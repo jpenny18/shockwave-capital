@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SVG Globe Animation</title>
+    <style>
+      body {
+        background: #0d0d0d;
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+      svg {
+        width: 80vmin;
+        height: 80vmin;
+      }
+    </style>
+  </head>
+  <body>
+    <svg viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+      <!-- Globe wireframe -->
+      <defs>
+        <radialGradient id="pulse-gradient" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#45DEC4" />
+          <stop offset="40%" stop-color="#45DEC4" />
+          <stop offset="100%" stop-color="#45DEC4" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+
+      <!-- Outer circle -->
+      <circle cx="400" cy="400" r="400" fill="#1a1a1a" />
+
+      <!-- Vertical arcs (like meridians) -->
+      <g stroke="#2d2d2d" stroke-width="1">
+        <path d="M400 800 A -400 400 0 0 0 400 0" fill="none" />
+        <path d="M400 800 A -300 400 0 0 0 400 0" fill="none" />
+        <path d="M400 800 A -200 400 0 0 0 400 0" fill="none" />
+        <path d="M400 800 A -100 400 0 0 0 400 0" fill="none" />
+        <path d="M400 0 A 100 400 0 0 0 400 800" fill="none" />
+        <path d="M400 0 A 200 400 0 0 0 400 800" fill="none" />
+        <path d="M400 0 A 300 400 0 0 0 400 800" fill="none" />
+        <path d="M400 0 A 400 400 0 0 0 400 800" fill="none" />
+      </g>
+
+      <!-- Horizontal arcs (latitudes) -->
+      <g stroke="#2d2d2d" stroke-width="1">
+        <path d="M100,100 h600" />
+        <path d="M50,200 h700" />
+        <path d="M25,300 h750" />
+        <path d="M0,400 h800" />
+        <path d="M25,500 h750" />
+        <path d="M50,600 h700" />
+        <path d="M100,700 h600" />
+      </g>
+
+      <!-- Example Node Pulse (Right) -->
+      <g>
+        <circle
+          cx="650"
+          cy="250"
+          r="0"
+          stroke="#45DEC4"
+          stroke-width="2"
+          fill="none"
+        >
+          <animate
+            attributeName="r"
+            values="0;12;18;24;0"
+            dur="4s"
+            repeatCount="indefinite"
+          />
+          <animate
+            attributeName="opacity"
+            values="0;1;0.5;0;0"
+            dur="4s"
+            repeatCount="indefinite"
+          />
+        </circle>
+        <circle cx="650" cy="250" r="8" fill="#45DEC4" />
+      </g>
+
+      <!-- Example Node Pulse (Left) -->
+      <g>
+        <circle
+          cx="150"
+          cy="550"
+          r="0"
+          stroke="#45DEC4"
+          stroke-width="2"
+          fill="none"
+        >
+          <animate
+            attributeName="r"
+            values="0;12;18;24;0"
+            dur="4s"
+            repeatCount="indefinite"
+          />
+          <animate
+            attributeName="opacity"
+            values="0;1;0.5;0;0"
+            dur="4s"
+            repeatCount="indefinite"
+          />
+        </circle>
+        <circle cx="150" cy="550" r="8" fill="#45DEC4" />
+      </g>
+
+      <!-- Pulse Path Animation -->
+      <!-- This is a copy of a vertical meridian line -->
+      <path
+        id="pulsePath1"
+        d="M400 800 A -300 400 0 0 0 400 0"
+        stroke="none"
+        fill="none"
+      />
+
+      <!-- This animates a circle along that path -->
+      <circle r="6" fill="#45DEC4">
+        <animateMotion dur="4s" repeatCount="indefinite" rotate="auto">
+          <mpath xlink:href="#pulsePath1" />
+        </animateMotion>
+      </circle>
+    </svg>
+  </body>
+</html>
