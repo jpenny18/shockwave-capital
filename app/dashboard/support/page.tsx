@@ -284,7 +284,7 @@ export default function SupportPage() {
                   <div className="flex items-center justify-between mb-2">
                     <h2 className="text-lg font-bold text-white">{currentTicket.subject}</h2>
                     <div className={`px-3 py-1 rounded-full text-xs ${statusColors[currentTicket.status]} bg-opacity-20 capitalize flex items-center gap-1`}>
-                      <StatusIcon size={14} /> {currentTicket.status}
+                      {React.createElement(statusIcons[currentTicket.status], { size: 14 })} {currentTicket.status}
                     </div>
                   </div>
                   <div className="flex items-center gap-4 text-sm text-gray-400">
