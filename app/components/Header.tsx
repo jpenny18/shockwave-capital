@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -56,9 +57,11 @@ export default function Header() {
 
           {/* Client Area Button */}
           <div>
-            <button className="bg-[#0FF1CE] text-black px-4 py-2 rounded-full font-bold hover:scale-105 transition-transform">
-              Client Area
-            </button>
+            <Link href="/auth">
+              <button className="bg-[#0FF1CE] text-black px-4 py-2 rounded-full font-bold hover:scale-105 transition-transform">
+                Client Area
+              </button>
+            </Link>
           </div>
         </div>
 

@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import Particles from './components/Particles';
 import Header from './components/Header';
+import Link from 'next/link';
 
 export default function ShockwaveLandingPage() {
     const [selectedBalance, setSelectedBalance] = useState(100000);
@@ -86,12 +87,16 @@ export default function ShockwaveLandingPage() {
               </div>
 
               <div className="flex flex-col md:flex-row justify-center gap-4 md:gap-6 max-w-sm md:max-w-[600px] mx-auto w-full pt-8">
-                <button className="px-10 py-3 md:py-4 bg-[#0FF1CE] text-black text-sm md:text-lg font-bold rounded-lg hover:scale-105 transition-transform w-full md:w-1/2">
-                  START CHALLENGE
-                </button>
-                <button className="px-10 py-3 md:py-4 bg-transparent text-white text-sm md:text-lg font-bold rounded-lg hover:scale-105 transition-transform border-2 border-white w-full md:w-1/2 hidden">
-                  FREE TRIAL
-                </button>
+                <Link href="/auth">
+                  <button className="px-10 py-3 md:py-4 bg-[#0FF1CE] text-black text-sm md:text-lg font-bold rounded-lg hover:scale-105 transition-transform w-full md:w-1/2">
+                    START CHALLENGE
+                  </button>
+                </Link>
+                <Link href="/auth">
+                  <button className="px-10 py-3 md:py-4 bg-transparent text-white text-sm md:text-lg font-bold rounded-lg hover:scale-105 transition-transform border-2 border-white w-full md:w-1/2 hidden">
+                    FREE TRIAL
+                  </button>
+                </Link>
               </div>
 
               {/* Tradable Assets */}
@@ -176,7 +181,7 @@ export default function ShockwaveLandingPage() {
                 {
                   icon: "2",
                   title: "Pass Challenge",
-                  description: "Showcase your trading performance by successfully passing your evaluation with consinstency and effective risk management.",
+                  description: "Showcase your trading performance by successfully passing your evaluation with consistency and effective risk management.",
                   delay: "0.1s"
                 },
                 {
@@ -399,9 +404,11 @@ export default function ShockwaveLandingPage() {
 
             {/* CTA Button */}
             <div className="max-w-4xl mx-auto mt-8 md:mt-12 text-center px-4 md:px-0">
-              <button className="px-8 md:px-12 py-3 md:py-4 bg-[#0FF1CE] text-black text-lg md:text-xl font-bold rounded-full hover:scale-105 transition-transform shadow-lg hover:shadow-[#0FF1CE]/20">
-                START CHALLENGE
-              </button>
+              <Link href="/auth">
+                <button className="px-8 md:px-12 py-3 md:py-4 bg-[#0FF1CE] text-black text-lg md:text-xl font-bold rounded-full hover:scale-105 transition-transform shadow-lg hover:shadow-[#0FF1CE]/20">
+                  START CHALLENGE
+                </button>
+              </Link>
             </div>
           </div>
         </section>
@@ -439,9 +446,11 @@ export default function ShockwaveLandingPage() {
                   ))}
                 </ul>
                 <div className="mt-6 md:mt-8">
-                  <button className="w-full md:w-auto px-4 py-2 md:px-8 md:py-4 bg-[#0FF1CE] text-black text-sm md:text-lg font-bold rounded-lg hover:scale-105 transition-transform">
-                    Get Funded
-                </button>
+                  <Link href="/auth">
+                    <button className="w-full md:w-auto px-4 py-2 md:px-8 md:py-4 bg-[#0FF1CE] text-black text-sm md:text-lg font-bold rounded-lg hover:scale-105 transition-transform">
+                      Get Funded
+                  </button>
+                  </Link>
                 </div>
               </div>
 
@@ -609,9 +618,11 @@ export default function ShockwaveLandingPage() {
 
             {/* CTA Button */}
             <div className="max-w-4xl mx-auto mt-8 md:mt-16 text-center">
-              <button className="px-6 py-3 md:px-8 md:py-4 bg-[#0FF1CE] text-black text-base md:text-xl font-bold rounded-lg hover:scale-105 transition-transform shadow-lg hover:shadow-[#0FF1CE]/20">
-                Choose the Best. Choose Shockwave
-              </button>
+              <Link href="/auth">
+                <button className="px-6 py-3 md:px-8 md:py-4 bg-[#0FF1CE] text-black text-base md:text-xl font-bold rounded-lg hover:scale-105 transition-transform shadow-lg hover:shadow-[#0FF1CE]/20">
+                  Choose the Best. Choose Shockwave
+                </button>
+              </Link>
             </div>
           </div>
         </section>
@@ -873,9 +884,11 @@ export default function ShockwaveLandingPage() {
           
           {/* CTA Button */}
           <div className="max-w-4xl mx-auto mt-16 text-center">
-            <button className="px-8 md:px-12 py-3 md:py-4 bg-[#0FF1CE] text-black text-sm md:text-xl font-bold rounded-lg hover:scale-105 transition-transform shadow-lg hover:shadow-[#0FF1CE]/20">
-              Stop coasting and go full throttle
-            </button>
+            <Link href="/auth">
+              <button className="px-8 md:px-12 py-3 md:py-4 bg-[#0FF1CE] text-black text-sm md:text-xl font-bold rounded-lg hover:scale-105 transition-transform shadow-lg hover:shadow-[#0FF1CE]/20">
+                Stop coasting and go full throttle
+              </button>
+            </Link>
           </div>
         </section>
   
