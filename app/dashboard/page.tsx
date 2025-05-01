@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import Particles from '../components/Particles';
+import { useRouter } from 'next/navigation';
 
 const PromotionalCard = ({ 
   title,
@@ -37,6 +38,14 @@ const PromotionalCard = ({
 );
 
 export default function DashboardPage() {
+  const router = useRouter();
+
+  const handleStartChallenge = (type: string) => {
+    // Navigate to the challenge page with the type in session storage
+    sessionStorage.setItem('preselectedChallengeType', type);
+    router.push('/dashboard/challenge');
+  };
+
   return (
     <div className="relative">
       {/* Background Effects */}
@@ -71,7 +80,10 @@ export default function DashboardPage() {
               ))}
             </div>
 
-            <button className="w-full bg-[#0FF1CE] text-black font-bold text-sm py-2 rounded-lg hover:scale-105 transition-transform">
+            <button 
+              onClick={() => handleStartChallenge('Standard')}
+              className="w-full bg-[#0FF1CE] text-black font-bold text-sm py-2 rounded-lg hover:scale-105 transition-transform"
+            >
               Start Challenge
             </button>
           </div>
@@ -97,7 +109,10 @@ export default function DashboardPage() {
               ))}
             </div>
 
-            <button className="w-full bg-[#0FF1CE] text-black font-bold text-sm py-2 rounded-lg hover:scale-105 transition-transform">
+            <button 
+              onClick={() => handleStartChallenge('Instant')}
+              className="w-full bg-[#0FF1CE] text-black font-bold text-sm py-2 rounded-lg hover:scale-105 transition-transform"
+            >
               Get Instant Access
             </button>
           </div>

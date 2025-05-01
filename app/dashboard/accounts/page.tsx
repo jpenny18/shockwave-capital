@@ -9,8 +9,10 @@ import {
   ExternalLink,
   TrendingUp,
   TrendingDown,
-  BarChart2
+  BarChart2,
+  Lock
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface Account {
   id: string;
@@ -195,6 +197,7 @@ const SummaryCard = ({ accounts }: { accounts: Account[] }) => {
 };
 
 export default function MyAccountsPage() {
+  const router = useRouter();
   const [filters, setFilters] = useState<FilterState>({
     status: 'all',
     type: 'all',
@@ -298,10 +301,27 @@ export default function MyAccountsPage() {
 
       {/* Content */}
       <div className="relative z-10">
+        <h1 className="text-2xl font-bold text-white mb-6">My Accounts</h1>
+        
+        {/* Lock Overlay */}
+        <div className="absolute inset-0 z-50 backdrop-blur-md bg-[#0D0D0D]/50 flex items-center justify-center">
+          <div className="max-w-md w-full mx-4 p-8 rounded-2xl bg-[#0D0D0D]/90 border border-[#2F2F2F]/50 text-center">
+            <div className="w-16 h-16 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center mx-auto mb-6">
+              <Lock size={32} className="text-[#0FF1CE]" />
+            </div>
+            <h2 className="text-xl font-bold text-white mb-3">Account Locked</h2>
+            <p className="text-gray-400 mb-6">Please purchase a challenge to see your account metrics</p>
+            <button 
+              onClick={() => router.push('/dashboard/challenge')}
+              className="w-full bg-[#0FF1CE] text-black font-bold py-3 rounded-lg hover:bg-[#0FF1CE]/90 transition-colors"
+            >
+              Start Challenge
+            </button>
+          </div>
+        </div>
+
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <h1 className="text-2xl font-bold text-white">My Accounts</h1>
-          
           <div className="flex flex-wrap items-center gap-4">
             {/* Filter Button */}
             <div className="relative">
