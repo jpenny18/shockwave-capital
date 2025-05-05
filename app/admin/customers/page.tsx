@@ -32,9 +32,9 @@ interface Customer {
 }
 
 // Mock customer data
-const mockCustomers = [
+const mockCustomers: Customer[] = [
   {
-    id: 1,
+    id: "1",
     name: 'Alex Thompson',
     email: 'alex@example.com',
     phone: '+1 (555) 123-4567',
@@ -43,11 +43,11 @@ const mockCustomers = [
     totalSpent: 2499,
     orderCount: 3,
     lastOrderDate: '2023-05-20',
-    status: 'active',
+    status: 'active' as const,
     notes: 'Prefers to be contacted via email. Interested in larger account sizes.'
   },
   {
-    id: 2,
+    id: "2",
     name: 'Sarah Chen',
     email: 'sarah.chen@example.com',
     phone: '+1 (555) 987-6543',
@@ -56,11 +56,11 @@ const mockCustomers = [
     totalSpent: 3599,
     orderCount: 4,
     lastOrderDate: '2023-05-15',
-    status: 'active',
+    status: 'active' as const,
     notes: 'Looking to scale up to larger accounts after successful challenges.'
   },
   {
-    id: 3,
+    id: "3",
     name: 'David Miller',
     email: 'david.m@example.com',
     phone: '+44 7700 900123',
@@ -69,11 +69,11 @@ const mockCustomers = [
     totalSpent: 1599,
     orderCount: 2,
     lastOrderDate: '2023-04-30',
-    status: 'inactive',
+    status: 'inactive' as const,
     notes: 'Had issues with previous challenge. Follow up about potential retry.'
   },
   {
-    id: 4,
+    id: "4",
     name: 'Maria Rodriguez',
     email: 'maria.r@example.com',
     phone: '+34 612 34 56 78',
@@ -82,11 +82,11 @@ const mockCustomers = [
     totalSpent: 999,
     orderCount: 1,
     lastOrderDate: '2023-05-01',
-    status: 'active',
+    status: 'active' as const,
     notes: 'New trader, might need extra support with platform questions.'
   },
   {
-    id: 5,
+    id: "5",
     name: 'Jamal Wilson',
     email: 'jwilson@example.com',
     phone: '+1 (555) 234-5678',
@@ -95,11 +95,11 @@ const mockCustomers = [
     totalSpent: 5198,
     orderCount: 6,
     lastOrderDate: '2023-05-18',
-    status: 'active',
+    status: 'active' as const,
     notes: 'Consistent trader, potential candidate for VIP program.'
   },
   {
-    id: 6,
+    id: "6",
     name: 'Emma Johnson',
     email: 'emma.j@example.com',
     phone: '+61 4 1234 5678',
@@ -108,11 +108,11 @@ const mockCustomers = [
     totalSpent: 999,
     orderCount: 1,
     lastOrderDate: '2023-04-05',
-    status: 'inactive',
+    status: 'inactive' as const,
     notes: 'No activity since initial purchase. Consider reaching out with special offer.'
   },
   {
-    id: 7,
+    id: "7",
     name: 'Hiroshi Tanaka',
     email: 'h.tanaka@example.com',
     phone: '+81 90-1234-5678',
@@ -121,7 +121,7 @@ const mockCustomers = [
     totalSpent: 2598,
     orderCount: 3,
     lastOrderDate: '2023-05-10',
-    status: 'active',
+    status: 'active' as const,
     notes: 'Prefers communication in Japanese when possible.'
   }
 ];
