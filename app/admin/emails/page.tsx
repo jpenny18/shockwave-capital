@@ -56,13 +56,26 @@ const initialTemplates = [
   }
 ];
 
+interface EmailTemplate {
+  id: number;
+  name: string;
+  subject: string;
+  body: string;
+  variables: string[];
+  lastUpdated: string;
+}
+
+interface TestValues {
+  [key: string]: string;
+}
+
 export default function EmailTemplatesPage() {
   const [templates, setTemplates] = useState(initialTemplates);
   const [isEditing, setIsEditing] = useState(false);
-  const [currentTemplate, setCurrentTemplate] = useState<any>(null);
+  const [currentTemplate, setCurrentTemplate] = useState<EmailTemplate | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showPreview, setShowPreview] = useState(false);
-  const [testValues, setTestValues] = useState<Record<string, string>>({});
+  const [testValues, setTestValues] = useState<TestValues>({});
   
   const filteredTemplates = templates.filter(template => 
     template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -74,16 +87,15 @@ export default function EmailTemplatesPage() {
       id: Date.now(),
       name: 'New Template',
       subject: 'New Email Subject',
-      body: '<p>Enter your email content here...</p>',
+      body: 'New Email Content',
       variables: [],
-      lastUpdated: new Date().toISOString().split('T')[0]
+      lastUpdated: new Date().toISOString()
     };
-    
     setCurrentTemplate(newTemplate);
     setIsEditing(true);
   };
 
-  const handleEdit = (template: any) => {
+  const handleEdit = (template: EmailTemplate) => {
     setCurrentTemplate(template);
     setIsEditing(true);
     setShowPreview(false);
@@ -183,25 +195,17 @@ export default function EmailTemplatesPage() {
     }
   };
   
-  const handleVariableAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (value && currentTemplate && !currentTemplate.variables.includes(value)) {
+  const handleVariableAdd = (e: React.FocusEvent<HTMLInputElement>) => {
+    const value = e.target.value.trim();
+    if (value && currentTemplate) {
       setCurrentTemplate({
         ...currentTemplate,
         variables: [...currentTemplate.variables, value]
       });
-      
-      // Add to test values
-      setTestValues({
-        ...testValues,
-        [value]: `{{${value}}}`
-      });
-      
-      // Clear the input
       e.target.value = '';
     }
   };
-  
+
   const handleVariableRemove = (variable: string) => {
     if (currentTemplate) {
       setCurrentTemplate({
@@ -221,6 +225,21 @@ export default function EmailTemplatesPage() {
       ...testValues,
       [variable]: value
     });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const target = e.target as HTMLInputElement;
+      const value = target.value.trim();
+      if (value && currentTemplate) {
+        setCurrentTemplate({
+          ...currentTemplate,
+          variables: [...currentTemplate.variables, value]
+        });
+        target.value = '';
+      }
+    }
   };
 
   return (
@@ -401,7 +420,7 @@ export default function EmailTemplatesPage() {
                       className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#0FF1CE]/50 font-mono text-sm"
                     ></textarea>
                     <div className="text-xs text-gray-400 mt-1">
-                      Use {{variableName}} to insert dynamic content
+                      Use {'{{'} variableName {'}}'}  to insert dynamic content
                     </div>
                   </div>
                   
@@ -434,8 +453,8 @@ export default function EmailTemplatesPage() {
                       <input
                         type="text"
                         placeholder="Add a variable name"
-                        onKeyDown={(e) => e.key === 'Enter' && handleVariableAdd(e as any)}
-                        onBlur={(e) => handleVariableAdd(e)}
+                        onKeyDown={handleKeyDown}
+                        onBlur={handleVariableAdd}
                         className="flex-1 bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#0FF1CE]/50"
                       />
                       <button 

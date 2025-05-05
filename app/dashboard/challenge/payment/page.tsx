@@ -26,6 +26,20 @@ interface ChallengeData {
   price: number;
 }
 
+interface CardDetails {
+  number: string;
+  expiry: string;
+  cvc: string;
+  name: string;
+}
+
+interface FormErrors {
+  number?: string;
+  expiry?: string;
+  cvc?: string;
+  name?: string;
+}
+
 const validateChallengeData = (data: ChallengeData | null): boolean => {
   if (!data) return false;
   
@@ -52,13 +66,13 @@ export default function PaymentPage() {
   const [isCardExpanded, setIsCardExpanded] = useState(false);
   const [isCryptoExpanded, setIsCryptoExpanded] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const [cardDetails, setCardDetails] = useState({
+  const [cardDetails, setCardDetails] = useState<CardDetails>({
     number: '',
     expiry: '',
     cvc: '',
     name: ''
   });
-  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
 
   useEffect(() => {
     const storedData = sessionStorage.getItem('challengeData');
@@ -123,24 +137,25 @@ export default function PaymentPage() {
     setCardDetails(prev => ({ ...prev, [name]: value }));
   };
 
-  const validateCardDetails = (): boolean => {
-    const errors: {[key: string]: string} = {};
+  const validateCardDetails = () => {
+    const errors: FormErrors = {};
     
-    if (!cardDetails.number || cardDetails.number.replace(/\s/g, '').length < 16) {
-      errors.number = 'Please enter a valid card number';
+    if (!cardDetails.number) errors.number = 'Card number is required';
+    else if (!/^\d{16}$/.test(cardDetails.number.replace(/\s/g, ''))) {
+      errors.number = 'Invalid card number';
     }
     
-    if (!cardDetails.expiry || cardDetails.expiry.length < 5) {
-      errors.expiry = 'Please enter a valid expiry date (MM/YY)';
+    if (!cardDetails.expiry) errors.expiry = 'Expiry date is required';
+    else if (!/^\d{2}\/\d{2}$/.test(cardDetails.expiry)) {
+      errors.expiry = 'Invalid expiry date (MM/YY)';
     }
     
-    if (!cardDetails.cvc || cardDetails.cvc.length < 3) {
-      errors.cvc = 'Please enter a valid CVC';
+    if (!cardDetails.cvc) errors.cvc = 'CVC is required';
+    else if (!/^\d{3,4}$/.test(cardDetails.cvc)) {
+      errors.cvc = 'Invalid CVC';
     }
     
-    if (!cardDetails.name) {
-      errors.name = 'Please enter the cardholder name';
-    }
+    if (!cardDetails.name) errors.name = 'Cardholder name is required';
     
     setFormErrors(errors);
     return Object.keys(errors).length === 0;

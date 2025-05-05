@@ -14,6 +14,18 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
+interface AuthData {
+  email: string;
+  password: string;
+  rememberMe: boolean;
+}
+
+interface AuthErrors {
+  email?: string;
+  password?: string;
+  terms?: string;
+}
+
 const FloatingLabelInput = ({ 
   id, 
   type = 'text', 
@@ -94,34 +106,37 @@ export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [rememberMe, setRememberMe] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [formData, setFormData] = useState<AuthData>({
+    email: '',
+    password: '',
+    rememberMe: false
+  });
+  const [errors, setErrors] = useState<AuthErrors>({});
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setErrors({});
     setLoading(true);
 
     // For login form
     if (isLogin) {
       // Simple validation
-      if (!email || !password) {
-        setError('Please fill in all fields');
+      if (!formData.email || !formData.password) {
+        setErrors({ email: 'Please fill in all fields', password: 'Please fill in all fields' });
         setLoading(false);
         return;
       }
 
       // Test credentials check
-      if (email === 'test@gmail.com' && password === '12345') {
+      if (formData.email === 'test@gmail.com' && formData.password === '12345') {
         setTimeout(() => {
           // Simulate API call delay
           setLoading(false);
           router.push('/dashboard');
         }, 1000);
       } else {
-        setError('Invalid email or password');
+        setErrors({ email: 'Invalid email or password', password: 'Invalid email or password' });
         setLoading(false);
       }
     } else {
@@ -129,7 +144,7 @@ export default function AuthPage() {
       setTimeout(() => {
         setLoading(false);
         setIsLogin(true);
-        setError('');
+        setErrors({});
       }, 1000);
     }
   };
@@ -161,7 +176,7 @@ export default function AuthPage() {
             <button
               onClick={() => {
                 setIsLogin(true);
-                setError('');
+                setErrors({});
               }}
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
                 isLogin
@@ -174,7 +189,7 @@ export default function AuthPage() {
             <button
               onClick={() => {
                 setIsLogin(false);
-                setError('');
+                setErrors({});
               }}
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
                 !isLogin
@@ -187,9 +202,9 @@ export default function AuthPage() {
           </div>
 
           {/* Error message */}
-          {error && (
+          {Object.keys(errors).length > 0 && (
             <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-sm text-red-200">
-              {error}
+              {Object.values(errors).join('\n')}
             </div>
           )}
 
@@ -207,7 +222,7 @@ export default function AuthPage() {
             <div className="relative">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <Mail size={18} className={`transition-colors ${email.length > 0 ? 'text-[#0FF1CE]' : 'text-gray-400'}`} />
+                  <Mail size={18} className={`transition-colors ${formData.email.length > 0 ? 'text-[#0FF1CE]' : 'text-gray-400'}`} />
                 </div>
                 <input
                   id="email"
@@ -215,18 +230,18 @@ export default function AuthPage() {
                   className={`
                     w-full bg-[#1A1A1A] border rounded-lg pl-10 pr-4 py-3 text-white 
                     transition-all focus:outline-none
-                    ${email.length > 0 ? 'border-[#0FF1CE]' : 'border-[#2F2F2F]'}
+                    ${formData.email.length > 0 ? 'border-[#0FF1CE]' : 'border-[#2F2F2F]'}
                   `}
                   placeholder="Email Address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
                 />
                 <label
                   htmlFor="email"
                   className={`
                     absolute left-10 transition-all pointer-events-none
-                    ${email.length > 0 
+                    ${formData.email.length > 0 
                       ? '-top-2 text-xs text-[#0FF1CE] bg-[#0D0D0D] px-2' 
                       : 'top-3 text-gray-400'
                     }
@@ -240,7 +255,7 @@ export default function AuthPage() {
             <div className="relative">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <Lock size={18} className={`transition-colors ${password.length > 0 ? 'text-[#0FF1CE]' : 'text-gray-400'}`} />
+                  <Lock size={18} className={`transition-colors ${formData.password.length > 0 ? 'text-[#0FF1CE]' : 'text-gray-400'}`} />
                 </div>
                 <input
                   id="password"
@@ -248,18 +263,18 @@ export default function AuthPage() {
                   className={`
                     w-full bg-[#1A1A1A] border rounded-lg pl-10 pr-10 py-3 text-white 
                     transition-all focus:outline-none
-                    ${password.length > 0 ? 'border-[#0FF1CE]' : 'border-[#2F2F2F]'}
+                    ${formData.password.length > 0 ? 'border-[#0FF1CE]' : 'border-[#2F2F2F]'}
                   `}
                   placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   required
                 />
                 <label
                   htmlFor="password"
                   className={`
                     absolute left-10 transition-all pointer-events-none
-                    ${password.length > 0 
+                    ${formData.password.length > 0 
                       ? '-top-2 text-xs text-[#0FF1CE] bg-[#0D0D0D] px-2' 
                       : 'top-3 text-gray-400'
                     }

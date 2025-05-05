@@ -17,6 +17,20 @@ import {
   ExternalLink
 } from 'lucide-react';
 
+interface Customer {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  country: string;
+  joinDate: string;
+  totalSpent: number;
+  orderCount: number;
+  lastOrderDate: string;
+  status: 'active' | 'inactive';
+  notes: string;
+}
+
 // Mock customer data
 const mockCustomers = [
   {
@@ -119,7 +133,7 @@ const statusStyles = {
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState(mockCustomers);
-  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -151,7 +165,7 @@ export default function CustomersPage() {
       }
     });
   
-  const handleViewDetails = (customer: any) => {
+  const handleViewDetails = (customer: Customer) => {
     setSelectedCustomer(customer);
     setIsDetailsOpen(true);
   };
