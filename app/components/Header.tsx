@@ -7,9 +7,8 @@ export default function Header() {
 
   const navItems = [
     { name: 'Home', href: '#' },
-    { name: 'Challenge', href: '#challenge' },
-    { name: 'Pricing', href: '#pricing' },
-    { name: 'FAQ', href: '#faq' }
+    { name: 'FAQ', href: '#faq' },
+    { name: 'How Shockwave Operates', href: '/How-Shockwave-Operates' }
   ];
 
   return (
