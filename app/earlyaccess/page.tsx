@@ -1,6 +1,5 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import Particles from '../components/Particles';
 import { 
@@ -92,16 +91,6 @@ const FloatingLabelInput = ({
     </div>
   );
 };
-
-const SocialButton = ({ icon, label }: { icon: string; label: string }) => (
-  <button
-    type="button"
-    className="w-full flex items-center justify-center gap-3 py-2.5 px-4 bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg text-white hover:bg-[#2F2F2F] transition-colors"
-  >
-    <Image src={icon} alt={label} width={20} height={20} />
-    <span>Continue with {label}</span>
-  </button>
-);
 
 export default function EarlyAccessPage() {
   const router = useRouter();
@@ -239,221 +228,140 @@ export default function EarlyAccessPage() {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-4">
-      {/* Background Effects */}
-      <div className="absolute top-0 left-0 w-full h-full bg-[#0FF1CE]/[0.02] background-noise"></div>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full md:w-3/4 h-full rounded-full bg-[#0FF1CE]/[0.03] blur-[150px] opacity-60"></div>
+    <div className="min-h-screen bg-[#0D0D0D] text-white relative overflow-hidden">
       <Particles />
-
-      {/* Content */}
-      <div className="relative z-10 w-full max-w-md">
-        {/* Logo */}
-        <div className="flex justify-center mb-4">
-          <Image
-            src="/logo.png"
-            alt="Shockwave Capital"
-            width={360}
-            height={160}
-            className="h-30 w-auto"
-          />
-        </div>
-
-        {/* Early Access Banner */}
-        <div className="mb-6 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#0FF1CE]/10 rounded-full text-[#0FF1CE] text-sm font-medium">
-            <Rocket size={16} />
-            <span>Early Access Registration</span>
-          </div>
-          <h2 className="mt-4 text-2xl font-bold text-white">Join the Revolution Early</h2>
-          <p className="mt-2 text-gray-400 text-sm">
-            Get exclusive early access to Shockwave Capital's revolutionary trading platform.
-          </p>
-        </div>
-
-        {/* Form Container */}
-        <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl p-8 border border-[#2F2F2F]/50">
-          {/* Form Toggle */}
-          <div className="flex space-x-1 mb-8 bg-[#1A1A1A]/50 backdrop-blur-sm rounded-lg p-1">
-            <button
-              onClick={() => {
-                setIsLogin(true);
-                setErrors({});
-              }}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                isLogin
-                  ? 'bg-[#0FF1CE] text-black'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              Log in
-            </button>
-            <button
-              onClick={() => {
-                setIsLogin(false);
-                setErrors({});
-              }}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                !isLogin
-                  ? 'bg-[#0FF1CE] text-black'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              Register
-            </button>
+      
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-4">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#0FF1CE]/10 mb-4">
+              <Rocket className="w-6 h-6 text-[#0FF1CE]" />
+            </div>
+            <h1 className="text-2xl font-bold mb-2">Early Access</h1>
+            <p className="text-gray-400">
+              {isLogin ? 'Sign in to access your account' : 'Create your account to get started'}
+            </p>
           </div>
 
-          {/* Error message */}
-          {Object.keys(errors).length > 0 && (
-            <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-sm text-red-200">
-              {Object.values(errors).join('\n')}
+          {success && (
+            <div className="mb-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg text-green-400 flex items-center gap-2">
+              <Check size={16} />
+              {success}
             </div>
           )}
 
-          {/* Form */}
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <FloatingLabelInput
                 id="name"
                 label="Full Name"
                 icon={User}
-                required
                 value={formData.name || ''}
                 onChange={(value) => setFormData({ ...formData, name: value })}
+                error={errors.name}
+                required
               />
             )}
-            
+
             <FloatingLabelInput
               id="email"
-              type="email"
-              label="Email address"
+              label="Email Address"
               icon={Mail}
-              required
+              type="email"
               value={formData.email}
               onChange={(value) => setFormData({ ...formData, email: value })}
               error={errors.email}
+              required
             />
 
             <FloatingLabelInput
               id="password"
-              type="password"
               label="Password"
               icon={Lock}
-              required
+              type="password"
               value={formData.password}
               onChange={(value) => setFormData({ ...formData, password: value })}
               error={errors.password}
+              required
             />
 
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-600 text-[#0FF1CE] focus:ring-[#0FF1CE] focus:ring-offset-0 bg-[#1A1A1A]"
+                />
+                <span className="text-sm text-gray-300">Remember me</span>
+              </label>
+            </div>
+
             {!isLogin && (
-              <div className="flex items-start">
-                <div className="flex items-center h-5">
-                  <input
-                    id="terms"
-                    type="checkbox"
-                    checked={acceptTerms}
-                    onChange={(e) => setAcceptTerms(e.target.checked)}
-                    className="w-4 h-4 border border-[#2F2F2F] rounded bg-[#1A1A1A] focus:ring-[#0FF1CE] focus:ring-2"
-                  />
-                </div>
-                <label htmlFor="terms" className="ml-2 text-sm text-gray-400">
-                  I accept the{' '}
+              <div className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  checked={acceptTerms}
+                  onChange={(e) => setAcceptTerms(e.target.checked)}
+                  className="mt-1 w-4 h-4 rounded border-gray-600 text-[#0FF1CE] focus:ring-[#0FF1CE] focus:ring-offset-0 bg-[#1A1A1A]"
+                />
+                <label htmlFor="terms" className="text-sm text-gray-300">
+                  I agree to the{' '}
                   <Link href="/terms" className="text-[#0FF1CE] hover:underline">
-                    terms and conditions
+                    Terms of Service
+                  </Link>{' '}
+                  and{' '}
+                  <Link href="/privacy" className="text-[#0FF1CE] hover:underline">
+                    Privacy Policy
                   </Link>
                 </label>
               </div>
             )}
 
-            {isLogin && (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    id="remember"
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 border border-[#2F2F2F] rounded bg-[#1A1A1A] focus:ring-[#0FF1CE] focus:ring-2"
-                  />
-                  <label htmlFor="remember" className="ml-2 text-sm text-gray-400">
-                    Remember me
-                  </label>
-                </div>
-                <Link href="/forgot-password" className="text-sm text-[#0FF1CE] hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
+            {errors.terms && (
+              <p className="text-sm text-red-500 flex items-center gap-1">
+                <AlertCircle size={14} />
+                {errors.terms}
+              </p>
             )}
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`
-                w-full bg-[#0FF1CE] text-black font-bold py-3 rounded-lg 
-                hover:bg-[#0FF1CE]/90 transition-colors flex items-center justify-center gap-2
-                ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}
-              `}
+              className="w-full bg-[#0FF1CE] text-black font-semibold py-3 px-4 rounded-lg hover:bg-[#0FF1CE]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
-                <>
-                  <span className="inline-block h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin"></span>
-                  <span>{isLogin ? 'Logging in...' : 'Creating Account...'}</span>
-                </>
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                  <span>Processing...</span>
+                </div>
               ) : (
-                <>
-                  <span>{isLogin ? 'Log in' : 'Get Early Access'}</span>
-                  <ArrowRight size={18} />
-                </>
+                <div className="flex items-center justify-center gap-2">
+                  <span>{isLogin ? 'Sign In' : 'Create Account'}</span>
+                  <ArrowRight size={16} />
+                </div>
               )}
             </button>
           </form>
 
-          {/* Early Access Benefits */}
-          <div className="mt-6 p-4 bg-[#0FF1CE]/10 rounded-lg">
-            <h3 className="text-[#0FF1CE] font-medium mb-2">Early Access Benefits:</h3>
-            <ul className="space-y-2 text-sm text-gray-300">
-              <li className="flex items-center gap-2">
-                <Check size={14} className="text-[#0FF1CE]" />
-                <span>First access to new features</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check size={14} className="text-[#0FF1CE]" />
-                <span>Exclusive early bird rewards</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check size={14} className="text-[#0FF1CE]" />
-                <span>Priority support access</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* Social Login */}
-          <div className="mt-8">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-[#2F2F2F]"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-[#0D0D0D] text-gray-400">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-6 space-y-3">
-              <SocialButton icon="/google.svg" label="Google" />
-              <SocialButton icon="/apple.svg" label="Apple" />
-              <SocialButton icon="/facebook.svg" label="Facebook" />
-            </div>
+          <div className="mt-6 text-center">
+            <p className="text-gray-400">
+              {isLogin ? "Don't have an account?" : 'Already have an account?'}{' '}
+              <button
+                onClick={() => {
+                  setIsLogin(!isLogin);
+                  setErrors({});
+                  setSuccess('');
+                }}
+                className="text-[#0FF1CE] hover:underline"
+              >
+                {isLogin ? 'Sign Up' : 'Sign In'}
+              </button>
+            </p>
           </div>
         </div>
       </div>
-
-      <style jsx global>{`
-        .background-noise {
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 250 250' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
-          opacity: 0.15;
-        }
-      `}</style>
     </div>
   );
 } 
