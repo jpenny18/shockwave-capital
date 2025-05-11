@@ -34,11 +34,11 @@ export default function ShockwaveLandingPage() {
     
     const getOneTimePrice = (balance: number, type: string) => {
       const standardPrices: Record<number, string> = {
-        5000: '80',
-        10000: '150',
-        25000: '300',
-        50000: '350',
-        100000: '600',
+        5000: '79',
+        10000: '149',
+        25000: '299',
+        50000: '349',
+        100000: '599',
         200000: '999',
         500000: '1999'
       };
