@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Search, 
   Filter, 
@@ -11,28 +11,39 @@ import {
   ChevronUp,
   Eye,
   Mail,
-  RefreshCw
+  RefreshCw,
+  Loader2
 } from 'lucide-react';
+import { collection, query, orderBy, getDocs, Timestamp } from 'firebase/firestore';
+import { db } from '../../../lib/firebase';
 
-// Mock data for demonstration
-const orders = [
-  { id: '#OSK1001', customer: 'John Doe', email: 'john@example.com', amount: 400, status: 'completed', date: '2023-05-27', type: 'Standard Challenge', accountSize: '$10,000' },
-  { id: '#OSK1002', customer: 'Jane Smith', email: 'jane@example.com', amount: 1200, status: 'pending', date: '2023-05-27', type: 'Express Challenge', accountSize: '$25,000' },
-  { id: '#OSK1003', customer: 'Mike Johnson', email: 'mike@example.com', amount: 2000, status: 'completed', date: '2023-05-26', type: 'Instant Funding', accountSize: '$50,000' },
-  { id: '#OSK1004', customer: 'Sarah Williams', email: 'sarah@example.com', amount: 400, status: 'failed', date: '2023-05-26', type: 'Standard Challenge', accountSize: '$10,000' },
-  { id: '#OSK1005', customer: 'Alex Brown', email: 'alex@example.com', amount: 4000, status: 'completed', date: '2023-05-23', type: 'Standard Challenge', accountSize: '$100,000' },
-  { id: '#OSK1006', customer: 'Chris Davis', email: 'chris@example.com', amount: 800, status: 'pending', date: '2023-05-22', type: 'Express Challenge', accountSize: '$20,000' },
-  { id: '#OSK1007', customer: 'Taylor Jones', email: 'taylor@example.com', amount: 1600, status: 'completed', date: '2023-05-21', type: 'Instant Funding', accountSize: '$25,000' },
-  { id: '#OSK1008', customer: 'Morgan Lee', email: 'morgan@example.com', amount: 2400, status: 'completed', date: '2023-05-20', type: 'Standard Challenge', accountSize: '$50,000' },
-  { id: '#OSK1009', customer: 'Jordan Bailey', email: 'jordan@example.com', amount: 400, status: 'failed', date: '2023-05-19', type: 'Standard Challenge', accountSize: '$10,000' },
-  { id: '#OSK1010', customer: 'Casey Kim', email: 'casey@example.com', amount: 1200, status: 'completed', date: '2023-05-18', type: 'Express Challenge', accountSize: '$25,000' },
-];
+interface Order {
+  id: string;
+  customerEmail: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  country: string;
+  discordUsername?: string;
+  challengeType: string;
+  challengeAmount: string;
+  platform: string;
+  totalAmount: number;
+  paymentMethod: 'card' | 'crypto';
+  paymentStatus: 'pending' | 'processing' | 'completed' | 'failed';
+  paymentIntentId?: string;
+  transactionId?: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
 
 // Status styles
 const statusStyles = {
   completed: { color: 'text-green-500', bg: 'bg-green-500/10', icon: CheckCircle },
   pending: { color: 'text-yellow-500', bg: 'bg-yellow-500/10', icon: Clock },
+  processing: { color: 'text-blue-500', bg: 'bg-blue-500/10', icon: RefreshCw },
   failed: { color: 'text-red-500', bg: 'bg-red-500/10', icon: AlertCircle },
+  unknown: { color: 'text-gray-500', bg: 'bg-gray-500/10', icon: AlertCircle }, // Fallback style
 };
 
 // Sort options
@@ -45,26 +56,57 @@ const sortOptions = [
 
 // Filter options
 const filterOptions = {
-  status: ['All', 'Completed', 'Pending', 'Failed'],
+  status: ['All', 'Completed', 'Processing', 'Pending', 'Failed'],
   type: ['All', 'Standard Challenge', 'Express Challenge', 'Instant Funding'],
 };
 
 export default function OrdersPage() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('date_desc');
   const [filterStatus, setFilterStatus] = useState('All');
   const [filterType, setFilterType] = useState('All');
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
 
+  // Fetch orders from Firebase
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const ordersRef = collection(db, 'orders');
+        const q = query(ordersRef, orderBy('createdAt', 'desc'));
+        const querySnapshot = await getDocs(q);
+        
+        const fetchedOrders: Order[] = [];
+        querySnapshot.forEach((doc) => {
+          fetchedOrders.push({ id: doc.id, ...doc.data() } as Order);
+        });
+        
+        setOrders(fetchedOrders);
+      } catch (err) {
+        console.error('Error fetching orders:', err);
+        setError('Failed to load orders. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, []);
+
   // Apply filters and search
   const filteredOrders = orders.filter(order => {
     // Status filter
-    if (filterStatus !== 'All' && order.status !== filterStatus.toLowerCase()) {
+    if (filterStatus !== 'All' && order.paymentStatus !== filterStatus.toLowerCase()) {
       return false;
     }
     
     // Type filter
-    if (filterType !== 'All' && order.type !== filterType) {
+    if (filterType !== 'All' && order.challengeType !== filterType) {
       return false;
     }
     
@@ -73,9 +115,10 @@ export default function OrdersPage() {
       const searchLower = searchTerm.toLowerCase();
       return (
         order.id.toLowerCase().includes(searchLower) ||
-        order.customer.toLowerCase().includes(searchLower) ||
-        order.email.toLowerCase().includes(searchLower) ||
-        order.type.toLowerCase().includes(searchLower)
+        order.firstName.toLowerCase().includes(searchLower) ||
+        order.lastName.toLowerCase().includes(searchLower) ||
+        order.customerEmail.toLowerCase().includes(searchLower) ||
+        order.challengeType.toLowerCase().includes(searchLower)
       );
     }
     
@@ -86,13 +129,13 @@ export default function OrdersPage() {
   const sortedOrders = [...filteredOrders].sort((a, b) => {
     switch(sortBy) {
       case 'date_asc':
-        return new Date(a.date).getTime() - new Date(b.date).getTime();
+        return a.createdAt.seconds - b.createdAt.seconds;
       case 'date_desc':
-        return new Date(b.date).getTime() - new Date(a.date).getTime();
+        return b.createdAt.seconds - a.createdAt.seconds;
       case 'amount_asc':
-        return a.amount - b.amount;
+        return a.totalAmount - b.totalAmount;
       case 'amount_desc':
-        return b.amount - a.amount;
+        return b.totalAmount - a.totalAmount;
       default:
         return 0;
     }
@@ -106,16 +149,81 @@ export default function OrdersPage() {
     }
   };
 
-  const handleResendCredentials = (email: string) => {
-    // In a real implementation, this would call an API
+  const handleResendCredentials = async (email: string) => {
+    // TODO: Implement resend credentials functionality
     alert(`Credentials will be resent to ${email}`);
   };
+
+  const handleExportCSV = () => {
+    // Convert orders to CSV format
+    const headers = ['Order ID', 'Date', 'Customer', 'Email', 'Type', 'Amount', 'Status', 'Payment Method'];
+    const csvData = sortedOrders.map(order => [
+      order.id,
+      new Date(order.createdAt.seconds * 1000).toLocaleDateString(),
+      `${order.firstName} ${order.lastName}`,
+      order.customerEmail,
+      order.challengeType,
+      order.totalAmount,
+      order.paymentStatus,
+      order.paymentMethod
+    ]);
+
+    // Create CSV content
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map(row => row.join(','))
+    ].join('\n');
+
+    // Create and download the file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `orders_${new Date().toISOString()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-[#0FF1CE] mx-auto mb-4" />
+          <p className="text-gray-400">Loading orders...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-4" />
+          <p className="text-red-500 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="inline-flex items-center gap-2 bg-[#0FF1CE]/10 text-[#0FF1CE] px-4 py-2 rounded-lg hover:bg-[#0FF1CE]/20 transition-colors"
+          >
+            <RefreshCw size={16} />
+            <span>Try Again</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-white">Orders</h1>
-        <button className="flex items-center gap-2 bg-[#0FF1CE] text-black px-4 py-2 rounded-lg font-medium hover:bg-[#0FF1CE]/90 transition-colors">
+        <button 
+          onClick={handleExportCSV}
+          className="flex items-center gap-2 bg-[#0FF1CE] text-black px-4 py-2 rounded-lg font-medium hover:bg-[#0FF1CE]/90 transition-colors"
+        >
           <Download size={16} />
           <span>Export CSV</span>
         </button>
@@ -197,7 +305,9 @@ export default function OrdersPage() {
             </thead>
             <tbody className="divide-y divide-[#2F2F2F]">
               {sortedOrders.map((order) => {
-                const Status = statusStyles[order.status as keyof typeof statusStyles].icon;
+                // Add type safety for payment status
+                const status = order.paymentStatus && statusStyles[order.paymentStatus] ? order.paymentStatus : 'unknown';
+                const Status = statusStyles[status].icon;
                 const isExpanded = expandedOrderId === order.id;
                 
                 return (
@@ -207,17 +317,19 @@ export default function OrdersPage() {
                       onClick={() => toggleOrderDetails(order.id)}
                     >
                       <td className="py-4 px-4 whitespace-nowrap text-sm font-medium text-white">{order.id}</td>
-                      <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">{order.customer}</td>
-                      <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">{order.type}</td>
-                      <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">{order.accountSize}</td>
-                      <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">${order.amount}</td>
+                      <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">{`${order.firstName} ${order.lastName}`}</td>
+                      <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">{order.challengeType}</td>
+                      <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">{order.challengeAmount}</td>
+                      <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">${order.totalAmount}</td>
                       <td className="py-4 px-4 whitespace-nowrap">
-                        <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusStyles[order.status as keyof typeof statusStyles].bg} ${statusStyles[order.status as keyof typeof statusStyles].color}`}>
+                        <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusStyles[status].bg} ${statusStyles[status].color}`}>
                           <Status size={12} className="mr-1" />
-                          <span className="capitalize">{order.status}</span>
+                          <span className="capitalize">{order.paymentStatus || 'Unknown'}</span>
                         </div>
                       </td>
-                      <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">{new Date(order.date).toLocaleDateString()}</td>
+                      <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">
+                        {new Date(order.createdAt.seconds * 1000).toLocaleDateString()}
+                      </td>
                       <td className="py-4 px-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <button className="p-1 text-gray-400 hover:text-[#0FF1CE] transition-colors">
@@ -237,12 +349,26 @@ export default function OrdersPage() {
                               <div className="space-y-2">
                                 <div className="flex justify-between">
                                   <span className="text-gray-400">Name:</span>
-                                  <span className="text-white">{order.customer}</span>
+                                  <span className="text-white">{`${order.firstName} ${order.lastName}`}</span>
                                 </div>
                                 <div className="flex justify-between">
                                   <span className="text-gray-400">Email:</span>
-                                  <span className="text-white">{order.email}</span>
+                                  <span className="text-white">{order.customerEmail}</span>
                                 </div>
+                                <div className="flex justify-between">
+                                  <span className="text-gray-400">Phone:</span>
+                                  <span className="text-white">{order.phone}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-gray-400">Country:</span>
+                                  <span className="text-white">{order.country}</span>
+                                </div>
+                                {order.discordUsername && (
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-400">Discord:</span>
+                                    <span className="text-white">{order.discordUsername}</span>
+                                  </div>
+                                )}
                               </div>
                             </div>
                             
@@ -251,44 +377,56 @@ export default function OrdersPage() {
                               <div className="space-y-2">
                                 <div className="flex justify-between">
                                   <span className="text-gray-400">Challenge Type:</span>
-                                  <span className="text-white">{order.type}</span>
+                                  <span className="text-white">{order.challengeType}</span>
                                 </div>
                                 <div className="flex justify-between">
                                   <span className="text-gray-400">Account Size:</span>
-                                  <span className="text-white">{order.accountSize}</span>
+                                  <span className="text-white">{order.challengeAmount}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                  <span className="text-gray-400">Status:</span>
-                                  <div className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusStyles[order.status as keyof typeof statusStyles].bg} ${statusStyles[order.status as keyof typeof statusStyles].color}`}>
-                                    <Status size={10} className="mr-1" />
-                                    <span className="capitalize">{order.status}</span>
-                                  </div>
+                                  <span className="text-gray-400">Platform:</span>
+                                  <span className="text-white">{order.platform}</span>
                                 </div>
-                              </div>
+                                <div className="flex justify-between">
+                                  <span className="text-gray-400">Payment Method:</span>
+                                  <span className="text-white capitalize">{order.paymentMethod}</span>
+                                </div>
+                                {order.paymentIntentId && (
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-400">Payment ID:</span>
+                                    <span className="text-white font-mono text-xs">{order.paymentIntentId}</span>
+                                  </div>
+                                )}
+                                {order.transactionId && (
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-400">Transaction ID:</span>
+                                    <span className="text-white font-mono text-xs">{order.transactionId}</span>
+                                  </div>
+                                )}
+                                <div className="flex justify-between">
+                                  <span className="text-gray-400">Created:</span>
+                                  <span className="text-white">
+                                    {new Date(order.createdAt.seconds * 1000).toLocaleString()}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-gray-400">Last Updated:</span>
+                                  <span className="text-white">
+                                    {new Date(order.updatedAt.seconds * 1000).toLocaleString()}
+                                  </span>
                             </div>
                           </div>
                           
-                          <div className="flex flex-wrap gap-2 mt-4 justify-end">
-                            <button className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#151515] text-white text-xs hover:bg-[#2F2F2F] transition-colors">
-                              <Eye size={14} />
-                              <span>View Details</span>
-                            </button>
+                              <div className="mt-4 pt-4 border-t border-[#2F2F2F]/50">
                             <button 
-                              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#0FF1CE] text-black text-xs hover:bg-[#0FF1CE]/90 transition-colors"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleResendCredentials(order.email);
-                              }}
-                            >
-                              <Mail size={14} />
+                                  onClick={() => handleResendCredentials(order.customerEmail)}
+                                  className="w-full flex items-center justify-center gap-2 bg-[#0FF1CE]/10 hover:bg-[#0FF1CE]/20 text-[#0FF1CE] py-2 rounded-lg transition-colors"
+                                >
+                                  <Mail size={16} />
                               <span>Resend Credentials</span>
                             </button>
-                            {order.status === 'failed' && (
-                              <button className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-yellow-500 text-black text-xs hover:bg-yellow-600 transition-colors">
-                                <RefreshCw size={14} />
-                                <span>Retry Payment</span>
-                              </button>
-                            )}
+                              </div>
+                            </div>
                           </div>
                         </td>
                       </tr>
@@ -298,33 +436,12 @@ export default function OrdersPage() {
               })}
             </tbody>
           </table>
-        </div>
 
-        {/* Pagination */}
-        <div className="flex justify-between items-center mt-6">
-          <div className="text-sm text-gray-400">
-            Showing <span className="text-white">{sortedOrders.length}</span> of <span className="text-white">{orders.length}</span> orders
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <button className="px-3 py-1 rounded-lg bg-[#151515] text-white text-sm hover:bg-[#2F2F2F] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-              Previous
-            </button>
-            <div className="flex items-center">
-              <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#0FF1CE] text-black font-medium text-sm">
-                1
-              </button>
-              <button className="w-8 h-8 flex items-center justify-center rounded-lg text-white hover:bg-[#151515] text-sm">
-                2
-              </button>
-              <button className="w-8 h-8 flex items-center justify-center rounded-lg text-white hover:bg-[#151515] text-sm">
-                3
-              </button>
+          {sortedOrders.length === 0 && !isLoading && (
+            <div className="text-center py-8">
+              <p className="text-gray-400">No orders found matching your filters.</p>
             </div>
-            <button className="px-3 py-1 rounded-lg bg-[#151515] text-white text-sm hover:bg-[#2F2F2F] transition-colors">
-              Next
-            </button>
-          </div>
+          )}
         </div>
       </div>
     </div>

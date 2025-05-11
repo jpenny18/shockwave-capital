@@ -10,6 +10,8 @@ import {
   ChevronUp, 
   Check 
 } from 'lucide-react';
+import BitcoinPayment from '../../../components/BitcoinPayment';
+import StripeCardForm from '../../../components/StripeCardForm';
 
 interface ChallengeData {
   type: string;
@@ -24,20 +26,6 @@ interface ChallengeData {
     discordUsername?: string;
   };
   price: number;
-}
-
-interface CardDetails {
-  number: string;
-  expiry: string;
-  cvc: string;
-  name: string;
-}
-
-interface FormErrors {
-  number?: string;
-  expiry?: string;
-  cvc?: string;
-  name?: string;
 }
 
 const validateChallengeData = (data: ChallengeData | null): boolean => {
@@ -59,20 +47,29 @@ const validateChallengeData = (data: ChallengeData | null): boolean => {
   return requiredFields.every(field => field && String(field).trim() !== '');
 };
 
+const PaymentProcessingOverlay = () => (
+  <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 rounded-2xl">
+    <div className="text-center">
+      <div className="w-12 h-12 border-2 border-[#0FF1CE] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+      <p className="text-white">Processing payment...</p>
+    </div>
+  </div>
+);
+
 export default function PaymentPage() {
+  // Add feature flag at the top of the component
+  const CRYPTO_PAYMENTS_ENABLED = false; // Feature flag for crypto payments
+  
   const router = useRouter();
   const [challengeData, setChallengeData] = useState<ChallengeData | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'crypto' | null>(null);
   const [isCardExpanded, setIsCardExpanded] = useState(false);
   const [isCryptoExpanded, setIsCryptoExpanded] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const [cardDetails, setCardDetails] = useState<CardDetails>({
-    number: '',
-    expiry: '',
-    cvc: '',
-    name: ''
-  });
-  const [formErrors, setFormErrors] = useState<FormErrors>({});
+  const [isLoadingPaymentIntent, setIsLoadingPaymentIntent] = useState(false);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   useEffect(() => {
     const storedData = sessionStorage.getItem('challengeData');
@@ -90,15 +87,66 @@ export default function PaymentPage() {
     setChallengeData(parsedData);
   }, [router]);
 
+  // Function to create a payment intent
+  const createPaymentIntent = async () => {
+    if (!challengeData) return;
+    
+    try {
+      setIsLoadingPaymentIntent(true);
+      setPaymentError(null);
+      
+      const response = await fetch('/api/create-payment-intent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: challengeData.price,
+          email: challengeData.formData.email,
+          metadata: {
+            challengeType: challengeData.type,
+            challengeAmount: challengeData.amount,
+            platform: challengeData.platform,
+            customerName: `${challengeData.formData.firstName} ${challengeData.formData.lastName}`,
+            existingPaymentIntentId: paymentIntentId || undefined
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create payment intent');
+      }
+
+      const data = await response.json();
+      console.log('Payment intent created in dashboard component:', data.paymentIntentId);
+      
+      setClientSecret(data.clientSecret);
+      setPaymentIntentId(data.paymentIntentId);
+      
+    } catch (error) {
+      console.error('Error creating payment intent:', error);
+      setPaymentError(error instanceof Error ? error.message : 'Failed to initialize payment. Please try again later.');
+    } finally {
+      setIsLoadingPaymentIntent(false);
+    }
+  };
+
   const getCryptoPrice = () => {
     if (!challengeData?.price) return 0;
     return Math.round(challengeData.price * 0.9); // 10% discount
   };
 
-  const handlePaymentSelect = (method: 'card' | 'crypto') => {
+  const handlePaymentSelect = async (method: 'card' | 'crypto') => {
     if (method === 'card') {
-      setIsCardExpanded(!isCardExpanded);
+      const wasExpanded = isCardExpanded;
+      setIsCardExpanded(!wasExpanded);
       setIsCryptoExpanded(false);
+      
+      // If expanding the card section and we don't have a client secret yet, create a payment intent
+      if (!wasExpanded && !clientSecret) {
+        await createPaymentIntent();
+      }
     } else {
       setIsCryptoExpanded(!isCryptoExpanded);
       setIsCardExpanded(false);
@@ -106,120 +154,68 @@ export default function PaymentPage() {
     setPaymentMethod(method);
   };
 
-  const handleCardInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    
-    // Format card number with spaces
-    if (name === 'number') {
-      const formattedValue = value
-        .replace(/\s/g, '')
-        .replace(/(\d{4})/g, '$1 ')
-        .trim()
-        .slice(0, 19);
-      
-      setCardDetails(prev => ({ ...prev, number: formattedValue }));
-      return;
-    }
-    
-    // Format expiry date with slash
-    if (name === 'expiry') {
-      const sanitizedValue = value.replace(/[^\d]/g, '');
-      let formattedValue = sanitizedValue;
-      
-      if (sanitizedValue.length > 2) {
-        formattedValue = `${sanitizedValue.slice(0, 2)}/${sanitizedValue.slice(2, 4)}`;
-      }
-      
-      setCardDetails(prev => ({ ...prev, expiry: formattedValue }));
-      return;
-    }
-    
-    setCardDetails(prev => ({ ...prev, [name]: value }));
-  };
-
-  const validateCardDetails = () => {
-    const errors: FormErrors = {};
-    
-    if (!cardDetails.number) errors.number = 'Card number is required';
-    else if (!/^\d{16}$/.test(cardDetails.number.replace(/\s/g, ''))) {
-      errors.number = 'Invalid card number';
-    }
-    
-    if (!cardDetails.expiry) errors.expiry = 'Expiry date is required';
-    else if (!/^\d{2}\/\d{2}$/.test(cardDetails.expiry)) {
-      errors.expiry = 'Invalid expiry date (MM/YY)';
-    }
-    
-    if (!cardDetails.cvc) errors.cvc = 'CVC is required';
-    else if (!/^\d{3,4}$/.test(cardDetails.cvc)) {
-      errors.cvc = 'Invalid CVC';
-    }
-    
-    if (!cardDetails.name) errors.name = 'Cardholder name is required';
-    
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleCardPayment = async () => {
-    if (!validateCardDetails()) {
-      return;
-    }
-    
-    setIsProcessingPayment(true);
-    
-    // Simulate payment processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Store success data in session storage for the success page
-    sessionStorage.setItem('paymentSuccess', JSON.stringify({
-      orderId: Math.floor(Math.random() * 10000000).toString(),
-      amount: challengeData?.price,
-      challengeType: challengeData?.type,
-      paymentMethod: 'card'
-    }));
-    
-    router.push('/dashboard/challenge/success');
-  };
-
-  const handleCryptoPayment = async () => {
-    setIsProcessingPayment(true);
-    
-    // Simulate payment processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Store success data in session storage for the success page
-    sessionStorage.setItem('paymentSuccess', JSON.stringify({
-      orderId: Math.floor(Math.random() * 10000000).toString(),
-      amount: getCryptoPrice(),
-      challengeType: challengeData?.type,
-      paymentMethod: 'crypto'
-    }));
-    
-    router.push('/dashboard/challenge/success');
-  };
-
   if (!challengeData) {
     return (
-      <div className="flex items-center justify-center min-h-[500px]">
-        <div className="text-center">
-          <div className="w-12 h-12 border-2 border-[#0FF1CE] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-400">Loading payment details...</p>
+      <div className="relative">
+        <Particles />
+        <div className="relative z-10">
+          <div className="flex justify-center items-center min-h-[60vh]">
+            <div className="animate-spin w-12 h-12 border-2 border-[#0FF1CE] border-t-transparent rounded-full"></div>
+          </div>
         </div>
       </div>
     );
   }
 
-  // Add payment processing overlay
-  const PaymentProcessingOverlay = () => (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-[#0D0D0D] p-8 rounded-2xl max-w-md w-full mx-4 text-center border border-[#2F2F2F]/50">
-        <div className="w-16 h-16 border-2 border-[#0FF1CE] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <h3 className="text-xl font-semibold mb-2 text-white">Processing Payment</h3>
-        <p className="text-gray-400">Please do not close this window. Your payment is being processed...</p>
+  // Render card payment form or loading state
+  const renderCardPaymentSection = () => {
+    if (isLoadingPaymentIntent) {
+      return (
+        <div className="flex items-center justify-center p-8">
+          <div className="animate-spin w-8 h-8 border-2 border-[#0FF1CE] border-t-transparent rounded-full"></div>
+          <span className="ml-3 text-white/70">Initializing payment...</span>
+        </div>
+      );
+    }
+    
+    if (paymentError) {
+      return (
+        <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+          {paymentError}
+          <button
+            className="mt-4 px-4 py-2 bg-[#0FF1CE]/10 hover:bg-[#0FF1CE]/20 text-white rounded-lg"
+            onClick={createPaymentIntent}
+          >
+            Try Again
+          </button>
       </div>
+      );
+    }
+    
+    if (!clientSecret) {
+      return (
+        <div className="p-6 text-center">
+          <p className="text-white/70">Unable to initialize payment. Please try again.</p>
+          <button
+            className="mt-4 px-4 py-2 bg-[#0FF1CE]/10 hover:bg-[#0FF1CE]/20 text-white rounded-lg"
+            onClick={createPaymentIntent}
+          >
+            Initialize Payment
+          </button>
     </div>
   );
+    }
+    
+    // Only render the StripeCardForm when clientSecret is available
+    return (
+      <StripeCardForm
+        clientSecret={clientSecret}
+        challengeData={challengeData}
+        successRedirectPath="/dashboard/challenge/success"
+        onProcessingStateChange={setIsProcessingPayment}
+      />
+    );
+  };
 
   return (
     <div className="relative">
@@ -228,254 +224,128 @@ export default function PaymentPage() {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full md:w-3/4 h-full rounded-full bg-[#0FF1CE]/[0.03] blur-[150px] opacity-60"></div>
       <Particles />
 
+      {/* Main Content */}
       <div className="relative z-10">
-        {isProcessingPayment && <PaymentProcessingOverlay />}
-        
-        <h1 className="text-2xl font-bold text-white mb-6">Payment</h1>
-        
-        {/* Order Overview */}
-        <div className="max-w-3xl mx-auto bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl p-6 mb-8 border border-[#2F2F2F]/50">
-          <h2 className="text-xl font-medium mb-6 text-white">Order Overview</h2>
-          <div className="space-y-4">
-            <div className="flex justify-between py-2 border-b border-[#2F2F2F]/50">
-              <span className="text-gray-400">Order number</span>
-              <span className="text-white">{Math.floor(Math.random() * 10000000)}</span>
-            </div>
-            <div className="flex justify-between py-2 border-b border-[#2F2F2F]/50">
-              <span className="text-gray-400">Account Size</span>
-              <span className="text-white">{challengeData.amount}</span>
-            </div>
-            <div className="flex justify-between py-2 border-b border-[#2F2F2F]/50">
-              <span className="text-gray-400">Account Type</span>
-              <span className="text-white">{challengeData.type}</span>
-            </div>
-            <div className="flex justify-between py-2 border-b border-[#2F2F2F]/50">
-              <span className="text-gray-400">Platform</span>
-              <span className="text-white">{challengeData.platform}</span>
-            </div>
-            <div className="flex justify-between py-2 border-b border-[#2F2F2F]/50">
-              <span className="text-gray-400">Trading Account Currency</span>
-              <span className="text-white">USD</span>
-            </div>
-            <div className="flex justify-between py-2 text-xl font-semibold">
-              <span className="text-white">To be paid</span>
-              <span className="text-[#0FF1CE]">${challengeData.price}</span>
-            </div>
-          </div>
-        </div>
+        <h1 className="text-xl font-bold text-white mb-6">Complete Your Payment</h1>
 
-        {/* Payment Methods */}
-        <div className="max-w-3xl mx-auto mb-8">
-          <h2 className="text-xl font-medium mb-4 text-white">Select Payment Method</h2>
-          
-          {/* Card Payment Button */}
-          <div className="space-y-4">
-            <div>
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          {/* Left Column - Payment Methods */}
+          <div className="lg:col-span-3">
+            <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl p-6 border border-[#2F2F2F]/50 mb-8">
+              <h2 className="text-xl font-semibold mb-6 text-white">Payment Methods</h2>
+
+              {/* Credit Card Payment Option */}
+              <div className="mb-4">
               <button
                 onClick={() => handlePaymentSelect('card')}
-                className={`w-full p-4 rounded-lg transition-colors ${
-                  isCardExpanded
-                    ? 'border-[#0FF1CE] bg-[#0D0D0D]/80 backdrop-blur-sm rounded-b-none border border-b-0'
-                    : 'border border-[#2F2F2F]/50 bg-[#0D0D0D]/80 backdrop-blur-sm hover:border-[#0FF1CE]/30'
-                } flex items-center justify-between`}
-              >
-                <div className="flex items-center gap-3">
-                  <CreditCard className="h-5 w-5 text-[#0FF1CE]" />
-                  <span className="text-white">Pay with Credit/Debit Card</span>
+                  className="w-full bg-[#1A1A1A] hover:bg-[#212121] border border-[#2F2F2F]/50 rounded-xl p-4 transition duration-200"
+                >
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center">
+                      <CreditCard className="text-[#0FF1CE] mr-3" size={20} />
+                      <span className="font-medium text-white">Credit Card</span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="mr-2 text-white">${challengeData.price}</span>
+                      {isCardExpanded ? <ChevronUp size={16} className="text-white" /> : <ChevronDown size={16} className="text-white" />}
                 </div>
-                <div className="flex items-center gap-4">
-                  {isCardExpanded ? (
-                    <ChevronUp className="h-5 w-5 text-gray-400" />
-                  ) : (
-                    <ChevronDown className="h-5 w-5 text-gray-400" />
-                  )}
                 </div>
               </button>
 
               {isCardExpanded && (
-                <div className="border border-[#0FF1CE] rounded-b-lg bg-[#0D0D0D]/80 backdrop-blur-sm p-6">
-                  <div className="grid grid-cols-1 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-400 mb-2">Card Number</label>
-                      <input
-                        type="text"
-                        name="number"
-                        value={cardDetails.number}
-                        onChange={handleCardInputChange}
-                        placeholder="4242 4242 4242 4242"
-                        maxLength={19}
-                        className={`w-full bg-[#151515] border ${formErrors.number ? 'border-red-500' : 'border-[#2F2F2F]'} rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#0FF1CE]/50`}
-                      />
-                      {formErrors.number && <p className="mt-1 text-sm text-red-500">{formErrors.number}</p>}
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-2">Expiry Date</label>
-                        <input
-                          type="text"
-                          name="expiry"
-                          value={cardDetails.expiry}
-                          onChange={handleCardInputChange}
-                          placeholder="MM/YY"
-                          maxLength={5}
-                          className={`w-full bg-[#151515] border ${formErrors.expiry ? 'border-red-500' : 'border-[#2F2F2F]'} rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#0FF1CE]/50`}
-                        />
-                        {formErrors.expiry && <p className="mt-1 text-sm text-red-500">{formErrors.expiry}</p>}
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-2">CVC</label>
-                        <input
-                          type="text"
-                          name="cvc"
-                          value={cardDetails.cvc}
-                          onChange={handleCardInputChange}
-                          placeholder="123"
-                          maxLength={4}
-                          className={`w-full bg-[#151515] border ${formErrors.cvc ? 'border-red-500' : 'border-[#2F2F2F]'} rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#0FF1CE]/50`}
-                        />
-                        {formErrors.cvc && <p className="mt-1 text-sm text-red-500">{formErrors.cvc}</p>}
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-400 mb-2">Cardholder Name</label>
-                      <input
-                        type="text"
-                        name="name"
-                        value={cardDetails.name}
-                        onChange={handleCardInputChange}
-                        placeholder="John Doe"
-                        className={`w-full bg-[#151515] border ${formErrors.name ? 'border-red-500' : 'border-[#2F2F2F]'} rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#0FF1CE]/50`}
-                      />
-                      {formErrors.name && <p className="mt-1 text-sm text-red-500">{formErrors.name}</p>}
-                    </div>
-                    
-                    <button
-                      onClick={handleCardPayment}
-                      className="w-full bg-[#0FF1CE] text-black font-bold py-3 rounded-lg hover:bg-[#0FF1CE]/90 transition-colors mt-4"
-                    >
-                      Pay ${challengeData.price}
-                    </button>
+                  <div className="mt-4 relative">
+                    {isProcessingPayment && <PaymentProcessingOverlay />}
+                    <div className="bg-[#151515] rounded-xl p-5 border border-[#2F2F2F]/50">
+                      {renderCardPaymentSection()}
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Crypto Payment Button */}
+              {/* Crypto Payment Option - Only render if enabled */}
+              {CRYPTO_PAYMENTS_ENABLED && (
             <div>
               <button
                 onClick={() => handlePaymentSelect('crypto')}
-                className={`w-full p-4 rounded-lg transition-colors ${
-                  isCryptoExpanded
-                    ? 'border-[#0FF1CE] bg-[#0D0D0D]/80 backdrop-blur-sm rounded-b-none border border-b-0'
-                    : 'border border-[#2F2F2F]/50 bg-[#0D0D0D]/80 backdrop-blur-sm hover:border-[#0FF1CE]/30'
-                } flex items-center justify-between`}
-              >
-                <div className="flex items-center gap-3">
-                  <Bitcoin className="h-5 w-5 text-[#0FF1CE]" />
-                  <div>
-                    <span className="text-white">Pay with Cryptocurrency</span>
-                    <span className="ml-2 text-xs bg-[#0FF1CE]/20 text-[#0FF1CE] py-0.5 px-2 rounded">10% OFF</span>
+                    className="w-full bg-[#1A1A1A] hover:bg-[#212121] border border-[#2F2F2F]/50 rounded-xl p-4 transition duration-200"
+                  >
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center">
+                        <Bitcoin className="text-[#0FF1CE] mr-3" size={20} />
+                        <span className="font-medium text-white">Bitcoin (10% Off)</span>
                   </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  {isCryptoExpanded ? (
-                    <ChevronUp className="h-5 w-5 text-gray-400" />
-                  ) : (
-                    <ChevronDown className="h-5 w-5 text-gray-400" />
-                  )}
-                </div>
-              </button>
+                      <div className="flex items-center">
+                        <span className="mr-2 text-white">${getCryptoPrice()}</span>
+                        {isCryptoExpanded ? <ChevronUp size={16} className="text-white" /> : <ChevronDown size={16} className="text-white" />}
+                      </div>
+                    </div>
+                  </button>
 
-              {isCryptoExpanded && (
-                <div className="border border-[#0FF1CE] rounded-b-lg bg-[#0D0D0D]/80 backdrop-blur-sm p-6">
-                  <div className="text-center space-y-6">
-                    <div>
-                      <h3 className="text-lg font-medium text-white">Pay with Cryptocurrency</h3>
-                      <p className="text-gray-400 mt-1">10% discount applied</p>
-                    </div>
-                    
-                    <div className="bg-[#151515] p-4 rounded-lg inline-block">
-                      <p className="text-gray-400 mb-2">BTC Payment Address</p>
-                      <div className="flex items-center justify-center gap-2">
-                        <p className="text-white font-mono bg-[#0D0D0D] p-2 rounded-lg">bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh</p>
+                  {isCryptoExpanded && (
+                    <div className="mt-4">
+                      <div className="bg-[#151515] rounded-xl border border-[#2F2F2F]/50 relative">
+                        {isProcessingPayment && <PaymentProcessingOverlay />}
+                        <BitcoinPayment
+                          challengeData={challengeData}
+                          successRedirectPath="/dashboard/challenge/success"
+                          onProcessingStateChange={setIsProcessingPayment}
+                          discountPercentage={10}
+                        />
                       </div>
                     </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex justify-between py-2">
-                        <span className="text-gray-400">Amount to Pay (USD)</span>
-                        <span className="text-white">${getCryptoPrice()}</span>
-                      </div>
-                      <div className="flex justify-between py-2">
-                        <span className="text-gray-400">Discount Applied</span>
-                        <span className="text-[#0FF1CE]">10%</span>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <p className="text-gray-400 text-sm">
-                        Please send the exact amount to the address above. Your account will be created once the payment is confirmed.
-                      </p>
-                      <p className="text-gray-400 text-sm">
-                        Supported cryptocurrencies: BTC, ETH, USDT, USDC
-                      </p>
-                    </div>
-                    
-                    <div className="pt-4">
-                      <button
-                        onClick={handleCryptoPayment}
-                        className="w-full bg-[#0FF1CE] text-black font-bold py-3 rounded-lg hover:bg-[#0FF1CE]/90 transition-colors"
-                      >
-                        I've Sent the Payment
-                      </button>
-                    </div>
-                  </div>
+                  )}
                 </div>
               )}
             </div>
           </div>
-        </div>
 
-        {/* Security and Support */}
-        <div className="max-w-3xl mx-auto">
-          <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl p-6 border border-[#2F2F2F]/50">
-            <h3 className="text-lg font-medium mb-4 text-white">Payment Security & Support</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-12 h-12 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center mb-3">
-                  <Check className="h-6 w-6 text-[#0FF1CE]" />
+          {/* Right Column - Order Summary */}
+          <div className="lg:col-span-2">
+            <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl p-6 border border-[#2F2F2F]/50 sticky top-8">
+              <h2 className="text-xl font-semibold mb-6 text-white">Order Summary</h2>
+              
+              <div className="mb-6">
+                <div className="flex justify-between mb-2">
+                  <span className="text-white/70">Challenge Type:</span>
+                  <span className="font-medium text-white">{challengeData.type}</span>
                 </div>
-                <h4 className="text-white font-medium mb-1">Secure Payments</h4>
-                <p className="text-gray-400 text-sm">All payments are encrypted and processed securely</p>
+                <div className="flex justify-between mb-2">
+                  <span className="text-white/70">Account Size:</span>
+                  <span className="font-medium text-white">{challengeData.amount}</span>
+        </div>
+                <div className="flex justify-between mb-2">
+                  <span className="text-white/70">Platform:</span>
+                  <span className="font-medium text-white">{challengeData.platform}</span>
+                </div>
               </div>
-              <div className="flex flex-col items-center text-center">
-                <div className="w-12 h-12 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center mb-3">
-                  <Check className="h-6 w-6 text-[#0FF1CE]" />
+              
+              <div className="border-t border-[#2F2F2F]/50 pt-4 mb-6">
+                <div className="flex justify-between mb-2">
+                  <span className="text-white/70">Subtotal:</span>
+                  <span className="font-medium text-white">${challengeData.price}</span>
                 </div>
-                <h4 className="text-white font-medium mb-1">24/7 Support</h4>
-                <p className="text-gray-400 text-sm">Our team is available around the clock to assist you</p>
+                {CRYPTO_PAYMENTS_ENABLED && paymentMethod === 'crypto' && (
+                  <div className="flex justify-between mb-2 text-green-400">
+                    <span>Crypto Discount (10%):</span>
+                    <span>-${challengeData.price - getCryptoPrice()}</span>
               </div>
-              <div className="flex flex-col items-center text-center">
-                <div className="w-12 h-12 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center mb-3">
-                  <Check className="h-6 w-6 text-[#0FF1CE]" />
+                )}
+                <div className="flex justify-between text-lg font-semibold mt-4">
+                  <span className="text-white">Total:</span>
+                  <span className="text-[#0FF1CE]">
+                    ${(CRYPTO_PAYMENTS_ENABLED && paymentMethod === 'crypto') ? getCryptoPrice() : challengeData.price}
+                  </span>
                 </div>
-                <h4 className="text-white font-medium mb-1">Money-Back Guarantee</h4>
-                <p className="text-gray-400 text-sm">Get a full refund after completing your challenge</p>
+              </div>
+              
+              <div className="text-sm text-white/60">
+                <p className="mb-2">By completing this purchase, you agree to our Terms of Service and acknowledge that all sales are final.</p>
+                <p>Need help? <a href="#" className="text-[#0FF1CE] hover:underline">Contact Support</a></p>
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      <style jsx global>{`
-        .background-noise {
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 250 250' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
-          opacity: 0.15;
-        }
-      `}</style>
     </div>
   );
 } 

@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { 
   BarChart2, 
   Users, 
@@ -29,7 +30,34 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Logout failed');
+      }
+
+      // Redirect to admin login page
+      router.push('/admin-auth');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // You might want to show an error message to the user here
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-[#0D0D0D] via-[#121212] to-[#151515]">
@@ -110,7 +138,11 @@ export default function AdminLayout({
                 <div className="text-white text-sm font-medium truncate">Admin User</div>
                 <div className="text-gray-400 text-xs truncate">admin@shockwave.capital</div>
               </div>
-              <button className="text-gray-400 hover:text-[#0FF1CE] p-1.5 rounded-lg hover:bg-[#0FF1CE]/10 transition-all">
+              <button 
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="text-gray-400 hover:text-[#0FF1CE] p-1.5 rounded-lg hover:bg-[#0FF1CE]/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <LogOut size={18} />
               </button>
             </div>
@@ -148,6 +180,13 @@ export default function AdminLayout({
               </div>
               <span className="text-white text-sm">Admin</span>
             </div>
+            <button 
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="p-2 text-gray-400 hover:text-[#0FF1CE] rounded-lg hover:bg-[#0FF1CE]/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <LogOut size={20} />
+            </button>
           </div>
         </header>
         

@@ -1,17 +1,7 @@
 'use client';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Particles from '../../components/Particles';
-import { 
-  ChevronDown, 
-  ChevronUp, 
-  Filter, 
-  Plus, 
-  ExternalLink,
-  TrendingUp,
-  TrendingDown,
-  BarChart2,
-  Lock
-} from 'lucide-react';
+import { ChevronDown, ChevronUp, Filter, Plus, ExternalLink, TrendingUp, TrendingDown, BarChart2, Lock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface Account {
@@ -70,7 +60,6 @@ const AccountCard = ({ account }: { account: Account }) => {
   
   return (
     <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl border border-[#2F2F2F]/50 overflow-hidden transition-all duration-300 hover:border-[#0FF1CE]/30">
-      {/* Main Card Content */}
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-bold text-white">{account.type}</h3>
@@ -111,13 +100,11 @@ const AccountCard = ({ account }: { account: Account }) => {
         </div>
       </div>
 
-      {/* Expandable Details */}
       <div className={`
         overflow-hidden transition-all duration-500 ease-in-out
         ${isExpanded ? 'max-h-[500px] border-t border-[#2F2F2F]/50' : 'max-h-0'}
       `}>
         <div className="p-6 space-y-6">
-          {/* Progress Bars */}
           <div className="space-y-3">
             <ProgressBar 
               value={account.progress.profitTarget} 
@@ -136,7 +123,6 @@ const AccountCard = ({ account }: { account: Account }) => {
             />
           </div>
 
-          {/* Trading Statistics */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <div className="text-lg font-semibold text-white">{account.metrics.winRate}%</div>
@@ -205,75 +191,33 @@ export default function MyAccountsPage() {
     sortOrder: 'desc'
   });
 
-  // Sample account data (replace with real data from API)
-  const accounts: Account[] = [
-    {
-      id: '1',
-      type: 'Standard Challenge',
-      balance: 100000,
-      status: 'active',
-      metrics: {
-        equity: 102500,
-        dailyDrawdown: -2.5,
-        maxDrawdown: -5.8,
-        profitTarget: 8.2,
-        winRate: 68.5,
-        profitFactor: 2.14,
-        totalTrades: 145,
-        averageWin: 342,
-        averageLoss: 156
-      },
-      progress: {
-        profitTarget: 65,
-        maxDrawdown: 75,
-        minTradingDays: 80
+  const [accounts, setAccounts] = useState<Account[]>([]);
+
+  // Fetch accounts from the API
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      try {
+        const token = localStorage.getItem('token'); // Adjust token storage based on your auth
+        const response = await fetch('/api/accounts', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setAccounts(data.accounts);
+        } else {
+          console.error('Failed to fetch accounts');
+        }
+      } catch (error) {
+        console.error('Error fetching accounts:', error);
       }
-    },
-    {
-      id: '2',
-      type: 'Instant Funded',
-      balance: 25000,
-      status: 'pending',
-      metrics: {
-        equity: 24800,
-        dailyDrawdown: -0.8,
-        maxDrawdown: -1.2,
-        profitTarget: 2.4,
-        winRate: 62.3,
-        profitFactor: 1.85,
-        totalTrades: 78,
-        averageWin: 285,
-        averageLoss: 142
-      },
-      progress: {
-        profitTarget: 35,
-        maxDrawdown: 90,
-        minTradingDays: 45
-      }
-    },
-    {
-      id: '3',
-      type: 'Express Challenge',
-      balance: 50000,
-      status: 'completed',
-      metrics: {
-        equity: 53200,
-        dailyDrawdown: -1.5,
-        maxDrawdown: -3.8,
-        profitTarget: 12.4,
-        winRate: 71.2,
-        profitFactor: 2.45,
-        totalTrades: 92,
-        averageWin: 412,
-        averageLoss: 185
-      },
-      progress: {
-        profitTarget: 100,
-        maxDrawdown: 85,
-        minTradingDays: 100
-      }
-    }
-  ];
+    };
+
+    fetchAccounts();
+  }, []);
 
   const filteredAccounts = useMemo(() => {
     return accounts
@@ -294,71 +238,17 @@ export default function MyAccountsPage() {
 
   return (
     <div className="relative">
-      {/* Background Effects */}
-      <div className="absolute top-0 left-0 w-full h-full bg-[#0FF1CE]/[0.02] background-noise"></div>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full md:w-3/4 h-full rounded-full bg-[#0FF1CE]/[0.03] blur-[150px] opacity-60"></div>
-      <Particles />
-
-      {/* Content */}
+      <div className="absolute top-0 left-0 w-full h-full bg-[#0FF1CE]/[0.06] z-0">
+        <Particles />
+      </div>
       <div className="relative z-10">
-        <h1 className="text-2xl font-bold text-white mb-6">My Accounts</h1>
-        
-        {/* Lock Overlay */}
-        <div className="absolute inset-0 z-50 backdrop-blur-md bg-[#0D0D0D]/50 flex items-center justify-center">
-          <div className="max-w-md w-full mx-4 p-8 rounded-2xl bg-[#0D0D0D]/90 border border-[#2F2F2F]/50 text-center">
-            <div className="w-16 h-16 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center mx-auto mb-6">
-              <Lock size={32} className="text-[#0FF1CE]" />
-            </div>
-            <h2 className="text-xl font-bold text-white mb-3">Account Locked</h2>
-            <p className="text-gray-400 mb-6">Please purchase a challenge to see your account metrics</p>
-            <button 
-              onClick={() => router.push('/dashboard/challenge')}
-              className="w-full bg-[#0FF1CE] text-black font-bold py-3 rounded-lg hover:bg-[#0FF1CE]/90 transition-colors"
-            >
-              Start Challenge
-            </button>
-          </div>
-        </div>
-
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <div className="flex flex-wrap items-center gap-4">
-            {/* Filter Button */}
-            <div className="relative">
-              <button className="flex items-center gap-2 px-4 py-2 bg-[#0D0D0D]/80 border border-[#2F2F2F]/50 rounded-lg text-white hover:border-[#0FF1CE]/30 transition-colors">
-                <Filter size={16} />
-                <span>Filter</span>
-                <ChevronDown size={16} />
-              </button>
-            </div>
-
-            {/* Create Account Button */}
-            <button className="flex items-center gap-2 px-4 py-2 bg-[#0FF1CE] text-black font-semibold rounded-lg hover:bg-[#0FF1CE]/90 transition-colors">
-              <Plus size={16} />
-              <span>Create New Account</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Summary Card */}
-        <div className="mb-8">
-          <SummaryCard accounts={accounts} />
-        </div>
-
-        {/* Accounts Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <SummaryCard accounts={filteredAccounts} />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
           {filteredAccounts.map(account => (
             <AccountCard key={account.id} account={account} />
           ))}
         </div>
       </div>
-
-      <style jsx global>{`
-        .background-noise {
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 250 250' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
-          opacity: 0.15;
-        }
-      `}</style>
     </div>
   );
-} 
+}

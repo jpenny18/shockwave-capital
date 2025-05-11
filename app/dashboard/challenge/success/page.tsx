@@ -32,7 +32,9 @@ export default function SuccessPage() {
   const [paymentData, setPaymentData] = useState<PaymentSuccess | null>(null);
   const [challengeData, setChallengeData] = useState<ChallengeData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
+  // First useEffect to load data from sessionStorage
   useEffect(() => {
     const paymentSuccess = sessionStorage.getItem('paymentSuccess');
     const challengeData = sessionStorage.getItem('challengeData');
@@ -46,15 +48,21 @@ export default function SuccessPage() {
     setPaymentData(JSON.parse(paymentSuccess));
     setChallengeData(JSON.parse(challengeData));
     setIsLoading(false);
-
-    // Clear the stored data after a delay
-    const timer = setTimeout(() => {
-      sessionStorage.removeItem('paymentSuccess');
-      sessionStorage.removeItem('challengeData');
-    }, 2000);
-
-    return () => clearTimeout(timer);
+    setDataLoaded(true);
   }, [router]);
+
+  // Second useEffect to clear sessionStorage after data is loaded
+  useEffect(() => {
+    if (dataLoaded) {
+      // Use a timeout to ensure the UI renders with the data before clearing storage
+      const timer = setTimeout(() => {
+        sessionStorage.removeItem('paymentSuccess');
+        sessionStorage.removeItem('challengeData');
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [dataLoaded]);
 
   if (isLoading) {
     return (

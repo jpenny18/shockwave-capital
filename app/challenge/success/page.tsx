@@ -31,25 +31,41 @@ export default function SuccessPage() {
   const router = useRouter();
   const [paymentData, setPaymentData] = useState<PaymentSuccess | null>(null);
   const [challengeData, setChallengeData] = useState<ChallengeData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
+  // First useEffect to load data from sessionStorage
   useEffect(() => {
     const storedPaymentData = sessionStorage.getItem('paymentSuccess');
     const storedChallengeData = sessionStorage.getItem('challengeData');
     
     if (!storedPaymentData || !storedChallengeData) {
+      setIsLoading(false);
       router.push('/challenge');
       return;
     }
     
+    // Parse and set the data
     setPaymentData(JSON.parse(storedPaymentData));
     setChallengeData(JSON.parse(storedChallengeData));
-    
-    // Clear session storage
-    sessionStorage.removeItem('paymentSuccess');
-    sessionStorage.removeItem('challengeData');
+    setIsLoading(false);
+    setDataLoaded(true);
   }, [router]);
 
-  if (!paymentData || !challengeData) {
+  // Second useEffect to clear sessionStorage after data is loaded
+  useEffect(() => {
+    if (dataLoaded) {
+      // Use a timeout to ensure the UI renders with the data before clearing storage
+      const timer = setTimeout(() => {
+        sessionStorage.removeItem('paymentSuccess');
+        sessionStorage.removeItem('challengeData');
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [dataLoaded]);
+
+  if (isLoading || !paymentData || !challengeData) {
     return (
       <div className="flex items-center justify-center min-h-[500px]">
         <div className="text-center">

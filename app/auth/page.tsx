@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import Particles from '../components/Particles';
@@ -10,20 +10,25 @@ import {
   Lock,
   User,
   ArrowRight,
-  Check
+  Check,
+  AlertCircle
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { registerUser, signInUser, resetPassword } from '@/lib/firebase';
 
 interface AuthData {
   email: string;
   password: string;
   rememberMe: boolean;
+  name?: string;
 }
 
 interface AuthErrors {
   email?: string;
   password?: string;
+  name?: string;
   terms?: string;
+  general?: string;
 }
 
 const FloatingLabelInput = ({ 
@@ -32,6 +37,8 @@ const FloatingLabelInput = ({
   label, 
   icon: Icon,
   showPasswordToggle,
+  value,
+  onChange,
   ...props 
 }: { 
   id: string;
@@ -39,11 +46,12 @@ const FloatingLabelInput = ({
   label: string;
   icon: React.ElementType;
   showPasswordToggle?: boolean;
+  value: string;
+  onChange: (value: string) => void;
   [key: string]: any;
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [value, setValue] = useState('');
 
   const isFloating = isFocused || value.length > 0;
 
@@ -63,7 +71,7 @@ const FloatingLabelInput = ({
           `}
           placeholder={label}
           value={value}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={(e) => onChange(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           {...props}
@@ -104,49 +112,137 @@ const SocialButton = ({ icon, label }: { icon: string; label: string }) => (
 export default function AuthPage() {
   const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [formData, setFormData] = useState<AuthData>({
     email: '',
     password: '',
-    rememberMe: false
+    rememberMe: false,
+    name: ''
   });
   const [errors, setErrors] = useState<AuthErrors>({});
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
     setLoading(true);
+    setSuccess('');
 
-    // For login form
-    if (isLogin) {
-      // Simple validation
-      if (!formData.email || !formData.password) {
-        setErrors({ email: 'Please fill in all fields', password: 'Please fill in all fields' });
+    try {
+      // For password reset form
+      if (isForgotPassword) {
+        if (!formData.email) {
+          setErrors({ email: 'Please enter your email address' });
+          setLoading(false);
+          return;
+        }
+
+        await resetPassword(formData.email);
+        setSuccess('Password reset email sent! Please check your inbox.');
         setLoading(false);
         return;
       }
 
-      // Test credentials check
-      if (formData.email === 'test@gmail.com' && formData.password === '12345') {
-        setTimeout(() => {
-          // Simulate API call delay
+      // For login form
+      if (isLogin) {
+        // Validation
+        if (!formData.email || !formData.password) {
+          setErrors({ 
+            email: !formData.email ? 'Please enter your email address' : undefined,
+            password: !formData.password ? 'Please enter your password' : undefined
+          });
           setLoading(false);
+          return;
+        }
+
+        // Sign in with Firebase
+        await signInUser(formData.email, formData.password);
+        // If successful, redirect to dashboard
           router.push('/dashboard');
-        }, 1000);
       } else {
-        setErrors({ email: 'Invalid email or password', password: 'Invalid email or password' });
+        // For registration form
+        // Validation
+        if (!formData.email || !formData.password || !formData.name) {
+          setErrors({ 
+            email: !formData.email ? 'Please enter your email address' : undefined,
+            password: !formData.password ? 'Please enter your password' : undefined,
+            name: !formData.name ? 'Please enter your name' : undefined
+          });
+          setLoading(false);
+          return;
+        }
+
+        if (!acceptTerms) {
+          setErrors({ terms: 'You must accept the terms and conditions' });
+          setLoading(false);
+          return;
+        }
+
+        // Password strength check (basic)
+        if (formData.password.length < 6) {
+          setErrors({ password: 'Password must be at least 6 characters' });
         setLoading(false);
+          return;
+        }
+
+        // Register with Firebase
+        const nameParts = formData.name.split(' ');
+        const firstName = nameParts[0];
+        const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+
+        await registerUser(formData.email, formData.password, {
+          displayName: formData.name,
+          firstName: firstName,
+          lastName: lastName
+        });
+
+        // If successful, redirect to dashboard
+        router.push('/dashboard');
       }
-    } else {
-      // For registration form - just redirect to login for now
-      setTimeout(() => {
+    } catch (error: any) {
+      console.error('Authentication error:', error);
+      // Handle different Firebase auth errors
+      const errorCode = error.code;
+      let errorMessage = 'An unexpected error occurred. Please try again.';
+      
+      switch (errorCode) {
+        case 'auth/email-already-in-use':
+          errorMessage = 'This email address is already in use.';
+          setErrors({ email: errorMessage });
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'The email address is not valid.';
+          setErrors({ email: errorMessage });
+          break;
+        case 'auth/user-disabled':
+          errorMessage = 'This user account has been disabled.';
+          setErrors({ general: errorMessage });
+          break;
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+          errorMessage = 'Invalid email or password.';
+          setErrors({ general: errorMessage });
+          break;
+        case 'auth/weak-password':
+          errorMessage = 'The password is too weak.';
+          setErrors({ password: errorMessage });
+          break;
+        default:
+          setErrors({ general: errorMessage });
+      }
+    } finally {
         setLoading(false);
-        setIsLogin(true);
-        setErrors({});
-      }, 1000);
     }
+  };
+
+  const toggleForgotPassword = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsForgotPassword(!isForgotPassword);
+        setErrors({});
+    setSuccess('');
   };
 
   return (
@@ -216,6 +312,8 @@ export default function AuthPage() {
                 label="Full Name"
                 icon={User}
                 required
+                value={formData.name || ''}
+                onChange={(value) => setFormData({ ...formData, name: value })}
               />
             )}
             
@@ -294,6 +392,8 @@ export default function AuthPage() {
                   icon={Lock}
                   showPasswordToggle
                   required
+                  value={formData.password}
+                  onChange={(value) => setFormData({ ...formData, password: value })}
                 />
                 
                 <div className="flex items-start">

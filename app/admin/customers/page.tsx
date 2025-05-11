@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Search, 
   Filter, 
@@ -14,137 +14,74 @@ import {
   Download,
   Eye,
   MoreHorizontal,
-  ExternalLink
+  ExternalLink,
+  Loader
 } from 'lucide-react';
+import { UserData, getAllUsers, updateUser, Timestamp } from '@/lib/firebase';
 
-interface Customer {
+interface Customer extends Omit<UserData, 'lastOrderDate'> {
   id: string;
-  name: string;
-  email: string;
-  phone: string;
-  country: string;
-  joinDate: string;
-  totalSpent: number;
-  orderCount: number;
-  lastOrderDate: string;
-  status: 'active' | 'inactive';
-  notes: string;
+  joinDate: string; // Formatted date string
+  lastOrderDate?: string; // Formatted date string
 }
 
-// Mock customer data
-const mockCustomers: Customer[] = [
-  {
-    id: "1",
-    name: 'Alex Thompson',
-    email: 'alex@example.com',
-    phone: '+1 (555) 123-4567',
-    country: 'United States',
-    joinDate: '2023-04-18',
-    totalSpent: 2499,
-    orderCount: 3,
-    lastOrderDate: '2023-05-20',
-    status: 'active' as const,
-    notes: 'Prefers to be contacted via email. Interested in larger account sizes.'
-  },
-  {
-    id: "2",
-    name: 'Sarah Chen',
-    email: 'sarah.chen@example.com',
-    phone: '+1 (555) 987-6543',
-    country: 'Canada',
-    joinDate: '2023-02-05',
-    totalSpent: 3599,
-    orderCount: 4,
-    lastOrderDate: '2023-05-15',
-    status: 'active' as const,
-    notes: 'Looking to scale up to larger accounts after successful challenges.'
-  },
-  {
-    id: "3",
-    name: 'David Miller',
-    email: 'david.m@example.com',
-    phone: '+44 7700 900123',
-    country: 'United Kingdom',
-    joinDate: '2023-03-22',
-    totalSpent: 1599,
-    orderCount: 2,
-    lastOrderDate: '2023-04-30',
-    status: 'inactive' as const,
-    notes: 'Had issues with previous challenge. Follow up about potential retry.'
-  },
-  {
-    id: "4",
-    name: 'Maria Rodriguez',
-    email: 'maria.r@example.com',
-    phone: '+34 612 34 56 78',
-    country: 'Spain',
-    joinDate: '2023-05-01',
-    totalSpent: 999,
-    orderCount: 1,
-    lastOrderDate: '2023-05-01',
-    status: 'active' as const,
-    notes: 'New trader, might need extra support with platform questions.'
-  },
-  {
-    id: "5",
-    name: 'Jamal Wilson',
-    email: 'jwilson@example.com',
-    phone: '+1 (555) 234-5678',
-    country: 'United States',
-    joinDate: '2023-01-17',
-    totalSpent: 5198,
-    orderCount: 6,
-    lastOrderDate: '2023-05-18',
-    status: 'active' as const,
-    notes: 'Consistent trader, potential candidate for VIP program.'
-  },
-  {
-    id: "6",
-    name: 'Emma Johnson',
-    email: 'emma.j@example.com',
-    phone: '+61 4 1234 5678',
-    country: 'Australia',
-    joinDate: '2023-04-05',
-    totalSpent: 999,
-    orderCount: 1,
-    lastOrderDate: '2023-04-05',
-    status: 'inactive' as const,
-    notes: 'No activity since initial purchase. Consider reaching out with special offer.'
-  },
-  {
-    id: "7",
-    name: 'Hiroshi Tanaka',
-    email: 'h.tanaka@example.com',
-    phone: '+81 90-1234-5678',
-    country: 'Japan',
-    joinDate: '2023-03-14',
-    totalSpent: 2598,
-    orderCount: 3,
-    lastOrderDate: '2023-05-10',
-    status: 'active' as const,
-    notes: 'Prefers communication in Japanese when possible.'
-  }
-];
-
-const statusStyles = {
-  active: 'bg-green-500/20 text-green-500',
-  inactive: 'bg-gray-500/20 text-gray-400',
-};
-
 export default function CustomersPage() {
-  const [customers, setCustomers] = useState(mockCustomers);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('newest');
   
+  // Fetch customers from Firebase
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        setLoading(true);
+        const usersData = await getAllUsers();
+        
+        // Transform Firebase user data to Customer interface
+        const transformedCustomers: Customer[] = usersData.map(user => ({
+          id: user.uid,
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName || 'Unknown',
+          firstName: user.firstName,
+          lastName: user.lastName,
+          phone: user.phone || 'N/A',
+          country: user.country || 'Unknown',
+          joinDate: user.createdAt.toDate().toISOString().split('T')[0], // Format as YYYY-MM-DD
+          totalSpent: user.totalSpent || 0,
+          orderCount: user.orderCount || 0,
+          lastOrderDate: user.lastOrderDate ? user.lastOrderDate.toDate().toISOString().split('T')[0] : undefined,
+          status: user.status || 'inactive',
+          notes: user.notes || '',
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+          lastLoginAt: user.lastLoginAt
+        }));
+        
+        setCustomers(transformedCustomers);
+      } catch (error) {
+        console.error('Error fetching customers:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchCustomers();
+  }, []);
+  
   // Filter and sort customers
   const filteredCustomers = customers
     .filter(customer => 
       (statusFilter === 'all' || customer.status === statusFilter) &&
-      (customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       customer.email.toLowerCase().includes(searchTerm.toLowerCase()))
+      (
+        (customer.displayName && customer.displayName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (customer.email && customer.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (customer.phone && customer.phone.toLowerCase().includes(searchTerm.toLowerCase()))
+      )
     )
     .sort((a, b) => {
       switch(sortBy) {
@@ -153,13 +90,13 @@ export default function CustomersPage() {
         case 'oldest':
           return new Date(a.joinDate).getTime() - new Date(b.joinDate).getTime();
         case 'highest-spend':
-          return b.totalSpent - a.totalSpent;
+          return (b.totalSpent || 0) - (a.totalSpent || 0);
         case 'most-orders':
-          return b.orderCount - a.orderCount;
+          return (b.orderCount || 0) - (a.orderCount || 0);
         case 'name-az':
-          return a.name.localeCompare(b.name);
+          return (a.displayName || '').localeCompare(b.displayName || '');
         case 'name-za':
-          return b.name.localeCompare(a.name);
+          return (b.displayName || '').localeCompare(a.displayName || '');
         default:
           return 0;
       }
@@ -174,6 +111,44 @@ export default function CustomersPage() {
     setIsDetailsOpen(false);
     // Small delay to make the transition smoother
     setTimeout(() => setSelectedCustomer(null), 200);
+  };
+
+  const handleStatusChange = async (customerId: string, newStatus: 'active' | 'inactive') => {
+    try {
+      // Update in Firebase
+      await updateUser(customerId, { status: newStatus });
+      
+      // Update local state
+      setCustomers(customers.map(customer => 
+        customer.id === customerId ? { ...customer, status: newStatus } : customer
+      ));
+      
+      // Update selected customer if it's the one being edited
+      if (selectedCustomer && selectedCustomer.id === customerId) {
+        setSelectedCustomer({ ...selectedCustomer, status: newStatus });
+      }
+    } catch (error) {
+      console.error('Error updating customer status:', error);
+    }
+  };
+
+  const handleUpdateNotes = async (customerId: string, notes: string) => {
+    try {
+      // Update in Firebase
+      await updateUser(customerId, { notes });
+      
+      // Update local state
+      setCustomers(customers.map(customer => 
+        customer.id === customerId ? { ...customer, notes } : customer
+      ));
+      
+      // Update selected customer if it's the one being edited
+      if (selectedCustomer && selectedCustomer.id === customerId) {
+        setSelectedCustomer({ ...selectedCustomer, notes });
+      }
+    } catch (error) {
+      console.error('Error updating customer notes:', error);
+    }
   };
 
   return (
@@ -240,6 +215,12 @@ export default function CustomersPage() {
       {/* Customers List */}
       <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 overflow-hidden">
         <div className="overflow-x-auto">
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader className="h-8 w-8 text-[#0FF1CE] animate-spin" />
+              <span className="ml-4 text-gray-400">Loading customers...</span>
+            </div>
+          ) : (
           <table className="w-full">
             <thead>
               <tr className="text-left text-gray-400 text-sm border-b border-[#2F2F2F]">
@@ -263,21 +244,25 @@ export default function CustomersPage() {
                         <User size={18} />
                       </div>
                       <div>
-                        <div className="font-medium">{customer.name}</div>
+                          <div className="font-medium">{customer.displayName}</div>
                         <div className="text-gray-400 text-sm">{customer.email}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="font-medium">{customer.orderCount}</div>
+                      <div className="font-medium">{customer.orderCount || 0}</div>
                     <div className="text-gray-400 text-sm">orders</div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="font-medium">${customer.totalSpent.toLocaleString()}</div>
+                      <div className="font-medium">${(customer.totalSpent || 0).toLocaleString()}</div>
                     <div className="text-gray-400 text-sm">total</div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusStyles[customer.status as keyof typeof statusStyles]}`}>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        customer.status === 'active' 
+                          ? 'bg-green-500/20 text-green-500' 
+                          : 'bg-gray-500/20 text-gray-400'
+                      }`}>
                       {customer.status === 'active' ? (
                         <>
                           <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
@@ -292,7 +277,7 @@ export default function CustomersPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="font-medium">{new Date(customer.lastOrderDate).toLocaleDateString()}</div>
+                      <div className="font-medium">{customer.lastOrderDate ? new Date(customer.lastOrderDate).toLocaleDateString() : 'No orders'}</div>
                     <div className="text-gray-400 text-sm">{customer.country}</div>
                   </td>
                   <td className="px-6 py-4">
@@ -333,6 +318,7 @@ export default function CustomersPage() {
               )}
             </tbody>
           </table>
+          )}
         </div>
         
         <div className="px-6 py-4 border-t border-[#2F2F2F] text-sm text-gray-400">
@@ -359,48 +345,49 @@ export default function CustomersPage() {
             <div className="p-6 h-[calc(100vh-73px)] overflow-y-auto">
               {/* Customer Info Card */}
               <div className="bg-[#151515] rounded-xl p-6 mb-6">
-                <div className="flex items-center gap-4 mb-4">
+                <div className="flex items-start gap-4 mb-4">
                   <div className="w-16 h-16 rounded-full bg-[#0FF1CE]/20 flex items-center justify-center text-[#0FF1CE]">
                     <User size={32} />
                   </div>
-                  <div>
-                    <h3 className="text-xl font-semibold text-white">{selectedCustomer.name}</h3>
+                  <div className="flex-grow">
+                    <h3 className="text-xl font-semibold text-white">{selectedCustomer.displayName}</h3>
                     <p className="text-gray-400">{selectedCustomer.email}</p>
                   </div>
                   
                   <div className="ml-auto">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusStyles[selectedCustomer.status as keyof typeof statusStyles]}`}>
-                      {selectedCustomer.status === 'active' ? (
-                        <>
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
-                          Active
-                        </>
-                      ) : (
-                        <>
-                          <span className="w-1.5 h-1.5 rounded-full bg-gray-400 mr-1.5"></span>
-                          Inactive
-                        </>
-                      )}
-                    </span>
+                    <div className="flex items-center space-x-2">
+                      <select
+                        value={selectedCustomer.status}
+                        onChange={(e) => handleStatusChange(selectedCustomer.id, e.target.value as 'active' | 'inactive')}
+                        className={`appearance-none rounded-full px-3 py-1 text-xs font-medium ${
+                          selectedCustomer.status === 'active' 
+                            ? 'bg-green-500/20 text-green-500' 
+                            : 'bg-gray-500/20 text-gray-400'
+                        }`}
+                      >
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   <div>
                     <div className="text-sm text-gray-400 mb-1">Phone</div>
-                    <div className="text-white">{selectedCustomer.phone}</div>
+                    <div className="text-white">{selectedCustomer.phone || 'Not provided'}</div>
                   </div>
                   <div>
                     <div className="text-sm text-gray-400 mb-1">Country</div>
-                    <div className="text-white">{selectedCustomer.country}</div>
+                    <div className="text-white">{selectedCustomer.country || 'Not provided'}</div>
                   </div>
                   <div>
                     <div className="text-sm text-gray-400 mb-1">Join Date</div>
                     <div className="text-white">{new Date(selectedCustomer.joinDate).toLocaleDateString()}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-gray-400 mb-1">Last Order</div>
-                    <div className="text-white">{new Date(selectedCustomer.lastOrderDate).toLocaleDateString()}</div>
+                    <div className="text-sm text-gray-400 mb-1">Last Login</div>
+                    <div className="text-white">{selectedCustomer.lastLoginAt ? selectedCustomer.lastLoginAt.toDate().toLocaleDateString() : 'Never'}</div>
                   </div>
                 </div>
                 
@@ -420,16 +407,16 @@ export default function CustomersPage() {
               <div className="grid grid-cols-3 gap-4 mb-6">
                 <div className="bg-[#151515] rounded-xl p-5">
                   <div className="text-sm text-gray-400 mb-1">Total Spent</div>
-                  <div className="text-2xl font-semibold text-white">${selectedCustomer.totalSpent.toLocaleString()}</div>
+                  <div className="text-2xl font-semibold text-white">${(selectedCustomer.totalSpent || 0).toLocaleString()}</div>
                 </div>
                 <div className="bg-[#151515] rounded-xl p-5">
                   <div className="text-sm text-gray-400 mb-1">Orders</div>
-                  <div className="text-2xl font-semibold text-white">{selectedCustomer.orderCount}</div>
+                  <div className="text-2xl font-semibold text-white">{selectedCustomer.orderCount || 0}</div>
                 </div>
                 <div className="bg-[#151515] rounded-xl p-5">
                   <div className="text-sm text-gray-400 mb-1">Avg. Order Value</div>
                   <div className="text-2xl font-semibold text-white">
-                    ${selectedCustomer.orderCount > 0 ? Math.round(selectedCustomer.totalSpent / selectedCustomer.orderCount).toLocaleString() : 0}
+                    ${selectedCustomer.orderCount && selectedCustomer.orderCount > 0 ? Math.round((selectedCustomer.totalSpent || 0) / selectedCustomer.orderCount).toLocaleString() : 0}
                   </div>
                 </div>
               </div>
@@ -437,90 +424,49 @@ export default function CustomersPage() {
               {/* Notes Section */}
               <div className="bg-[#151515] rounded-xl p-6 mb-6">
                 <h3 className="text-lg font-semibold text-white mb-4">Notes</h3>
-                <div className="text-gray-300">
-                  {selectedCustomer.notes}
-                </div>
-                <div className="mt-4">
-                  <button className="text-[#0FF1CE] text-sm font-medium hover:underline">
-                    + Add Note
-                  </button>
-                </div>
+                <textarea
+                  value={selectedCustomer.notes || ''}
+                  onChange={(e) => {
+                    // Update local state temporarily
+                    setSelectedCustomer({
+                      ...selectedCustomer,
+                      notes: e.target.value
+                    });
+                  }}
+                  onBlur={() => {
+                    // Save to Firebase when focus is lost
+                    if (selectedCustomer) {
+                      handleUpdateNotes(selectedCustomer.id, selectedCustomer.notes || '');
+                    }
+                  }}
+                  className="w-full bg-[#0D0D0D] border border-[#2F2F2F] rounded-lg p-3 text-white min-h-24 resize-none focus:outline-none focus:border-[#0FF1CE]/50"
+                  placeholder="Add notes about this customer..."
+                />
               </div>
               
-              {/* Recent Orders */}
-              <h3 className="text-lg font-semibold text-white mb-4">Recent Orders</h3>
-              <div className="bg-[#151515] rounded-xl overflow-hidden mb-6">
-                <table className="w-full">
-                  <thead>
-                    <tr className="text-left text-gray-400 text-sm border-b border-[#2F2F2F]">
-                      <th className="px-6 py-3 font-medium">Order ID</th>
-                      <th className="px-6 py-3 font-medium">Date</th>
-                      <th className="px-6 py-3 font-medium">Amount</th>
-                      <th className="px-6 py-3 font-medium">Status</th>
-                      <th className="px-6 py-3 font-medium"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {/* Mock order data - in a real app, this would come from the customer's orders */}
-                    <tr className="border-b border-[#2F2F2F] text-white">
-                      <td className="px-6 py-3">
-                        <div className="text-sm">#ORD-{selectedCustomer.id}001</div>
-                      </td>
-                      <td className="px-6 py-3">
-                        <div className="text-sm">{new Date(selectedCustomer.lastOrderDate).toLocaleDateString()}</div>
-                      </td>
-                      <td className="px-6 py-3">
-                        <div className="text-sm font-medium">${(selectedCustomer.totalSpent / selectedCustomer.orderCount).toFixed(2)}</div>
-                      </td>
-                      <td className="px-6 py-3">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-500">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
-                          Completed
-                        </span>
-                      </td>
-                      <td className="px-6 py-3">
-                        <button className="text-[#0FF1CE] text-sm hover:underline font-medium flex items-center">
-                          <ExternalLink size={14} className="mr-1" />
-                          View
-                        </button>
-                      </td>
-                    </tr>
-                    
-                    {selectedCustomer.orderCount > 1 && (
-                      <tr className="text-white">
-                        <td className="px-6 py-3">
-                          <div className="text-sm">#ORD-{selectedCustomer.id}002</div>
-                        </td>
-                        <td className="px-6 py-3">
-                          <div className="text-sm">{new Date(selectedCustomer.joinDate).toLocaleDateString()}</div>
-                        </td>
-                        <td className="px-6 py-3">
-                          <div className="text-sm font-medium">${(selectedCustomer.totalSpent / selectedCustomer.orderCount).toFixed(2)}</div>
-                        </td>
-                        <td className="px-6 py-3">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-500">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
-                            Completed
-                          </span>
-                        </td>
-                        <td className="px-6 py-3">
-                          <button className="text-[#0FF1CE] text-sm hover:underline font-medium flex items-center">
-                            <ExternalLink size={14} className="mr-1" />
-                            View
-                          </button>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-                
-                {selectedCustomer.orderCount > 2 && (
-                  <div className="px-6 py-3 border-t border-[#2F2F2F]">
-                    <button className="text-[#0FF1CE] text-sm font-medium hover:underline">
-                      View all orders
-                    </button>
+              {/* Login Details */}
+              <div className="bg-[#151515] rounded-xl p-6 mb-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Account Info</h3>
+                <div className="space-y-4">
+                  <div>
+                    <div className="text-sm text-gray-400 mb-1">User ID</div>
+                    <div className="text-white font-mono text-sm bg-[#0D0D0D] p-2 rounded overflow-x-auto">
+                      {selectedCustomer.uid}
+                    </div>
                   </div>
-                )}
+                  <div>
+                    <div className="text-sm text-gray-400 mb-1">Created</div>
+                    <div className="text-white">
+                      {selectedCustomer.createdAt.toDate().toLocaleString()}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-400 mb-1">Last Updated</div>
+                    <div className="text-white">
+                      {selectedCustomer.updatedAt.toDate().toLocaleString()}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
