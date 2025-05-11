@@ -391,4 +391,4 @@ export async function getOrdersByPaymentIntentId(paymentIntentId: string) {
   }
 }
 
-export { app, db, auth }; 
+export { app, db, auth, Timestamp }; 
