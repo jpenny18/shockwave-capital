@@ -5,8 +5,55 @@ import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import moment from 'moment';
 
+// Define interfaces for type safety
+interface UserAccount {
+  id: string;
+  metaApiAccountId: string;
+  challengeType: string;
+  phase: number;
+  status: string;
+  [key: string]: any; // Allow for additional Firestore fields
+}
+
+interface MetaApiAccount {
+  id: string;
+  balance: number;
+  equity: number;
+  [key: string]: any; // Allow for additional MetaApi fields
+}
+
+interface Deal {
+  time: string;
+  profit: number;
+  equity?: number;
+}
+
+interface HistoryStorage {
+  getDealsByTimeRange: (options: { startTime: string }) => Promise<Deal[]>;
+}
+
+interface StreamingConnection {
+  connect: () => Promise<void>;
+  waitSynchronized: () => Promise<void>;
+  historyStorage: HistoryStorage;
+}
+
+interface MetaApiTraderAccount {
+  id: string;
+  deploy: () => Promise<void>;
+  waitConnected: () => Promise<void>;
+  getStreamingConnection: () => StreamingConnection;
+}
+
+interface MetaApiTraderAccountApi {
+  getAccount: (id: string) => Promise<MetaApiTraderAccount>;
+  getAllAccounts: () => Promise<MetaApiAccount[]>;
+}
+
 // Initialize MetaAPI SDK
-const metaApi = new MetaApi(process.env.METAAPI_TOKEN!);
+const metaApi = new MetaApi(process.env.METAAPI_TOKEN!) as unknown as {
+  metatraderAccountApi: MetaApiTraderAccountApi;
+};
 
 // Initialize Firebase Admin
 if (!getApps().length) {
@@ -61,13 +108,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ accounts: [] });
     }
 
-    const userAccounts = accountsSnap.docs.map(doc => ({
+    const userAccounts: UserAccount[] = accountsSnap.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
-    }));
+    } as UserAccount));
 
     // Fetch MetaApi accounts (all)
-    const allMetaApiAccounts = await metaApi.metatraderAccountApi.getAccounts();
+    const allMetaApiAccounts = await metaApi.metatraderAccountApi.getAllAccounts();
 
     const accountData = [];
 
@@ -84,11 +131,11 @@ export async function GET(req: NextRequest) {
       await conn.waitSynchronized();
 
       const history = conn.historyStorage;
-      const deals = await history.getDeals({
+      const deals = await history.getDealsByTimeRange({
         startTime: moment().subtract(30, 'days').toISOString()
       });
 
-      const closed = deals.filter(d => d.profit !== undefined);
+      const closed = deals.filter((d: Deal) => d.profit !== undefined);
       let totalProfit = 0;
       let peakEquity = 0;
       let maxDrawdown = 0;
