@@ -1,13 +1,36 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { auth } from '@/lib/firebase';
 import Image from 'next/image';
 import Particles from './components/Particles';
 import Header from './components/Header';
 import Link from 'next/link';
 
 export default function ShockwaveLandingPage() {
+    const router = useRouter();
     const [selectedBalance, setSelectedBalance] = useState(100000);
     const [challengeType, setChallengeType] = useState('standard');
+    const [loading, setLoading] = useState(true);
+    
+    useEffect(() => {
+      const unsubscribe = auth.onAuthStateChanged((user) => {
+        if (!user && !loading) {
+          router.push('/earlyaccess');
+        }
+        setLoading(false);
+      });
+  
+      return () => unsubscribe();
+    }, [router, loading]);
+    
+    if (loading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-[#0D0D0D]">
+          <div className="w-8 h-8 border-4 border-[#0FF1CE] border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      );
+    }
     
     const getOneTimePrice = (balance: number, type: string) => {
       const standardPrices: Record<number, string> = {

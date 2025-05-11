@@ -39,29 +39,56 @@ export default function HowShockwaveOperatesPage() {
           {/* Section 1: Business Model */}
           <div className="relative bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl p-8 border border-[#2F2F2F]/50">
             <h2 className="text-2xl md:text-3xl font-bold text-[#0FF1CE] mb-6">The Foundation: Our Business Model</h2>
-            <p className="text-gray-300 leading-relaxed">
+            <p className="text-gray-300 leading-relaxed mb-12">
               Challenge fees fund operations and our growing reserve pool (currently $800k+). Funded traders operate on simulated accounts and are copy traded to live capital accounts backed by us. Payouts come from the reserve if needed and live profits — rarely from new challenges.
             </p>
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-white font-medium mb-2">Challenge Fees</h3>
-                <p className="text-gray-300">
-                  We charge an upfront fee for each evaluation challenge. These are not used to pay trader profits directly — they fund our business operations and contribute to a growing reserve pool.
-                </p>
+            <div className="space-y-8">
+              <div className="flex items-start gap-4">
+                <div className="w-8 h-8 rounded-full bg-[#0FF1CE]/20 flex items-center justify-center flex-shrink-0">
+                  <span className="text-[#0FF1CE] font-medium">1</span>
+                </div>
+                <div>
+                  <h3 className="text-white font-medium mb-2">Challenge Fees</h3>
+                  <p className="text-gray-300">
+                    We charge an upfront fee for each evaluation challenge. These are not used to pay trader profits directly — they fund our business operations and contribute to a growing reserve pool.
+                  </p>
+                </div>
               </div>
 
-              <div>
-                <h3 className="text-white font-medium mb-2">$800,000+ Reserve Pool</h3>
-                <p className="text-gray-300">
-                  We maintain a dedicated reserve for trader payouts — currently sitting at $800,000 and climbing. This is not a marketing number. It exists to ensure we rarely rely on new challenge fees to pay current traders.
-                </p>
+              <div className="flex items-start gap-4">
+                <div className="w-8 h-8 rounded-full bg-[#0FF1CE]/20 flex items-center justify-center flex-shrink-0">
+                  <span className="text-[#0FF1CE] font-medium">2</span>
+                </div>
+                <div>
+                  <h3 className="text-white font-medium mb-2">$800,000+ Reserve Pool</h3>
+                  <p className="text-gray-300">
+                    We maintain a dedicated reserve for trader payouts — currently sitting at $800,000 and climbing. This is not a marketing number. It exists to ensure we rarely rely on new challenge fees to pay current traders.
+                  </p>
+                </div>
               </div>
 
-              <div>
-                <h3 className="text-white font-medium mb-2">Live Copy Trading</h3>
-                <p className="text-gray-300">
-                  Your trades are executed in simulated demo environments, but your trades are copied 1:1 to live capital accounts. Profits generated from those live trades cover real payouts. This is how we scale and sustain — real capital, real profits.
-                </p>
+              <div className="flex items-start gap-4">
+                <div className="w-8 h-8 rounded-full bg-[#0FF1CE]/20 flex items-center justify-center flex-shrink-0">
+                  <span className="text-[#0FF1CE] font-medium">3</span>
+                </div>
+                <div>
+                  <h3 className="text-white font-medium mb-2">Simulated Funded Trading</h3>
+                  <p className="text-gray-300">
+                    Upon successfully completing your challenge, you'll begin trading on a simulated funded account. After demonstrating consistent profitability with three successful payouts, our risk management team conducts a comprehensive strategy review. The three initial payouts are paid through our substantial reserve pool and failed challenge fees. Traders are then elevated to A-Book status and transition to our Live Copy Trading system.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <div className="w-8 h-8 rounded-full bg-[#0FF1CE]/20 flex items-center justify-center flex-shrink-0">
+                  <span className="text-[#0FF1CE] font-medium">4</span>
+                </div>
+                <div>
+                  <h3 className="text-white font-medium mb-2">Live Copy Trading</h3>
+                  <p className="text-gray-300">
+                    Your trades are executed in simulated demo environments, but your trades are copied 1:1 to live capital accounts. Profits generated from those live trades cover real payouts. This is how we scale and sustain — real capital, real profits.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -273,6 +300,162 @@ export default function HowShockwaveOperatesPage() {
                       <span className="text-gray-300">Having a losing day of 5%+ on a single trading day and making an additional 10%+ on the next trading day or two.</span>
                     </li>
                   </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Section: Withdrawal Structure */}
+          <div className="relative bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl p-8 border border-[#2F2F2F]/50">
+            <h2 className="text-2xl md:text-3xl font-bold text-[#0FF1CE] mb-6">Withdrawal Structure</h2>
+            <p className="text-gray-300 leading-relaxed mb-8">
+              Our withdrawal system is designed to reward consistent, disciplined trading while maintaining operational sustainability. All funded accounts must adhere to our trading rules and meet specific criteria before becoming eligible for withdrawals.
+            </p>
+
+            <div className="space-y-12">
+              {/* Simulated Funded Accounts */}
+              <div>
+                <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                  <span className="text-[#0FF1CE] mr-2">90%</span> Profit Split — Simulated Funded Accounts
+                </h3>
+                
+                <div className="space-y-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-8 h-8 rounded-full bg-[#0FF1CE]/20 flex items-center justify-center flex-shrink-0">
+                      <span className="text-[#0FF1CE] font-medium">1</span>
+                    </div>
+                    <div>
+                      <h4 className="text-white font-medium mb-2">Initial Withdrawal Period</h4>
+                      <p className="text-gray-300">
+                        First withdrawal becomes available 14 days after your first trade. Subsequent withdrawals follow a 14-day cycle, subject to the monthly withdrawal cap.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <div className="w-8 h-8 rounded-full bg-[#0FF1CE]/20 flex items-center justify-center flex-shrink-0">
+                      <span className="text-[#0FF1CE] font-medium">2</span>
+                    </div>
+                    <div>
+                      <h4 className="text-white font-medium mb-2">Minimum Profitable Days</h4>
+                      <p className="text-gray-300">
+                        Requires 5 profitable trading days, each showing at least 0.5% gain on initial balance. For swing trades, profit is counted as one day regardless of holding period. These days reset after each withdrawal and don't accumulate for multiple withdrawals.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <div className="w-8 h-8 rounded-full bg-[#0FF1CE]/20 flex items-center justify-center flex-shrink-0">
+                      <span className="text-[#0FF1CE] font-medium">3</span>
+                    </div>
+                    <div>
+                      <h4 className="text-white font-medium mb-2">Monthly Withdrawal Cap</h4>
+                      <p className="text-gray-300">
+                        Maximum withdrawal of $10,000 per month after profit split. This applies regardless of account size or total profits generated. Each withdrawal requires meeting the minimum profitable days criterion again.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-[#0FF1CE]/5 rounded-lg p-4 border border-[#0FF1CE]/20">
+                    <p className="text-gray-300 text-sm">
+                      <span className="text-white font-medium">Important:</span> After 3 successful withdrawals, traders undergo strategy analysis for potential transition to Live Copy Trading. Any remaining profits in simulated accounts are forfeited during transition. This transition is mandatory for continued program participation.
+                    </p>
+                  </div>
+
+                  <div className="mt-6 bg-[#1A1A1A] rounded-lg p-6 border border-[#2F2F2F]/50">
+                    <h4 className="text-white font-medium mb-3">Example Scenario</h4>
+                    <p className="text-gray-300 text-sm leading-relaxed">
+                      A trader operating a $100,000 simulated funded account generates $30,000 in profits over 10 trading days. Here's how the withdrawal process works:
+                    </p>
+                    <ul className="mt-3 space-y-2">
+                      <li className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
+                        <span className="text-gray-300 text-sm">Must wait 14 days from first trade before initial withdrawal</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
+                        <span className="text-gray-300 text-sm">Requires 5 minimum profitable days (0.5% daily gain) for first $10,000 withdrawal</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
+                        <span className="text-gray-300 text-sm">After first withdrawal, needs another 5 profitable days before next month's $10,000 withdrawal</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
+                        <span className="text-gray-300 text-sm">Even if 5 profitable days are achieved early, must wait for monthly withdrawal cap to reset</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* Live Copy Trading Accounts */}
+              <div>
+                <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                  <span className="text-[#0FF1CE] mr-2">95%</span> Profit Split — Live Copy Trading Accounts
+                </h3>
+                
+                <div className="space-y-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-8 h-8 rounded-full bg-[#0FF1CE]/20 flex items-center justify-center flex-shrink-0">
+                      <span className="text-[#0FF1CE] font-medium">1</span>
+                    </div>
+                    <div>
+                      <h4 className="text-white font-medium mb-2">Extended Initial Period</h4>
+                      <p className="text-gray-300">
+                        First withdrawal available after 30 days from initial trade. Subsequent withdrawals are processed monthly, ensuring stable capital management for live accounts.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <div className="w-8 h-8 rounded-full bg-[#0FF1CE]/20 flex items-center justify-center flex-shrink-0">
+                      <span className="text-[#0FF1CE] font-medium">2</span>
+                    </div>
+                    <div>
+                      <h4 className="text-white font-medium mb-2">Performance Requirements</h4>
+                      <p className="text-gray-300">
+                        Maintains the 5 profitable trading days requirement (0.5% daily gain minimum). Trading days reset after each withdrawal, ensuring consistent performance between payouts.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <div className="w-8 h-8 rounded-full bg-[#0FF1CE]/20 flex items-center justify-center flex-shrink-0">
+                      <span className="text-[#0FF1CE] font-medium">3</span>
+                    </div>
+                    <div>
+                      <h4 className="text-white font-medium mb-2">Unlimited Withdrawal Potential</h4>
+                      <p className="text-gray-300">
+                        No withdrawal cap applies — all profits are available for withdrawal once performance criteria are met. This reflects direct connection to live market profits.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 bg-[#1A1A1A] rounded-lg p-6 border border-[#2F2F2F]/50">
+                    <h4 className="text-white font-medium mb-3">Example Scenario</h4>
+                    <p className="text-gray-300 text-sm leading-relaxed">
+                      A trader managing a $100,000 live copy trading account generates $30,000 in profits over 10 trading days. Here's the withdrawal process:
+                    </p>
+                    <ul className="mt-3 space-y-2">
+                      <li className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
+                        <span className="text-gray-300 text-sm">Initial 30-day waiting period from first trade must be completed</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
+                        <span className="text-gray-300 text-sm">Must achieve 5 profitable trading days (0.5% daily minimum)</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
+                        <span className="text-gray-300 text-sm">Can withdraw entire $28,500 (95% profit split) once criteria are met</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
+                        <span className="text-gray-300 text-sm">Next withdrawal requires another 5 profitable days and waiting for next monthly cycle</span>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
               </div>
             </div>
