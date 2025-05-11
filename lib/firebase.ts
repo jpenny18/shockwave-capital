@@ -77,7 +77,7 @@ export interface UserData {
  * Interface for order data to be stored in Firestore
  */
 export interface OrderData {
-  userId?: string;
+  userId?: string | null;
   customerEmail: string;
   firstName: string;
   lastName: string;

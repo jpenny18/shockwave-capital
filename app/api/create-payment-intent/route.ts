@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createPaymentIntent, getPaymentIntent } from '../../../lib/stripe';
 import { getOrdersByPaymentIntentId } from '../../../lib/firebase';
+import { StripeError } from '@stripe/stripe-js';
 
 export async function POST(request: NextRequest) {
   try {
@@ -75,11 +76,12 @@ export async function POST(request: NextRequest) {
         paymentIntentId: paymentIntent.id,
         clientSecret: paymentIntent.client_secret,
       });
-    } catch (stripeError: any) {
+    } catch (stripeError: unknown) {
       console.error('Stripe API error:', stripeError);
+      const errorMessage = stripeError instanceof Error ? stripeError.message : 'Unknown error';
       return NextResponse.json(
         { 
-          error: `Stripe API error: ${stripeError.message || 'Unknown error'}` 
+          error: `Stripe API error: ${errorMessage}` 
         },
         { status: 500 }
       );

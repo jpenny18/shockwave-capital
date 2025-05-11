@@ -2,6 +2,16 @@
  * A utility library for Bitcoin payment processing
  */
 
+export interface BitcoinPaymentInfo {
+  bitcoinAddress: string;
+  btcAmount: number;
+  formattedBTCAmount: string;
+  bitcoinURI: string;
+  qrCodeUrl: string;
+  usdAmount: number;
+  btcPrice: number;
+}
+
 /**
  * Generate a Bitcoin payment URI with amount and message
  * @param address Bitcoin address
@@ -114,7 +124,7 @@ export function getBitcoinAddress(): string {
 export async function generateBitcoinPaymentInfo(
   usdAmount: number,
   orderReference: string
-) {
+): Promise<BitcoinPaymentInfo> {
   try {
     // Get Bitcoin address from environment variables
     const bitcoinAddress = getBitcoinAddress();
@@ -146,7 +156,7 @@ export async function generateBitcoinPaymentInfo(
       usdAmount,
       btcPrice,
     };
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error generating Bitcoin payment info:', error);
     throw error;
   }

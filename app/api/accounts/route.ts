@@ -2,24 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import MetaApi from 'metaapi.cloud-sdk';
 import { getAuth } from 'firebase-admin/auth';
 import { cert, getApps, initializeApp } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, DocumentData } from 'firebase-admin/firestore';
 import moment from 'moment';
 
 // Define interfaces for type safety
-interface UserAccount {
+interface UserAccount extends DocumentData {
   id: string;
   metaApiAccountId: string;
   challengeType: string;
   phase: number;
   status: string;
-  [key: string]: any; // Allow for additional Firestore fields
 }
 
 interface MetaApiAccount {
   id: string;
   balance: number;
   equity: number;
-  [key: string]: any; // Allow for additional MetaApi fields
+  state: string;
+  type: string;
+  login: string;
+  platform: string;
+  broker: string;
 }
 
 interface Deal {
@@ -187,8 +190,9 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({ accounts: accountData });
-  } catch (err) {
+  } catch (err: unknown) {
     console.error('Error in /api/accounts:', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    const errorMessage = err instanceof Error ? err.message : 'Internal server error';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

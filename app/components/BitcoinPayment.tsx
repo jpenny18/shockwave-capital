@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { createOrder } from '../../lib/firebase';
-import { generateBitcoinPaymentInfo } from '../../lib/bitcoin';
+import { generateBitcoinPaymentInfo, BitcoinPaymentInfo } from '../../lib/bitcoin';
 import { Copy, Check, RefreshCw } from 'lucide-react';
 
 interface BitcoinPaymentProps {
@@ -32,7 +32,7 @@ const BitcoinPayment: React.FC<BitcoinPaymentProps> = ({
   discountPercentage = 10, // Default 10% discount
 }) => {
   const router = useRouter();
-  const [bitcoinInfo, setBitcoinInfo] = useState<any>(null);
+  const [bitcoinInfo, setBitcoinInfo] = useState<BitcoinPaymentInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
