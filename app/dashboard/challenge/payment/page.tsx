@@ -8,10 +8,43 @@ import {
   Bitcoin, 
   ChevronDown, 
   ChevronUp, 
-  Check 
+  Check,
+  Shield,
+  RefreshCcw,
+  HeadphonesIcon 
 } from 'lucide-react';
 import BitcoinPayment from '../../../components/BitcoinPayment';
 import StripeCardForm from '../../../components/StripeCardForm';
+
+type ChallengeType = 'Standard' | 'Instant';
+
+// Function to calculate price based on challenge type and amount
+const calculatePrice = (type: ChallengeType, amount: string): number => {
+  const baseAmount = parseInt(amount.replace(/\$|,/g, ''));
+  
+  switch(type) {
+    case 'Standard':
+      switch(baseAmount) {
+        case 5000: return 79;
+        case 10000: return 149;
+        case 25000: return 299;
+        case 50000: return 349;
+        case 100000: return 599;
+        case 200000: return 999;
+        case 500000: return 1999;
+        default: return 0;
+      }
+    case 'Instant':
+      switch(baseAmount) {
+        case 25000: return 799;
+        case 50000: return 999;
+        case 100000: return 1999;
+        default: return 0;
+      }
+    default:
+      return 0;
+  }
+};
 
 interface ChallengeData {
   type: string;
@@ -26,6 +59,12 @@ interface ChallengeData {
     discordUsername?: string;
   };
   price: number;
+  discount?: {
+    id: string;
+    code: string;
+    type: 'percentage' | 'fixed';
+    value: number;
+  };
 }
 
 const validateChallengeData = (data: ChallengeData | null): boolean => {
@@ -52,6 +91,44 @@ const PaymentProcessingOverlay = () => (
     <div className="text-center">
       <div className="w-12 h-12 border-2 border-[#0FF1CE] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
       <p className="text-white">Processing payment...</p>
+    </div>
+  </div>
+);
+
+const PriceDisplay = ({ originalPrice, finalPrice, discount }: { 
+  originalPrice: number;
+  finalPrice: number;
+  discount?: ChallengeData['discount'];
+}) => (
+  <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl p-6 border border-[#2F2F2F]/50 mb-8">
+    <h2 className="text-xl font-semibold mb-4 text-white">Order Summary</h2>
+    <div className="space-y-2">
+      <div className="flex justify-between items-center">
+        <span className="text-gray-400">Subtotal</span>
+        <span className={discount ? 'line-through text-gray-400' : 'text-white'}>
+          ${originalPrice.toFixed(2)}
+        </span>
+      </div>
+      
+      {discount && (
+        <div className="flex justify-between items-center text-[#0FF1CE]">
+          <span>
+            Discount ({discount.type === 'percentage' 
+              ? `${discount.value}%` 
+              : `$${discount.value}`})
+          </span>
+          <span>
+            -${(originalPrice - finalPrice).toFixed(2)}
+          </span>
+        </div>
+      )}
+      
+      <div className="flex justify-between items-center pt-2 border-t border-[#2F2F2F]">
+        <span className="font-medium text-white">Total</span>
+        <span className="text-xl font-bold text-[#0FF1CE]">
+          ${finalPrice.toFixed(2)}
+        </span>
+      </div>
     </div>
   </div>
 );
@@ -108,7 +185,10 @@ export default function PaymentPage() {
             challengeAmount: challengeData.amount,
             platform: challengeData.platform,
             customerName: `${challengeData.formData.firstName} ${challengeData.formData.lastName}`,
-            existingPaymentIntentId: paymentIntentId || undefined
+            existingPaymentIntentId: paymentIntentId || undefined,
+            discountCode: challengeData.discount?.code,
+            discountId: challengeData.discount?.id,
+            originalAmount: challengeData.discount ? calculatePrice(challengeData.type as ChallengeType, challengeData.amount) : undefined
           },
         }),
       });
@@ -225,8 +305,14 @@ export default function PaymentPage() {
       <Particles />
 
       {/* Main Content */}
-      <div className="relative z-10">
-        <h1 className="text-xl font-bold text-white mb-6">Complete Your Payment</h1>
+      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <h1 className="text-3xl font-bold text-white mb-8 text-center">Complete Your Payment</h1>
+
+        <PriceDisplay 
+          originalPrice={challengeData.discount ? calculatePrice(challengeData.type as ChallengeType, challengeData.amount) : challengeData.price}
+          finalPrice={challengeData.price}
+          discount={challengeData.discount}
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           {/* Left Column - Payment Methods */}
@@ -260,6 +346,33 @@ export default function PaymentPage() {
                   </div>
                 </div>
               )}
+
+              {/* Trust Badges */}
+              <div className="grid grid-cols-3 gap-4 mt-6">
+                  <div className="bg-[#151515] rounded-xl p-4 text-center border border-[#2F2F2F]/50 hover:border-[#0FF1CE]/50 transition-colors group">
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center group-hover:bg-[#0FF1CE]/20 transition-colors">
+                      <Shield className="text-[#0FF1CE]" size={24} />
+                    </div>
+                    <div className="text-[#0FF1CE] font-medium mb-1 text-xs">Secure Payment</div>
+                    <div className="text-[0.5rem] text-gray-400 leading-relaxed">256-bit SSL encryption for maximum security</div>
+                  </div>
+                  
+                  <div className="bg-[#151515] rounded-xl p-4 text-center border border-[#2F2F2F]/50 hover:border-[#0FF1CE]/50 transition-colors group">
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center group-hover:bg-[#0FF1CE]/20 transition-colors">
+                      <RefreshCcw className="text-[#0FF1CE]" size={24} />
+                    </div>
+                    <div className="text-[#0FF1CE] font-medium mb-1 text-xs">Money Back Guarantee</div>
+                    <div className="text-[0.5rem] text-gray-400 leading-relaxed">Full refund after successfully completing the challenge</div>
+                  </div>
+
+                  <div className="bg-[#151515] rounded-xl p-4 text-center border border-[#2F2F2F]/50 hover:border-[#0FF1CE]/50 transition-colors group">
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center group-hover:bg-[#0FF1CE]/20 transition-colors">
+                      <HeadphonesIcon className="text-[#0FF1CE]" size={24} />
+                    </div>
+                    <div className="text-[#0FF1CE] font-medium mb-1 text-xs">24/7 Support</div>
+                    <div className="text-[0.5rem] text-gray-400 leading-relaxed">Round-the-clock customer service assistance</div>
+                  </div>
+                </div>
             </div>
 
               {/* Crypto Payment Option - Only render if enabled */}

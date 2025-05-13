@@ -6,9 +6,10 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navItems = [
-    { name: 'Home', href: '#' },
-    { name: 'FAQ', href: '#faq' },
-    { name: 'How Shockwave Operates', href: '/How-Shockwave-Operates' }
+    { name: 'Home', href: '/' },
+    { name: 'FAQ', href: '/#faq' },
+    { name: 'How Shockwave Operates', href: '/How-Shockwave-Operates' },
+    { name: 'Shockwave Pulse', href: '/Shockwave-Pulse' }
   ];
 
   return (
@@ -44,14 +45,16 @@ export default function Header() {
 
           {/* Logo */}
           <div className={`absolute left-1/2 top-1/2 -translate-x-1/2 md:-translate-x-1/2 -translate-y-1/2 md:left-1/2 left-[calc(50%-40px)] ${isMenuOpen ? 'md:block hidden' : 'block'}`}>
-            <Image
-              src="/logo.png"
-              alt="Shockwave Capital"
-              width={80}
-              height={80}
-              className="h-auto w-auto"
-              priority
-            />
+            <Link href="/">
+              <Image
+                src="/logo.png"
+                alt="Shockwave Capital"
+                width={80}
+                height={80}
+                className="h-auto w-auto"
+                priority
+              />
+            </Link>
           </div>
 
           {/* Client Area Button */}

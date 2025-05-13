@@ -241,6 +241,13 @@ export default function EarlyAccessPage() {
             <p className="text-gray-400">
               {isLogin ? 'Sign in to access your account' : 'Create your account to get started'}
             </p>
+            <div className="mt-6 flex flex-col items-center">
+              <div className="text-[#0FF1CE] font-semibold text-sm uppercase tracking-wider mb-1">Launch Date</div>
+              <div className="text-2xl font-bold bg-gradient-to-r from-[#0FF1CE] to-[#00D4FF] bg-clip-text text-transparent">
+                May 18th 2025
+              </div>
+              <div className="mt-2 text-xs text-gray-400">No handholding, no baby rules, no micromanaging, ONLY high octane funding.</div>
+            </div>
           </div>
 
           {success && (

@@ -273,7 +273,7 @@ const CardForm: React.FC<CardFormProps> = ({
         disabled={!stripe || isProcessing}
         className="w-full bg-[#0FF1CE] hover:bg-[#0FF1CE]/90 text-black font-semibold py-3 px-4 rounded-lg transition duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
       >
-        {isProcessing ? 'Processing...' : `Pay $${challengeData.price}`}
+        {isProcessing ? 'Processing...' : `Pay $${challengeData.price.toFixed(2)}`}
       </button>
     </form>
   );

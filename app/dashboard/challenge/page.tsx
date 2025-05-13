@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Particles from '../../components/Particles';
 import Image from 'next/image';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { Check } from 'lucide-react';
 
 // Define the type for challenge options
 type ChallengeType = 'Standard' | 'Instant';
@@ -37,6 +40,18 @@ interface FormErrors {
   amount?: string;
   platform?: string;
   terms?: string;
+  discountCode?: string;
+}
+
+interface DiscountCode {
+  id: string;
+  code: string;
+  type: 'percentage' | 'fixed';
+  value: number;
+  active: boolean;
+  expiresAt: any;
+  usageLimit: number | null;
+  usageCount: number;
 }
 
 // Function to calculate price based on challenge type and amount
@@ -96,6 +111,9 @@ export default function ChallengePage() {
   });
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
+  const [discountCode, setDiscountCode] = useState('');
+  const [appliedDiscount, setAppliedDiscount] = useState<DiscountCode | null>(null);
+  const [isValidatingCode, setIsValidatingCode] = useState(false);
   
   // Calculate table values when selectedType or selectedAmount changes
   const tableValues = calculateTableValues(selectedType, selectedAmount);
@@ -131,7 +149,8 @@ export default function ChallengePage() {
 
   const getCurrentPrice = () => {
     if (!selectedType || !selectedAmount) return null;
-    return calculatePrice(selectedType, selectedAmount);
+    const originalPrice = calculatePrice(selectedType, selectedAmount);
+    return calculateDiscountedPrice(originalPrice, appliedDiscount);
   };
 
   const handleProceedToPayment = () => {
@@ -165,7 +184,13 @@ export default function ChallengePage() {
         country: formData.country,
         discordUsername: formData.discordUsername || ''
       },
-      price: getCurrentPrice()
+      price: getCurrentPrice(),
+      discount: appliedDiscount ? {
+        id: appliedDiscount.id,
+        code: appliedDiscount.code,
+        type: appliedDiscount.type,
+        value: appliedDiscount.value
+      } : null
     }));
     
     router.push('/dashboard/challenge/payment');
@@ -182,6 +207,131 @@ export default function ChallengePage() {
       formData.phone &&
       formData.country &&
       termsAccepted
+    );
+  };
+
+  const validateDiscountCode = async (code: string) => {
+    if (!code) {
+      setAppliedDiscount(null);
+      return;
+    }
+
+    setIsValidatingCode(true);
+    try {
+      const discountQuery = query(
+        collection(db, 'discounts'),
+        where('code', '==', code.toUpperCase()),
+        where('active', '==', true)
+      );
+      
+      const snapshot = await getDocs(discountQuery);
+      
+      if (snapshot.empty) {
+        setFormErrors(prev => ({ ...prev, discountCode: 'Invalid discount code' }));
+        setAppliedDiscount(null);
+        return;
+      }
+      
+      const discount = {
+        id: snapshot.docs[0].id,
+        ...snapshot.docs[0].data()
+      } as DiscountCode;
+      
+      // Validate expiration
+      if (discount.expiresAt && new Date() > discount.expiresAt.toDate()) {
+        setFormErrors(prev => ({ ...prev, discountCode: 'This code has expired' }));
+        setAppliedDiscount(null);
+        return;
+      }
+      
+      // Validate usage limit
+      if (discount.usageLimit !== null && discount.usageCount >= discount.usageLimit) {
+        setFormErrors(prev => ({ ...prev, discountCode: 'This code has reached its usage limit' }));
+        setAppliedDiscount(null);
+        return;
+      }
+      
+      setFormErrors(prev => ({ ...prev, discountCode: undefined }));
+      setAppliedDiscount(discount);
+      
+    } catch (error) {
+      console.error('Error validating discount code:', error);
+      setFormErrors(prev => ({ ...prev, discountCode: 'Error validating code' }));
+      setAppliedDiscount(null);
+    } finally {
+      setIsValidatingCode(false);
+    }
+  };
+
+  const calculateDiscountedPrice = (originalPrice: number, discount: DiscountCode | null): number => {
+    if (!discount) return originalPrice;
+    
+    if (discount.type === 'percentage') {
+      return originalPrice * (1 - discount.value / 100);
+    } else {
+      return Math.max(0, originalPrice - discount.value);
+    }
+  };
+
+  const renderDiscountSection = () => (
+    <div className="mb-8">
+      <h3 className="text-lg font-medium mb-4 text-white">Discount Code</h3>
+      <div className="flex gap-4">
+        <div className="relative flex-1">
+          <input
+            type="text"
+            value={discountCode}
+            onChange={(e) => {
+              setDiscountCode(e.target.value.toUpperCase());
+              setFormErrors(prev => ({ ...prev, discountCode: undefined }));
+            }}
+            onBlur={() => validateDiscountCode(discountCode)}
+            placeholder="Enter discount code"
+            className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#0FF1CE]/50 focus:border-transparent transition-all"
+          />
+          {isValidatingCode && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-[#0FF1CE] border-t-transparent"></div>
+            </div>
+          )}
+        </div>
+        <button
+          onClick={() => validateDiscountCode(discountCode)}
+          disabled={isValidatingCode || !discountCode}
+          className="bg-[#0FF1CE] text-black px-6 py-3 rounded-lg font-medium hover:bg-[#0FF1CE]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Apply
+        </button>
+      </div>
+      {formErrors.discountCode && (
+        <p className="mt-2 text-red-400 text-sm">{formErrors.discountCode}</p>
+      )}
+      {appliedDiscount && (
+        <div className="mt-2 text-[#0FF1CE] text-sm flex items-center gap-2">
+          <Check size={16} />
+          <span>
+            Discount applied: {appliedDiscount.type === 'percentage' 
+              ? `${appliedDiscount.value}% off` 
+              : `$${appliedDiscount.value} off`}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderPriceSection = () => {
+    const originalPrice = selectedType && selectedAmount ? calculatePrice(selectedType, selectedAmount) : null;
+    const finalPrice = getCurrentPrice();
+    
+    if (!originalPrice || !finalPrice) return null;
+    
+    return (
+      <div className="text-right">
+        {appliedDiscount && (
+          <div className="text-gray-400 line-through mb-1">${originalPrice.toFixed(2)}</div>
+        )}
+        <div className="text-2xl font-bold text-[#0FF1CE]">${finalPrice.toFixed(2)}</div>
+      </div>
     );
   };
 
@@ -283,7 +433,7 @@ export default function ChallengePage() {
             {/* Price Display */}
             {selectedPlatform && (
               <div className="mt-6 p-4 bg-[#151515] rounded-lg">
-                <h3 className="text-xl font-medium text-white">Total Price: <span className="text-[#0FF1CE]">${getCurrentPrice()}</span></h3>
+                {renderPriceSection()}
               </div>
             )}
           </div>
@@ -388,6 +538,8 @@ export default function ChallengePage() {
                 </label>
                 {formErrors.terms && <p className="mt-1 text-sm text-red-500">{formErrors.terms}</p>}
               </div>
+              
+              {renderDiscountSection()}
               
               <button
                 onClick={handleProceedToPayment}

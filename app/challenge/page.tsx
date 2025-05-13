@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Particles from '../components/Particles';
 import Image from 'next/image';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { Check } from 'lucide-react';
 
 // Define the type for challenge options
 type ChallengeType = 'Standard' | 'Instant';
@@ -37,6 +40,18 @@ interface FormErrors {
   amount?: string;
   platform?: string;
   terms?: string;
+  discountCode?: string;
+}
+
+interface DiscountCode {
+  id: string;
+  code: string;
+  type: 'percentage' | 'fixed';
+  value: number;
+  active: boolean;
+  expiresAt: any;
+  usageLimit: number | null;
+  usageCount: number;
 }
 
 // Function to calculate price based on challenge type and amount
@@ -96,6 +111,9 @@ export default function ChallengePage() {
   });
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
+  const [discountCode, setDiscountCode] = useState('');
+  const [appliedDiscount, setAppliedDiscount] = useState<DiscountCode | null>(null);
+  const [isValidatingCode, setIsValidatingCode] = useState(false);
   
   // Calculate table values when selectedType or selectedAmount changes
   const tableValues = calculateTableValues(selectedType, selectedAmount);
@@ -118,9 +136,73 @@ export default function ChallengePage() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const validateDiscountCode = async (code: string) => {
+    if (!code) {
+      setAppliedDiscount(null);
+      return;
+    }
+
+    setIsValidatingCode(true);
+    try {
+      const discountQuery = query(
+        collection(db, 'discounts'),
+        where('code', '==', code.toUpperCase()),
+        where('active', '==', true)
+      );
+      
+      const snapshot = await getDocs(discountQuery);
+      
+      if (snapshot.empty) {
+        setFormErrors(prev => ({ ...prev, discountCode: 'Invalid discount code' }));
+        setAppliedDiscount(null);
+        return;
+      }
+      
+      const discount = {
+        id: snapshot.docs[0].id,
+        ...snapshot.docs[0].data()
+      } as DiscountCode;
+      
+      // Validate expiration
+      if (discount.expiresAt && new Date() > discount.expiresAt.toDate()) {
+        setFormErrors(prev => ({ ...prev, discountCode: 'This code has expired' }));
+        setAppliedDiscount(null);
+        return;
+      }
+      
+      // Validate usage limit
+      if (discount.usageLimit !== null && discount.usageCount >= discount.usageLimit) {
+        setFormErrors(prev => ({ ...prev, discountCode: 'This code has reached its usage limit' }));
+        setAppliedDiscount(null);
+        return;
+      }
+      
+      setFormErrors(prev => ({ ...prev, discountCode: undefined }));
+      setAppliedDiscount(discount);
+      
+    } catch (error) {
+      console.error('Error validating discount code:', error);
+      setFormErrors(prev => ({ ...prev, discountCode: 'Error validating code' }));
+      setAppliedDiscount(null);
+    } finally {
+      setIsValidatingCode(false);
+    }
+  };
+
+  const calculateDiscountedPrice = (originalPrice: number, discount: DiscountCode | null): number => {
+    if (!discount) return originalPrice;
+    
+    if (discount.type === 'percentage') {
+      return originalPrice * (1 - discount.value / 100);
+    } else {
+      return Math.max(0, originalPrice - discount.value);
+    }
+  };
+
   const getCurrentPrice = () => {
     if (!selectedType || !selectedAmount) return null;
-    return calculatePrice(selectedType, selectedAmount);
+    const originalPrice = calculatePrice(selectedType, selectedAmount);
+    return calculateDiscountedPrice(originalPrice, appliedDiscount);
   };
 
   const handleProceedToPayment = () => {
@@ -154,7 +236,13 @@ export default function ChallengePage() {
         country: formData.country,
         discordUsername: formData.discordUsername || ''
       },
-      price: getCurrentPrice()
+      price: getCurrentPrice(),
+      discount: appliedDiscount ? {
+        id: appliedDiscount.id,
+        code: appliedDiscount.code,
+        type: appliedDiscount.type,
+        value: appliedDiscount.value
+      } : null
     }));
     
     router.push('/challenge/payment');
@@ -171,6 +259,68 @@ export default function ChallengePage() {
       formData.phone &&
       formData.country &&
       termsAccepted
+    );
+  };
+
+  const renderDiscountSection = () => (
+    <div className="mb-8">
+      <h3 className="text-lg font-medium mb-4 text-white">Discount Code</h3>
+      <div className="flex gap-4">
+        <div className="relative flex-1">
+          <input
+            type="text"
+            value={discountCode}
+            onChange={(e) => {
+              setDiscountCode(e.target.value.toUpperCase());
+              setFormErrors(prev => ({ ...prev, discountCode: undefined }));
+            }}
+            onBlur={() => validateDiscountCode(discountCode)}
+            placeholder="Enter discount code"
+            className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#0FF1CE]/50 focus:border-transparent transition-all"
+          />
+          {isValidatingCode && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-[#0FF1CE] border-t-transparent"></div>
+            </div>
+          )}
+        </div>
+        <button
+          onClick={() => validateDiscountCode(discountCode)}
+          disabled={isValidatingCode || !discountCode}
+          className="bg-[#0FF1CE] text-black px-6 py-3 rounded-lg font-medium hover:bg-[#0FF1CE]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Apply
+        </button>
+      </div>
+      {formErrors.discountCode && (
+        <p className="mt-2 text-red-400 text-sm">{formErrors.discountCode}</p>
+      )}
+      {appliedDiscount && (
+        <div className="mt-2 text-[#0FF1CE] text-sm flex items-center gap-2">
+          <Check size={16} />
+          <span>
+            Discount applied: {appliedDiscount.type === 'percentage' 
+              ? `${appliedDiscount.value}% off` 
+              : `$${appliedDiscount.value} off`}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderPriceSection = () => {
+    const originalPrice = selectedType && selectedAmount ? calculatePrice(selectedType, selectedAmount) : null;
+    const finalPrice = getCurrentPrice();
+    
+    if (!originalPrice || !finalPrice) return null;
+    
+    return (
+      <div className="text-right">
+        {appliedDiscount && (
+          <div className="text-gray-400 line-through mb-1">${originalPrice.toFixed(2)}</div>
+        )}
+        <div className="text-2xl font-bold text-[#0FF1CE]">${finalPrice.toFixed(2)}</div>
+      </div>
     );
   };
 
@@ -270,11 +420,14 @@ export default function ChallengePage() {
               </div>
             </div>
 
-            {/* Price Display */}
-            {selectedPlatform && (
-              <div className="mt-6 p-4 bg-[#151515] rounded-lg">
-                <h3 className="text-xl font-medium text-white">Total Price: <span className="text-[#0FF1CE]">${getCurrentPrice()}</span></h3>
-              </div>
+            {/* Discount Code */}
+            {selectedType && selectedAmount && selectedPlatform && (
+              <>
+                {renderDiscountSection()}
+                <div className="p-4 bg-[#151515] rounded-lg">
+                  {renderPriceSection()}
+                </div>
+              </>
             )}
           </div>
 
@@ -340,11 +493,87 @@ export default function ChallengePage() {
                   className={`w-full bg-[#151515] border ${formErrors.country ? 'border-red-500' : 'border-[#2F2F2F]'} rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#0FF1CE]/50`}
                 >
                   <option value="">Select a country</option>
-                  <option value="US">United States</option>
-                  <option value="CA">Canada</option>
-                  <option value="UK">United Kingdom</option>
+                  <option value="AF">Afghanistan</option>
+                  <option value="AL">Albania</option>
+                  <option value="DZ">Algeria</option>
+                  <option value="AD">Andorra</option>
+                  <option value="AO">Angola</option>
+                  <option value="AG">Antigua and Barbuda</option>
+                  <option value="AR">Argentina</option>
+                  <option value="AM">Armenia</option>
                   <option value="AU">Australia</option>
+                  <option value="AT">Austria</option>
+                  <option value="AZ">Azerbaijan</option>
+                  <option value="BS">Bahamas</option>
+                  <option value="BH">Bahrain</option>
+                  <option value="BD">Bangladesh</option>
+                  <option value="BB">Barbados</option>
+                  <option value="BY">Belarus</option>
+                  <option value="BE">Belgium</option>
+                  <option value="BZ">Belize</option>
+                  <option value="BJ">Benin</option>
+                  <option value="BT">Bhutan</option>
+                  <option value="BO">Bolivia</option>
+                  <option value="BA">Bosnia and Herzegovina</option>
+                  <option value="BW">Botswana</option>
+                  <option value="BR">Brazil</option>
+                  <option value="BN">Brunei</option>
+                  <option value="BG">Bulgaria</option>
+                  <option value="BF">Burkina Faso</option>
+                  <option value="BI">Burundi</option>
+                  <option value="KH">Cambodia</option>
+                  <option value="CM">Cameroon</option>
+                  <option value="CA">Canada</option>
+                  <option value="CV">Cape Verde</option>
+                  <option value="CF">Central African Republic</option>
+                  <option value="TD">Chad</option>
+                  <option value="CL">Chile</option>
+                  <option value="CN">China</option>
+                  <option value="CO">Colombia</option>
+                  <option value="KM">Comoros</option>
+                  <option value="CG">Congo</option>
+                  <option value="CD">Congo, Democratic Republic</option>
+                  <option value="CR">Costa Rica</option>
+                  <option value="CI">Côte d'Ivoire</option>
+                  <option value="HR">Croatia</option>
+                  <option value="CU">Cuba</option>
+                  <option value="CY">Cyprus</option>
+                  <option value="CZ">Czech Republic</option>
+                  <option value="DK">Denmark</option>
+                  <option value="DJ">Djibouti</option>
+                  <option value="DM">Dominica</option>
+                  <option value="DO">Dominican Republic</option>
+                  <option value="EC">Ecuador</option>
+                  <option value="EG">Egypt</option>
+                  <option value="SV">El Salvador</option>
+                  <option value="GQ">Equatorial Guinea</option>
+                  <option value="ER">Eritrea</option>
+                  <option value="EE">Estonia</option>
+                  <option value="SZ">Eswatini</option>
+                  <option value="ET">Ethiopia</option>
+                  <option value="FJ">Fiji</option>
+                  <option value="FI">Finland</option>
+                  <option value="FR">France</option>
+                  <option value="GA">Gabon</option>
+                  <option value="GM">Gambia</option>
+                  <option value="GE">Georgia</option>
                   <option value="DE">Germany</option>
+                  <option value="GH">Ghana</option>
+                  <option value="GR">Greece</option>
+                  <option value="GD">Grenada</option>
+                  <option value="GT">Guatemala</option>
+                  <option value="GN">Guinea</option>
+                  <option value="GW">Guinea-Bissau</option>
+                  <option value="GY">Guyana</option>
+                  <option value="HT">Haiti</option>
+                  <option value="HN">Honduras</option>
+                  <option value="HU">Hungary</option>
+                  <option value="IS">Iceland</option>
+                  <option value="IN">India</option>
+                  <option value="ID">Indonesia</option>
+                  <option value="IR">Iran</option>
+                  <option value="IQ">Iraq</option>
+                  <option value="IE">Ireland</option>
                   <option value="FR">France</option>
                   <option value="JP">Japan</option>
                   <option value="SG">Singapore</option>

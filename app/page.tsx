@@ -111,7 +111,7 @@ export default function ShockwaveLandingPage() {
 
               <div className="flex flex-col md:flex-row justify-center gap-4 md:gap-6 max-w-sm md:max-w-[600px] mx-auto w-full pt-8">
                 <Link href="/auth">
-                  <button className="px-10 py-3 md:py-4 bg-[#0FF1CE] text-black text-sm md:text-lg font-bold rounded-lg hover:scale-105 transition-transform w-full md:w-1/2">
+                  <button className="px-10 py-3 md:py-4 bg-[#0FF1CE] text-black text-sm md:text-lg font-bold rounded-lg hover:scale-105 transition-transform w-full md:w-[300px]">
                     START CHALLENGE
                   </button>
                 </Link>
@@ -427,7 +427,7 @@ export default function ShockwaveLandingPage() {
 
             {/* CTA Button */}
             <div className="max-w-4xl mx-auto mt-8 md:mt-12 text-center px-4 md:px-0">
-              <Link href="/auth">
+              <Link href="/challenge">
                 <button className="px-8 md:px-12 py-3 md:py-4 bg-[#0FF1CE] text-black text-lg md:text-xl font-bold rounded-full hover:scale-105 transition-transform shadow-lg hover:shadow-[#0FF1CE]/20">
                   START CHALLENGE
                 </button>

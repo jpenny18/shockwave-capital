@@ -8,7 +8,10 @@ import {
   Bitcoin, 
   ChevronDown, 
   ChevronUp, 
-  Check 
+  Check,
+  Shield,
+  RefreshCcw,
+  HeadphonesIcon
 } from 'lucide-react';
 import BitcoinPayment from '../../components/BitcoinPayment';
 import StripeCardForm from '../../components/StripeCardForm';
@@ -26,6 +29,12 @@ interface ChallengeData {
     discordUsername?: string;
   };
   price: number;
+  discount?: {
+    id: string;
+    code: string;
+    type: 'percentage' | 'fixed';
+    value: number;
+  };
 }
 
 const validateChallengeData = (data: ChallengeData | null): boolean => {
@@ -52,6 +61,40 @@ const PaymentProcessingOverlay = () => (
     <div className="text-center">
       <div className="w-12 h-12 border-2 border-[#0FF1CE] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
       <p className="text-white">Processing payment...</p>
+    </div>
+  </div>
+);
+
+const PriceDisplay = ({ originalPrice, finalPrice, discount }: { 
+  originalPrice: number;
+  finalPrice: number;
+  discount?: ChallengeData['discount'];
+}) => (
+  <div className="mb-6 p-4 bg-[#151515] rounded-lg">
+    <div className="flex justify-between items-center">
+      <div>
+        <div className="text-gray-400">Total Amount</div>
+        {discount && (
+          <div className="text-[#0FF1CE] text-sm mt-1 flex items-center gap-2">
+            <Check size={14} />
+            <span>
+              {discount.code} ({discount.type === 'percentage' 
+                ? `${discount.value}% off` 
+                : `$${discount.value.toFixed(2)} off`})
+            </span>
+          </div>
+        )}
+      </div>
+      <div className="text-right">
+        {discount && (
+          <div className="text-gray-400 line-through text-sm mb-1">
+            ${originalPrice.toFixed(2)}
+          </div>
+        )}
+        <div className="text-2xl font-bold text-[#0FF1CE]">
+          ${finalPrice.toFixed(2)}
+        </div>
+      </div>
     </div>
   </div>
 );
@@ -107,7 +150,10 @@ export default function PaymentPage() {
             challengeAmount: challengeData.amount,
             platform: challengeData.platform,
             customerName: `${challengeData.formData.firstName} ${challengeData.formData.lastName}`,
-            existingPaymentIntentId: paymentIntentId || undefined
+            existingPaymentIntentId: paymentIntentId || undefined,
+            discountCode: challengeData.discount?.code,
+            discountId: challengeData.discount?.id,
+            originalAmount: challengeData.discount ? Math.round(challengeData.price / (1 - challengeData.discount.value / 100)) : challengeData.price
           },
         }),
       });
@@ -216,6 +262,23 @@ export default function PaymentPage() {
     );
   };
 
+  // Add this where you want to display the price information
+  const renderPriceSection = () => {
+    if (!challengeData) return null;
+
+    const originalPrice = challengeData.discount 
+      ? Math.round(challengeData.price / (1 - challengeData.discount.value / 100))
+      : challengeData.price;
+
+    return (
+      <PriceDisplay
+        originalPrice={originalPrice}
+        finalPrice={challengeData.price}
+        discount={challengeData.discount}
+      />
+    );
+  };
+
   return (
     <div className="bg-gradient-to-b from-[#0D0D0D] via-[#121212] to-[#151515] text-white min-h-screen font-sans">
       {/* Background Effects */}
@@ -226,6 +289,8 @@ export default function PaymentPage() {
       {/* Main Content */}
       <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <h1 className="text-3xl font-bold text-white mb-8 text-center">Complete Your Payment</h1>
+
+        {renderPriceSection()}
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           {/* Left Column - Payment Methods */}
@@ -245,13 +310,13 @@ export default function PaymentPage() {
                       <span className="font-medium">Credit/Debit Card</span>
                     </div>
                     <div className="flex items-center">
-                      <span className="mr-2">${challengeData.price}</span>
+                      <span className="mr-2">${challengeData.price.toFixed(2)}</span>
                       {isCardExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                </div>
-                </div>
-              </button>
+                    </div>
+                  </div>
+                </button>
 
-              {isCardExpanded && (
+                {isCardExpanded && (
                   <div className="mt-4 relative">
                     {isProcessingPayment && <PaymentProcessingOverlay />}
                     <div className="bg-[#151515] rounded-xl p-5 border border-[#2F2F2F]/50">
@@ -259,8 +324,35 @@ export default function PaymentPage() {
                     </div>
                   </div>
                 )}
+
+                {/* Trust Badges */}
+                <div className="grid grid-cols-3 gap-4 mt-6">
+                  <div className="bg-[#151515] rounded-xl p-4 text-center border border-[#2F2F2F]/50 hover:border-[#0FF1CE]/50 transition-colors group">
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center group-hover:bg-[#0FF1CE]/20 transition-colors">
+                      <Shield className="text-[#0FF1CE]" size={24} />
                     </div>
-                    
+                    <div className="text-[#0FF1CE] font-medium mb-1 text-xs">Secure Payment</div>
+                    <div className="text-[0.5rem] text-gray-400 leading-relaxed">256-bit SSL encryption for maximum security</div>
+                  </div>
+                  
+                  <div className="bg-[#151515] rounded-xl p-4 text-center border border-[#2F2F2F]/50 hover:border-[#0FF1CE]/50 transition-colors group">
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center group-hover:bg-[#0FF1CE]/20 transition-colors">
+                      <RefreshCcw className="text-[#0FF1CE]" size={24} />
+                    </div>
+                    <div className="text-[#0FF1CE] font-medium mb-1 text-xs">Money Back Guarantee</div>
+                    <div className="text-[0.5rem] text-gray-400 leading-relaxed">Full refund after successfully completing the challenge</div>
+                  </div>
+
+                  <div className="bg-[#151515] rounded-xl p-4 text-center border border-[#2F2F2F]/50 hover:border-[#0FF1CE]/50 transition-colors group">
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center group-hover:bg-[#0FF1CE]/20 transition-colors">
+                      <HeadphonesIcon className="text-[#0FF1CE]" size={24} />
+                    </div>
+                    <div className="text-[#0FF1CE] font-medium mb-1 text-xs">24/7 Support</div>
+                    <div className="text-[0.5rem] text-gray-400 leading-relaxed">Round-the-clock customer service assistance</div>
+                  </div>
+                </div>
+              </div>
+              
               {/* Crypto Payment Option - Only render if enabled */}
               {CRYPTO_PAYMENTS_ENABLED && (
                       <div>
@@ -322,18 +414,18 @@ export default function PaymentPage() {
               <div className="border-t border-[#2F2F2F]/50 pt-4 mb-6">
                 <div className="flex justify-between mb-2">
                   <span className="text-white/70">Subtotal:</span>
-                  <span className="font-medium">${challengeData.price}</span>
+                  <span className="font-medium">${challengeData.price.toFixed(2)}</span>
                 </div>
                 {CRYPTO_PAYMENTS_ENABLED && paymentMethod === 'crypto' && (
                   <div className="flex justify-between mb-2 text-green-400">
                     <span>Crypto Discount (10%):</span>
-                    <span>-${challengeData.price - getCryptoPrice()}</span>
+                    <span>-${(challengeData.price - getCryptoPrice()).toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-lg font-semibold mt-4">
                   <span>Total:</span>
                   <span className="text-[#0FF1CE]">
-                    ${(CRYPTO_PAYMENTS_ENABLED && paymentMethod === 'crypto') ? getCryptoPrice() : challengeData.price}
+                    ${((CRYPTO_PAYMENTS_ENABLED && paymentMethod === 'crypto') ? getCryptoPrice() : challengeData.price).toFixed(2)}
                   </span>
                 </div>
               </div>

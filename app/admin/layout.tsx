@@ -14,7 +14,9 @@ import {
   X,
   Sliders,
   Bell,
-  Search
+  Search,
+  MessageSquare,
+  Tag
 } from 'lucide-react';
 
 const navItems = [
@@ -22,6 +24,8 @@ const navItems = [
   { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
   { name: 'Customers', href: '/admin/customers', icon: Users },
   { name: 'Email Templates', href: '/admin/emails', icon: Mail },
+  { name: 'Pulse Management', href: '/admin/pulse', icon: MessageSquare },
+  { name: 'Discount Codes', href: '/admin/discounts', icon: Tag },
   { name: 'Settings', href: '/admin/settings', icon: Settings }
 ];
 

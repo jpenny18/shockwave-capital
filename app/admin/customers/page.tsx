@@ -151,11 +151,68 @@ export default function CustomersPage() {
     }
   };
 
+  const handleExportCustomers = () => {
+    // Define CSV headers
+    const headers = [
+      'ID',
+      'Email',
+      'Display Name',
+      'First Name',
+      'Last Name',
+      'Phone',
+      'Country',
+      'Join Date',
+      'Total Spent',
+      'Order Count',
+      'Last Order Date',
+      'Status',
+      'Notes'
+    ].join(',');
+
+    // Convert customers to CSV rows
+    const rows = filteredCustomers.map(customer => [
+      customer.id,
+      customer.email,
+      customer.displayName,
+      customer.firstName || '',
+      customer.lastName || '',
+      customer.phone,
+      customer.country,
+      customer.joinDate,
+      customer.totalSpent || 0,
+      customer.orderCount || 0,
+      customer.lastOrderDate || '',
+      customer.status,
+      // Escape notes to handle commas and quotes
+      customer.notes ? `"${customer.notes.replace(/"/g, '""')}"` : ''
+    ].join(','));
+
+    // Combine headers and rows
+    const csvContent = [headers, ...rows].join('\n');
+
+    // Create blob and download link
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    // Set download attributes
+    link.setAttribute('href', url);
+    link.setAttribute('download', `shockwave-customers-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    
+    // Append to document, click, and cleanup
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="relative">
       <div className="flex flex-wrap items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-white">Customers</h1>
         <button
+          onClick={handleExportCustomers}
           className="flex items-center gap-2 bg-[#0FF1CE] text-black px-4 py-2 rounded-lg font-medium hover:bg-[#0FF1CE]/90 transition-colors"
         >
           <Download size={16} />
