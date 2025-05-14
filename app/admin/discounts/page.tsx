@@ -50,6 +50,15 @@ interface FormData {
   usageLimit: number | null;
 }
 
+interface FormErrors {
+  code?: string;
+  type?: string;
+  value?: string;
+  active?: string;
+  expiresAt?: string;
+  usageLimit?: string;
+}
+
 export default function DiscountsPage() {
   const [discounts, setDiscounts] = useState<DiscountCode[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,7 +72,7 @@ export default function DiscountsPage() {
     expiresAt: '',
     usageLimit: null
   });
-  const [formErrors, setFormErrors] = useState<Partial<FormData>>({});
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
 
   useEffect(() => {
     fetchDiscounts();
@@ -89,7 +98,7 @@ export default function DiscountsPage() {
   };
 
   const validateForm = (): boolean => {
-    const errors: Partial<FormData> = {};
+    const errors: FormErrors = {};
     
     if (!formData.code.trim()) {
       errors.code = 'Code is required';
