@@ -13,7 +13,8 @@ import {
   Clock,
   CreditCard,
   Building,
-  Bitcoin
+  Bitcoin,
+  Lock
 } from 'lucide-react';
 
 interface Transaction {
@@ -191,7 +192,7 @@ export default function PayoutsPage() {
   ];
 
   return (
-    <div className="relative">
+    <div className="relative min-h-screen">
       {/* Background Effects */}
       <div className="absolute top-0 left-0 w-full h-full bg-[#0FF1CE]/[0.02] background-noise"></div>
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full md:w-3/4 h-full rounded-full bg-[#0FF1CE]/[0.03] blur-[150px] opacity-60"></div>
@@ -227,94 +228,104 @@ export default function PayoutsPage() {
 
         {/* Tab Content */}
         {activeTab === 'history' ? (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center mb-4">
+          <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl p-6 border border-[#2F2F2F]/50">
+            <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold text-white">Transaction History</h2>
-              <div className="flex items-center gap-2">
-                <button className="flex items-center gap-2 px-3 py-1.5 text-sm bg-[#0D0D0D]/80 border border-[#2F2F2F]/50 rounded-lg text-white hover:border-[#0FF1CE]/30 transition-colors">
-                  <Calendar size={14} />
-                  <span>Filter by Date</span>
-                  <ChevronDown size={14} />
-                </button>
-              </div>
+              <button className="flex items-center gap-2 px-3 py-1.5 text-sm bg-[#151515] border border-[#2F2F2F]/50 rounded-lg text-white hover:border-[#0FF1CE]/30 transition-colors">
+                <Calendar size={14} />
+                <span>Filter by Date</span>
+                <ChevronDown size={14} />
+              </button>
             </div>
-            
-            <div className="space-y-3">
-              {transactions.map(transaction => (
-                <TransactionCard key={transaction.id} transaction={transaction} />
-              ))}
+            <div className="text-center text-gray-400 py-8">
+              No withdrawal history available
             </div>
           </div>
         ) : (
-          <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl p-6 border border-[#2F2F2F]/50">
-            <h2 className="text-lg font-bold text-white mb-6">Request Payout</h2>
-            
-            <div className="space-y-6">
-              {/* Account Selection */}
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Select Account</label>
-                <div className="relative">
-                  <select className="w-full bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg px-4 py-2.5 text-white appearance-none focus:outline-none focus:border-[#0FF1CE]/50">
-                    <option>Standard Challenge - $100,000</option>
-                    <option>Instant Funded - $25,000</option>
-                    <option>Express Challenge - $50,000</option>
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <ChevronDown size={18} className="text-gray-400" />
+          <div className="relative">
+            {/* Blurred payout form */}
+            <div className="blur-sm pointer-events-none">
+              <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl p-6 border border-[#2F2F2F]/50">
+                <h2 className="text-lg font-bold text-white mb-6">Request Payout</h2>
+                
+                <div className="space-y-6">
+                  {/* Account Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Select Account</label>
+                    <div className="relative">
+                      <select className="w-full bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg px-4 py-2.5 text-white appearance-none">
+                        <option>Standard Challenge - $100,000</option>
+                      </select>
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <ChevronDown size={18} className="text-gray-400" />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Amount */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Amount</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                        <span className="text-gray-400">$</span>
+                      </div>
+                      <input
+                        type="number"
+                        placeholder="0.00"
+                        className="w-full bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg px-4 py-2.5 pl-8 text-white"
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Payment Method */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Payment Method</label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <PaymentMethodCard
+                        icon={Building}
+                        title="Bank Transfer"
+                        description="3-5 business days"
+                        isSelected={selectedMethod === 'bank'}
+                        onSelect={() => setSelectedMethod('bank')}
+                      />
+                      <PaymentMethodCard
+                        icon={CreditCard}
+                        title="Credit Card"
+                        description="Instant processing"
+                        isSelected={selectedMethod === 'card'}
+                        onSelect={() => setSelectedMethod('card')}
+                      />
+                      <PaymentMethodCard
+                        icon={Bitcoin}
+                        title="Cryptocurrency"
+                        description="Bitcoin, Ethereum, USDT"
+                        isSelected={selectedMethod === 'crypto'}
+                        onSelect={() => setSelectedMethod('crypto')}
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Submit Button */}
+                  <div className="pt-4 border-t border-[#2F2F2F]">
+                    <button className="w-full md:w-auto px-6 py-3 bg-[#0FF1CE] text-black font-semibold rounded-lg flex items-center justify-center gap-2">
+                      <Wallet size={18} />
+                      <span>Request Payout</span>
+                    </button>
                   </div>
                 </div>
               </div>
-              
-              {/* Amount */}
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Amount</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                    <span className="text-gray-400">$</span>
-                  </div>
-                  <input
-                    type="number"
-                    placeholder="0.00"
-                    className="w-full bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg px-4 py-2.5 pl-8 text-white focus:outline-none focus:border-[#0FF1CE]/50"
-                  />
+            </div>
+
+            {/* Locked overlay */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="bg-[#0D0D0D]/95 backdrop-blur-sm rounded-2xl p-8 border border-[#2F2F2F]/50 max-w-md w-full mx-4 text-center transform hover:scale-[1.02] transition-all duration-300">
+                <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center">
+                  <Lock className="text-[#0FF1CE]" size={32} />
                 </div>
-                <div className="mt-1 text-sm text-gray-500">Available balance: $2,500.00</div>
-              </div>
-              
-              {/* Payment Method */}
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Payment Method</label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <PaymentMethodCard
-                    icon={Building}
-                    title="Bank Transfer"
-                    description="3-5 business days"
-                    isSelected={selectedMethod === 'bank'}
-                    onSelect={() => setSelectedMethod('bank')}
-                  />
-                  <PaymentMethodCard
-                    icon={CreditCard}
-                    title="Credit Card"
-                    description="Instant processing"
-                    isSelected={selectedMethod === 'card'}
-                    onSelect={() => setSelectedMethod('card')}
-                  />
-                  <PaymentMethodCard
-                    icon={Bitcoin}
-                    title="Cryptocurrency"
-                    description="Bitcoin, Ethereum, USDT"
-                    isSelected={selectedMethod === 'crypto'}
-                    onSelect={() => setSelectedMethod('crypto')}
-                  />
-                </div>
-              </div>
-              
-              {/* Submit Button */}
-              <div className="pt-4 border-t border-[#2F2F2F]">
-                <button className="w-full md:w-auto px-6 py-3 bg-[#0FF1CE] text-black font-semibold rounded-lg hover:bg-[#0FF1CE]/90 transition-colors flex items-center justify-center gap-2">
-                  <Wallet size={18} />
-                  <span>Request Payout</span>
-                </button>
+                <h2 className="text-2xl font-bold text-white mb-3">Withdrawals Locked</h2>
+                <p className="text-gray-400">
+                  You will be able to request a withdrawal after your first withdrawal date. Complete your challenge and maintain profitable trading to unlock withdrawals.
+                </p>
               </div>
             </div>
           </div>

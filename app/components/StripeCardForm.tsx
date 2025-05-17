@@ -12,6 +12,7 @@ import {
 } from '@stripe/react-stripe-js';
 import { Check } from 'lucide-react';
 import { createOrder } from '../../lib/firebase';
+import { useRouter } from 'next/navigation';
 
 // Initialize Stripe with publishable key
 const stripePromise = loadStripe(
@@ -71,6 +72,7 @@ const CardForm: React.FC<CardFormProps> = ({
   successRedirectPath,
   onProcessingStateChange,
 }) => {
+  const router = useRouter();
   const stripe = useStripe();
   const elements = useElements();
   const [cardholderName, setCardholderName] = useState('');
@@ -149,8 +151,8 @@ const CardForm: React.FC<CardFormProps> = ({
         sessionStorage.removeItem(`${paymentIntentKey}_client_secret`);
         sessionStorage.removeItem(`${paymentIntentKey}_payment_intent_id`);
 
-        // Redirect to success page
-        window.location.href = successRedirectPath;
+        // Redirect to success page using Next.js router
+        router.push(successRedirectPath);
       }
     } catch (error) {
       console.error('Payment error:', error);

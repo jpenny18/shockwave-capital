@@ -110,10 +110,10 @@ export default function ShockwaveLandingPage() {
               </div>
 
               <div className="flex flex-col md:flex-row justify-center gap-4 md:gap-6 max-w-sm md:max-w-[600px] mx-auto w-full pt-8">
-                <Link href="/auth">
+                <Link href="/challenge">
                   <button className="px-10 py-3 md:py-4 bg-[#0FF1CE] text-black text-sm md:text-lg font-bold rounded-lg hover:scale-105 transition-transform w-full md:w-[300px]">
                     START CHALLENGE
-                  </button>
+                  </button>             
                 </Link>
                 <Link href="/auth">
                   <button className="px-10 py-3 md:py-4 bg-transparent text-white text-sm md:text-lg font-bold rounded-lg hover:scale-105 transition-transform border-2 border-white w-full md:w-1/2 hidden">
@@ -239,7 +239,7 @@ export default function ShockwaveLandingPage() {
         </section>
   
         {/* Challenge Details Table Section */}
-        <section className="relative py-20 px-6 bg-gradient-to-b from-[#111111] to-[#131313] overflow-hidden">
+        <section id="pricing" className="relative py-20 px-6 bg-gradient-to-b from-[#111111] to-[#131313] overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-[#111111] to-transparent"></div>
           <div className="absolute bottom-0 left-0 w-full h-20 bg-gradient-to-t from-[#131313] to-transparent"></div>
           <div className="absolute top-1/2 left-1/4 w-1/2 h-[400px] bg-[#0FF1CE]/[0.02] blur-[150px] rounded-full"></div>
@@ -469,7 +469,7 @@ export default function ShockwaveLandingPage() {
                   ))}
                 </ul>
                 <div className="mt-6 md:mt-8">
-                  <Link href="/auth">
+                  <Link href="/challenge">
                     <button className="w-full md:w-auto px-4 py-2 md:px-8 md:py-4 bg-[#0FF1CE] text-black text-sm md:text-lg font-bold rounded-lg hover:scale-105 transition-transform">
                       Get Funded
                   </button>
@@ -641,7 +641,7 @@ export default function ShockwaveLandingPage() {
 
             {/* CTA Button */}
             <div className="max-w-4xl mx-auto mt-8 md:mt-16 text-center">
-              <Link href="/auth">
+              <Link href="/challenge">
                 <button className="px-6 py-3 md:px-8 md:py-4 bg-[#0FF1CE] text-black text-base md:text-xl font-bold rounded-lg hover:scale-105 transition-transform shadow-lg hover:shadow-[#0FF1CE]/20">
                   Choose the Best. Choose Shockwave
                 </button>
@@ -809,7 +809,7 @@ export default function ShockwaveLandingPage() {
           <div className="absolute top-1/3 right-1/4 w-1/2 h-[300px] bg-[#0FF1CE]/[0.02] blur-[120px] rounded-full"></div>
           <div className="absolute bottom-1/3 left-1/4 w-1/2 h-[300px] bg-[#0FF1CE]/[0.015] blur-[120px] rounded-full"></div>
           <div className="relative z-10">
-            <h2 className="text-4xl font-bold text-center text-[#0FF1CE] mb-12 mt-32 md:mt-40">FAQ</h2>
+            <h2 id="faq" className="text-4xl font-bold text-center text-[#0FF1CE] mb-12 mt-32 md:mt-40">FAQ</h2>
             
             {/* Mobile Scroll Indicators */}
             <div className="relative">
@@ -907,7 +907,7 @@ export default function ShockwaveLandingPage() {
           
           {/* CTA Button */}
           <div className="max-w-4xl mx-auto mt-16 text-center">
-            <Link href="/auth">
+            <Link href="/challenge">
               <button className="px-8 md:px-12 py-3 md:py-4 bg-[#0FF1CE] text-black text-sm md:text-xl font-bold rounded-lg hover:scale-105 transition-transform shadow-lg hover:shadow-[#0FF1CE]/20">
                 Stop coasting and go full throttle
               </button>
@@ -1041,9 +1041,20 @@ export default function ShockwaveLandingPage() {
               <div>
                 <h3 className="text-[#0FF1CE] font-bold text-lg mb-6">Quick Links</h3>
                 <ul className="space-y-4">
-                  {['Home', 'Challenge', 'Pricing', 'FAQ', 'Client Area'].map(link => (
-                    <li key={link}>
-                      <a href="#" className="text-gray-400 hover:text-[#0FF1CE] transition-colors">{link}</a>
+                  {[
+                    { text: 'Home', href: '/' },
+                    { text: 'Challenge', href: '/challenge' },
+                    { text: 'Pricing', href: '/#pricing', scroll: true },
+                    { text: 'FAQ', href: '/#faq', scroll: true }
+                  ].map(({ text, href, scroll }) => (
+                    <li key={text}>
+                      <Link 
+                        href={href}
+                        className="text-gray-400 hover:text-[#0FF1CE] transition-colors"
+                        scroll={scroll}
+                      >
+                        {text}
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -1053,9 +1064,19 @@ export default function ShockwaveLandingPage() {
               <div>
                 <h3 className="text-[#0FF1CE] font-bold text-lg mb-6">Resources</h3>
                 <ul className="space-y-4">
-                  {['Trading Rules', 'Terms of Service', 'Privacy Policy', 'Support Center', 'Contact Us'].map(link => (
-                    <li key={link}>
-                      <a href="#" className="text-gray-400 hover:text-[#0FF1CE] transition-colors">{link}</a>
+                  {[
+                    { text: 'How Shockwave Operates', href: '/How-Shockwave-Operates', active: true },
+                    { text: 'Terms of Service', href: '/terms', active: true },
+                    { text: 'Privacy Policy', href: '/privacy', active: true },
+                    { text: 'Refund Policy', href: '/refund', active: true },
+                    { text: 'Support Center', href: '/support-center', active: true }
+                  ].map(({ text, href, active }) => (
+                    <li key={text}>
+                      {active ? (
+                        <Link href={href} className="text-gray-400 hover:text-[#0FF1CE] transition-colors">{text}</Link>
+                      ) : (
+                        <span className="text-gray-500 cursor-not-allowed">{text}</span>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -1085,14 +1106,23 @@ export default function ShockwaveLandingPage() {
                   <p className="mb-2">
                     Trading foreign exchange and futures carries a high level of risk and may not be suitable for all investors. The high degree of leverage can work against you as well as for you.
                   </p>
+                  <p className="mb-2">
+                    By purchasing our trading challenges or funded accounts, you acknowledge that Shockwave Capital is not responsible for any losses incurred during trading. All trading decisions and their outcomes are solely your responsibility.
+                  </p>
+                  <p className="mb-2">
+                    Our prop firm services are for educational and evaluation purposes only. Past performance is not indicative of future results. Trading capital provided remains the property of Shockwave Capital and is subject to our risk management protocols.
+                  </p>
+                  <p className="mb-2">
+                    Challenge fees and subscription payments are non-refundable once trading activity has commenced. We reserve the right to modify trading rules, profit targets, and account conditions at our discretion with appropriate notice.
+                  </p>
                   <p>
                     &copy; {new Date().getFullYear()} Shockwave Capital. All rights reserved.
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-4 md:justify-end text-xs">
-                  <a href="#" className="text-gray-400 hover:text-[#0FF1CE] transition-colors">Terms</a>
-                  <a href="#" className="text-gray-400 hover:text-[#0FF1CE] transition-colors">Privacy</a>
-                  <a href="#" className="text-gray-400 hover:text-[#0FF1CE] transition-colors">Cookies</a>
+                  <Link href="/terms" className="text-gray-400 hover:text-[#0FF1CE] transition-colors">Terms</Link>
+                  <Link href="/privacy" className="text-gray-400 hover:text-[#0FF1CE] transition-colors">Privacy</Link>
+                  <Link href="/refund" className="text-gray-400 hover:text-[#0FF1CE] transition-colors">Refund Policy</Link>
                 </div>
               </div>
             </div>

@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Particles from '../../components/Particles';
 import { 
   User, 
@@ -14,8 +14,27 @@ import {
   CheckCircle,
   XCircle,
   ArrowRight,
-  LogOut
+  LogOut,
+  AlertCircle,
+  Eye,
+  EyeOff,
+  Shield
 } from 'lucide-react';
+import { auth, db } from '@/lib/firebase';
+import { 
+  updateProfile, 
+  updatePassword, 
+  EmailAuthProvider, 
+  reauthenticateWithCredential,
+  User as FirebaseUser
+} from 'firebase/auth';
+import { 
+  doc, 
+  getDoc, 
+  updateDoc, 
+  setDoc, 
+  serverTimestamp 
+} from 'firebase/firestore';
 
 interface SettingsTab {
   id: string;
@@ -68,9 +87,54 @@ const ToggleSwitch = ({ enabled, onChange }: { enabled: boolean; onChange: () =>
   </button>
 );
 
+interface UserProfile {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  country: string;
+  username: string;
+  profileImage: string;
+}
+
+interface FormErrors {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  country?: string;
+  username?: string;
+  currentPassword?: string;
+  newPassword?: string;
+  confirmPassword?: string;
+}
+
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<string>('profile');
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
+  const [successMessage, setSuccessMessage] = useState<string>('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  
+  const [profile, setProfile] = useState<UserProfile>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    country: '',
+    username: '',
+    profileImage: ''
+  });
+
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+
   const [notificationSettings, setNotificationSettings] = useState({
     emailUpdates: true,
     tradingNotifications: true,
@@ -79,6 +143,170 @@ export default function SettingsPage() {
     smsAlerts: false
   });
   const [themePreference, setThemePreference] = useState('dark');
+
+  // Fetch user profile on mount
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const user = auth.currentUser;
+        if (!user) {
+          // Handle not authenticated state
+          return;
+        }
+
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setProfile({
+            firstName: userData.firstName || '',
+            lastName: userData.lastName || '',
+            email: user.email || '',
+            phone: userData.phone || '',
+            country: userData.country || '',
+            username: userData.username || '',
+            profileImage: userData.profileImage || ''
+          });
+          if (userData.profileImage) {
+            setProfileImage(userData.profileImage);
+          }
+        }
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
+  const validateUsername = async (username: string): Promise<boolean> => {
+    if (!username) return false;
+    if (username.length < 3) {
+      setFormErrors(prev => ({ ...prev, username: 'Username must be at least 3 characters long' }));
+      return false;
+    }
+    if (username.length > 20) {
+      setFormErrors(prev => ({ ...prev, username: 'Username must be less than 20 characters' }));
+      return false;
+    }
+    if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+      setFormErrors(prev => ({ ...prev, username: 'Username can only contain letters, numbers, underscores and hyphens' }));
+      return false;
+    }
+    return true;
+  };
+
+  const handleProfileUpdate = async () => {
+    try {
+      setSaving(true);
+      setFormErrors({});
+      setSuccessMessage('');
+
+      const user = auth.currentUser;
+      if (!user) return;
+
+      // Validate username
+      if (!(await validateUsername(profile.username))) {
+        setSaving(false);
+        return;
+      }
+
+      // Update Firebase Auth profile
+      await updateProfile(user, {
+        displayName: profile.username
+      });
+
+      // Update Firestore profile
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        phone: profile.phone,
+        country: profile.country,
+        username: profile.username,
+        profileImage: profileImage,
+        lastUpdated: serverTimestamp()
+      });
+
+      setSuccessMessage('Profile updated successfully!');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      setFormErrors(prev => ({ ...prev, general: 'Failed to update profile. Please try again.' }));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    try {
+      setSaving(true);
+      setFormErrors({});
+      setSuccessMessage('');
+
+      const user = auth.currentUser;
+      if (!user || !user.email) return;
+
+      // Validate password requirements
+      if (passwordForm.newPassword.length < 8) {
+        setFormErrors(prev => ({ ...prev, newPassword: 'Password must be at least 8 characters long' }));
+        return;
+      }
+
+      if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+        setFormErrors(prev => ({ ...prev, confirmPassword: 'Passwords do not match' }));
+        return;
+      }
+
+      // Reauthenticate user
+      const credential = EmailAuthProvider.credential(user.email, passwordForm.currentPassword);
+      await reauthenticateWithCredential(user, credential);
+
+      // Update password
+      await updatePassword(user, passwordForm.newPassword);
+
+      // Clear form
+      setPasswordForm({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+
+      setSuccessMessage('Password updated successfully!');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (error: any) {
+      console.error('Error changing password:', error);
+      if (error.code === 'auth/wrong-password') {
+        setFormErrors(prev => ({ ...prev, currentPassword: 'Current password is incorrect' }));
+      } else {
+        setFormErrors(prev => ({ ...prev, general: 'Failed to update password. Please try again.' }));
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleImageUpload = async (file: File) => {
+    try {
+      // Here you would typically upload to your storage solution
+      // For now, we'll just use local FileReader
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const imageDataUrl = e.target?.result as string;
+        setProfileImage(imageDataUrl);
+        
+        // Update profile with new image
+        setProfile(prev => ({
+          ...prev,
+          profileImage: imageDataUrl
+        }));
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Error uploading image:', error);
+    }
+  };
 
   const toggleNotification = (key: keyof typeof notificationSettings) => {
     setNotificationSettings(prev => ({
@@ -122,6 +350,14 @@ export default function SettingsPage() {
 
           {/* Main content */}
           <div className="lg:col-span-3 bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl border border-[#2F2F2F]/50 p-6">
+            {/* Success Message */}
+            {successMessage && (
+              <div className="mb-6 p-4 bg-green-500/20 border border-green-500/50 rounded-lg flex items-center gap-2 text-green-500">
+                <CheckCircle size={20} />
+                <span>{successMessage}</span>
+              </div>
+            )}
+
             {/* Profile Tab */}
             {activeTab === 'profile' && (
               <div>
@@ -135,7 +371,11 @@ export default function SettingsPage() {
                         {profileImage ? (
                           <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
                         ) : (
-                          <span className="text-[#0FF1CE] text-4xl font-medium">JP</span>
+                          <span className="text-[#0FF1CE] text-4xl font-medium">
+                            {profile.firstName && profile.lastName 
+                              ? `${profile.firstName[0]}${profile.lastName[0]}`
+                              : 'U'}
+                          </span>
                         )}
                       </div>
                       <label 
@@ -152,18 +392,16 @@ export default function SettingsPage() {
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (e) => {
-                              setProfileImage(e.target?.result as string);
-                            };
-                            reader.readAsDataURL(file);
+                            handleImageUpload(file);
                           }
                         }}
                       />
                     </div>
                     <div className="text-center">
-                      <div className="text-white font-medium">John Piper</div>
-                      <div className="text-gray-400 text-sm">Member since June 2023</div>
+                      <div className="text-white font-medium">
+                        {profile.firstName} {profile.lastName}
+                      </div>
+                      <div className="text-gray-400 text-sm">@{profile.username}</div>
                     </div>
                   </div>
 
@@ -174,18 +412,45 @@ export default function SettingsPage() {
                         <label className="block text-sm font-medium text-gray-400 mb-2">First Name</label>
                         <input
                           type="text"
-                          defaultValue="John"
+                          value={profile.firstName}
+                          onChange={(e) => setProfile({ ...profile, firstName: e.target.value })}
                           className="w-full bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#0FF1CE]/50"
                         />
+                        {formErrors.firstName && (
+                          <p className="mt-1 text-sm text-red-500">{formErrors.firstName}</p>
+                        )}
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-400 mb-2">Last Name</label>
                         <input
                           type="text"
-                          defaultValue="Piper"
+                          value={profile.lastName}
+                          onChange={(e) => setProfile({ ...profile, lastName: e.target.value })}
                           className="w-full bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#0FF1CE]/50"
                         />
+                        {formErrors.lastName && (
+                          <p className="mt-1 text-sm text-red-500">{formErrors.lastName}</p>
+                        )}
                       </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">Username</label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                          <User size={16} className="text-gray-400" />
+                        </div>
+                        <input
+                          type="text"
+                          value={profile.username}
+                          onChange={(e) => setProfile({ ...profile, username: e.target.value })}
+                          className="w-full bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg pl-10 px-4 py-2.5 text-white focus:outline-none focus:border-[#0FF1CE]/50"
+                          placeholder="Your display name for leaderboard"
+                        />
+                      </div>
+                      {formErrors.username && (
+                        <p className="mt-1 text-sm text-red-500">{formErrors.username}</p>
+                      )}
                     </div>
                     
                     <div>
@@ -196,8 +461,9 @@ export default function SettingsPage() {
                         </div>
                         <input
                           type="email"
-                          defaultValue="john@example.com"
-                          className="w-full bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg pl-10 px-4 py-2.5 text-white focus:outline-none focus:border-[#0FF1CE]/50"
+                          value={profile.email}
+                          disabled
+                          className="w-full bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg pl-10 px-4 py-2.5 text-white focus:outline-none focus:border-[#0FF1CE]/50 opacity-50"
                         />
                       </div>
                     </div>
@@ -210,10 +476,14 @@ export default function SettingsPage() {
                         </div>
                         <input
                           type="tel"
-                          defaultValue="+1 (555) 123-4567"
+                          value={profile.phone}
+                          onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
                           className="w-full bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg pl-10 px-4 py-2.5 text-white focus:outline-none focus:border-[#0FF1CE]/50"
                         />
                       </div>
+                      {formErrors.phone && (
+                        <p className="mt-1 text-sm text-red-500">{formErrors.phone}</p>
+                      )}
                     </div>
                     
                     <div>
@@ -222,22 +492,44 @@ export default function SettingsPage() {
                         <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                           <Globe size={16} className="text-gray-400" />
                         </div>
-                        <select className="w-full bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg pl-10 px-4 py-2.5 text-white appearance-none focus:outline-none focus:border-[#0FF1CE]/50">
-                          <option>United States</option>
-                          <option>United Kingdom</option>
-                          <option>Canada</option>
-                          <option>Australia</option>
-                          <option>Germany</option>
+                        <select 
+                          value={profile.country}
+                          onChange={(e) => setProfile({ ...profile, country: e.target.value })}
+                          className="w-full bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg pl-10 px-4 py-2.5 text-white appearance-none focus:outline-none focus:border-[#0FF1CE]/50"
+                        >
+                          <option value="">Select a country</option>
+                          <option value="US">United States</option>
+                          <option value="GB">United Kingdom</option>
+                          <option value="CA">Canada</option>
+                          <option value="AU">Australia</option>
+                          <option value="DE">Germany</option>
+                          {/* Add more countries as needed */}
                         </select>
                       </div>
+                      {formErrors.country && (
+                        <p className="mt-1 text-sm text-red-500">{formErrors.country}</p>
+                      )}
                     </div>
                   </div>
                 </div>
                 
                 <div className="pt-6 border-t border-[#2F2F2F]">
-                  <button className="px-6 py-2.5 bg-[#0FF1CE] text-black font-semibold rounded-lg hover:bg-[#0FF1CE]/90 transition-colors flex items-center gap-2">
+                  <button 
+                    onClick={handleProfileUpdate}
+                    disabled={saving}
+                    className="px-6 py-2.5 bg-[#0FF1CE] text-black font-semibold rounded-lg hover:bg-[#0FF1CE]/90 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {saving ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-black border-t-transparent"></div>
+                        <span>Saving...</span>
+                      </>
+                    ) : (
+                      <>
                     <Save size={18} />
                     <span>Save Changes</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -248,87 +540,112 @@ export default function SettingsPage() {
               <div>
                 <h2 className="text-lg font-bold text-white mb-6">Security Settings</h2>
                 
-                <div className="space-y-8">
-                  {/* Password Change */}
-                  <div className="bg-[#1A1A1A] rounded-lg p-6">
-                    <h3 className="text-white font-medium mb-4">Change Password</h3>
+                {/* Password Change Section */}
+                <div className="mb-8 p-6 bg-[#151515] rounded-xl border border-[#2F2F2F]">
+                  <h3 className="text-white font-medium mb-4 flex items-center gap-2">
+                    <Lock size={18} />
+                    <span>Change Password</span>
+                  </h3>
                     
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-2">Current Password</label>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">
+                        Current Password
+                      </label>
+                      <div className="relative">
                         <input
-                          type="password"
-                          placeholder="••••••••"
-                          className="w-full bg-[#0D0D0D] border border-[#2F2F2F] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#0FF1CE]/50"
+                          type={showCurrentPassword ? 'text' : 'password'}
+                          value={passwordForm.currentPassword}
+                          onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                          className="w-full bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#0FF1CE]/50"
                         />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-2">New Password</label>
-                        <input
-                          type="password"
-                          placeholder="••••••••"
-                          className="w-full bg-[#0D0D0D] border border-[#2F2F2F] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#0FF1CE]/50"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-2">Confirm New Password</label>
-                        <input
-                          type="password"
-                          placeholder="••••••••"
-                          className="w-full bg-[#0D0D0D] border border-[#2F2F2F] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#0FF1CE]/50"
-                        />
-                      </div>
-                      <div>
-                        <button className="px-6 py-2.5 bg-[#0FF1CE] text-black font-semibold rounded-lg hover:bg-[#0FF1CE]/90 transition-colors">
-                          Update Password
+                        <button
+                          type="button"
+                          onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                        >
+                          {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                       </div>
-                    </div>
+                      {formErrors.currentPassword && (
+                        <p className="mt-1 text-sm text-red-500">{formErrors.currentPassword}</p>
+                      )}
+                      </div>
+
+                      <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">
+                        New Password
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showNewPassword ? 'text' : 'password'}
+                          value={passwordForm.newPassword}
+                          onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                          className="w-full bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#0FF1CE]/50"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewPassword(!showNewPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                        >
+                          {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                      {formErrors.newPassword && (
+                        <p className="mt-1 text-sm text-red-500">{formErrors.newPassword}</p>
+                      )}
                   </div>
                   
-                  {/* Two-Factor Authentication */}
-                  <div className="bg-[#1A1A1A] rounded-lg p-6">
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-white font-medium">Two-Factor Authentication</h3>
-                      <div className="flex items-center gap-2">
-                        <CheckCircle size={16} className="text-green-500" />
-                        <span className="text-green-500 text-sm">Enabled</span>
-                      </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">
+                        Confirm New Password
+                      </label>
+                      <input
+                        type="password"
+                        value={passwordForm.confirmPassword}
+                        onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                        className="w-full bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#0FF1CE]/50"
+                      />
+                      {formErrors.confirmPassword && (
+                        <p className="mt-1 text-sm text-red-500">{formErrors.confirmPassword}</p>
+                      )}
                     </div>
-                    <p className="text-gray-400 text-sm mb-4">
-                      Two-factor authentication adds an extra layer of security to your account by requiring more than just a password to sign in.
-                    </p>
-                    <button className="text-[#0FF1CE] hover:underline text-sm">
-                      Manage 2FA Settings
+
+                    <button
+                      onClick={handlePasswordChange}
+                      disabled={saving}
+                      className="px-6 py-2.5 bg-[#0FF1CE] text-black font-semibold rounded-lg hover:bg-[#0FF1CE]/90 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {saving ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-black border-t-transparent"></div>
+                          <span>Updating...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Shield size={18} />
+                          <span>Update Password</span>
+                        </>
+                      )}
                     </button>
                   </div>
+                  </div>
                   
-                  {/* Session Management */}
-                  <div className="bg-[#1A1A1A] rounded-lg p-6">
-                    <h3 className="text-white font-medium mb-4">Active Sessions</h3>
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center pb-4 border-b border-[#2F2F2F]">
+                {/* Two-Factor Authentication Section */}
+                <div className="p-6 bg-[#151515] rounded-xl border border-[#2F2F2F]">
+                  <div className="flex items-start justify-between">
                         <div>
-                          <div className="text-white font-medium">Current Session</div>
-                          <div className="text-gray-400 text-sm">MacOS - Chrome • New York, USA</div>
-                        </div>
-                        <div className="px-3 py-1 rounded-full bg-green-500/20 text-green-500 text-xs">
-                          Active Now
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-center pb-4 border-b border-[#2F2F2F]">
-                        <div>
-                          <div className="text-white font-medium">iOS Device</div>
-                          <div className="text-gray-400 text-sm">iOS 16 - Safari • Los Angeles, USA</div>
-                        </div>
-                        <button className="text-red-500 hover:underline text-sm">
-                          Revoke
-                        </button>
-                      </div>
-                      <button className="text-red-500 hover:underline text-sm">
-                        Log out of all other devices
-                      </button>
+                      <h3 className="text-white font-medium mb-2 flex items-center gap-2">
+                        <Shield size={18} />
+                        <span>Two-Factor Authentication</span>
+                      </h3>
+                      <p className="text-gray-400 text-sm">
+                        Add an extra layer of security to your account by enabling two-factor authentication.
+                      </p>
                     </div>
+                    <button className="px-4 py-2 bg-[#0FF1CE]/10 text-[#0FF1CE] rounded-lg hover:bg-[#0FF1CE]/20 transition-colors">
+                      Enable
+                    </button>
                   </div>
                 </div>
               </div>

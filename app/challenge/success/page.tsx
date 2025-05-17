@@ -130,7 +130,7 @@ export default function SuccessPage() {
             </div>
             <div className="flex justify-between py-2 text-xl font-semibold">
               <span className="text-white">Amount Paid</span>
-              <span className="text-[#0FF1CE]">${paymentData.amount}</span>
+              <span className="text-[#0FF1CE]">${paymentData.amount.toFixed(2)}</span>
             </div>
           </div>
 
