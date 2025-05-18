@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Particles from '../../components/Particles';
-import { CheckCircle, ArrowLeft } from 'lucide-react';
+import { CheckCircle, ArrowLeft, Mail } from 'lucide-react';
 
 interface PaymentSuccess {
   orderId: string;
@@ -100,6 +100,19 @@ export default function SuccessPage() {
             <div>
               <h1 className="text-2xl font-bold text-white">Payment Successful</h1>
               <p className="text-gray-400">Your challenge has been created successfully</p>
+            </div>
+          </div>
+          
+          {/* Email confirmation notice */}
+          <div className="bg-[#0FF1CE]/10 rounded-lg p-4 mb-6 flex items-start gap-3">
+            <Mail className="h-5 w-5 text-[#0FF1CE] mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-white text-sm">
+                A confirmation email has been sent to <span className="font-semibold">{challengeData.formData.email}</span> with your order details.
+              </p>
+              <p className="text-gray-400 text-xs mt-1">
+                Your account credentials will be sent separately within the next few hours.
+              </p>
             </div>
           </div>
 

@@ -332,7 +332,7 @@ export default function PaymentPage() {
                       <span className="font-medium text-white">Credit Card</span>
                     </div>
                     <div className="flex items-center">
-                      <span className="mr-2 text-white">${challengeData.price}</span>
+                      <span className="mr-2 text-white">${challengeData.price.toFixed(2)}</span>
                       {isCardExpanded ? <ChevronUp size={16} className="text-white" /> : <ChevronDown size={16} className="text-white" />}
                 </div>
                 </div>
@@ -435,7 +435,7 @@ export default function PaymentPage() {
               <div className="border-t border-[#2F2F2F]/50 pt-4 mb-6">
                 <div className="flex justify-between mb-2">
                   <span className="text-white/70">Subtotal:</span>
-                  <span className="font-medium text-white">${challengeData.price}</span>
+                  <span className="font-medium text-white">${challengeData.price.toFixed(2)}</span>
                 </div>
                 {CRYPTO_PAYMENTS_ENABLED && paymentMethod === 'crypto' && (
                   <div className="flex justify-between mb-2 text-green-400">
@@ -446,7 +446,7 @@ export default function PaymentPage() {
                 <div className="flex justify-between text-lg font-semibold mt-4">
                   <span className="text-white">Total:</span>
                   <span className="text-[#0FF1CE]">
-                    ${(CRYPTO_PAYMENTS_ENABLED && paymentMethod === 'crypto') ? getCryptoPrice() : challengeData.price}
+                    ${(CRYPTO_PAYMENTS_ENABLED && paymentMethod === 'crypto') ? getCryptoPrice() : challengeData.price.toFixed(2)}
                   </span>
                 </div>
               </div>

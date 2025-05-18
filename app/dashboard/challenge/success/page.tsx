@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Particles from '../../../components/Particles';
-import { CheckCircle, ArrowLeft } from 'lucide-react';
+import { CheckCircle, ArrowLeft, Mail } from 'lucide-react';
 
 interface PaymentSuccess {
   orderId: string;
@@ -141,6 +141,19 @@ export default function SuccessPage() {
               Your login credentials will be emailed to you shortly.
             </p>
           </div>
+          
+          {/* Email confirmation notice */}
+          <div className="max-w-xl mx-auto bg-[#0FF1CE]/10 rounded-lg p-4 mb-6 flex items-start gap-3">
+            <Mail className="h-5 w-5 text-[#0FF1CE] mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-white text-sm">
+                A confirmation email has been sent to <span className="font-semibold">{challengeData.formData.email}</span> with your order details.
+              </p>
+              <p className="text-gray-400 text-xs mt-1">
+                Your account credentials will be sent separately within the next few hours.
+              </p>
+            </div>
+          </div>
 
           <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl p-6 mb-8 border border-[#2F2F2F]/50">
             <h2 className="text-xl font-medium mb-6 text-white">Order Details</h2>
@@ -171,7 +184,7 @@ export default function SuccessPage() {
               </div>
               <div className="flex justify-between py-2 text-xl font-semibold">
                 <span className="text-white">Amount Paid</span>
-                <span className="text-[#0FF1CE]">${paymentData.amount}</span>
+                <span className="text-[#0FF1CE]">${paymentData.amount.toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -198,8 +211,7 @@ export default function SuccessPage() {
                 <div>
                   <h3 className="text-white font-medium mb-1">Log into your trading platform</h3>
                   <p className="text-gray-400 text-sm">
-                    Download and install your chosen platform ({challengeData.platform}) if you haven't already, 
-                    and log in using the credentials we provide.
+                    Download and install {challengeData.platform} if you haven't already, then log in with the credentials provided.
                   </p>
                 </div>
               </div>
@@ -210,27 +222,25 @@ export default function SuccessPage() {
                 <div>
                   <h3 className="text-white font-medium mb-1">Start trading</h3>
                   <p className="text-gray-400 text-sm">
-                    Begin trading according to the challenge rules. You can view your challenge progress 
-                    and metrics in your Shockwave Capital dashboard.
+                    Begin trading according to the challenge rules. Remember to stay within the drawdown limits and profit targets.
                   </p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="flex space-x-4 mb-6">
             <button
               onClick={() => router.push('/dashboard')}
-              className="w-full bg-[#0FF1CE] text-black py-3 rounded-lg font-semibold hover:bg-[#0FF1CE]/90 transition-colors"
+              className="flex-1 bg-[#0FF1CE] text-black py-3 rounded-lg font-semibold hover:bg-[#0FF1CE]/90 transition-colors"
             >
               Go to Dashboard
             </button>
             <button
               onClick={() => router.push('/dashboard/challenge')}
-              className="w-full flex items-center justify-center gap-2 bg-transparent border border-[#0FF1CE] text-[#0FF1CE] py-3 rounded-lg font-semibold hover:bg-[#0FF1CE]/10 transition-colors"
+              className="flex-1 bg-transparent border border-[#0FF1CE] text-[#0FF1CE] py-3 rounded-lg font-semibold hover:bg-[#0FF1CE]/10 transition-colors"
             >
-              <ArrowLeft size={16} />
-              <span>Start Another Challenge</span>
+              Start Another Challenge
             </button>
           </div>
         </div>

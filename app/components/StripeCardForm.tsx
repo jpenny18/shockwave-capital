@@ -79,6 +79,27 @@ const CardForm: React.FC<CardFormProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
 
+  // Function to send order emails
+  const sendOrderEmails = async (orderData: any) => {
+    try {
+      console.log('Sending order emails via API...');
+      const response = await fetch('/api/send-order-emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData),
+      });
+      
+      const result = await response.json();
+      console.log('Email sending result:', result);
+      return result;
+    } catch (error) {
+      console.error('Error sending order emails:', error);
+      return { success: false, error };
+    }
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -120,8 +141,10 @@ const CardForm: React.FC<CardFormProps> = ({
       if (result.error) {
         setFormErrors(prev => ({ ...prev, general: result.error.message }));
       } else if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
+        console.log('Payment succeeded, creating order...');
+        
         // Payment was successful, store in Firebase
-        await createOrder({
+        const orderId = await createOrder({
           userId: null, // Will be linked to user account if available
           customerEmail: challengeData.formData.email,
           firstName: challengeData.formData.firstName,
@@ -137,6 +160,36 @@ const CardForm: React.FC<CardFormProps> = ({
           paymentStatus: 'completed',
           paymentIntentId: result.paymentIntent.id,
         });
+        
+        console.log('Order created with ID:', orderId);
+
+        // Prepare order data for email notifications with the actual order ID
+        const orderData = {
+          id: orderId,
+          customerEmail: challengeData.formData.email,
+          firstName: challengeData.formData.firstName,
+          lastName: challengeData.formData.lastName,
+          phone: challengeData.formData.phone,
+          country: challengeData.formData.country,
+          discordUsername: challengeData.formData.discordUsername,
+          challengeType: challengeData.type,
+          challengeAmount: challengeData.amount,
+          platform: challengeData.platform,
+          totalAmount: challengeData.price,
+          paymentMethod: 'card' as const,
+          paymentStatus: 'completed' as const,
+          paymentIntentId: result.paymentIntent.id,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        
+        // Send email notifications via API endpoint
+        try {
+          await sendOrderEmails(orderData);
+        } catch (emailError) {
+          console.error('Error sending email notifications:', emailError);
+          // Continue with checkout flow even if emails fail
+        }
 
         // Store payment success data for the success page
         sessionStorage.setItem('paymentSuccess', JSON.stringify({
