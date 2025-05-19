@@ -11,7 +11,8 @@ import {
   Check,
   Shield,
   RefreshCcw,
-  HeadphonesIcon 
+  HeadphonesIcon,
+  Mail
 } from 'lucide-react';
 import BitcoinPayment from '../../../components/BitcoinPayment';
 import StripeCardForm from '../../../components/StripeCardForm';
@@ -307,6 +308,23 @@ export default function PaymentPage() {
       {/* Main Content */}
       <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <h1 className="text-3xl font-bold text-white mb-8 text-center">Complete Your Payment</h1>
+
+        {/* Payment Support Notice */}
+        <div className="mb-8 bg-[#1A1A1A] rounded-xl border border-[#0FF1CE]/30 overflow-hidden">
+          <div className="px-4 py-3 bg-[#0FF1CE]/10 border-b border-[#0FF1CE]/20">
+            <h3 className="text-[#0FF1CE] font-medium">Having trouble with your payment?</h3>
+          </div>
+          <div className="p-4 flex items-start gap-3">
+            <Mail className="text-[#0FF1CE] w-5 h-5 mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-gray-300">
+              If your card declines or you encounter any payment issues, please email{' '}
+              <a href="mailto:support@shockwave-capital.com" className="text-[#0FF1CE] hover:underline">
+                support@shockwave-capital.com
+              </a>
+              {' '}for alternative payment methods or assistance.
+            </p>
+          </div>
+        </div>
 
         <PriceDisplay 
           originalPrice={challengeData.discount ? calculatePrice(challengeData.type as ChallengeType, challengeData.amount) : challengeData.price}

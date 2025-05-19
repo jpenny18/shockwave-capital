@@ -237,12 +237,12 @@ export default function EarlyAccessPage() {
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#0FF1CE]/10 mb-4">
               <Rocket className="w-6 h-6 text-[#0FF1CE]" />
             </div>
-            <h1 className="text-2xl font-bold mb-2">Early Access</h1>
+            <h1 className="text-2xl font-bold mb-2">Welcome to Shockwave Capital</h1>
             <p className="text-gray-400">
               {isLogin ? 'Sign in to access your account' : 'Create your account to get started'}
             </p>
             <div className="mt-4 p-4 bg-gradient-to-r from-[#0FF1CE]/10 to-[#00D4FF]/10 rounded-lg border border-[#0FF1CE]/20">
-              <div className="text-lg font-bold text-white mb-1">Special Early Access Offer!</div>
+              <div className="text-lg font-bold text-white mb-1">Limited Time Launch Offer! 🚀</div>
               <div className="text-2xl font-bold text-[#0FF1CE] mb-1">SAVE 40% OFF</div>
               <div className="text-sm text-gray-400 mb-2">Use Code:</div>
               <div className="text-xl font-mono font-bold bg-gradient-to-r from-[#0FF1CE] to-[#00D4FF] bg-clip-text text-transparent tracking-wider">
@@ -250,9 +250,9 @@ export default function EarlyAccessPage() {
               </div>
             </div>
             <div className="mt-6 flex flex-col items-center">
-              <div className="text-[#0FF1CE] font-semibold text-sm uppercase tracking-wider mb-1">Launch Date</div>
+              <div className="text-[#0FF1CE] font-semibold text-sm uppercase tracking-wider mb-1">Now Live</div>
               <div className="text-2xl font-bold bg-gradient-to-r from-[#0FF1CE] to-[#00D4FF] bg-clip-text text-transparent">
-                May 18th 2025
+                Start Trading Today
               </div>
               <div className="mt-2 text-xs text-gray-400">No handholding, no baby rules, no micromanaging, ONLY high octane funding.</div>
             </div>

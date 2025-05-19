@@ -77,6 +77,7 @@ const CardForm: React.FC<CardFormProps> = ({
   const elements = useElements();
   const [cardholderName, setCardholderName] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [is3DSecure, setIs3DSecure] = useState(false);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
 
   // Function to send order emails
@@ -115,6 +116,7 @@ const CardForm: React.FC<CardFormProps> = ({
     }
 
     setIsProcessing(true);
+    setIs3DSecure(false);
     onProcessingStateChange?.(true);
 
     try {
@@ -124,6 +126,7 @@ const CardForm: React.FC<CardFormProps> = ({
         throw new Error('Card element not found');
       }
 
+      // Start the payment process
       const result = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
           card: cardElement,
@@ -139,80 +142,118 @@ const CardForm: React.FC<CardFormProps> = ({
       });
 
       if (result.error) {
-        setFormErrors(prev => ({ ...prev, general: result.error.message }));
-      } else if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
-        console.log('Payment succeeded, creating order...');
-        
-        // Payment was successful, store in Firebase
-        const orderId = await createOrder({
-          userId: null, // Will be linked to user account if available
-          customerEmail: challengeData.formData.email,
-          firstName: challengeData.formData.firstName,
-          lastName: challengeData.formData.lastName,
-          phone: challengeData.formData.phone,
-          country: challengeData.formData.country,
-          discordUsername: challengeData.formData.discordUsername,
-          challengeType: challengeData.type,
-          challengeAmount: challengeData.amount,
-          platform: challengeData.platform,
-          totalAmount: challengeData.price,
-          paymentMethod: 'card',
-          paymentStatus: 'completed',
-          paymentIntentId: result.paymentIntent.id,
-        });
-        
-        console.log('Order created with ID:', orderId);
-
-        // Prepare order data for email notifications with the actual order ID
-        const orderData = {
-          id: orderId,
-          customerEmail: challengeData.formData.email,
-          firstName: challengeData.formData.firstName,
-          lastName: challengeData.formData.lastName,
-          phone: challengeData.formData.phone,
-          country: challengeData.formData.country,
-          discordUsername: challengeData.formData.discordUsername,
-          challengeType: challengeData.type,
-          challengeAmount: challengeData.amount,
-          platform: challengeData.platform,
-          totalAmount: challengeData.price,
-          paymentMethod: 'card' as const,
-          paymentStatus: 'completed' as const,
-          paymentIntentId: result.paymentIntent.id,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-        
-        // Send email notifications via API endpoint
-        try {
-          await sendOrderEmails(orderData);
-        } catch (emailError) {
-          console.error('Error sending email notifications:', emailError);
-          // Continue with checkout flow even if emails fail
+        if (result.error.type === 'card_error' || result.error.type === 'validation_error') {
+          setFormErrors(prev => ({ ...prev, general: result.error.message }));
+        } else {
+          setFormErrors(prev => ({ ...prev, general: 'An unexpected error occurred. Please try again.' }));
         }
-
-        // Store payment success data for the success page
-        sessionStorage.setItem('paymentSuccess', JSON.stringify({
-          orderId: result.paymentIntent.id,
-          amount: challengeData.price,
-          challengeType: challengeData.type,
-          paymentMethod: 'card',
-        }));
-        
-        // Clear any payment intent data from session storage
-        const paymentIntentKey = `payment_intent_${challengeData.type}_${challengeData.amount}_${challengeData.price}_${challengeData.formData.email}`;
-        sessionStorage.removeItem(`${paymentIntentKey}_client_secret`);
-        sessionStorage.removeItem(`${paymentIntentKey}_payment_intent_id`);
-
-        // Redirect to success page using Next.js router
-        router.push(successRedirectPath);
+      } else {
+        // Handle 3D Secure authentication if required
+        if (result.paymentIntent.status === 'requires_action') {
+          setIs3DSecure(true);
+          
+          // Handle 3D Secure authentication
+          const { error: threeDSecureError } = await stripe.handleCardAction(result.paymentIntent.client_secret || '');
+          
+          if (threeDSecureError) {
+            setFormErrors(prev => ({ ...prev, general: threeDSecureError.message }));
+            return;
+          }
+          
+          // Confirm the payment after 3D Secure authentication
+          const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(clientSecret);
+          
+          if (confirmError) {
+            setFormErrors(prev => ({ ...prev, general: confirmError.message }));
+            return;
+          }
+          
+          if (paymentIntent.status === 'succeeded') {
+            await handlePaymentSuccess(paymentIntent);
+          }
+        } else if (result.paymentIntent.status === 'succeeded') {
+          await handlePaymentSuccess(result.paymentIntent);
+        }
       }
     } catch (error) {
       console.error('Payment error:', error);
       setFormErrors(prev => ({ ...prev, general: 'An unexpected error occurred. Please try again.' }));
     } finally {
       setIsProcessing(false);
+      setIs3DSecure(false);
       onProcessingStateChange?.(false);
+    }
+  };
+
+  const handlePaymentSuccess = async (paymentIntent: any) => {
+    console.log('Payment succeeded, creating order...');
+    
+    try {
+      // Create order in Firebase
+      const orderId = await createOrder({
+        userId: null,
+        customerEmail: challengeData.formData.email,
+        firstName: challengeData.formData.firstName,
+        lastName: challengeData.formData.lastName,
+        phone: challengeData.formData.phone,
+        country: challengeData.formData.country,
+        discordUsername: challengeData.formData.discordUsername,
+        challengeType: challengeData.type,
+        challengeAmount: challengeData.amount,
+        platform: challengeData.platform,
+        totalAmount: challengeData.price,
+        paymentMethod: 'card',
+        paymentStatus: 'completed',
+        paymentIntentId: paymentIntent.id,
+      });
+      
+      console.log('Order created with ID:', orderId);
+
+      // Prepare order data for email notifications
+      const orderData = {
+        id: orderId,
+        customerEmail: challengeData.formData.email,
+        firstName: challengeData.formData.firstName,
+        lastName: challengeData.formData.lastName,
+        phone: challengeData.formData.phone,
+        country: challengeData.formData.country,
+        discordUsername: challengeData.formData.discordUsername,
+        challengeType: challengeData.type,
+        challengeAmount: challengeData.amount,
+        platform: challengeData.platform,
+        totalAmount: challengeData.price,
+        paymentMethod: 'card' as const,
+        paymentStatus: 'completed' as const,
+        paymentIntentId: paymentIntent.id,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      
+      // Send email notifications
+      try {
+        await sendOrderEmails(orderData);
+      } catch (emailError) {
+        console.error('Error sending email notifications:', emailError);
+      }
+
+      // Store payment success data
+      sessionStorage.setItem('paymentSuccess', JSON.stringify({
+        orderId: paymentIntent.id,
+        amount: challengeData.price,
+        challengeType: challengeData.type,
+        paymentMethod: 'card',
+      }));
+      
+      // Clear payment intent data
+      const paymentIntentKey = `payment_intent_${challengeData.type}_${challengeData.amount}_${challengeData.price}_${challengeData.formData.email}`;
+      sessionStorage.removeItem(`${paymentIntentKey}_client_secret`);
+      sessionStorage.removeItem(`${paymentIntentKey}_payment_intent_id`);
+
+      // Redirect to success page
+      router.push(successRedirectPath);
+    } catch (error) {
+      console.error('Error handling payment success:', error);
+      setFormErrors(prev => ({ ...prev, general: 'Payment successful but there was an error processing your order. Please contact support.' }));
     }
   };
 
@@ -317,6 +358,20 @@ const CardForm: React.FC<CardFormProps> = ({
         <span>Your payment information is secure and encrypted</span>
       </div>
 
+      {/* 3D Secure Processing Overlay */}
+      {is3DSecure && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="bg-[#101010] p-6 rounded-lg text-center max-w-md mx-4">
+            <div className="w-16 h-16 border-4 border-[#0FF1CE] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <h3 className="text-xl font-semibold text-white mb-2">3D Secure Authentication</h3>
+            <p className="text-gray-400">
+              Please complete the authentication process in the secure window.
+              Do not close this window until the process is complete.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Display General Error */}
       {formErrors.general && (
         <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
@@ -330,7 +385,7 @@ const CardForm: React.FC<CardFormProps> = ({
         disabled={!stripe || isProcessing}
         className="w-full bg-[#0FF1CE] hover:bg-[#0FF1CE]/90 text-black font-semibold py-3 px-4 rounded-lg transition duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
       >
-        {isProcessing ? 'Processing...' : `Pay $${challengeData.price.toFixed(2)}`}
+        {isProcessing ? (is3DSecure ? 'Authenticating...' : 'Processing...') : `Pay $${challengeData.price.toFixed(2)}`}
       </button>
     </form>
   );

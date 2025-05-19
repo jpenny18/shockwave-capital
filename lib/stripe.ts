@@ -30,16 +30,31 @@ export async function createPaymentIntent(
     // Convert the amount to cents
     const amountInCents = Math.round(amount * 100);
     
-    // Create the payment intent
+    console.log(`Creating payment intent for ${customerEmail} with amount ${amount}`);
+    
+    // Create the payment intent with strict 3D Secure requirements
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amountInCents,
       currency: 'usd',
       receipt_email: customerEmail,
       metadata: {
         ...metadata,
-        integration_check: 'shockwave_capital_payment'
+        integration_check: 'shockwave_capital_payment',
+        requires_3ds: 'true' // Add metadata to track 3DS requirement
       },
+      payment_method_options: {
+        card: {
+          request_three_d_secure: 'any', // Always request 3D Secure when available
+        },
+      },
+      automatic_payment_methods: {
+        enabled: true,
+        allow_redirects: 'always', // Always allow redirects for 3D Secure
+      }
     });
+    
+    console.log(`Payment intent created: ${paymentIntent.id}`);
+    console.log(`3D Secure status: ${paymentIntent.status}`);
     
     return paymentIntent;
   } catch (error) {
