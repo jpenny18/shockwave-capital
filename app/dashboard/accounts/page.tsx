@@ -3,7 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import Particles from '../../components/Particles';
-import { Lock, Plus } from 'lucide-react';
+import { Lock, Plus, AlertTriangle } from 'lucide-react';
 
 export default function MyAccountsPage() {
   const router = useRouter();
@@ -14,6 +14,25 @@ export default function MyAccountsPage() {
   
   return (
     <div className="relative min-h-screen">
+      {/* Alert Banner */}
+      <div className="relative z-30">
+        <div className="bg-gradient-to-r from-amber-500/10 via-red-500/10 to-amber-500/10 border-y border-amber-500/20 backdrop-blur-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-start gap-3">
+              <div className="p-1 bg-amber-500/20 rounded-lg">
+                <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-amber-500 font-medium mb-1">System Alert</h3>
+                <p className="text-gray-300 text-sm leading-relaxed">
+                  We are currently experiencing technical difficulties and the metrics dashboard is temporarily offline while our developers work towards a solution. Please manage your risk carefully during this time. We sincerely apologize for this significant inconvenience.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Background Effects */}
       <div className="absolute top-0 left-0 w-full h-full bg-[#0FF1CE]/[0.02] background-noise"></div>
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full md:w-3/4 h-full rounded-full bg-[#0FF1CE]/[0.03] blur-[150px] opacity-60"></div>
@@ -29,7 +48,7 @@ export default function MyAccountsPage() {
             ))}
           </div>
         </div>
-        </div>
+      </div>
 
       {/* Locked content overlay */}
       <div className="absolute inset-0 flex items-center justify-center z-20">

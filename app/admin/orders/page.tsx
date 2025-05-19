@@ -12,9 +12,11 @@ import {
   Eye,
   Mail,
   RefreshCw,
-  Loader2
+  Loader2,
+  Trash2,
+  X
 } from 'lucide-react';
-import { collection, query, orderBy, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, Timestamp, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
 
 interface Order {
@@ -69,6 +71,10 @@ export default function OrdersPage() {
   const [filterStatus, setFilterStatus] = useState('All');
   const [filterType, setFilterType] = useState('All');
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Fetch orders from Firebase
   useEffect(() => {
@@ -187,6 +193,71 @@ export default function OrdersPage() {
     }
   };
 
+  const handleSelectOrder = (orderId: string) => {
+    const newSelected = new Set(selectedOrders);
+    if (newSelected.has(orderId)) {
+      newSelected.delete(orderId);
+    } else {
+      newSelected.add(orderId);
+    }
+    setSelectedOrders(newSelected);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedOrders.size === sortedOrders.length) {
+      setSelectedOrders(new Set());
+    } else {
+      setSelectedOrders(new Set(sortedOrders.map(order => order.id)));
+    }
+  };
+
+  const handleDeleteOrder = async (orderId: string) => {
+    try {
+      setIsDeleting(true);
+      await deleteDoc(doc(db, 'orders', orderId));
+      
+      // Remove from local state
+      setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
+      setSelectedOrders(prev => {
+        const newSelected = new Set(prev);
+        newSelected.delete(orderId);
+        return newSelected;
+      });
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      setError('Failed to delete order. Please try again.');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+      setOrderToDelete(null);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      setIsDeleting(true);
+      
+      // Delete all selected orders
+      await Promise.all(
+        Array.from(selectedOrders).map(orderId => 
+          deleteDoc(doc(db, 'orders', orderId))
+        )
+      );
+      
+      // Remove from local state
+      setOrders(prevOrders => 
+        prevOrders.filter(order => !selectedOrders.has(order.id))
+      );
+      setSelectedOrders(new Set());
+    } catch (error) {
+      console.error('Error deleting orders:', error);
+      setError('Failed to delete orders. Please try again.');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -220,13 +291,27 @@ export default function OrdersPage() {
     <div>
       <div className="flex flex-wrap items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-white">Orders</h1>
-        <button 
-          onClick={handleExportCSV}
-          className="flex items-center gap-2 bg-[#0FF1CE] text-black px-4 py-2 rounded-lg font-medium hover:bg-[#0FF1CE]/90 transition-colors"
-        >
-          <Download size={16} />
-          <span>Export CSV</span>
-        </button>
+        <div className="flex items-center gap-4">
+          {selectedOrders.size > 0 && (
+            <button 
+              onClick={() => {
+                setOrderToDelete(null);
+                setShowDeleteConfirm(true);
+              }}
+              className="flex items-center gap-2 bg-red-500/10 text-red-500 px-4 py-2 rounded-lg font-medium hover:bg-red-500/20 transition-colors"
+            >
+              <Trash2 size={16} />
+              <span>Delete Selected ({selectedOrders.size})</span>
+            </button>
+          )}
+          <button 
+            onClick={handleExportCSV}
+            className="flex items-center gap-2 bg-[#0FF1CE] text-black px-4 py-2 rounded-lg font-medium hover:bg-[#0FF1CE]/90 transition-colors"
+          >
+            <Download size={16} />
+            <span>Export CSV</span>
+          </button>
+        </div>
       </div>
 
       {/* Filters Row */}
@@ -293,6 +378,14 @@ export default function OrdersPage() {
           <table className="w-full min-w-[900px]">
             <thead>
               <tr className="border-b border-[#2F2F2F]">
+                <th className="py-3 px-4 text-left">
+                  <input
+                    type="checkbox"
+                    checked={selectedOrders.size === sortedOrders.length && sortedOrders.length > 0}
+                    onChange={handleSelectAll}
+                    className="rounded border-gray-600 text-[#0FF1CE] focus:ring-[#0FF1CE] focus:ring-offset-0 bg-[#1A1A1A]"
+                  />
+                </th>
                 <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Order ID</th>
                 <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Customer</th>
                 <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Type</th>
@@ -313,9 +406,17 @@ export default function OrdersPage() {
                 return (
                   <React.Fragment key={order.id}>
                     <tr 
-                      className={`hover:bg-white/5 transition-colors cursor-pointer ${isExpanded ? 'bg-[#0FF1CE]/5' : ''}`}
-                      onClick={() => toggleOrderDetails(order.id)}
+                      className={`hover:bg-white/5 transition-colors ${isExpanded ? 'bg-[#0FF1CE]/5' : ''}`}
                     >
+                      <td className="py-4 px-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedOrders.has(order.id)}
+                          onChange={() => handleSelectOrder(order.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="rounded border-gray-600 text-[#0FF1CE] focus:ring-[#0FF1CE] focus:ring-offset-0 bg-[#1A1A1A]"
+                        />
+                      </td>
                       <td className="py-4 px-4 whitespace-nowrap text-sm font-medium text-white">{order.id}</td>
                       <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">{`${order.firstName} ${order.lastName}`}</td>
                       <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">{order.challengeType}</td>
@@ -332,8 +433,21 @@ export default function OrdersPage() {
                       </td>
                       <td className="py-4 px-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          <button className="p-1 text-gray-400 hover:text-[#0FF1CE] transition-colors">
+                          <button 
+                            onClick={() => toggleOrderDetails(order.id)}
+                            className="p-1 text-gray-400 hover:text-[#0FF1CE] transition-colors"
+                          >
                             {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOrderToDelete(order.id);
+                              setShowDeleteConfirm(true);
+                            }}
+                            className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                          >
+                            <Trash2 size={16} />
                           </button>
                         </div>
                       </td>
@@ -414,17 +528,17 @@ export default function OrdersPage() {
                                   <span className="text-white">
                                     {new Date(order.updatedAt.seconds * 1000).toLocaleString()}
                                   </span>
-                            </div>
-                          </div>
-                          
+                                </div>
+                              </div>
+                              
                               <div className="mt-4 pt-4 border-t border-[#2F2F2F]/50">
-                            <button 
+                                <button 
                                   onClick={() => handleResendCredentials(order.customerEmail)}
                                   className="w-full flex items-center justify-center gap-2 bg-[#0FF1CE]/10 hover:bg-[#0FF1CE]/20 text-[#0FF1CE] py-2 rounded-lg transition-colors"
                                 >
                                   <Mail size={16} />
-                              <span>Resend Credentials</span>
-                            </button>
+                                  <span>Resend Credentials</span>
+                                </button>
                               </div>
                             </div>
                           </div>
@@ -444,6 +558,60 @@ export default function OrdersPage() {
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-[#1A1A1A] rounded-xl border border-[#2F2F2F]/50 p-6 max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-white">Confirm Delete</h3>
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setOrderToDelete(null);
+                }}
+                className="text-gray-400 hover:text-white"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <p className="text-gray-300 mb-6">
+              {orderToDelete
+                ? 'Are you sure you want to delete this order? This action cannot be undone.'
+                : `Are you sure you want to delete ${selectedOrders.size} selected orders? This action cannot be undone.`}
+            </p>
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setOrderToDelete(null);
+                }}
+                className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => orderToDelete ? handleDeleteOrder(orderToDelete) : handleBulkDelete()}
+                className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 size={16} />
+                    <span>Delete</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 
