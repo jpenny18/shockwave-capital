@@ -42,14 +42,11 @@ export async function createPaymentIntent(
         integration_check: 'shockwave_capital_payment',
         requires_3ds: 'true' // Add metadata to track 3DS requirement
       },
+      payment_method_types: ['card'], // Explicitly specify card payment method
       payment_method_options: {
         card: {
           request_three_d_secure: 'any', // Always request 3D Secure when available
         },
-      },
-      automatic_payment_methods: {
-        enabled: true,
-        allow_redirects: 'always', // Always allow redirects for 3D Secure
       }
     });
     

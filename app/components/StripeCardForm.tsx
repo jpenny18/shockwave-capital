@@ -143,7 +143,7 @@ const CardForm: React.FC<CardFormProps> = ({
 
       if (result.error) {
         if (result.error.type === 'card_error' || result.error.type === 'validation_error') {
-          setFormErrors(prev => ({ ...prev, general: result.error.message }));
+        setFormErrors(prev => ({ ...prev, general: result.error.message }));
         } else {
           setFormErrors(prev => ({ ...prev, general: 'An unexpected error occurred. Please try again.' }));
         }
@@ -192,18 +192,18 @@ const CardForm: React.FC<CardFormProps> = ({
       // Create order in Firebase
       const orderId = await createOrder({
         userId: null,
-        customerEmail: challengeData.formData.email,
-        firstName: challengeData.formData.firstName,
-        lastName: challengeData.formData.lastName,
-        phone: challengeData.formData.phone,
-        country: challengeData.formData.country,
-        discordUsername: challengeData.formData.discordUsername,
-        challengeType: challengeData.type,
-        challengeAmount: challengeData.amount,
-        platform: challengeData.platform,
-        totalAmount: challengeData.price,
-        paymentMethod: 'card',
-        paymentStatus: 'completed',
+          customerEmail: challengeData.formData.email,
+          firstName: challengeData.formData.firstName,
+          lastName: challengeData.formData.lastName,
+          phone: challengeData.formData.phone,
+          country: challengeData.formData.country,
+          discordUsername: challengeData.formData.discordUsername,
+          challengeType: challengeData.type,
+          challengeAmount: challengeData.amount,
+          platform: challengeData.platform,
+          totalAmount: challengeData.price,
+          paymentMethod: 'card',
+          paymentStatus: 'completed',
         paymentIntentId: paymentIntent.id,
       });
       
@@ -237,20 +237,20 @@ const CardForm: React.FC<CardFormProps> = ({
       }
 
       // Store payment success data
-      sessionStorage.setItem('paymentSuccess', JSON.stringify({
+        sessionStorage.setItem('paymentSuccess', JSON.stringify({
         orderId: paymentIntent.id,
-        amount: challengeData.price,
-        challengeType: challengeData.type,
-        paymentMethod: 'card',
-      }));
-      
+          amount: challengeData.price,
+          challengeType: challengeData.type,
+          paymentMethod: 'card',
+        }));
+        
       // Clear payment intent data
-      const paymentIntentKey = `payment_intent_${challengeData.type}_${challengeData.amount}_${challengeData.price}_${challengeData.formData.email}`;
-      sessionStorage.removeItem(`${paymentIntentKey}_client_secret`);
-      sessionStorage.removeItem(`${paymentIntentKey}_payment_intent_id`);
+        const paymentIntentKey = `payment_intent_${challengeData.type}_${challengeData.amount}_${challengeData.price}_${challengeData.formData.email}`;
+        sessionStorage.removeItem(`${paymentIntentKey}_client_secret`);
+        sessionStorage.removeItem(`${paymentIntentKey}_payment_intent_id`);
 
       // Redirect to success page
-      router.push(successRedirectPath);
+        router.push(successRedirectPath);
     } catch (error) {
       console.error('Error handling payment success:', error);
       setFormErrors(prev => ({ ...prev, general: 'Payment successful but there was an error processing your order. Please contact support.' }));
