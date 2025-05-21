@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Check } from 'lucide-react';
+import Link from 'next/link';
 
 // Define the type for challenge options
 type ChallengeType = 'Standard' | 'Instant';
@@ -17,14 +18,14 @@ const challengeTypes = [
     name: 'Shockwave Challenge', 
     amounts: ['$5,000', '$10,000', '$25,000', '$50,000', '$100,000', '$200,000', '$500,000'],
     image: '/shockwavechallenge.png',
-    description: 'Classic two-step challenge for confident traders'
+    description: 'Classic two-phase trading evaluation'
   },
   { 
     id: 'Instant' as const, 
     name: 'Shockwave Instant', 
     amounts: ['$25,000', '$50,000', '$100,000'],
     image: '/shockwaveinstant.png',
-    description: 'Skip the evaluation and get funded instantly'
+    description: 'Access a simulated funded account instantly'
   }
 ];
 
@@ -757,17 +758,33 @@ export default function ChallengePage() {
               </div>
               
               <div className="pt-4">
-                <label className="flex items-start gap-2">
+                <div className="flex items-start gap-2">
                   <input
                     type="checkbox"
+                    id="disclaimer"
                     checked={termsAccepted}
                     onChange={() => setTermsAccepted(!termsAccepted)}
-                    className={`mt-1 ${formErrors.terms ? 'border-red-500' : ''}`}
+                    className="mt-1 w-4 h-4 rounded border-gray-600 text-[#0FF1CE] focus:ring-[#0FF1CE] focus:ring-offset-0 bg-[#1A1A1A]"
                   />
-                  <span className="text-sm text-gray-400">
-                    I accept the <a href="#" className="text-[#0FF1CE] hover:underline">Terms and Conditions</a> and <a href="#" className="text-[#0FF1CE] hover:underline">Privacy Policy</a>
-                  </span>
-                </label>
+                  <label htmlFor="disclaimer" className="text-sm text-gray-400">
+                    I acknowledge that Shockwave Capital provides a simulated trading environment and that all activity is for educational and evaluative purposes only. I agree to the{' '}
+                    <Link href="/disclaimer" className="text-[#0FF1CE] hover:underline">
+                      Disclaimer
+                    </Link>, {' '}
+                    <Link href="/terms" className="text-[#0FF1CE] hover:underline">
+                      Terms of Use
+                    </Link>, {' '}
+                    <Link href="/privacy" className="text-[#0FF1CE] hover:underline">
+                      Privacy Policy
+                    </Link>, {' '}
+                    <Link href="/legal-disclosure" className="text-[#0FF1CE] hover:underline">
+                      Legal Disclosure
+                    </Link>, and {' '}
+                    <Link href="/refund" className="text-[#0FF1CE] hover:underline">
+                      Refund Policy
+                    </Link>.
+                  </label>
+                </div>
                 {formErrors.terms && <p className="mt-1 text-sm text-red-500">{formErrors.terms}</p>}
               </div>
               
@@ -856,8 +873,8 @@ export default function ChallengePage() {
                           </div>
                         ],
                         ['News Trading', 'Yes', 'Yes', 'Yes'],
-                        ['Profit Split', '-', '-', 'Up to 95%'],
-                        ['First Withdrawal', '-', '-', '14 Days'],
+                        ['Profit Split', '-', '-', 'Up to 95% (Simulated Payout)'],
+                        ['Payout Eligibility', '-', '-', '14 Days'],
                         ['Refundable Fee', `$${getCurrentPrice()}`, 'Free', 'Refund']
                       ].map((row, i) => (
                         <div 
@@ -895,8 +912,8 @@ export default function ChallengePage() {
                           </div>
                         ],
                         ['News Trading', 'Yes'],
-                        ['First Withdrawal', '6 Days'],
-                        ['Profit Split', '70%'],
+                        ['Payout Eligibility', '6 Days'],
+                        ['Profit Split', '70% (Simulated Payout)'],
                         ['One Free Retry', 'Yes'],
                         ['One-Time Price', `$${getCurrentPrice()}`]
                       ].map((row, i) => (

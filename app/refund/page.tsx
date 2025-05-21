@@ -10,81 +10,108 @@ export default function RefundPage() {
         
         <div className="relative z-10 max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold text-[#0FF1CE] mb-8">Refund & Chargeback Policy</h1>
-          
+          <p className="text-gray-300 mb-8">Effective Date: May 17th 2025</p>
+
           <div className="space-y-8 text-gray-300">
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-white">1. Challenge Fee Refund Policy</h2>
+              <p>Shockwave Capital is committed to transparency and fairness in all transactions related to our evaluation services. By purchasing a challenge or subscription from Shockwave Capital, you agree to the following refund and chargeback terms. These policies ensure our ability to offer consistent service, protect against abuse, and maintain operational integrity in compliance with Stripe and applicable regulations.</p>
+            </section>
+
+            <section className="space-y-4">
+              <h2 className="text-2xl font-bold text-white">1. Refund Eligibility for Successful Challenge Completion</h2>
               <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl p-6 border border-[#0FF1CE]/20">
-                <p className="text-lg font-semibold text-[#0FF1CE] mb-4">Successful Challenge Refund Program</p>
-                <p>Traders who successfully complete our challenge are entitled to a full refund of their challenge fee upon their second consecutive successful withdrawal on their funded account. This refund policy applies specifically to the account for which the refund is being requested.</p>
+                <p className="text-lg font-semibold text-[#0FF1CE] mb-4">Challenge Fee Refund Program</p>
+                <p className="mb-4">To be eligible:</p>
+                <ul className="list-disc pl-6 space-y-2">
+                  <li>You must successfully complete a Shockwave trading challenge;</li>
+                  <li>You must remain in full compliance with all trading rules and parameters at all times;</li>
+                  <li>You must complete two (2) consecutive successful withdrawals from your funded simulation account;</li>
+                  <li>You must submit a valid refund request for the specific account that meets the above criteria.</li>
+                </ul>
+                <p className="mt-4">Refunds under this program are processed only after the second approved payout and apply exclusively to the associated account.</p>
               </div>
             </section>
 
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-white">2. Refund Eligibility</h2>
-              <p>2.1. To be eligible for a refund, traders must:</p>
+              <h2 className="text-2xl font-bold text-white">2. Non-Refundable Circumstances</h2>
+              <p>Challenge fees, instant access fees, and subscription payments are non-refundable in the following scenarios:</p>
               <ul className="list-disc pl-6 space-y-2">
-                <li>Successfully complete the trading challenge</li>
-                <li>Maintain compliance with all trading rules</li>
-                <li>Complete two consecutive successful withdrawals</li>
-                <li>Submit the refund request for the specific account</li>
+                <li>Failure to complete a challenge;</li>
+                <li>Breach or violation of any trading rules or platform terms;</li>
+                <li>Voluntary account closure or inactivity;</li>
+                <li>Suspicious, manipulative, or exploitative trading behavior;</li>
+                <li>Disagreement with platform terms or conditions after payment has been made;</li>
+                <li>Partial use of a subscription or challenge access.</li>
               </ul>
+              <p className="mt-4">Refunds will not be granted on the basis of user dissatisfaction with evaluation outcomes or trading restrictions.</p>
             </section>
 
             <section className="space-y-4">
               <h2 className="text-2xl font-bold text-white">3. Chargeback Policy</h2>
               <div className="bg-gradient-to-br from-red-500/10 to-red-500/5 backdrop-blur-sm rounded-xl p-6 border border-red-500/20">
-                <p className="text-lg font-semibold text-red-400 mb-4">Strict Chargeback Consequences</p>
-                <p>Any trader who initiates a chargeback will:</p>
-                <ul className="list-disc pl-6 space-y-2 mt-4">
-                  <li>Immediately forfeit ALL profits generated on their funded accounts</li>
-                  <li>Forfeit ALL profits on any challenge accounts</li>
-                  <li>Be permanently banned from our platform</li>
-                  <li>Be added to our blacklist, preventing future registration</li>
+                <p className="text-lg font-semibold text-red-400 mb-4">If a user initiates a chargeback:</p>
+                <ul className="list-disc pl-6 space-y-2">
+                  <li>All profits associated with any funded or challenge accounts will be automatically forfeited;</li>
+                  <li>The user's access will be permanently revoked, and they will be banned from all future participation;</li>
+                  <li>The user may be added to a third-party industry blacklist to prevent abuse across similar platforms.</li>
                 </ul>
+                <p className="mt-4">We strongly encourage users to contact our support team prior to filing any dispute to resolve concerns directly.</p>
               </div>
             </section>
 
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-white">4. Non-Refundable Circumstances</h2>
-              <p>4.1. Challenge fees are non-refundable in cases of:</p>
+              <h2 className="text-2xl font-bold text-white">4. Refund Request Procedure</h2>
+              <p>Eligible refund requests must be submitted via the user's dashboard or emailed to <span className="text-[#0FF1CE]">support@shockwave-capital.com</span> and must include:</p>
               <ul className="list-disc pl-6 space-y-2">
-                <li>Failed challenge attempts</li>
-                <li>Violation of trading rules</li>
-                <li>Voluntary account termination</li>
-                <li>Suspicious trading activity</li>
+                <li>The specific account ID associated with the completed challenge;</li>
+                <li>Proof of two consecutive approved withdrawals;</li>
+                <li>The original payment transaction ID.</li>
               </ul>
+              <p className="mt-4">Please allow up to 5 business days for processing. Approved refunds will be issued to the original payment method only.</p>
             </section>
 
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-white">5. Refund Process</h2>
-              <p>5.1. To request a refund:</p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>Submit request through your dashboard</li>
-                <li>Provide account details and withdrawal history</li>
-                <li>Allow up to 5 business days for processing</li>
-                <li>Refund will be issued to original payment method</li>
-              </ul>
-            </section>
-
-            <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-white">6. Challenge Fees</h2>
+              <h2 className="text-2xl font-bold text-white">5. Challenge & Evaluation Fees</h2>
               <div className="bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 backdrop-blur-sm rounded-xl p-6 border border-yellow-500/20">
-                <p className="text-lg font-semibold text-yellow-400 mb-4">Important Notice</p>
-                <p>Challenge or instant access fees are payment for evaluation services and simulated trading access — not investment products or deposits. Refunds are not applicable if you fail the challenge or disagree with trading rules post-purchase.</p>
+                <p className="mb-4">All challenge and instant access fees are payments for:</p>
+                <ul className="list-disc pl-6 space-y-2">
+                  <li>Access to our simulated trading evaluation environment;</li>
+                  <li>Performance-based assessments and analytics;</li>
+                  <li>Use of proprietary rules, infrastructure, and performance metrics.</li>
+                </ul>
+                <p className="mt-4">These payments are not investments, not deposits, and do not constitute the purchase of financial instruments or any guaranteed outcome.</p>
               </div>
             </section>
 
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-white">7. Subscription Cancellation</h2>
-              <p>You may cancel any recurring subscriptions prior to the next billing cycle to avoid further charges. No partial refunds will be issued for unused time.</p>
-              <p className="mt-4">All refund inquiries must be submitted to <span className="text-[#0FF1CE]">support@shockwave-capital.com</span> within 3 days of the transaction.</p>
+              <h2 className="text-2xl font-bold text-white">6. Subscription Billing and Cancellation</h2>
+              <p>If you enroll in a subscription plan:</p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li>You may cancel at any time prior to the next billing cycle to avoid renewal charges;</li>
+                <li>No partial refunds will be issued for unused days or early cancellation.</li>
+              </ul>
+              <p className="mt-4">To cancel a subscription, log in to your dashboard or contact <span className="text-[#0FF1CE]">support@shockwave-capital.com</span>.</p>
             </section>
 
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-white">8. Contact Information</h2>
-              <p>For questions about refunds or to report unauthorized charges, contact:</p>
-              <p className="text-[#0FF1CE]">support@shockwave-capital.com</p>
+              <h2 className="text-2xl font-bold text-white">7. Disputes & Unauthorized Charges</h2>
+              <p>All refund or billing inquiries must be submitted within three (3) calendar days of the original transaction.</p>
+              <p className="mt-4">Please email our billing department at <span className="text-[#0FF1CE]">support@shockwave-capital.com</span> with any concerns related to:</p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li>Duplicate charges;</li>
+                <li>Unauthorized transactions;</li>
+                <li>Billing errors or disputes.</li>
+              </ul>
+            </section>
+
+            <section className="space-y-4 bg-[#1A1A1A] p-6 rounded-lg border border-[#2F2F2F]/50">
+              <h2 className="text-2xl font-bold text-white">8. Final Notice</h2>
+              <p>By purchasing a challenge or subscription through Shockwave Capital, you agree that:</p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li>You are purchasing access to a simulated trading evaluation service, not a live trading account or investment product;</li>
+                <li>You understand and accept that fees are non-refundable except where explicitly stated under the refund eligibility conditions above;</li>
+                <li>You waive any claim for refund outside the terms of this policy.</li>
+              </ul>
             </section>
 
             <div className="pt-8">

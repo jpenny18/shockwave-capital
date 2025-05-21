@@ -379,8 +379,8 @@ export default function PaymentPage() {
                     <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center group-hover:bg-[#0FF1CE]/20 transition-colors">
                       <RefreshCcw className="text-[#0FF1CE]" size={24} />
                     </div>
-                    <div className="text-[#0FF1CE] font-medium mb-1 text-xs">Money Back Guarantee</div>
-                    <div className="text-[0.5rem] text-gray-400 leading-relaxed">Full refund after successfully completing the challenge</div>
+                    <div className="text-[#0FF1CE] font-medium mb-1 text-xs">Refund Policy</div>
+                    <div className="text-[0.5rem] text-gray-400 leading-relaxed">Full refund after successfully completing the evaluation</div>
                   </div>
 
                   <div className="bg-[#151515] rounded-xl p-4 text-center border border-[#2F2F2F]/50 hover:border-[#0FF1CE]/50 transition-colors group">
@@ -427,6 +427,33 @@ export default function PaymentPage() {
                   )}
                 </div>
               )}
+            </div>
+
+            {/* Important Disclaimer Notice */}
+            <div className="mt-6 bg-gradient-to-r from-orange-500/20 to-amber-500/20 rounded-lg p-4 border border-orange-500/30 shadow-lg">
+              <div className="flex items-start gap-2 mb-3">
+                <span className="text-orange-400 text-xl">⚠️</span>
+                <h3 className="text-orange-400 font-bold">Important Disclaimer</h3>
+              </div>
+              <p className="text-sm text-gray-300 mb-3">
+                Shockwave Capital offers access to a simulated trading environment for the sole purpose of evaluating trading skill and discipline. All trading activity occurs on demo accounts using real-time market data. No actual capital is deposited, invested, or traded on behalf of users.
+              </p>
+              <p className="text-sm text-gray-300 mb-3">
+                References to "funding," "capital," "payouts," or "profit splits" pertain exclusively to performance-based simulations and do not imply the transfer or management of real funds.
+              </p>
+              <p className="text-sm text-gray-300 mb-3">
+                Participation in Shockwave Capital's programs is strictly for educational and evaluative purposes and does not constitute financial advice, investment services, or brokerage activity.
+              </p>
+              <p className="text-sm text-gray-300 font-semibold mb-2">By proceeding with payment, you confirm that:</p>
+              <ul className="text-sm text-gray-300 list-disc pl-5 mb-3 space-y-1">
+                <li>You are not participating in real-money or live trading.</li>
+                <li>You understand this platform is not a broker-dealer, investment advisor, or asset management firm.</li>
+                <li>Any rewards, incentives, or performance-based milestones are tied to simulated results and subject to our internal review and compliance criteria.</li>
+                <li>You accept these terms and agree to our full Terms of Use and Privacy Policy.</li>
+              </ul>
+              <p className="text-sm text-orange-400 font-semibold">
+                If you do not agree to these conditions, please do not proceed with payment.
+              </p>
             </div>
           </div>
 

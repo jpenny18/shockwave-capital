@@ -47,7 +47,7 @@ export default function LegalDisclosurePage() {
             </section>
 
             <div className="pt-8">
-              <p className="text-sm text-gray-400">Last updated: {new Date().toLocaleDateString()}</p>
+              <p className="text-sm text-gray-400">Last updated: May 17th 2025</p>
             </div>
           </div>
         </div>

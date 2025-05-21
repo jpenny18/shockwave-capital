@@ -249,7 +249,7 @@ export default function EarlyAccessPage() {
             </div>
             <h1 className="text-2xl font-bold mb-2">Welcome to Shockwave Capital</h1>
             <p className="text-gray-400">
-              {isLogin ? 'Sign in to access your account' : 'Create your account to get started'}
+              {isLogin ? 'Sign in for access' : 'Create your account to get started'}
             </p>
             <div className="mt-4 p-4 bg-gradient-to-r from-[#0FF1CE]/10 to-[#00D4FF]/10 rounded-lg border border-[#0FF1CE]/20">
               <div className="text-lg font-bold text-white mb-1">Limited Time Launch Offer! 🚀</div>
