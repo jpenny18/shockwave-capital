@@ -297,10 +297,10 @@ export default function PaymentPage() {
                     Due to an unexpected issue with our payment processor, we are temporarily unable to accept new payments. We are actively implementing new payment solutions including cryptocurrency and a new credit/debit card processor.
                   </p>
                   <p className="text-white font-medium">
-                    <span className="text-[#0FF1CE]">Good news for early supporters:</span> All traders who purchased during our launch day have received their accounts for free! We've chosen to absorb the $30,000 loss from these transactions to demonstrate our commitment to the trading community.
+                    <span className="text-[#0FF1CE]">Good news for early supporters:</span> Everybody who purchased during our launch day have received their accounts for free! We've chosen to absorb the $30,000 loss from these transactions to demonstrate our commitment to the trading community.
                   </p>
                   <p>
-                    This decision reflects our core values: we are here for the traders, and we aim to be the most transparent prop firm in the industry. We appreciate your patience during this brief transition.
+                    This decision reflects our core values: we are here for the traders, and we aim to be the most transparent in the industry. We appreciate your patience during this brief transition.
                   </p>
                   <p className="text-orange-400 font-medium mt-4">
                     New payment systems will be operational shortly. Please check back soon or contact support for updates.
