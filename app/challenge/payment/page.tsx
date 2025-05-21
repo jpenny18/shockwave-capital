@@ -282,6 +282,36 @@ export default function PaymentPage() {
 
   return (
     <div className="bg-gradient-to-b from-[#0D0D0D] via-[#121212] to-[#151515] text-white min-h-screen font-sans">
+      {/* System Alert Banner */}
+      <div className="relative z-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="bg-gradient-to-r from-orange-500/20 via-amber-500/20 to-orange-500/20 rounded-xl border border-orange-500/30 shadow-lg p-6">
+            <div className="flex items-start gap-4">
+              <div className="bg-orange-500/20 rounded-full p-2 mt-1">
+                <span className="text-2xl">⚠️</span>
+              </div>
+              <div className="space-y-3">
+                <h3 className="text-xl font-bold text-orange-400">Payment System Temporarily Paused</h3>
+                <div className="space-y-2 text-gray-300">
+                  <p>
+                    Due to an unexpected issue with our payment processor, we are temporarily unable to accept new payments. We are actively implementing new payment solutions including cryptocurrency and a new credit/debit card processor.
+                  </p>
+                  <p className="text-white font-medium">
+                    <span className="text-[#0FF1CE]">Good news for early supporters:</span> All traders who purchased during our launch day have received their accounts for free! We've chosen to absorb the $30,000 loss from these transactions to demonstrate our commitment to the trading community.
+                  </p>
+                  <p>
+                    This decision reflects our core values: we are here for the traders, and we aim to be the most transparent prop firm in the industry. We appreciate your patience during this brief transition.
+                  </p>
+                  <p className="text-orange-400 font-medium mt-4">
+                    New payment systems will be operational shortly. Please check back soon or contact support for updates.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Background Effects */}
       <div className="absolute top-0 left-0 w-full h-full bg-[#0FF1CE]/[0.02] background-noise"></div>
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full md:w-3/4 h-full rounded-full bg-[#0FF1CE]/[0.03] blur-[150px] opacity-60"></div>

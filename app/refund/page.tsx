@@ -11,7 +11,7 @@ export default function RefundPage() {
         <div className="relative z-10 max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold text-[#0FF1CE] mb-8">Refund & Chargeback Policy</h1>
           <p className="text-gray-300 mb-8">Effective Date: May 17th 2025</p>
-
+          
           <div className="space-y-8 text-gray-300">
             <section className="space-y-4">
               <p>Shockwave Capital is committed to transparency and fairness in all transactions related to our evaluation services. By purchasing a challenge or subscription from Shockwave Capital, you agree to the following refund and chargeback terms. These policies ensure our ability to offer consistent service, protect against abuse, and maintain operational integrity in compliance with Stripe and applicable regulations.</p>

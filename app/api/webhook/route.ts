@@ -4,8 +4,8 @@ import { updateOrderPaymentStatus, getOrdersByPaymentIntentId } from '../../../l
 import { sendAdminNotificationEmail, sendCustomerReceiptEmail } from '../../../lib/email';
 
 // Initialize Stripe with secret key
-const stripeSecretKey = process.env.NODE_ENV === 'production'
-  ? process.env.STRIPE_SECRET_KEY
+const stripeSecretKey = process.env.NODE_ENV === 'production' 
+  ? process.env.STRIPE_SECRET_KEY 
   : process.env.STRIPE_TEST_SECRET_KEY;
 
 const webhookSecret = process.env.NODE_ENV === 'production'
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
   try {
     // Get the signature from the headers
     const signature = request.headers.get('stripe-signature');
-    
+
     if (!signature) {
       console.error('[WebhookHandler] No Stripe signature found in request headers');
       return NextResponse.json(
@@ -140,9 +140,9 @@ export async function POST(request: NextRequest) {
     // Handle the event
     console.log(`[WebhookHandler] Processing event: ${event.type}`);
     
-    switch (event.type) {
+      switch (event.type) {
       case 'payment_intent.succeeded': {
-        const paymentIntent = event.data.object as Stripe.PaymentIntent;
+          const paymentIntent = event.data.object as Stripe.PaymentIntent;
         console.log(`[WebhookHandler] Payment succeeded: ${paymentIntent.id}`);
         
         // Update order status in Firestore
@@ -151,11 +151,11 @@ export async function POST(request: NextRequest) {
           console.log(`[WebhookHandler] Updating ${orders.length} orders to completed status`);
           
           for (const order of orders) {
-            await updateOrderPaymentStatus(
+          await updateOrderPaymentStatus(
               order.id,
-              'completed',
-              paymentIntent.id
-            );
+            'completed', 
+            paymentIntent.id
+          );
             console.log(`[WebhookHandler] Updated order ${order.id} to completed status`);
           }
           
@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
       }
       
       case 'payment_intent.payment_failed': {
-        const failedPaymentIntent = event.data.object as Stripe.PaymentIntent;
+          const failedPaymentIntent = event.data.object as Stripe.PaymentIntent;
         console.log(`[WebhookHandler] Payment failed: ${failedPaymentIntent.id}`);
         
         // Update order status in Firestore
@@ -180,18 +180,18 @@ export async function POST(request: NextRequest) {
           console.log(`[WebhookHandler] Updating ${failedOrders.length} orders to failed status`);
           
           for (const order of failedOrders) {
-            await updateOrderPaymentStatus(
+          await updateOrderPaymentStatus(
               order.id,
-              'failed',
-              failedPaymentIntent.id
-            );
+            'failed', 
+            failedPaymentIntent.id
+          );
             console.log(`[WebhookHandler] Updated order ${order.id} to failed status`);
           }
         } else {
           console.warn(`[WebhookHandler] No orders found for failed payment intent: ${failedPaymentIntent.id}`);
         }
         
-        break;
+          break;
       }
       
       case 'checkout.session.completed': {
