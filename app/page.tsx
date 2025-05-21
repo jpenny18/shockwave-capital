@@ -78,13 +78,13 @@ export default function ShockwaveLandingPage() {
                 Funded or Fried
               </h1>
               <h3 className="text-[0.9375rem] md:text-3xl font-extrabold bg-gradient-to-b from-[#0FF1CE] to-[#0FF1CE]/50 text-transparent bg-clip-text mb-12 -mt-4 md:mt-0">
-                Prop trading without the training wheels
+                No Hand-Holding. No Gimmicks. Just Elite-Level Simulated Trading.
               </h3>
             </div>
 
             <div className="space-y-12">
               <p className="text-base md:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-                High-octane funding for elite traders.<br className="md:hidden" /> Push your trading into Overdrive with:
+                Push your trading to the limit with:
               </p>
 
               <div className="grid grid-cols-3 gap-2 md:flex md:flex-row md:justify-center md:items-center md:gap-8 px-2 md:px-0">
@@ -112,7 +112,7 @@ export default function ShockwaveLandingPage() {
               <div className="flex flex-col md:flex-row justify-center gap-4 md:gap-6 max-w-sm md:max-w-[600px] mx-auto w-full pt-8">
                 <Link href="/challenge">
                   <button className="px-10 py-3 md:py-4 bg-[#0FF1CE] text-black text-sm md:text-lg font-bold rounded-lg hover:scale-105 transition-transform w-full md:w-[300px]">
-                    START CHALLENGE
+                    START YOUR EVALUATION
                   </button>             
                 </Link>
                 <Link href="/auth">
@@ -197,20 +197,20 @@ export default function ShockwaveLandingPage() {
               {[
                 {
                   icon: "1",
-                  title: "Create An Account",
-                  description: "Select the evaluation you feel the most comfortable with, and start trading immediately.",
+                  title: "Create Your Account",
+                  description: "Choose your evaluation plan and gain immediate access to a live-market simulated environment.",
                   delay: "0s"
                 },
                 {
                   icon: "2",
-                  title: "Pass Challenge",
-                  description: "Showcase your trading performance by successfully passing your evaluation with consistency and effective risk management.",
+                  title: "Complete the Challenge",
+                  description: "Demonstrate consistency, discipline, and strategic risk management in real-time simulated conditions.",
                   delay: "0.1s"
                 },
                 {
                   icon: "3",
-                  title: "Get Funded",
-                  description: "Sign your trader agreement and complete the KYC process to become a Shockwave Funded trader and start trading towards your first of many performance fees!",
+                  title: "Progress to Simulated Funded Status",
+                  description: "Once your performance meets the challenge criteria, you'll be transitioned into our Simulated Funded Program — designed to mirror the pressure and opportunity of trading at scale.",
                   delay: "0.2s"
                 },
               ].map(({ icon, title, description, delay }) => (
@@ -373,8 +373,8 @@ export default function ShockwaveLandingPage() {
                       </div>
                     ],
                     ['News Trading', 'Yes', 'Yes', 'Yes'],
-                    ['Profit Split', '-', '-', 'Up to 95%'],
-                    ['First Withdrawal', '-', '-', '14 Days'],
+                    ['Profit Split', '-', '-', 'Up to 95%(Simulated Payout)'],
+                    ['First Payout Eligibility', '-', '-', '14 Days'],
                     ['Refundable Fee', `$${getOneTimePrice(selectedBalance, 'standard')}`, 'Free', 'Refund']
                   ].map((row, i) => (
                     <div 
@@ -409,7 +409,7 @@ export default function ShockwaveLandingPage() {
                     ],
                     ['News Trading', 'Yes'],
                     ['First Withdrawal', '6 Days'],
-                    ['Profit Split', '70%'],
+                    ['Profit Split', '70% (Simulated Payout)'],
                     ['One Free Retry', 'Yes'],
                     ['One-Time Price', `$${getOneTimePrice(selectedBalance, 'instant')}`]
                   ].map((row, i) => (
@@ -442,9 +442,9 @@ export default function ShockwaveLandingPage() {
           <div className="absolute bottom-0 left-0 w-full h-20 bg-gradient-to-t from-[#121212] to-transparent"></div>
           <div className="absolute top-1/2 right-1/4 w-1/2 h-[350px] bg-[#0FF1CE]/[0.02] blur-[130px] rounded-full"></div>
           <div className="relative z-10">
-            <h2 className="text-3xl md:text-4xl font-bold text-center text-[#0FF1CE] mb-3 md:mb-6">Scaling plan</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-center text-[#0FF1CE] mb-3 md:mb-6">Performance Scaling Plan</h2>
             <p className="text-gray-300 text-center text-sm md:text-base max-w-3xl mx-auto mb-8 md:mb-12">
-              At Shockwave Capital we believe that a traders' development is an ongoing journey, which is why we give our earning account traders the ability to further scale their trading over time.
+              We believe trader development is a journey — not a one-time event. That's why Shockwave Capital offers an ongoing scale-up path for consistent performers.
             </p>
 
             <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12">
@@ -458,7 +458,7 @@ export default function ShockwaveLandingPage() {
                     "Balance Scale up of 50% every 3 months",
                     "Ongoing increases every 3 months if objectives are met",
                     "Trading Objectives remain the same as your original plan on increased balance",
-                    "Maximum Allocation per trader of $5 million"
+                    "Maximum Allocation per trader of $5 million Simulated Account"
                   ].map((item, index) => (
                     <li key={index} className="flex items-start space-x-3 md:space-x-4 group">
                       <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center mt-0.5 md:mt-1 group-hover:scale-110 transition-transform shrink-0">
@@ -485,7 +485,7 @@ export default function ShockwaveLandingPage() {
                     <thead>
                       <tr className="border-b border-[#0FF1CE]/20">
                         <th className="py-3 md:py-4 px-3 md:px-6 text-left text-[#0FF1CE] font-bold">Elapsed Time</th>
-                        <th className="py-3 md:py-4 px-3 md:px-6 text-right text-[#0FF1CE] font-bold">Initial Balance</th>
+                        <th className="py-3 md:py-4 px-3 md:px-6 text-right text-[#0FF1CE] font-bold">Simulated Capital</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -582,20 +582,20 @@ export default function ShockwaveLandingPage() {
                   },
 
                   {
-                    feature: "First Withdrawal",
+                    feature: "First Payout Eligibility",
                     shockwave: "14 Days",
                     ftmo: "14 Days",
                     fundedNext: "21 Days"
                   },
         
                   {
-                    feature: "Instant Funding",
+                    feature: "Simulated Instant Access",
                     shockwave: true,
                     ftmo: false,
                     fundedNext: false
                   },
                   {
-                    feature: "Max Allocation",
+                    feature: "Simulated Max Allocation",
                     shockwave: "$500k",
                     ftmo: "$400k",
                     fundedNext: "$300k"
@@ -655,9 +655,9 @@ export default function ShockwaveLandingPage() {
           <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-[#131313] to-transparent"></div>
           <div className="absolute top-0 left-0 w-full h-full bg-[#0FF1CE]/[0.025] blur-[100px] rounded-full"></div>
           <div className="relative z-10">
-            <h2 className="text-3xl font-bold text-center text-[#0FF1CE] mb-6">Global Trading Network</h2>
+            <h2 className="text-3xl font-bold text-center text-[#0FF1CE] mb-6">Global Network</h2>
             <p className="text-base md:text-xl text-gray-300 text-center max-w-2xl mx-auto mb-16">
-              Powering high-octane traders worldwide. Join our network of elite traders pushing the boundaries of what's possible.
+              Global Access. Elite Focus. Unmatched Simulation.
             </p>
 
             <div className="max-w-5xl mx-auto relative">
@@ -798,7 +798,7 @@ export default function ShockwaveLandingPage() {
                 </div>
                 <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-4 md:p-6">
                   <h3 className="text-[#0FF1CE] text-lg md:text-4xl font-bold mb-2">$2M+</h3>
-                  <p className="text-gray-400 text-[0.625rem] md:text-base">Trading Capital Available</p>
+                  <p className="text-gray-400 text-[0.625rem] md:text-base">Simulated Capital Programs</p>
                 </div>
               </div>
             </div>
@@ -828,34 +828,29 @@ export default function ShockwaveLandingPage() {
                 <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-6 px-4 md:px-0">
                   {[
                     {
-                      question: "What makes Shockwave Capital different from other prop firms?",
-                      questionShort: "We're not just another challenge shop.",
-                      answer: "We're the nitrous boost of the prop world — offering 1:200 leverage, massive 15%,8% drawdowns, instant access funding, and zero fluff. While others hold you back with baby rules and slow payouts, we throw you straight into the deep end — where real traders thrive."
+                      question: "What makes Shockwave different?",
+                      questionShort: "We don't play small.",
+                      answer: "While other platforms overpromise and underdeliver, we offer structured simulations with higher drawdown tolerance, tighter feedback loops, and faster scaling potential — all with fully disclosed rules and performance metrics."
                     },
                     {
-                      question: "How fast can I start trading live capital?",
-                      questionShort: "Instantly.",
-                      answer: "With our Instant Funding model, there's no waiting, no phases, no warm-ups. You hit the ground running — with real buying power, real leverage, and real upside. You're live the moment your payment clears. No delays. No games. With our standard challenge you can get funded within 8 trading days."
+                      question: "How soon can I start trading?",
+                      questionShort: "Immediately after setup.",
+                      answer: "Once your account is set up and your evaluation fee is processed, you're good to go. No long waiting times, no phases to unlock — just start trading in our live-market simulation environment."
                     },
                     {
-                      question: "What's the profit split and how do payouts work?",
-                      questionShort: "Standard - 90%, Instant - 70%",
-                      answer: "Our payouts are lightning fast, and we offer industry-leading terms with a one free retry if you stumble on our instant funding account. We reward precision, not perfection."
+                      question: "What's the payout process like?",
+                      questionShort: "Fast and straightforward.",
+                      answer: "After meeting performance benchmarks, simulated payouts become eligible after 14 days and the required number of profitable trade days. Standard accounts: up to 90% simulated share. Instant accounts: up to 70%."
                     },
                     {
-                      question: "What are the rules? Are they trader-friendly?",
-                      questionShort: "Let's put it this way:\nWe're aggressive — but fair.",
-                      answer: "Standard:\nMax Daily Drawdown: 8%\nMax Total Drawdown: 15%\nLeverage: 1:200\nMinimum Profitable Days: 4\nTarget: 12%/6%\n\nInstant:\nMax Daily Drawdown: 4%\nMax Total Drawdown: 8%\nLeverage: 1:200\nMinimum Profitable Days: 5\nTarget: 12%\n\nWe give you the tools to blow up the charts — not your account."
+                      question: "What trading styles are allowed?",
+                      questionShort: "All legitimate strategies.",
+                      answer: "We support all strategies — scalping, swing, algorithmic — as long as your trades stay within risk rules and show consistency."
                     },
                     {
-                      question: "Can I swing trade, scalp, hold over news, or use EAs?",
-                      questionShort: "Hell yes.",
-                      answer: "We're not here to clip your wings — we're here to hand you the throttle. Use your strategy, your way.\nScalp, swing, algorithmic? As long as you play within the risk rules, the market is yours."
-                    },
-                    {
-                      question: "What happens if I fail? Do I lose everything?",
-                      questionShort: "Not with Shockwave.",
-                      answer: "Every challenger on our Instant Funding account gets one free retry — because we know great traders sometimes have off days. We don't punish that. We back those who fight back. On our Standard Challenge if you fail you can reset for 199$ and try again!"
+                      question: "What happens if I don't pass?",
+                      questionShort: "You get another chance.",
+                      answer: "On our Instant Evaluation plan, every trader gets one free retry. Standard Challenge users can reset for $199 if needed — no penalty, just another shot at proving yourself."
                     }
                   ].map(({ question, questionShort, answer }, index) => (
                     <div
@@ -995,7 +990,7 @@ export default function ShockwaveLandingPage() {
                   className="h-auto w-auto"
                 />
                 <p className="text-gray-400 text-sm">
-                  High-octane funding for elite traders. Push your trading into Overdrive with industry-leading leverage and conditions.
+                High-performance simulated trading for skilled traders. Test your strategy with industry-leading virtual conditions and 1:200 simulated leverage in our evaluation programs.
                 </p>
                 <div className="flex space-x-4">
                   {[
@@ -1103,18 +1098,30 @@ export default function ShockwaveLandingPage() {
             <div className="border-t border-[#2F2F2F] pt-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                 <div className="text-xs text-gray-500">
-                  <p className="mb-2">
-                    Trading foreign exchange and futures carries a high level of risk and may not be suitable for all investors. The high degree of leverage can work against you as well as for you.
-                  </p>
-                  <p className="mb-2">
-                    By purchasing our trading challenges or funded accounts, you acknowledge that Shockwave Capital is not responsible for any losses incurred during trading. All trading decisions and their outcomes are solely your responsibility.
-                  </p>
-                  <p className="mb-2">
-                    Our prop firm services are for educational and evaluation purposes only. Past performance is not indicative of future results. Trading capital provided remains the property of Shockwave Capital and is subject to our risk management protocols.
-                  </p>
-                  <p className="mb-2">
-                    Challenge fees and subscription payments are non-refundable once trading activity has commenced. We reserve the right to modify trading rules, profit targets, and account conditions at our discretion with appropriate notice.
-                  </p>
+                <p className="mb-2">
+  ⚠️ <strong>Disclaimer:</strong> Shockwave Capital provides access to simulated trading environments for educational and evaluation purposes only. No real funds are traded, invested, or deposited by participants at any stage. References to "funded accounts," "capital," "payouts," or "profit splits" refer exclusively to simulated performance metrics within our proprietary trading models.
+</p>
+
+<p className="mb-2">
+  Participation in our challenges does not constitute an offer or solicitation to invest or manage capital. Shockwave Capital is not a broker-dealer, investment advisor, or financial institution and does not provide financial, investment, or trading advice.
+</p>
+
+<p className="mb-2">
+  All trading activity on our platform takes place in a simulated environment using live or delayed market data. Any strategies executed, profits generated, or losses incurred are part of a simulated experience and do not reflect actual market performance or real financial gain/loss.
+</p>
+
+<p className="mb-2">
+  By purchasing access to any evaluation or subscription plan, you acknowledge and agree to our Terms of Use, Privacy Policy, and Program Rules. All purchases are final. Fees are non-refundable once your simulated trading account is activated or access to our services is granted.
+</p>
+
+<p className="mb-2">
+  Shockwave Capital retains full control over all account parameters and reserves the right to update challenge rules, evaluation criteria, payout structures, or access terms with appropriate notice. Continued use of our services constitutes acceptance of any such updates.
+</p>
+
+<p className="mb-2">
+  Trading leveraged products like forex, indices, and commodities carries inherent risk. Even in simulated environments, practicing risk management and caution is essential. Past simulated performance is not indicative of future results.
+</p>
+
                   <p>
                     &copy; {new Date().getFullYear()} Shockwave Capital. All rights reserved.
                   </p>

@@ -10,87 +10,60 @@ export default function PrivacyPage() {
         
         <div className="relative z-10 max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold text-[#0FF1CE] mb-8">Privacy Policy</h1>
-          
+          <p className="text-gray-300 mb-8">Effective Date: {new Date().toLocaleDateString()}</p>
+
           <div className="space-y-8 text-gray-300">
             <section className="space-y-4">
+              <p>Shockwave Capital ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website or use our services.</p>
+            </section>
+
+            <section className="space-y-4">
               <h2 className="text-2xl font-bold text-white">1. Information We Collect</h2>
-              <p>1.1. Personal Information:</p>
+              <p>We collect the following types of personal information:</p>
               <ul className="list-disc pl-6 space-y-2">
-                <li>Name and contact information</li>
-                <li>Trading experience and history</li>
-                <li>Financial information for payouts</li>
-                <li>Government-issued identification for KYC</li>
-                <li>Communication records</li>
+                <li><span className="font-medium">Account Information:</span> Full name, email address, username, and password.</li>
+                <li><span className="font-medium">KYC/AML Compliance:</span> Government-issued ID, proof of residence, and other documents for verification purposes.</li>
+                <li><span className="font-medium">Payment Information:</span> Collected and processed securely via our third-party payment processors (e.g., Stripe, Paddle). We do not store card details on our servers.</li>
+                <li><span className="font-medium">Usage Data:</span> IP address, browser type, access times, device type, and pages visited.</li>
               </ul>
             </section>
 
             <section className="space-y-4">
               <h2 className="text-2xl font-bold text-white">2. How We Use Your Information</h2>
-              <p>2.1. We use your information to:</p>
+              <p>We use the data we collect to:</p>
               <ul className="list-disc pl-6 space-y-2">
-                <li>Provide and maintain our trading services</li>
-                <li>Process payments and withdrawals</li>
-                <li>Verify your identity and prevent fraud</li>
-                <li>Communicate important updates</li>
-                <li>Improve our services and user experience</li>
+                <li>Provide and manage our services</li>
+                <li>Verify your identity and eligibility</li>
+                <li>Enforce our terms and rules</li>
+                <li>Communicate with you about updates, promotions, and service notices</li>
+                <li>Ensure compliance with legal obligations and fraud prevention</li>
               </ul>
             </section>
 
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-white">3. Data Security</h2>
-              <p>3.1. We implement robust security measures to protect your data.</p>
-              <p>3.2. All sensitive information is encrypted using industry-standard protocols.</p>
-              <p>3.3. Regular security audits are conducted to maintain data integrity.</p>
-            </section>
-
-            <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-white">4. Information Sharing</h2>
-              <p>4.1. We may share your information with:</p>
+              <h2 className="text-2xl font-bold text-white">3. Data Sharing</h2>
+              <p>We do not sell your personal data. Your information may be shared with:</p>
               <ul className="list-disc pl-6 space-y-2">
-                <li>Payment processors for transactions</li>
-                <li>Regulatory authorities when required</li>
-                <li>Service providers who assist our operations</li>
-              </ul>
-              <p>4.2. We never sell your personal information to third parties.</p>
-            </section>
-
-            <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-white">5. Trading Data</h2>
-              <p>5.1. We collect and analyze trading data to:</p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>Monitor compliance with trading rules</li>
-                <li>Detect and prevent fraudulent activity</li>
-                <li>Calculate profit sharing and payouts</li>
-                <li>Improve our risk management systems</li>
+                <li>Payment processors for billing purposes</li>
+                <li>Regulatory bodies if required by law</li>
+                <li>Internal tools and platforms for service delivery (e.g., CRM, analytics)</li>
               </ul>
             </section>
 
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-white">6. Your Rights</h2>
-              <p>6.1. You have the right to:</p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>Access your personal data</li>
-                <li>Request data correction or deletion</li>
-                <li>Opt-out of marketing communications</li>
-                <li>Request data portability</li>
-              </ul>
+              <h2 className="text-2xl font-bold text-white">4. Data Retention</h2>
+              <p>We retain personal data only for as long as necessary to fulfill legal and operational purposes, including KYC retention guidelines and regulatory compliance.</p>
             </section>
 
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-white">7. Cookies and Tracking</h2>
-              <p>7.1. We use cookies and similar technologies to:</p>
+              <h2 className="text-2xl font-bold text-white">5. Your Rights</h2>
+              <p>You may request:</p>
               <ul className="list-disc pl-6 space-y-2">
-                <li>Maintain your session security</li>
-                <li>Remember your preferences</li>
-                <li>Analyze platform usage</li>
-                <li>Improve user experience</li>
+                <li>Access to your personal data</li>
+                <li>Correction or deletion of your data</li>
+                <li>Opt-out of marketing emails</li>
               </ul>
-            </section>
-
-            <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-white">8. Contact Us</h2>
-              <p>For any privacy-related inquiries, please contact us at:</p>
-              <p className="text-[#0FF1CE]">support@shockwave-capital.com</p>
+              <p className="mt-4">For requests, contact: <a href="mailto:support@shockwave-capital.com" className="text-[#0FF1CE] hover:underline">support@shockwave-capital.com</a></p>
             </section>
 
             <div className="pt-8">

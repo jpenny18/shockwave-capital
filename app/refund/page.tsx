@@ -68,7 +68,21 @@ export default function RefundPage() {
             </section>
 
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-white">6. Contact Information</h2>
+              <h2 className="text-2xl font-bold text-white">6. Challenge Fees</h2>
+              <div className="bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 backdrop-blur-sm rounded-xl p-6 border border-yellow-500/20">
+                <p className="text-lg font-semibold text-yellow-400 mb-4">Important Notice</p>
+                <p>Challenge or instant access fees are payment for evaluation services and simulated trading access — not investment products or deposits. Refunds are not applicable if you fail the challenge or disagree with trading rules post-purchase.</p>
+              </div>
+            </section>
+
+            <section className="space-y-4">
+              <h2 className="text-2xl font-bold text-white">7. Subscription Cancellation</h2>
+              <p>You may cancel any recurring subscriptions prior to the next billing cycle to avoid further charges. No partial refunds will be issued for unused time.</p>
+              <p className="mt-4">All refund inquiries must be submitted to <span className="text-[#0FF1CE]">support@shockwave-capital.com</span> within 3 days of the transaction.</p>
+            </section>
+
+            <section className="space-y-4">
+              <h2 className="text-2xl font-bold text-white">8. Contact Information</h2>
               <p>For questions about refunds or to report unauthorized charges, contact:</p>
               <p className="text-[#0FF1CE]">support@shockwave-capital.com</p>
             </section>

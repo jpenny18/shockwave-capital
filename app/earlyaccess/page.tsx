@@ -97,6 +97,7 @@ export default function EarlyAccessPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [rememberMe, setRememberMe] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
+  const [acceptDisclaimer, setAcceptDisclaimer] = useState(false);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState<AuthData>({
     email: '',
@@ -147,6 +148,12 @@ export default function EarlyAccessPage() {
           return;
         }
 
+        if (!acceptDisclaimer) {
+          setErrors({ disclaimer: 'You must acknowledge and accept the disclaimer' });
+          setIsSubmitting(false);
+          return;
+        }
+
         // Sign in with Firebase
         await signInUser(formData.email, formData.password);
         // If successful, redirect to main page
@@ -164,8 +171,11 @@ export default function EarlyAccessPage() {
           return;
         }
 
-        if (!acceptTerms) {
-          setErrors({ terms: 'You must accept the terms and conditions' });
+        if (!acceptTerms || !acceptDisclaimer) {
+          setErrors({ 
+            terms: !acceptTerms ? 'You must accept the terms and conditions' : undefined,
+            disclaimer: !acceptDisclaimer ? 'You must acknowledge and accept the disclaimer' : undefined
+          });
           setIsSubmitting(false);
           return;
         }
@@ -243,7 +253,7 @@ export default function EarlyAccessPage() {
             </p>
             <div className="mt-4 p-4 bg-gradient-to-r from-[#0FF1CE]/10 to-[#00D4FF]/10 rounded-lg border border-[#0FF1CE]/20">
               <div className="text-lg font-bold text-white mb-1">Limited Time Launch Offer! 🚀</div>
-              <div className="text-2xl font-bold text-[#0FF1CE] mb-1">SAVE 40% OFF</div>
+              <div className="text-2xl font-bold text-[#0FF1CE] mb-1">SAVE 40% on your evaluation fee</div>
               <div className="text-sm text-gray-400 mb-2">Use Code:</div>
               <div className="text-xl font-mono font-bold bg-gradient-to-r from-[#0FF1CE] to-[#00D4FF] bg-clip-text text-transparent tracking-wider">
                 SHOCKWAVE
@@ -251,10 +261,8 @@ export default function EarlyAccessPage() {
             </div>
             <div className="mt-6 flex flex-col items-center">
               <div className="text-[#0FF1CE] font-semibold text-sm uppercase tracking-wider mb-1">Now Live</div>
-              <div className="text-2xl font-bold bg-gradient-to-r from-[#0FF1CE] to-[#00D4FF] bg-clip-text text-transparent">
-                Start Trading Today
-              </div>
-              <div className="mt-2 text-xs text-gray-400">No handholding, no baby rules, no micromanaging, ONLY high octane funding.</div>
+              <div className="mt-2 text-xs text-gray-400">No micromanagement. No overreaching restrictions. Just a fast-paced trading evaluation built for serious traders.</div>
+              <div className="mt-1 text-xs text-gray-400">Join our simulation-based skill assessments and prove your edge.</div>
             </div>
           </div>
 
@@ -312,6 +320,42 @@ export default function EarlyAccessPage() {
               </label>
             </div>
 
+            {/* Disclaimer Acknowledgment */}
+            <div className="flex items-start gap-2">
+              <input
+                type="checkbox"
+                id="disclaimer"
+                checked={acceptDisclaimer}
+                onChange={(e) => setAcceptDisclaimer(e.target.checked)}
+                className="mt-1 w-4 h-4 rounded border-gray-600 text-[#0FF1CE] focus:ring-[#0FF1CE] focus:ring-offset-0 bg-[#1A1A1A]"
+              />
+              <label htmlFor="disclaimer" className="text-sm text-gray-300">
+                I acknowledge that Shockwave Capital provides a simulated trading environment and that all activity is for educational and evaluative purposes only. I agree to the{' '}
+                <Link href="/disclaimer" className="text-[#0FF1CE] hover:underline">
+                  Disclaimer
+                </Link>, {' '}
+                <Link href="/terms" className="text-[#0FF1CE] hover:underline">
+                  Terms of Use
+                </Link>, {' '}
+                <Link href="/privacy" className="text-[#0FF1CE] hover:underline">
+                  Privacy Policy
+                </Link>, {' '}
+                <Link href="/legal-disclosure" className="text-[#0FF1CE] hover:underline">
+                  Legal Disclosure
+                </Link>, and {' '}
+                <Link href="/refund" className="text-[#0FF1CE] hover:underline">
+                  Refund Policy
+                </Link>.
+              </label>
+            </div>
+
+            {errors.disclaimer && (
+              <p className="text-sm text-red-500 flex items-center gap-1">
+                <AlertCircle size={14} />
+                {errors.disclaimer}
+              </p>
+            )}
+
             {!isLogin && (
               <div className="flex items-start gap-2">
                 <input
@@ -360,6 +404,8 @@ export default function EarlyAccessPage() {
             </button>
           </form>
 
+          
+
           <div className="mt-6 text-center">
             <p className="text-gray-400">
               {isLogin ? "Don't have an account?" : 'Already have an account?'}{' '}
@@ -375,6 +421,33 @@ export default function EarlyAccessPage() {
               </button>
             </p>
           </div>
+
+          <div className="mt-6 mb-8 bg-gradient-to-r from-orange-500/20 to-amber-500/20 rounded-lg p-4 border border-orange-500/30 shadow-lg">
+            <div className="flex items-start gap-2 mb-3">
+              <span className="text-orange-400 text-xl">⚠️</span>
+              <h3 className="text-orange-400 font-bold">Important Disclaimer</h3>
+            </div>
+            <p className="text-sm text-gray-300 mb-3">
+              Shockwave Capital offers access to a simulated trading environment for the sole purpose of evaluating trading skill and discipline. All trading activity occurs on demo accounts using real-time market data. No actual capital is deposited, invested, or traded on behalf of users.
+            </p>
+            <p className="text-sm text-gray-300 mb-3">
+              References to "funding," "capital," "payouts," or "profit splits" pertain exclusively to performance-based simulations and do not imply the transfer or management of real funds.
+            </p>
+            <p className="text-sm text-gray-300 mb-3">
+              Participation in Shockwave Capital's programs is strictly for educational and evaluative purposes and does not constitute financial advice, investment services, or brokerage activity.
+            </p>
+            <p className="text-sm text-gray-300 font-semibold mb-2">By signing up or logging in, you confirm that:</p>
+            <ul className="text-sm text-gray-300 list-disc pl-5 mb-3 space-y-1">
+              <li>You are not participating in real-money or live trading.</li>
+              <li>You understand this platform is not a broker-dealer, investment advisor, or asset management firm.</li>
+              <li>Any rewards, incentives, or performance-based milestones are tied to simulated results and subject to our internal review and compliance criteria.</li>
+              <li>You accept these terms and agree to our full Terms of Use and Privacy Policy.</li>
+            </ul>
+            <p className="text-sm text-orange-400 font-semibold">
+              If you do not agree to these conditions, please do not proceed.
+            </p>
+          </div>
+
         </div>
       </div>
     </div>
