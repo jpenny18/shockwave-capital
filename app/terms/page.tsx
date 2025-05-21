@@ -11,7 +11,7 @@ export default function TermsPage() {
         
         <div className="relative z-10 max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold text-[#0FF1CE] mb-8">Terms of Service</h1>
-          <p className="text-gray-300 mb-8">Effective Date: {new Date().toLocaleDateString()}</p>
+          <p className="text-gray-300 mb-8">Effective Date: May 17th 2025</p>
           
           <div className="space-y-8 text-gray-300">
             <section className="space-y-4">

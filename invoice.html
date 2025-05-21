@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Shockwave Capital - Invoice</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        margin: 0;
+        padding: 0;
+        background-color: #f5f5f5;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .invoice-wrapper {
+        background-color: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        padding: 40px;
+        margin: 40px;
+        max-width: 900px;
+        width: 100%;
+      }
+      .invoice-header {
+        border-bottom: 2px solid #0ff1ce;
+        padding-bottom: 20px;
+        margin-bottom: 20px;
+      }
+      .logo {
+        max-width: 200px;
+      }
+      .invoice-details {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 30px;
+      }
+      .company-info,
+      .customer-info {
+        flex: 1;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+      }
+      th,
+      td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+      }
+      .total-section {
+        text-align: right;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+      }
+      .footer {
+        margin-top: 50px;
+        padding-top: 20px;
+        font-size: 0.9em;
+        color: #666;
+        text-align: center;
+        border-top: 1px solid #eee;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="invoice-wrapper">
+      <div class="invoice-header">
+        <img
+          src="/public/logo.png"
+          alt="Shockwave Capital"
+          class="logo"
+          style="width: 200px; height: auto"
+        />
+        <h1 style="color: #0ff1ce">INVOICE</h1>
+      </div>
+
+      <div class="invoice-details">
+        <div class="company-info">
+          <h3>From:</h3>
+          <p>Shockwave Capital LTD</p>
+          <p>Educational Trading Services</p>
+          <p>support@shockwave-capital.com</p>
+        </div>
+        <div class="customer-info">
+          <h3>To:</h3>
+          <p>Nikola Kosanovic</p>
+          <p>nikolakosanovic34@gmail.com</p>
+          <p>Phone: 062221228</p>
+          <p>Country: RS</p>
+        </div>
+      </div>
+
+      <div class="invoice-info">
+        <p><strong>Invoice Number:</strong> INV-2025-0518</p>
+        <p><strong>Date:</strong> May 18, 2025</p>
+        <p><strong>Payment ID:</strong> pi_3RQLqDDGPhRhqRFJ0rrS10Fy</p>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th>Details</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Educational Trading Assessment - Standard Package</td>
+            <td>
+              <ul>
+                <li>30-day Trading Simulator Access</li>
+                <li>Performance Analytics Tools</li>
+                <li>Risk Management Assessment</li>
+                <li>Trading Strategy Evaluation</li>
+              </ul>
+            </td>
+            <td>$299.40</td>
+          </tr>
+          <tr>
+            <td>Community Membership Benefits</td>
+            <td>
+              <ul>
+                <li>Discord Community Access</li>
+                <li>Educational Resources</li>
+                <li>Trading Tools Access</li>
+              </ul>
+            </td>
+            <td>$60.00</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="total-section">
+        <p><strong>Subtotal:</strong> $359.40</p>
+        <p><strong>Total:</strong> $359.40 USD</p>
+      </div>
+
+      <div class="footer">
+        <p><strong>About Shockwave Capital:</strong></p>
+        <p>
+          Shockwave Capital is an educational trading company providing trading
+          assessments and community membership services. Our recent launch has
+          attracted numerous students and trading enthusiasts looking to
+          evaluate their trading capabilities through our comprehensive
+          assessment program.
+        </p>
+        <p>For any questions, please contact: support@shockwave-capital.com</p>
+      </div>
+    </div>
+  </body>
+</html>
