@@ -1,30 +1,17 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { db } from '@/lib/firebase-admin';
 
 export async function GET() {
   try {
-    // Check if user is authenticated and is admin
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // Fetch all crypto orders from Firebase, ordered by most recent first
+    const ordersSnapshot = await db.collection('crypto-orders')
+      .orderBy('createdAt', 'desc')
+      .get();
 
-    // Fetch admin status
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { isAdmin: true }
-    });
-
-    if (!user?.isAdmin) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    // Fetch all crypto orders, ordered by most recent first
-    const orders = await prisma.cryptoOrder.findMany({
-      orderBy: { createdAt: 'desc' }
-    });
+    const orders = ordersSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
 
     return NextResponse.json(orders);
   } catch (error) {
