@@ -43,7 +43,7 @@ export default function DashboardPage() {
   const handleStartChallenge = (type: string) => {
     // Navigate to the challenge page with the type in session storage
     sessionStorage.setItem('preselectedChallengeType', type);
-    router.push('/dashboard/challenge');
+    router.push('/challenge');
   };
 
   return (

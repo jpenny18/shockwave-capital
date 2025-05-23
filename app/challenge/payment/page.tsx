@@ -14,7 +14,7 @@ import {
   HeadphonesIcon,
   Mail
 } from 'lucide-react';
-import BitcoinPayment from '../../components/BitcoinPayment';
+import CryptoPayment from '../../components/CryptoPayment';
 import StripeCardForm from '../../components/StripeCardForm';
 
 interface ChallengeData {
@@ -282,35 +282,8 @@ export default function PaymentPage() {
 
   return (
     <div className="bg-gradient-to-b from-[#0D0D0D] via-[#121212] to-[#151515] text-white min-h-screen font-sans">
-      {/* System Alert Banner */}
-      <div className="relative z-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="bg-gradient-to-r from-orange-500/20 via-amber-500/20 to-orange-500/20 rounded-xl border border-orange-500/30 shadow-lg p-6">
-            <div className="flex items-start gap-4">
-              <div className="bg-orange-500/20 rounded-full p-2 mt-1">
-                <span className="text-2xl">⚠️</span>
-              </div>
-              <div className="space-y-3">
-                <h3 className="text-xl font-bold text-orange-400">Payment System Temporarily Paused</h3>
-                <div className="space-y-2 text-gray-300">
-                  <p>
-                    Due to an unexpected issue with our payment processor, we are temporarily unable to accept new payments. We are actively implementing new payment solutions including cryptocurrency and a new credit/debit card processor.
-                  </p>
-                  <p className="text-white font-medium">
-                    <span className="text-[#0FF1CE]">Good news for early supporters:</span> Everybody who purchased during our launch day have received their accounts for free! We've chosen to absorb the $30,000 loss from these transactions to demonstrate our commitment to the trading community.
-                  </p>
-                  <p>
-                    This decision reflects our core values: we are here for the traders, and we aim to be the most transparent in the industry. We appreciate your patience during this brief transition.
-                  </p>
-                  <p className="text-orange-400 font-medium mt-4">
-                    New payment systems will be operational shortly. Please check back soon or contact support for updates.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      
+      
 
       {/* Background Effects */}
       <div className="absolute top-0 left-0 w-full h-full bg-[#0FF1CE]/[0.02] background-noise"></div>
@@ -329,7 +302,7 @@ export default function PaymentPage() {
           <div className="p-4 flex items-start gap-3">
             <Mail className="text-[#0FF1CE] w-5 h-5 mt-0.5 flex-shrink-0" />
             <p className="text-sm text-gray-300">
-              If your card declines or you encounter any payment issues, please email{' '}
+              If you encounter any payment issues, please email{' '}
               <a href="mailto:support@shockwave-capital.com" className="text-[#0FF1CE] hover:underline">
                 support@shockwave-capital.com
               </a>
@@ -346,96 +319,80 @@ export default function PaymentPage() {
             <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl p-6 border border-[#2F2F2F]/50 mb-8">
               <h2 className="text-xl font-semibold mb-6">Payment Methods</h2>
 
-              {/* Credit Card Payment Option */}
+              {/* Crypto Payment Option */}
               <div className="mb-4">
-              <button
-                onClick={() => handlePaymentSelect('card')}
+                <button
+                  onClick={() => handlePaymentSelect('crypto')}
                   className="w-full bg-[#1A1A1A] hover:bg-[#212121] border border-[#2F2F2F]/50 rounded-xl p-4 transition duration-200"
                 >
                   <div className="flex justify-between items-center">
                     <div className="flex items-center">
-                      <CreditCard className="text-[#0FF1CE] mr-3" size={20} />
-                      <span className="font-medium">Credit/Debit Card</span>
+                      <Bitcoin className="text-[#0FF1CE] mr-3" size={20} />
+                      <span className="font-medium">Cryptocurrency</span>
                     </div>
                     <div className="flex items-center">
                       <span className="mr-2">${challengeData.price.toFixed(2)}</span>
-                      {isCardExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                      {isCryptoExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                     </div>
                   </div>
                 </button>
 
-                {isCardExpanded && (
-                  <div className="mt-4 relative">
-                    {isProcessingPayment && <PaymentProcessingOverlay />}
-                    <div className="bg-[#151515] rounded-xl p-5 border border-[#2F2F2F]/50">
-                      {renderCardPaymentSection()}
+                {isCryptoExpanded && (
+                  <div className="mt-4">
+                    <div className="bg-[#151515] rounded-xl border border-[#2F2F2F]/50 relative">
+                      {isProcessingPayment && <PaymentProcessingOverlay />}
+                      <CryptoPayment
+                        challengeData={challengeData}
+                        successRedirectPath="/challenge/cryptopending"
+                        onProcessingStateChange={setIsProcessingPayment}
+                      />
                     </div>
                   </div>
                 )}
+              </div>
 
-                {/* Trust Badges */}
-                <div className="grid grid-cols-3 gap-4 mt-6">
-                  <div className="bg-[#151515] rounded-xl p-4 text-center border border-[#2F2F2F]/50 hover:border-[#0FF1CE]/50 transition-colors group">
-                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center group-hover:bg-[#0FF1CE]/20 transition-colors">
-                      <Shield className="text-[#0FF1CE]" size={24} />
-                    </div>
-                    <div className="text-[#0FF1CE] font-medium mb-1 text-xs">Secure Payment</div>
-                    <div className="text-[0.5rem] text-gray-400 leading-relaxed">256-bit SSL encryption for maximum security</div>
+              {/* Trust Badges */}
+              <div className="grid grid-cols-3 gap-4 mt-6">
+                <div className="bg-[#151515] rounded-xl p-4 text-center border border-[#2F2F2F]/50 hover:border-[#0FF1CE]/50 transition-colors group">
+                  <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center group-hover:bg-[#0FF1CE]/20 transition-colors">
+                    <Shield className="text-[#0FF1CE]" size={24} />
                   </div>
-                  
-                  <div className="bg-[#151515] rounded-xl p-4 text-center border border-[#2F2F2F]/50 hover:border-[#0FF1CE]/50 transition-colors group">
-                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center group-hover:bg-[#0FF1CE]/20 transition-colors">
-                      <RefreshCcw className="text-[#0FF1CE]" size={24} />
-                    </div>
-                    <div className="text-[#0FF1CE] font-medium mb-1 text-xs">Refund Policy</div>
-                    <div className="text-[0.5rem] text-gray-400 leading-relaxed">Full refund after successfully completing the evaluation</div>
+                  <div className="text-[#0FF1CE] font-medium mb-1 text-xs">Secure Payment</div>
+                  <div className="text-[0.5rem] text-gray-400 leading-relaxed">256-bit SSL encryption for maximum security</div>
+                </div>
+                
+                <div className="bg-[#151515] rounded-xl p-4 text-center border border-[#2F2F2F]/50 hover:border-[#0FF1CE]/50 transition-colors group">
+                  <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center group-hover:bg-[#0FF1CE]/20 transition-colors">
+                    <RefreshCcw className="text-[#0FF1CE]" size={24} />
                   </div>
+                  <div className="text-[#0FF1CE] font-medium mb-1 text-xs">Refund Policy</div>
+                  <div className="text-[0.5rem] text-gray-400 leading-relaxed">Full refund after successfully completing the evaluation</div>
+                </div>
 
-                  <div className="bg-[#151515] rounded-xl p-4 text-center border border-[#2F2F2F]/50 hover:border-[#0FF1CE]/50 transition-colors group">
-                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center group-hover:bg-[#0FF1CE]/20 transition-colors">
-                      <HeadphonesIcon className="text-[#0FF1CE]" size={24} />
+                <div className="bg-[#151515] rounded-xl p-4 text-center border border-[#2F2F2F]/50 hover:border-[#0FF1CE]/50 transition-colors group">
+                  <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center group-hover:bg-[#0FF1CE]/20 transition-colors">
+                    <HeadphonesIcon className="text-[#0FF1CE]" size={24} />
+                  </div>
+                  <div className="text-[#0FF1CE] font-medium mb-1 text-xs">24/7 Support</div>
+                  <div className="text-[0.5rem] text-gray-400 leading-relaxed">Round-the-clock customer service assistance</div>
+                </div>
+              </div>
+
+              {/* Credit Card Payment Option - Disabled */}
+              <div className="mt-4 opacity-50 cursor-not-allowed">
+                <div className="w-full bg-[#1A1A1A] border border-[#2F2F2F]/50 rounded-xl p-4">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center">
+                      <CreditCard className="text-gray-400 mr-3" size={20} />
+                      <span className="font-medium text-gray-400">Credit/Debit Card (Coming Soon)</span>
                     </div>
-                    <div className="text-[#0FF1CE] font-medium mb-1 text-xs">24/7 Support</div>
-                    <div className="text-[0.5rem] text-gray-400 leading-relaxed">Round-the-clock customer service assistance</div>
+                    <div className="flex items-center">
+                      <span className="mr-2 text-gray-400">${challengeData.price.toFixed(2)}</span>
+                      <ChevronDown size={16} className="text-gray-400" />
+                    </div>
                   </div>
                 </div>
               </div>
-              
-              {/* Crypto Payment Option - Only render if enabled */}
-              {CRYPTO_PAYMENTS_ENABLED && (
-                      <div>
-                  <button
-                    onClick={() => handlePaymentSelect('crypto')}
-                    className="w-full bg-[#1A1A1A] hover:bg-[#212121] border border-[#2F2F2F]/50 rounded-xl p-4 transition duration-200"
-                  >
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center">
-                        <Bitcoin className="text-[#0FF1CE] mr-3" size={20} />
-                        <span className="font-medium">Bitcoin (10% Off)</span>
-                      </div>
-                      <div className="flex items-center">
-                        <span className="mr-2">${getCryptoPrice()}</span>
-                        {isCryptoExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                      </div>
-                    </div>
-                  </button>
-
-                  {isCryptoExpanded && (
-                    <div className="mt-4">
-                      <div className="bg-[#151515] rounded-xl border border-[#2F2F2F]/50 relative">
-                        {isProcessingPayment && <PaymentProcessingOverlay />}
-                        {/* Bitcoin Payment Component */}
-                        <BitcoinPayment
-                          challengeData={challengeData}
-                          successRedirectPath="/challenge/success"
-                          onProcessingStateChange={setIsProcessingPayment}
-                          discountPercentage={10}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
 
             {/* Important Disclaimer Notice */}
@@ -483,9 +440,9 @@ export default function PaymentPage() {
                 <div className="flex justify-between mb-2">
                   <span className="text-white/70">Platform:</span>
                   <span className="font-medium">{challengeData.platform}</span>
-                    </div>
-                    </div>
-                    
+                </div>
+              </div>
+              
               <div className="border-t border-[#2F2F2F]/50 pt-4 mb-6">
                 <div className="flex justify-between mb-2">
                   <span className="text-white/70">Subtotal:</span>

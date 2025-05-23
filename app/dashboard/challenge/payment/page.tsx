@@ -14,7 +14,7 @@ import {
   HeadphonesIcon,
   Mail
 } from 'lucide-react';
-import BitcoinPayment from '../../../components/BitcoinPayment';
+import CryptoPayment from '../../../components/CryptoPayment';
 import StripeCardForm from '../../../components/StripeCardForm';
 
 type ChallengeType = 'Standard' | 'Instant';
@@ -152,13 +152,13 @@ export default function PaymentPage() {
   useEffect(() => {
     const storedData = sessionStorage.getItem('challengeData');
     if (!storedData) {
-      router.push('/dashboard/challenge');
+      router.push('/challenge');
       return;
     }
     
     const parsedData = JSON.parse(storedData);
     if (!validateChallengeData(parsedData)) {
-      router.push('/dashboard/challenge');
+      router.push('/challenge');
       return;
     }
     
@@ -425,18 +425,18 @@ export default function PaymentPage() {
 
               {/* Crypto Payment Option - Only render if enabled */}
               {CRYPTO_PAYMENTS_ENABLED && (
-            <div>
-              <button
-                onClick={() => handlePaymentSelect('crypto')}
+                <div>
+                  <button
+                    onClick={() => handlePaymentSelect('crypto')}
                     className="w-full bg-[#1A1A1A] hover:bg-[#212121] border border-[#2F2F2F]/50 rounded-xl p-4 transition duration-200"
                   >
                     <div className="flex justify-between items-center">
                       <div className="flex items-center">
                         <Bitcoin className="text-[#0FF1CE] mr-3" size={20} />
-                        <span className="font-medium text-white">Bitcoin (10% Off)</span>
-                  </div>
+                        <span className="font-medium text-white">Cryptocurrency</span>
+                      </div>
                       <div className="flex items-center">
-                        <span className="mr-2 text-white">${getCryptoPrice()}</span>
+                        <span className="mr-2 text-white">${challengeData.price.toFixed(2)}</span>
                         {isCryptoExpanded ? <ChevronUp size={16} className="text-white" /> : <ChevronDown size={16} className="text-white" />}
                       </div>
                     </div>
@@ -446,11 +446,10 @@ export default function PaymentPage() {
                     <div className="mt-4">
                       <div className="bg-[#151515] rounded-xl border border-[#2F2F2F]/50 relative">
                         {isProcessingPayment && <PaymentProcessingOverlay />}
-                        <BitcoinPayment
+                        <CryptoPayment
                           challengeData={challengeData}
                           successRedirectPath="/dashboard/challenge/success"
                           onProcessingStateChange={setIsProcessingPayment}
-                          discountPercentage={10}
                         />
                       </div>
                     </div>

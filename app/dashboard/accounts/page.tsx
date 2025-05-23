@@ -9,7 +9,7 @@ export default function MyAccountsPage() {
   const router = useRouter();
 
   const handleStartChallenge = () => {
-    router.push('/dashboard/challenge');
+    router.push('/challenge');
   };
   
   return (

@@ -103,7 +103,7 @@ export default function SuccessPage() {
                 Go to Dashboard
               </button>
               <button
-                onClick={() => router.push('/dashboard/challenge')}
+                onClick={() => router.push('/challenge')}
                 className="w-full bg-transparent border border-[#0FF1CE] text-[#0FF1CE] py-3 rounded-lg font-semibold hover:bg-[#0FF1CE]/10 transition-colors"
               >
                 Start Another Challenge
@@ -237,7 +237,7 @@ export default function SuccessPage() {
               Go to Dashboard
             </button>
             <button
-              onClick={() => router.push('/dashboard/challenge')}
+              onClick={() => router.push('/challenge')}
               className="flex-1 bg-transparent border border-[#0FF1CE] text-[#0FF1CE] py-3 rounded-lg font-semibold hover:bg-[#0FF1CE]/10 transition-colors"
             >
               Start Another Challenge

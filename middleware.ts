@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export const config = {
-  matcher: ['/admin/:path*', '/admin-auth/:path*'],
+  matcher: ['/admin/:path*', '/admin-auth/:path*', '/dashboard/challenge/:path*'],
   runtime: 'experimental-edge',
 };
 
@@ -57,6 +57,13 @@ export async function middleware(request: NextRequest) {
       // If session is invalid, redirect to admin login
       return NextResponse.redirect(new URL('/admin-auth', request.url));
     }
+  }
+
+  // Check if the URL starts with /dashboard/challenge
+  if (request.nextUrl.pathname.startsWith('/dashboard/challenge')) {
+    // Create a new URL for the redirect
+    const redirectUrl = new URL('/challenge', request.url);
+    return NextResponse.redirect(redirectUrl);
   }
 
   return NextResponse.next();

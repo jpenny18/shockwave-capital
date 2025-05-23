@@ -16,12 +16,14 @@ import {
   Bell,
   Search,
   MessageSquare,
-  Tag
+  Tag,
+  Bitcoin
 } from 'lucide-react';
 
 const navItems = [
   { name: 'Dashboard', href: '/admin', icon: BarChart2 },
   { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
+  { name: 'Crypto Orders', href: '/admin/crypto-orders', icon: Bitcoin },
   { name: 'Customers', href: '/admin/customers', icon: Users },
   { name: 'Email Templates', href: '/admin/emails', icon: Mail },
   { name: 'Pulse Management', href: '/admin/pulse', icon: MessageSquare },
