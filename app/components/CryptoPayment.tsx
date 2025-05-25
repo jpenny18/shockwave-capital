@@ -9,6 +9,7 @@ interface CryptoPaymentProps {
   challengeData: any;
   successRedirectPath: string;
   onProcessingStateChange: (state: boolean) => void;
+  cryptoPrices: CryptoPrice;
 }
 
 interface CryptoPrice {
@@ -32,10 +33,9 @@ const CRYPTO_ADDRESSES: CryptoAddress = {
   USDC: '8ShmNrRPeN1KaCixPhPWPQTvZJn9a8s7oqsCdhoJgeJj'  // Replace with your actual USDC address (Solana)
 };
 
-export default function CryptoPayment({ challengeData, successRedirectPath, onProcessingStateChange }: CryptoPaymentProps) {
+export default function CryptoPayment({ challengeData, successRedirectPath, onProcessingStateChange, cryptoPrices }: CryptoPaymentProps) {
   const router = useRouter();
   const [selectedCrypto, setSelectedCrypto] = useState<'BTC' | 'ETH' | 'USDT' | 'USDC'>('BTC');
-  const [cryptoPrices, setCryptoPrices] = useState<CryptoPrice>({ BTC: 0, ETH: 0, USDT: 1, USDC: 1 });
   const [cryptoAmount, setCryptoAmount] = useState<CryptoPrice>({ BTC: 0, ETH: 0, USDT: 0, USDC: 0 });
   const [verificationPhrase, setVerificationPhrase] = useState<string[]>([]);
   const [userPhrase, setUserPhrase] = useState('');
@@ -49,32 +49,16 @@ export default function CryptoPayment({ challengeData, successRedirectPath, onPr
     setVerificationPhrase(Array.isArray(words) ? words : [words]);
   }, []);
 
-  // Fetch crypto prices every 15 minutes
+  // Calculate crypto amounts when prices or challenge data changes
   useEffect(() => {
-    const fetchPrices = async () => {
-      try {
-        const response = await fetch('/api/crypto/prices');
-        const data = await response.json();
-        setCryptoPrices(data);
-        
-        // Calculate crypto amounts
-        const usdAmount = challengeData.price;
-        setCryptoAmount({
-          BTC: usdAmount / data.BTC,
-          ETH: usdAmount / data.ETH,
-          USDT: usdAmount,
-          USDC: usdAmount
-        });
-      } catch (error) {
-        console.error('Error fetching crypto prices:', error);
-      }
-    };
-
-    fetchPrices(); // Initial fetch
-    const interval = setInterval(fetchPrices, 15 * 60 * 1000); // Fetch every 15 minutes
-
-    return () => clearInterval(interval);
-  }, [challengeData.price]);
+    const usdAmount = challengeData.price;
+    setCryptoAmount({
+      BTC: usdAmount / cryptoPrices.BTC,
+      ETH: usdAmount / cryptoPrices.ETH,
+      USDT: usdAmount,
+      USDC: usdAmount
+    });
+  }, [challengeData.price, cryptoPrices]);
 
   const handleCryptoSelect = (crypto: 'BTC' | 'ETH' | 'USDT' | 'USDC') => {
     setSelectedCrypto(crypto);
@@ -278,6 +262,7 @@ export default function CryptoPayment({ challengeData, successRedirectPath, onPr
             type="text"
             value={userPhrase}
             onChange={(e) => setUserPhrase(e.target.value)}
+            onPaste={(e) => e.preventDefault()}
             placeholder="Type the verification phrase here"
             className="w-full bg-[#1A1A1A] border border-[#2F2F2F]/50 rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#0FF1CE]/50"
           />

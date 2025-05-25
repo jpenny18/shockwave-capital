@@ -78,13 +78,13 @@ export default function ShockwaveLandingPage() {
                 Funded or Fried
               </h1>
               <h3 className="text-[0.9375rem] md:text-3xl font-extrabold bg-gradient-to-b from-[#0FF1CE] to-[#0FF1CE]/50 text-transparent bg-clip-text mb-12 -mt-4 md:mt-0">
-                No Hand-Holding. No Gimmicks. Just Elite-Level Simulated Trading.
+                Prop trading without the training wheels
               </h3>
             </div>
 
             <div className="space-y-12">
               <p className="text-base md:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-                Push your trading to the limit with:
+                High-octane funding for elite traders. Push your trading into Overdrive with:
               </p>
 
               <div className="grid grid-cols-3 gap-2 md:flex md:flex-row md:justify-center md:items-center md:gap-8 px-2 md:px-0">
@@ -112,7 +112,7 @@ export default function ShockwaveLandingPage() {
               <div className="flex flex-col md:flex-row justify-center gap-4 md:gap-6 max-w-sm md:max-w-[600px] mx-auto w-full pt-8">
                 <Link href="/challenge">
                   <button className="px-10 py-3 md:py-4 bg-[#0FF1CE] text-black text-sm md:text-lg font-bold rounded-lg hover:scale-105 transition-transform w-full md:w-[300px]">
-                    START YOUR EVALUATION
+                    START CHALLENGE
                   </button>             
                 </Link>
                 <Link href="/auth">

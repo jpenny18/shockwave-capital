@@ -261,8 +261,7 @@ export default function EarlyAccessPage() {
             </div>
             <div className="mt-6 flex flex-col items-center">
               <div className="text-[#0FF1CE] font-semibold text-sm uppercase tracking-wider mb-1">Now Live</div>
-              <div className="mt-2 text-xs text-gray-400">No micromanagement. No overreaching restrictions. Just a fast-paced trading evaluation built for serious traders.</div>
-              <div className="mt-1 text-xs text-gray-400">Join our simulation-based skill assessments and prove your edge.</div>
+              <div className="mt-2 text-xs text-gray-400">No handholding, no baby rules, no micromanaging, ONLY high octane funding.</div>
             </div>
           </div>
 

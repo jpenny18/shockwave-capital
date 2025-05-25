@@ -38,6 +38,13 @@ interface ChallengeData {
   };
 }
 
+interface CryptoPrice {
+  BTC: number;
+  ETH: number;
+  USDT: number;
+  USDC: number;
+}
+
 const validateChallengeData = (data: ChallengeData | null): boolean => {
   if (!data) return false;
   
@@ -113,6 +120,7 @@ export default function PaymentPage() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [cryptoPrices, setCryptoPrices] = useState<CryptoPrice>({ BTC: 0, ETH: 0, USDT: 1, USDC: 1 });
 
   useEffect(() => {
     const storedData = sessionStorage.getItem('challengeData');
@@ -129,6 +137,24 @@ export default function PaymentPage() {
     
     setChallengeData(parsedData);
   }, [router]);
+
+  // Fetch crypto prices every 15 minutes
+  useEffect(() => {
+    const fetchPrices = async () => {
+      try {
+        const response = await fetch('/api/crypto/prices');
+        const data = await response.json();
+        setCryptoPrices(data);
+      } catch (error) {
+        console.error('Error fetching crypto prices:', error);
+      }
+    };
+
+    fetchPrices(); // Initial fetch
+    const interval = setInterval(fetchPrices, 15 * 60 * 1000); // Fetch every 15 minutes
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Function to create a payment intent
   const createPaymentIntent = async () => {
@@ -345,6 +371,7 @@ export default function PaymentPage() {
                         challengeData={challengeData}
                         successRedirectPath="/challenge/cryptopending"
                         onProcessingStateChange={setIsProcessingPayment}
+                        cryptoPrices={cryptoPrices}
                       />
                     </div>
                   </div>
@@ -378,8 +405,8 @@ export default function PaymentPage() {
                 </div>
               </div>
 
-              {/* Credit Card Payment Option - Disabled */}
-              <div className="mt-4 opacity-50 cursor-not-allowed">
+              {/* Credit Card Payment Option - Hidden */}
+              <div className="hidden">
                 <div className="w-full bg-[#1A1A1A] border border-[#2F2F2F]/50 rounded-xl p-4">
                   <div className="flex justify-between items-center">
                     <div className="flex items-center">
@@ -396,7 +423,7 @@ export default function PaymentPage() {
             </div>
 
             {/* Important Disclaimer Notice */}
-            <div className="mt-6 bg-gradient-to-r from-orange-500/20 to-amber-500/20 rounded-lg p-4 border border-orange-500/30 shadow-lg">
+            <div className="hidden">
               <div className="flex items-start gap-2 mb-3">
                 <span className="text-orange-400 text-xl">⚠️</span>
                 <h3 className="text-orange-400 font-bold">Important Disclaimer</h3>
