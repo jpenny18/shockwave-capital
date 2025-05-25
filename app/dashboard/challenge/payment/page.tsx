@@ -134,6 +134,13 @@ const PriceDisplay = ({ originalPrice, finalPrice, discount }: {
   </div>
 );
 
+interface CryptoPrice {
+  BTC: number;
+  ETH: number;
+  USDT: number;
+  USDC: number;
+}
+
 export default function PaymentPage() {
   // Add feature flag at the top of the component
   const CRYPTO_PAYMENTS_ENABLED = false; // Feature flag for crypto payments
@@ -148,6 +155,7 @@ export default function PaymentPage() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [cryptoPrices, setCryptoPrices] = useState<CryptoPrice>({ BTC: 0, ETH: 0, USDT: 1, USDC: 1 });
 
   useEffect(() => {
     const storedData = sessionStorage.getItem('challengeData');
@@ -164,6 +172,24 @@ export default function PaymentPage() {
     
     setChallengeData(parsedData);
   }, [router]);
+
+  // Fetch crypto prices every 15 minutes
+  useEffect(() => {
+    const fetchPrices = async () => {
+      try {
+        const response = await fetch('/api/crypto/prices');
+        const data = await response.json();
+        setCryptoPrices(data);
+      } catch (error) {
+        console.error('Error fetching crypto prices:', error);
+      }
+    };
+
+    fetchPrices(); // Initial fetch
+    const interval = setInterval(fetchPrices, 15 * 60 * 1000); // Fetch every 15 minutes
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Function to create a payment intent
   const createPaymentIntent = async () => {
@@ -450,6 +476,7 @@ export default function PaymentPage() {
                           challengeData={challengeData}
                           successRedirectPath="/dashboard/challenge/success"
                           onProcessingStateChange={setIsProcessingPayment}
+                          cryptoPrices={cryptoPrices}
                         />
                       </div>
                     </div>
