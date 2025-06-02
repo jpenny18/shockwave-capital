@@ -97,6 +97,47 @@ export interface OrderData {
 }
 
 /**
+ * Interface for MetaAPI account mapping in Firestore
+ */
+export interface UserMetaApiAccount {
+  userId: string;
+  accountId: string;
+  accountToken: string;
+  accountType: 'standard' | 'instant';
+  accountSize: number;
+  platform: 'mt4' | 'mt5';
+  status: 'active' | 'inactive' | 'passed' | 'failed';
+  step: 1 | 2; // For challenge steps
+  startDate: Timestamp;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  lastMetricsUpdate?: Timestamp;
+  trackerId?: string; // Risk management tracker ID
+}
+
+/**
+ * Interface for cached MetaAPI metrics in Firestore
+ */
+export interface CachedMetrics {
+  accountId: string;
+  balance: number;
+  equity: number;
+  averageProfit: number;
+  averageLoss: number;
+  numberOfTrades: number;
+  averageRRR: number;
+  lots: number;
+  expectancy: number;
+  winRate: number;
+  profitFactor: number;
+  maxDrawdown: number;
+  dailyDrawdown: number;
+  currentProfit: number;
+  tradingDays: number;
+  lastUpdated: Timestamp;
+}
+
+/**
  * Register a new user with email and password
  * @param email User's email
  * @param password User's password
@@ -387,6 +428,110 @@ export async function getOrdersByPaymentIntentId(paymentIntentId: string) {
     return orders;
   } catch (error) {
     console.error('Error retrieving orders by payment intent ID:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get user's MetaAPI account mapping
+ */
+export async function getUserMetaApiAccount(userId: string): Promise<UserMetaApiAccount | null> {
+  try {
+    const accountsRef = collection(db, 'userMetaApiAccounts');
+    const q = query(accountsRef, where('userId', '==', userId), where('status', '==', 'active'));
+    const querySnapshot = await getDocs(q);
+    
+    if (!querySnapshot.empty) {
+      return querySnapshot.docs[0].data() as UserMetaApiAccount;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching user MetaAPI account:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get all MetaAPI accounts for a user
+ */
+export async function getAllUserMetaApiAccounts(userId: string): Promise<UserMetaApiAccount[]> {
+  try {
+    const accountsRef = collection(db, 'userMetaApiAccounts');
+    const q = query(accountsRef, where('userId', '==', userId));
+    const querySnapshot = await getDocs(q);
+    
+    const accounts: UserMetaApiAccount[] = [];
+    querySnapshot.forEach((doc) => {
+      accounts.push(doc.data() as UserMetaApiAccount);
+    });
+    
+    return accounts;
+  } catch (error) {
+    console.error('Error fetching user MetaAPI accounts:', error);
+    throw error;
+  }
+}
+
+/**
+ * Create or update user's MetaAPI account mapping
+ */
+export async function setUserMetaApiAccount(data: Omit<UserMetaApiAccount, 'createdAt' | 'updatedAt'>): Promise<void> {
+  try {
+    const accountsRef = collection(db, 'userMetaApiAccounts');
+    const existingQuery = query(accountsRef, where('userId', '==', data.userId));
+    const existingSnapshot = await getDocs(existingQuery);
+    
+    if (!existingSnapshot.empty) {
+      // Update existing
+      const docId = existingSnapshot.docs[0].id;
+      await updateDoc(doc(db, 'userMetaApiAccounts', docId), {
+        ...data,
+        updatedAt: Timestamp.now()
+      });
+    } else {
+      // Create new
+      await addDoc(accountsRef, {
+        ...data,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
+      });
+    }
+  } catch (error) {
+    console.error('Error setting user MetaAPI account:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get cached metrics for an account
+ */
+export async function getCachedMetrics(accountId: string): Promise<CachedMetrics | null> {
+  try {
+    const metricsRef = doc(db, 'cachedMetrics', accountId);
+    const metricsSnap = await getDoc(metricsRef);
+    
+    if (metricsSnap.exists()) {
+      return metricsSnap.data() as CachedMetrics;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching cached metrics:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update cached metrics for an account
+ */
+export async function updateCachedMetrics(accountId: string, metrics: Omit<CachedMetrics, 'lastUpdated'>): Promise<void> {
+  try {
+    const metricsRef = doc(db, 'cachedMetrics', accountId);
+    await setDoc(metricsRef, {
+      ...metrics,
+      lastUpdated: Timestamp.now()
+    });
+  } catch (error) {
+    console.error('Error updating cached metrics:', error);
     throw error;
   }
 }

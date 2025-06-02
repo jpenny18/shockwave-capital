@@ -1,0 +1,804 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { auth as adminAuth, db as adminDb } from '@/lib/firebase-admin';
+
+// For now, we'll use mock data to test the system
+// Once MetaAPI connectivity is resolved, we can switch back
+const USE_MOCK_DATA = false;
+
+// Import MetaAPI only on server side
+const MetaApiClass = USE_MOCK_DATA ? null : require('metaapi.cloud-sdk').default;
+const MetaStats = USE_MOCK_DATA ? null : require('metaapi.cloud-sdk').MetaStats;
+const RiskManagement = USE_MOCK_DATA ? null : require('metaapi.cloud-sdk').RiskManagement;
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { accountId, accountToken, accountType, accountSize } = body;
+    
+    console.log('Request body:', { 
+      accountId, 
+      hasToken: !!accountToken, 
+      accountType, 
+      accountSize 
+    });
+    
+    // Validate required parameters
+    if (!accountId || !accountToken) {
+      return NextResponse.json(
+        { error: 'Missing required parameters: accountId and accountToken are required' },
+        { status: 400 }
+      );
+    }
+    
+    // Verify authentication
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const token = authHeader.substring(7);
+    let userId;
+    
+    try {
+      const decodedToken = await adminAuth.verifyIdToken(token);
+      userId = decodedToken.uid;
+    } catch (error) {
+      console.error('Token verification error:', error);
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
+    // Verify user has access to this account
+    try {
+      const accountsRef = adminDb.collection('userMetaApiAccounts');
+      const snapshot = await accountsRef
+        .where('userId', '==', userId)
+        .where('accountId', '==', accountId)
+        .get();
+      
+      if (snapshot.empty) {
+        return NextResponse.json({ error: 'Account not found or access denied' }, { status: 403 });
+      }
+
+      // Check account status
+      const accountDoc = snapshot.docs[0].data();
+      const accountStatus = accountDoc.status;
+      
+      // If account is failed, return cached metrics only
+      if (accountStatus === 'failed') {
+        console.log('Account is failed, returning cached metrics only');
+        
+        // Get cached metrics
+        const cachedMetricsRef = adminDb.collection('cachedMetrics').doc(accountId);
+        const cachedMetricsDoc = await cachedMetricsRef.get();
+        
+        if (!cachedMetricsDoc.exists) {
+          return NextResponse.json({ 
+            error: 'No cached metrics available for failed account',
+            accountStatus: 'failed'
+          }, { status: 404 });
+        }
+        
+        const cachedData = cachedMetricsDoc.data();
+        if (!cachedData) {
+          return NextResponse.json({ 
+            error: 'Invalid cached metrics data',
+            accountStatus: 'failed'
+          }, { status: 500 });
+        }
+        
+        // Return cached data in the expected format
+        return NextResponse.json({
+          metrics: {
+            balance: cachedData.balance || 0,
+            equity: cachedData.equity || 0,
+            averageProfit: cachedData.averageProfit || 0,
+            averageLoss: cachedData.averageLoss || 0,
+            numberOfTrades: cachedData.numberOfTrades || 0,
+            wonTrades: cachedData.wonTrades || 0,
+            lostTrades: cachedData.lostTrades || 0,
+            averageRRR: cachedData.averageRRR || 0,
+            lots: cachedData.lots || 0,
+            expectancy: cachedData.expectancy || 0,
+            winRate: cachedData.winRate || 0,
+            profitFactor: cachedData.profitFactor || 0,
+            maxDrawdown: cachedData.maxDrawdown || 0,
+            dailyDrawdown: cachedData.dailyDrawdown || 0,
+            trades: cachedData.numberOfTrades || 0,
+            avgRRR: cachedData.averageRRR || 0
+          },
+          accountInfo: {
+            accountId,
+            name: cachedData.accountName || 'Failed Account',
+            broker: cachedData.broker || 'Unknown',
+            server: cachedData.server || 'Unknown',
+            balance: cachedData.balance || 0,
+            equity: cachedData.equity || 0,
+            currency: 'USD',
+            leverage: 100,
+            type: 'ACCOUNT_TRADE_MODE_DEMO',
+            platform: accountDoc.platform || 'mt5',
+            state: 'FAILED',
+            connectionStatus: 'DISCONNECTED'
+          },
+          trades: cachedData.lastTrades || [],
+          equityChart: cachedData.lastEquityChart || [],
+          objectives: cachedData.lastObjectives || calculateTradingObjectives(
+            {
+              balance: cachedData.balance || 0,
+              maxDrawdown: cachedData.maxDrawdown || 0,
+              dailyDrawdown: cachedData.dailyDrawdown || 0,
+              trades: cachedData.numberOfTrades || 0,
+              tradingDays: cachedData.tradingDays || 0
+            },
+            accountType,
+            accountSize
+          ),
+          accountStatus: 'failed'
+        });
+      }
+    } catch (error) {
+      console.error('Database query error:', error);
+      return NextResponse.json({ error: 'Database error' }, { status: 500 });
+    }
+
+    // Use mock data for testing
+    if (USE_MOCK_DATA) {
+      const mockResponse = generateMockData(accountId, accountType, accountSize);
+      return NextResponse.json(mockResponse);
+    }
+
+    // Real MetaAPI implementation (currently disabled)
+    const metaApi = new MetaApiClass(accountToken);
+    const metaStats = new MetaStats(accountToken);
+    const riskManagement = new RiskManagement(accountToken);
+    
+    console.log('MetaAPI initialized with token:', accountToken.substring(0, 20) + '...');
+    console.log('Processing request for account:', accountId);
+
+    // Initialize default response data
+    let metricsData = {
+      balance: 0,
+      equity: 0,
+      margin: 0,
+      freeMargin: 0,
+      profit: 0,
+      credit: 0,
+      trades: 0,
+      wonTrades: 0,
+      lostTrades: 0,
+      averageWin: 0,
+      averageLoss: 0,
+      expectancy: 0,
+      profitFactor: 0,
+      absoluteDrawdown: 0,
+      maxDrawdown: 0,
+      relativeDrawdown: 0,
+      lots: 0,
+      commissions: 0
+    };
+    
+    let accountData = null;
+    let tradesData: any[] = [];
+    let equityData: any[] = [];
+
+    try {
+      // Fetch account info first to ensure connection
+      accountData = await fetchAccountInfo(metaApi, accountId);
+      
+      // Update balance from account info if available
+      if (accountData && accountData.balance) {
+        metricsData.balance = accountData.balance;
+        metricsData.equity = accountData.equity || accountData.balance;
+      }
+    } catch (error) {
+      console.error('Error fetching account info:', error);
+      // Continue with other data fetching
+    }
+
+    // Try to fetch metrics from MetaStats
+    try {
+      const metrics = await metaStats.getMetrics(accountId);
+      if (metrics) {
+        metricsData = { ...metricsData, ...metrics };
+        console.log('Metrics received:', {
+          balance: metrics.balance,
+          maxDrawdown: metrics.maxDrawdown,
+          relativeDrawdown: metrics.relativeDrawdown,
+          dailyDrawdown: metrics.dailyDrawdown,
+          maxDailyDrawdown: metrics.maxDailyDrawdown,
+          maxRelativeDrawdown: metrics.maxRelativeDrawdown,
+          trades: metrics.trades,
+          tradingDays: metrics.tradingDays
+        });
+      }
+    } catch (error: any) {
+      console.error('Error fetching metrics:', error.message);
+      // Use data from account info if available
+    }
+
+    // Try to fetch trades
+    try {
+      // Using the date format from the example: '0000-01-01 00:00:00.000'
+      const startDate = '2020-01-01 00:00:00.000';
+      const endDate = new Date().toISOString().slice(0, 19).replace('T', ' ') + '.000';
+      
+      console.log(`Fetching trades for account ${accountId} from ${startDate} to ${endDate}`);
+      
+      // Fetch both historical trades and open trades
+      const [historicalTrades, openTrades] = await Promise.all([
+        metaStats.getAccountTrades(accountId, startDate, endDate).catch(() => []),
+        metaStats.getAccountOpenTrades ? metaStats.getAccountOpenTrades(accountId).catch(() => []) : Promise.resolve([])
+      ]);
+      
+      // Combine historical and open trades
+      tradesData = [...(historicalTrades || []), ...(openTrades || [])];
+      console.log(`Retrieved ${tradesData.length} total trades (${historicalTrades?.length || 0} historical, ${openTrades?.length || 0} open)`);
+      
+      // Log a sample trade to understand the structure
+      if (tradesData.length > 0) {
+        console.log('Sample trade structure:', JSON.stringify(tradesData[0], null, 2));
+      }
+      
+      // Filter out balance operations and non-trading deals
+      const beforeFilterCount = tradesData.length;
+      const filteredOutTrades: any[] = [];
+      
+      tradesData = tradesData.filter((trade: any) => {
+        // Check if it's a real trade
+        const isRealTrade = trade.type && 
+               !trade.type.includes('DEAL_TYPE_BALANCE') &&
+               !trade.type.includes('DEAL_TYPE_CREDIT') &&
+               !trade.type.includes('DEAL_TYPE_CHARGE') &&
+               !trade.type.includes('DEAL_TYPE_CORRECTION') &&
+               !trade.type.includes('DEAL_TYPE_BONUS') &&
+               !trade.type.includes('DEAL_TYPE_COMMISSION') &&
+               trade.symbol; // Must have a symbol to be a real trade
+               
+        if (!isRealTrade && trade.type) {
+          filteredOutTrades.push({ type: trade.type, symbol: trade.symbol });
+        }
+        
+        return isRealTrade;
+      });
+      
+      console.log(`Filtered from ${beforeFilterCount} to ${tradesData.length} actual trades`);
+      if (filteredOutTrades.length > 0) {
+        console.log('Filtered out trade types:', filteredOutTrades);
+      }
+    } catch (error: any) {
+      console.error('Error fetching trades:', error.message);
+    }
+
+    // Try to fetch equity chart
+    try {
+      const riskApi = riskManagement.riskManagementApi;
+      const equity = await riskApi.getEquityChart(accountId);
+      equityData = equity || [];
+      console.log(`Retrieved ${equityData.length} equity data points`);
+      
+      // Log sample equity data to understand structure
+      if (equityData.length > 0) {
+        console.log('Sample equity data:', JSON.stringify(equityData[0], null, 2));
+      }
+    } catch (error: any) {
+      console.error('Error fetching equity chart:', error.message);
+    }
+
+    // Calculate additional metrics
+    const winRate = metricsData.trades > 0 ? (metricsData.wonTrades / metricsData.trades) * 100 : 0;
+    const avgRRR = metricsData.averageLoss !== 0 ? Math.abs(metricsData.averageWin / metricsData.averageLoss) : 0;
+
+    // Calculate trading objectives
+    const objectives = calculateTradingObjectives(metricsData, accountType, accountSize, equityData);
+
+    // Format response
+    const response = {
+      metrics: {
+        ...metricsData,
+        winRate,
+        avgRRR
+      },
+      accountInfo: accountData || {
+        accountId,
+        name: 'Unknown Account',
+        broker: 'Unknown',
+        server: 'Unknown',
+        balance: metricsData.balance,
+        equity: metricsData.equity,
+        currency: 'USD',
+        leverage: 100,
+        type: 'ACCOUNT_TRADE_MODE_DEMO',
+        platform: 'mt5',
+        state: 'UNKNOWN',
+        connectionStatus: 'UNKNOWN'
+      },
+      trades: tradesData.slice(0, 50).map((trade: any) => ({
+        id: trade._id || trade.id || `trade_${Date.now()}_${Math.random()}`,
+        symbol: trade.symbol || 'Unknown',
+        type: mapTradeType(trade.type),
+        volume: parseFloat(trade.volume || trade.lots) || 0,
+        openPrice: parseFloat(trade.openPrice || trade.priceOpen || trade.price) || 0,
+        closePrice: trade.closePrice != null ? parseFloat(trade.closePrice || trade.priceClose) : null,
+        profit: parseFloat(trade.profit || trade.gain) || 0,
+        openTime: trade.openTime || trade.time || new Date().toISOString(),
+        closeTime: trade.closeTime || null,
+        commission: parseFloat(trade.commission || trade.commissions) || 0,
+        swap: parseFloat(trade.swap || trade.swaps) || 0,
+        state: trade.state || (trade.closeTime ? 'closed' : 'opened')
+      })),
+      equityChart: (() => {
+        // The Risk Management API returns aggregated hourly data
+        // We need to create a time series for the chart
+        const chartPoints: any[] = [];
+        
+        equityData.forEach((point: any) => {
+          // Add start point
+          if (point.startBrokerTime) {
+            chartPoints.push({
+              date: point.startBrokerTime,
+              equity: parseFloat(point.startEquity || point.averageEquity || 0),
+              balance: parseFloat(point.startBalance || point.averageBalance || 0)
+            });
+          }
+          
+          // Add end point (or single point if no start/end)
+          chartPoints.push({
+            date: point.endBrokerTime || point.brokerTime || new Date().toISOString(),
+            equity: parseFloat(point.lastEquity || point.averageEquity || point.equity || 0),
+            balance: parseFloat(point.lastBalance || point.averageBalance || point.balance || 0)
+          });
+        });
+        
+        // Sort by date and filter out invalid points
+        return chartPoints
+          .filter((point: any) => point.equity > 0 || point.balance > 0)
+          .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      })(),
+      objectives
+    };
+    
+    console.log(`Returning ${response.trades.length} trades and ${response.equityChart.length} equity points`);
+
+    return NextResponse.json(response);
+  } catch (error: any) {
+    console.error('API Error:', error);
+    return NextResponse.json(
+      { error: error.message || 'Failed to fetch metrics' },
+      { status: 500 }
+    );
+  }
+}
+
+async function fetchAccountInfo(metaApi: any, accountId: string) {
+  try {
+    const account = await metaApi.metatraderAccountApi.getAccount(accountId);
+    
+    // First get basic account info from the account object
+    const accountData = {
+      accountId: account.id,
+      name: account.name,
+      broker: account.broker || 'Unknown',
+      server: account.server || 'Unknown',
+      type: account.type,
+      platform: account.platform || 'mt5',
+      state: account.state,
+      connectionStatus: account.connectionStatus,
+      // Default values that will be updated if we can connect
+      balance: 0,
+      equity: 0,
+      currency: 'USD',
+      leverage: 100
+    };
+    
+    try {
+      // Deploy account if needed
+      if (account.state !== 'DEPLOYED') {
+        console.log(`Deploying account ${accountId}. State: ${account.state}`);
+        await account.deploy();
+        console.log('Waiting for deployment...');
+        // Wait a bit for deployment
+        await new Promise(resolve => setTimeout(resolve, 5000));
+      }
+      
+      // Wait for connection if not connected
+      if (account.connectionStatus !== 'CONNECTED') {
+        console.log(`Waiting for account ${accountId} to connect. Status: ${account.connectionStatus}`);
+        await account.waitConnected({ timeoutInSeconds: 30 });
+      }
+      
+      // After account is connected, get account information
+      // Based on the SDK, we need to create a connection to get real-time data
+      const connection = account.getRPCConnection();
+      
+      try {
+        await connection.connect();
+        await connection.waitSynchronized({ timeoutInSeconds: 10 });
+        
+        // Get account information
+        const accountInfo = await connection.getAccountInformation();
+        if (accountInfo) {
+          accountData.balance = accountInfo.balance || 0;
+          accountData.equity = accountInfo.equity || 0;
+          accountData.currency = accountInfo.currency || 'USD';
+          accountData.leverage = accountInfo.leverage || 100;
+          accountData.broker = accountInfo.broker || account.broker || 'Unknown';
+          accountData.server = accountInfo.server || account.server || 'Unknown';
+        }
+        
+        // Close connection after getting data
+        if (connection.close) {
+          connection.close();
+        }
+      } catch (connectionError: any) {
+        console.error('Error with RPC connection:', connectionError.message);
+        // Try streaming connection as fallback
+        try {
+          const streamingConnection = account.getStreamingConnection();
+          await streamingConnection.connect();
+          await streamingConnection.waitSynchronized({ timeoutInSeconds: 10 });
+          
+          // Check terminal state for account information
+          if (streamingConnection.terminalState && streamingConnection.terminalState.accountInformation) {
+            const info = streamingConnection.terminalState.accountInformation;
+            accountData.balance = info.balance || 0;
+            accountData.equity = info.equity || 0;
+            accountData.currency = info.currency || 'USD';
+            accountData.leverage = info.leverage || 100;
+            accountData.broker = info.broker || account.broker || 'Unknown';
+            accountData.server = info.server || account.server || 'Unknown';
+          }
+          
+          if (streamingConnection.close) {
+            streamingConnection.close();
+          }
+        } catch (streamingError: any) {
+          console.error('Error with streaming connection:', streamingError.message);
+        }
+      }
+      
+    } catch (deploymentError: any) {
+      console.error('Error deploying/connecting account:', deploymentError.message);
+      // Return the basic account data we have
+    }
+    
+    return accountData;
+  } catch (error) {
+    console.error('Error fetching account info:', error);
+    throw error;
+  }
+}
+
+// Helper function to calculate daily drawdown from equity data
+function calculateDailyDrawdown(equityData: any[]): number {
+  if (!equityData || equityData.length === 0) return 0;
+  
+  let maxDailyDrawdown = 0;
+  
+  // Group equity data by day
+  const dailyData: { [key: string]: any[] } = {};
+  
+  equityData.forEach(point => {
+    const date = new Date(point.brokerTime || point.endBrokerTime || point.date);
+    const dayKey = date.toISOString().slice(0, 10); // YYYY-MM-DD
+    
+    if (!dailyData[dayKey]) {
+      dailyData[dayKey] = [];
+    }
+    dailyData[dayKey].push(point);
+  });
+  
+  // Calculate max drawdown for each day
+  Object.values(dailyData).forEach(dayPoints => {
+    let dayHighBalance = 0;
+    let dayHighEquity = 0;
+    let maxDayDrawdown = 0;
+    
+    dayPoints.forEach(point => {
+      // Track highest balance/equity for the day
+      const balance = parseFloat(point.balance || point.lastBalance || point.maxBalance || 0);
+      const equity = parseFloat(point.equity || point.lastEquity || point.maxEquity || 0);
+      
+      dayHighBalance = Math.max(dayHighBalance, balance);
+      dayHighEquity = Math.max(dayHighEquity, equity);
+      
+      // Calculate current drawdown from day's high
+      const currentEquity = parseFloat(point.lastEquity || point.equity || point.minEquity || 0);
+      const drawdownFromHigh = dayHighEquity > 0 ? ((dayHighEquity - currentEquity) / dayHighEquity) * 100 : 0;
+      
+      maxDayDrawdown = Math.max(maxDayDrawdown, drawdownFromHigh);
+    });
+    
+    // Track the worst daily drawdown across all days
+    maxDailyDrawdown = Math.max(maxDailyDrawdown, maxDayDrawdown);
+  });
+  
+  return maxDailyDrawdown;
+}
+
+function calculateTradingObjectives(
+  metrics: any,
+  challengeType: 'standard' | 'instant',
+  accountStartBalance: number,
+  equityData?: any[]
+) {
+  const currentBalance = metrics.balance || 0;
+  const currentDrawdown = metrics.maxDrawdown || 0;
+  
+  // Calculate daily drawdown from equity data if available
+  let maxDailyDrawdown = 0;
+  
+  if (equityData && equityData.length > 0) {
+    // Use our detailed calculation from equity data
+    maxDailyDrawdown = calculateDailyDrawdown(equityData);
+  } else {
+    // Fallback to metrics data if available
+    maxDailyDrawdown = Math.max(
+      metrics.dailyDrawdown || 0,
+      metrics.relativeDrawdown || 0,
+      metrics.maxDailyDrawdown || 0,
+      metrics.maxRelativeDrawdown || 0
+    );
+  }
+  
+  const profitPercentage = accountStartBalance > 0 
+    ? ((currentBalance - accountStartBalance) / accountStartBalance) * 100 
+    : 0;
+  
+  const targets = {
+    standard: {
+      minTradingDays: 4,
+      maxDrawdown: 15,
+      maxDailyDrawdown: 8,
+      profitTargetStep1: 10,
+      profitTargetStep2: 5
+    },
+    instant: {
+      minTradingDays: 5,
+      maxDrawdown: 12,
+      maxDailyDrawdown: 4,
+      profitTargetStep1: 12,
+      profitTargetStep2: 0
+    }
+  };
+  
+  const target = targets[challengeType] || targets.standard;
+  
+  // Calculate trading days based on MetaStats data
+  // A trading day is counted when there's at least 0.5% gain from the starting day balance
+  let tradingDays = 0;
+  
+  if (metrics.tradingDays) {
+    // If MetaStats provides trading days directly
+    tradingDays = metrics.tradingDays;
+  } else if (equityData && equityData.length > 0) {
+    // Calculate from equity data - count days with 0.5% or more profit
+    const dailyProfits: { [key: string]: { start: number, end: number } } = {};
+    
+    equityData.forEach(point => {
+      const date = new Date(point.brokerTime || point.endBrokerTime || point.date);
+      const dayKey = date.toISOString().slice(0, 10);
+      
+      if (!dailyProfits[dayKey]) {
+        const startBalance = parseFloat(point.startBalance || point.balance || 0);
+        dailyProfits[dayKey] = { start: startBalance, end: startBalance };
+      }
+      
+      const endBalance = parseFloat(point.lastBalance || point.balance || 0);
+      dailyProfits[dayKey].end = Math.max(dailyProfits[dayKey].end, endBalance);
+    });
+    
+    // Count days with at least 0.5% gain
+    Object.values(dailyProfits).forEach(day => {
+      if (day.start > 0) {
+        const dayGain = ((day.end - day.start) / day.start) * 100;
+        if (dayGain >= 0.5) {
+          tradingDays++;
+        }
+      }
+    });
+  } else if (metrics.trades > 0) {
+    // Fallback estimation
+    const avgWinPerTrade = metrics.averageWin || 0;
+    const wonTrades = metrics.wonTrades || 0;
+    const requiredDailyProfit = accountStartBalance * 0.005; // 0.5% of start balance
+    
+    if (avgWinPerTrade > 0 && requiredDailyProfit > 0) {
+      const totalProfit = currentBalance - accountStartBalance;
+      const daysFromProfit = Math.floor(totalProfit / requiredDailyProfit);
+      tradingDays = Math.min(daysFromProfit, 30); // Cap at 30 days
+    } else {
+      tradingDays = Math.min(Math.floor(metrics.trades / 2), 10);
+    }
+  }
+  
+  return {
+    minTradingDays: {
+      target: target.minTradingDays,
+      current: tradingDays,
+      passed: tradingDays >= target.minTradingDays
+    },
+    maxDrawdown: {
+      target: target.maxDrawdown,
+      current: currentDrawdown,
+      passed: currentDrawdown <= target.maxDrawdown
+    },
+    maxDailyDrawdown: {
+      target: target.maxDailyDrawdown,
+      current: maxDailyDrawdown,
+      passed: maxDailyDrawdown <= target.maxDailyDrawdown
+    },
+    profitTarget: {
+      target: target.profitTargetStep1,
+      current: profitPercentage,
+      passed: profitPercentage >= target.profitTargetStep1
+    }
+  };
+}
+
+function generateMockData(accountId: string, accountType: string, accountSize: number) {
+  const balance = accountSize * 1.05; // 5% profit
+  const equity = balance - 150; // Small floating loss
+  const trades = 47;
+  const wonTrades = 28;
+  const lostTrades = 19;
+  const winRate = (wonTrades / trades) * 100;
+  
+  return {
+    metrics: {
+      balance,
+      equity,
+      margin: 250,
+      freeMargin: equity - 250,
+      profit: balance - accountSize,
+      credit: 0,
+      trades,
+      wonTrades,
+      lostTrades,
+      averageWin: 125.50,
+      averageLoss: -65.25,
+      expectancy: 35.75,
+      profitFactor: 1.85,
+      absoluteDrawdown: 450,
+      maxDrawdown: 4.5,
+      relativeDrawdown: 2.3,
+      dailyGrowth: 0.25,
+      monthlyGrowth: 5.2,
+      lots: 15.75,
+      commissions: -125,
+      winRate,
+      avgRRR: 1.92
+    },
+    accountInfo: {
+      accountId,
+      name: 'Shockwave Challenge Account',
+      broker: 'MetaQuotes Software Corp.',
+      server: 'MetaQuotes-Demo',
+      balance,
+      equity,
+      currency: 'USD',
+      leverage: 100,
+      type: 'ACCOUNT_TRADE_MODE_DEMO',
+      platform: 'mt5',
+      state: 'DEPLOYED',
+      connectionStatus: 'CONNECTED'
+    },
+    trades: generateMockTrades(),
+    equityChart: generateMockEquityChart(accountSize),
+    objectives: calculateMockObjectives(accountType, accountSize, balance, [])
+  };
+}
+
+function generateMockTrades() {
+  const symbols = ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD', 'XAUUSD'];
+  const trades = [];
+  
+  for (let i = 0; i < 20; i++) {
+    const isWin = Math.random() > 0.4;
+    const symbol = symbols[Math.floor(Math.random() * symbols.length)];
+    const type = Math.random() > 0.5 ? 'buy' : 'sell';
+    const volume = (Math.random() * 0.5 + 0.1).toFixed(2);
+    const openPrice = 1.0500 + Math.random() * 0.01;
+    const profit = isWin ? Math.random() * 200 : -(Math.random() * 100);
+    
+    trades.push({
+      id: `trade_${i}`,
+      symbol,
+      type,
+      volume: parseFloat(volume),
+      openPrice,
+      closePrice: openPrice + (profit > 0 ? 0.001 : -0.0005),
+      profit,
+      openTime: new Date(Date.now() - i * 3600000).toISOString(),
+      closeTime: i < 10 ? new Date(Date.now() - i * 1800000).toISOString() : null,
+      commission: -2.5,
+      swap: -0.5,
+      state: i < 10 ? 'closed' : 'opened'
+    });
+  }
+  
+  return trades;
+}
+
+function generateMockEquityChart(startBalance: number) {
+  const points = [];
+  let currentBalance = startBalance;
+  let currentEquity = startBalance;
+  
+  for (let i = 30; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    
+    // Simulate gradual growth with some volatility
+    const dailyChange = (Math.random() - 0.3) * 0.005 * currentBalance;
+    currentBalance += dailyChange;
+    currentEquity = currentBalance + (Math.random() - 0.5) * 100;
+    
+    points.push({
+      date: date.toISOString(),
+      balance: currentBalance,
+      equity: currentEquity
+    });
+  }
+  
+  return points;
+}
+
+function calculateMockObjectives(accountType: string, accountSize: number, currentBalance: number, equityData?: any[]) {
+  const profitPercentage = ((currentBalance - accountSize) / accountSize) * 100;
+  
+  // Calculate daily drawdown from equity data if available
+  let maxDailyDrawdown = 2.3; // Default mock value
+  if (equityData && equityData.length > 0) {
+    maxDailyDrawdown = calculateDailyDrawdown(equityData);
+  }
+  
+  return {
+    minTradingDays: {
+      target: accountType === 'standard' ? 4 : 0,
+      current: 5,
+      passed: true
+    },
+    maxDrawdown: {
+      target: accountType === 'standard' ? 15 : 12,
+      current: 4.5,
+      passed: true
+    },
+    maxDailyDrawdown: {
+      target: accountType === 'standard' ? 8 : 4,
+      current: maxDailyDrawdown,
+      passed: maxDailyDrawdown <= (accountType === 'standard' ? 8 : 4)
+    },
+    profitTarget: {
+      target: accountType === 'standard' ? 10 : 12,
+      current: profitPercentage,
+      passed: profitPercentage >= (accountType === 'standard' ? 10 : 12)
+    }
+  };
+}
+
+function mapTradeType(type: string): 'buy' | 'sell' | 'unknown' {
+  if (!type) return 'unknown';
+  
+  const typeUpper = type.toUpperCase();
+  
+  // Handle various trade type formats from MetaStats
+  if (typeUpper.includes('BUY') || 
+      typeUpper.includes('DEAL_TYPE_BUY') || 
+      typeUpper === 'DEAL_BUY' ||
+      typeUpper === 'BUY_MARKET' ||
+      typeUpper === 'BUY_LIMIT' ||
+      typeUpper === 'BUY_STOP') {
+    return 'buy';
+  }
+  
+  if (typeUpper.includes('SELL') || 
+      typeUpper.includes('DEAL_TYPE_SELL') || 
+      typeUpper === 'DEAL_SELL' ||
+      typeUpper === 'SELL_MARKET' ||
+      typeUpper === 'SELL_LIMIT' ||
+      typeUpper === 'SELL_STOP') {
+    return 'sell';
+  }
+  
+  return 'unknown';
+} 

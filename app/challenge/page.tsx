@@ -535,7 +535,7 @@ export default function ChallengePage() {
       {/* Main Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Launch Day Sale Banner */}
-        <div className="mb-8 p-6 bg-gradient-to-r from-[#0FF1CE]/10 to-[#00D4FF]/10 rounded-lg border border-[#0FF1CE]/20 shadow-lg shadow-[#0FF1CE]/5 relative overflow-hidden">
+        <div className="hidden mb-8 p-6 bg-gradient-to-r from-[#0FF1CE]/10 to-[#00D4FF]/10 rounded-lg border border-[#0FF1CE]/20 shadow-lg shadow-[#0FF1CE]/5 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-[#0FF1CE]/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#00D4FF]/10 rounded-full blur-xl -ml-8 -mb-8"></div>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between relative z-10">

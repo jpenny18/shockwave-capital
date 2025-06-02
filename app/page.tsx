@@ -261,7 +261,7 @@ export default function ShockwaveLandingPage() {
                       : 'bg-[#1F1F1F] text-white'
                   } transition-all hover:scale-105 text-sm md:text-lg font-bold shadow-md hover:shadow-lg`}
                 >
-                  Standard Challenge
+                  Shockwave Standard
                 </button>
                 <button
                   onClick={() => {

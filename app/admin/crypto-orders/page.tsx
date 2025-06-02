@@ -21,6 +21,7 @@ import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc } fro
 interface CryptoOrder {
   id: string;
   status: 'PENDING' | 'COMPLETED' | 'CANCELLED';
+  challengeStatus?: 'IN_PROGRESS' | 'FAILED' | 'PASSED';
   cryptoType: string;
   cryptoAmount: string;
   cryptoAddress: string;
@@ -48,6 +49,7 @@ export default function CryptoOrdersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'COMPLETED' | 'CANCELLED'>('ALL');
   const [cryptoFilter, setCryptoFilter] = useState<'ALL' | 'BTC' | 'ETH' | 'USDT'>('ALL');
+  const [challengeStatusFilter, setChallengeStatusFilter] = useState<'ALL' | 'IN_PROGRESS' | 'FAILED' | 'PASSED'>('ALL');
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
 
@@ -130,6 +132,36 @@ export default function CryptoOrdersPage() {
     setTimeout(() => setCopiedAddress(null), 2000);
   };
 
+  const getStats = () => {
+    const totalOrders = orders.length;
+    const totalValue = orders.reduce((sum, order) => sum + order.usdAmount, 0);
+    const completedOrders = orders.filter(order => order.status === 'COMPLETED').length;
+    const passedChallenges = orders.filter(order => order.challengeStatus === 'PASSED').length;
+    const failedChallenges = orders.filter(order => order.challengeStatus === 'FAILED').length;
+    const inProgressChallenges = orders.filter(order => order.challengeStatus === 'IN_PROGRESS').length;
+
+    return {
+      totalOrders,
+      totalValue,
+      completedOrders,
+      passedChallenges,
+      failedChallenges,
+      inProgressChallenges
+    };
+  };
+
+  const handleChallengeStatusChange = async (orderId: string, newStatus: 'IN_PROGRESS' | 'FAILED' | 'PASSED') => {
+    try {
+      const orderRef = doc(db, 'crypto-orders', orderId);
+      await updateDoc(orderRef, { 
+        challengeStatus: newStatus,
+        updatedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error updating challenge status:', error);
+    }
+  };
+
   const filteredOrders = orders.filter(order => {
     const matchesSearch = 
       order.customerEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -139,8 +171,9 @@ export default function CryptoOrdersPage() {
     
     const matchesStatus = statusFilter === 'ALL' || order.status === statusFilter;
     const matchesCrypto = cryptoFilter === 'ALL' || order.cryptoType === cryptoFilter;
+    const matchesChallengeStatus = challengeStatusFilter === 'ALL' || order.challengeStatus === challengeStatusFilter;
 
-    return matchesSearch && matchesStatus && matchesCrypto;
+    return matchesSearch && matchesStatus && matchesCrypto && matchesChallengeStatus;
   });
 
   return (
@@ -154,6 +187,45 @@ export default function CryptoOrdersPage() {
           <RefreshCw size={16} />
           <span>Refresh</span>
         </button>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {/* Total Orders */}
+        <div className="bg-[#151515] p-4 rounded-lg border border-[#2F2F2F]/50">
+          <div className="text-gray-400 text-sm">Total Orders</div>
+          <div className="text-2xl font-bold text-white">{getStats().totalOrders}</div>
+        </div>
+        
+        {/* Total Value */}
+        <div className="bg-[#151515] p-4 rounded-lg border border-[#2F2F2F]/50">
+          <div className="text-gray-400 text-sm">Total Value</div>
+          <div className="text-2xl font-bold text-[#0FF1CE]">${getStats().totalValue.toFixed(2)}</div>
+        </div>
+
+        {/* Completed Orders */}
+        <div className="bg-[#151515] p-4 rounded-lg border border-[#2F2F2F]/50">
+          <div className="text-gray-400 text-sm">Completed Orders</div>
+          <div className="text-2xl font-bold text-white">{getStats().completedOrders}</div>
+        </div>
+
+        {/* Passed Challenges */}
+        <div className="bg-[#151515] p-4 rounded-lg border border-[#2F2F2F]/50">
+          <div className="text-gray-400 text-sm">Passed Challenges</div>
+          <div className="text-2xl font-bold text-green-400">{getStats().passedChallenges}</div>
+        </div>
+
+        {/* Failed Challenges */}
+        <div className="bg-[#151515] p-4 rounded-lg border border-[#2F2F2F]/50">
+          <div className="text-gray-400 text-sm">Failed Challenges</div>
+          <div className="text-2xl font-bold text-red-400">{getStats().failedChallenges}</div>
+        </div>
+
+        {/* In Progress Challenges */}
+        <div className="bg-[#151515] p-4 rounded-lg border border-[#2F2F2F]/50">
+          <div className="text-gray-400 text-sm">In Progress</div>
+          <div className="text-2xl font-bold text-yellow-400">{getStats().inProgressChallenges}</div>
+        </div>
       </div>
 
       {/* Filters */}
@@ -197,6 +269,21 @@ export default function CryptoOrdersPage() {
             <option value="BTC">Bitcoin</option>
             <option value="ETH">Ethereum</option>
             <option value="USDT">USDT</option>
+          </select>
+          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+        </div>
+
+        <div className="relative">
+          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+          <select
+            value={challengeStatusFilter}
+            onChange={(e) => setChallengeStatusFilter(e.target.value as any)}
+            className="pl-10 pr-8 py-2 bg-[#151515] border border-[#2F2F2F]/50 rounded-lg text-white appearance-none focus:outline-none focus:border-[#0FF1CE]/50"
+          >
+            <option value="ALL">All Challenge Status</option>
+            <option value="IN_PROGRESS">In Progress</option>
+            <option value="FAILED">Failed</option>
+            <option value="PASSED">Passed</option>
           </select>
           <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
         </div>
@@ -267,32 +354,86 @@ export default function CryptoOrdersPage() {
                       </div>
                     </td>
                     <td className="px-4 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        order.status === 'COMPLETED' ? 'bg-green-400/10 text-green-400' :
-                        order.status === 'CANCELLED' ? 'bg-red-400/10 text-red-400' :
-                        'bg-yellow-400/10 text-yellow-400'
-                      }`}>
-                        {order.status === 'COMPLETED' && <Check size={12} className="mr-1" />}
-                        {order.status === 'CANCELLED' && <X size={12} className="mr-1" />}
-                        {order.status === 'PENDING' && <Clock size={12} className="mr-1" />}
-                        {order.status}
-                      </span>
+                      <div className="flex flex-col gap-2">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          order.status === 'COMPLETED' ? 'bg-green-400/10 text-green-400' :
+                          order.status === 'CANCELLED' ? 'bg-red-400/10 text-red-400' :
+                          'bg-yellow-400/10 text-yellow-400'
+                        }`}>
+                          {order.status === 'COMPLETED' && <Check size={12} className="mr-1" />}
+                          {order.status === 'CANCELLED' && <X size={12} className="mr-1" />}
+                          {order.status === 'PENDING' && <Clock size={12} className="mr-1" />}
+                          {order.status}
+                        </span>
+                        
+                        {/* Challenge Status Badge */}
+                        {order.challengeStatus && (
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            order.challengeStatus === 'PASSED' ? 'bg-green-400/10 text-green-400' :
+                            order.challengeStatus === 'FAILED' ? 'bg-red-400/10 text-red-400' :
+                            'bg-yellow-400/10 text-yellow-400'
+                          }`}>
+                            {order.challengeStatus === 'PASSED' && <Check size={12} className="mr-1" />}
+                            {order.challengeStatus === 'FAILED' && <X size={12} className="mr-1" />}
+                            {order.challengeStatus === 'IN_PROGRESS' && <Clock size={12} className="mr-1" />}
+                            {order.challengeStatus.replace('_', ' ')}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-2">
+                        {/* Challenge Status Controls */}
+                        <div className="flex items-center gap-1 border-r border-[#2F2F2F]/50 pr-2 mr-2">
+                          <button
+                            onClick={() => handleChallengeStatusChange(order.id, 'IN_PROGRESS')}
+                            className={`p-1.5 rounded transition-colors ${
+                              order.challengeStatus === 'IN_PROGRESS' 
+                                ? 'bg-yellow-400/20 text-yellow-400' 
+                                : 'text-gray-400 hover:bg-[#2F2F2F]/20'
+                            }`}
+                            title="Mark Challenge as In Progress"
+                          >
+                            <Clock size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleChallengeStatusChange(order.id, 'FAILED')}
+                            className={`p-1.5 rounded transition-colors ${
+                              order.challengeStatus === 'FAILED' 
+                                ? 'bg-red-400/20 text-red-400' 
+                                : 'text-gray-400 hover:bg-[#2F2F2F]/20'
+                            }`}
+                            title="Mark Challenge as Failed"
+                          >
+                            <X size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleChallengeStatusChange(order.id, 'PASSED')}
+                            className={`p-1.5 rounded transition-colors ${
+                              order.challengeStatus === 'PASSED' 
+                                ? 'bg-green-400/20 text-green-400' 
+                                : 'text-gray-400 hover:bg-[#2F2F2F]/20'
+                            }`}
+                            title="Mark Challenge as Passed"
+                          >
+                            <Check size={16} />
+                          </button>
+                        </div>
+
+                        {/* Original Order Status Controls */}
                         {order.status === 'PENDING' && (
                           <>
                             <button
                               onClick={() => handleStatusChange(order.id, 'COMPLETED')}
                               className="p-1 text-green-400 hover:bg-green-400/10 rounded"
-                              title="Mark as Completed"
+                              title="Mark Order as Completed"
                             >
                               <Check size={16} />
                             </button>
                             <button
                               onClick={() => handleStatusChange(order.id, 'CANCELLED')}
                               className="p-1 text-red-400 hover:bg-red-400/10 rounded"
-                              title="Mark as Cancelled"
+                              title="Mark Order as Cancelled"
                             >
                               <X size={16} />
                             </button>

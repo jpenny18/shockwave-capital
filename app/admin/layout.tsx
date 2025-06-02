@@ -17,7 +17,8 @@ import {
   Search,
   MessageSquare,
   Tag,
-  Bitcoin
+  Bitcoin,
+  Server
 } from 'lucide-react';
 
 const navItems = [
@@ -25,6 +26,7 @@ const navItems = [
   { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
   { name: 'Crypto Orders', href: '/admin/crypto-orders', icon: Bitcoin },
   { name: 'Customers', href: '/admin/customers', icon: Users },
+  { name: 'MetaAPI Accounts', href: '/admin/accounts', icon: Server },
   { name: 'Email Templates', href: '/admin/emails', icon: Mail },
   { name: 'Pulse Management', href: '/admin/pulse', icon: MessageSquare },
   { name: 'Discount Codes', href: '/admin/discounts', icon: Tag },
