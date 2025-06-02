@@ -13,7 +13,7 @@ const RiskManagement = USE_MOCK_DATA ? null : require('metaapi.cloud-sdk').RiskM
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { accountId, accountToken, accountType, accountSize } = body;
+    const { accountId, accountToken, accountType, accountSize, isAdmin } = body;
     
     console.log('Request body:', { 
       accountId, 
@@ -30,111 +30,118 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Verify authentication
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // Skip user auth check if admin
+    let userId = null;
+    if (!isAdmin) {
+      // Verify user is authenticated
+      const authHeader = req.headers.get('authorization');
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
 
-    const token = authHeader.substring(7);
-    let userId;
-    
-    try {
-      const decodedToken = await adminAuth.verifyIdToken(token);
-      userId = decodedToken.uid;
-    } catch (error) {
-      console.error('Token verification error:', error);
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+      const token = authHeader.split('Bearer ')[1];
+      try {
+        const decodedToken = await adminAuth.verifyIdToken(token);
+        userId = decodedToken.uid;
+        console.log('Authenticated user:', userId);
+      } catch (error) {
+        return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+      }
+    } else {
+      console.log('Admin access - skipping user authentication');
     }
 
     // Verify user has access to this account
     try {
-      const accountsRef = adminDb.collection('userMetaApiAccounts');
-      const snapshot = await accountsRef
-        .where('userId', '==', userId)
-        .where('accountId', '==', accountId)
-        .get();
-      
-      if (snapshot.empty) {
-        return NextResponse.json({ error: 'Account not found or access denied' }, { status: 403 });
-      }
+      // Only check for user's account ownership if not admin
+      if (!isAdmin && userId) {
+        const accountsRef = adminDb.collection('userMetaApiAccounts');
+        const snapshot = await accountsRef
+          .where('userId', '==', userId)
+          .where('accountId', '==', accountId)
+          .get();
+        
+        if (snapshot.empty) {
+          return NextResponse.json({ error: 'Account not found or access denied' }, { status: 403 });
+        }
 
-      // Check account status
-      const accountDoc = snapshot.docs[0].data();
-      const accountStatus = accountDoc.status;
-      
-      // If account is failed, return cached metrics only
-      if (accountStatus === 'failed') {
-        console.log('Account is failed, returning cached metrics only');
+        // Check account status
+        const accountDoc = snapshot.docs[0].data();
+        const accountStatus = accountDoc.status;
         
-        // Get cached metrics
-        const cachedMetricsRef = adminDb.collection('cachedMetrics').doc(accountId);
-        const cachedMetricsDoc = await cachedMetricsRef.get();
-        
-        if (!cachedMetricsDoc.exists) {
-          return NextResponse.json({ 
-            error: 'No cached metrics available for failed account',
-            accountStatus: 'failed'
-          }, { status: 404 });
-        }
-        
-        const cachedData = cachedMetricsDoc.data();
-        if (!cachedData) {
-          return NextResponse.json({ 
-            error: 'Invalid cached metrics data',
-            accountStatus: 'failed'
-          }, { status: 500 });
-        }
-        
-        // Return cached data in the expected format
-        return NextResponse.json({
-          metrics: {
-            balance: cachedData.balance || 0,
-            equity: cachedData.equity || 0,
-            averageProfit: cachedData.averageProfit || 0,
-            averageLoss: cachedData.averageLoss || 0,
-            numberOfTrades: cachedData.numberOfTrades || 0,
-            wonTrades: cachedData.wonTrades || 0,
-            lostTrades: cachedData.lostTrades || 0,
-            averageRRR: cachedData.averageRRR || 0,
-            lots: cachedData.lots || 0,
-            expectancy: cachedData.expectancy || 0,
-            winRate: cachedData.winRate || 0,
-            profitFactor: cachedData.profitFactor || 0,
-            maxDrawdown: cachedData.maxDrawdown || 0,
-            dailyDrawdown: cachedData.dailyDrawdown || 0,
-            trades: cachedData.numberOfTrades || 0,
-            avgRRR: cachedData.averageRRR || 0
-          },
-          accountInfo: {
-            accountId,
-            name: cachedData.accountName || 'Failed Account',
-            broker: cachedData.broker || 'Unknown',
-            server: cachedData.server || 'Unknown',
-            balance: cachedData.balance || 0,
-            equity: cachedData.equity || 0,
-            currency: 'USD',
-            leverage: 100,
-            type: 'ACCOUNT_TRADE_MODE_DEMO',
-            platform: accountDoc.platform || 'mt5',
-            state: 'FAILED',
-            connectionStatus: 'DISCONNECTED'
-          },
-          trades: cachedData.lastTrades || [],
-          equityChart: cachedData.lastEquityChart || [],
-          objectives: cachedData.lastObjectives || calculateTradingObjectives(
-            {
+        // If account is failed, return cached metrics only
+        if (accountStatus === 'failed') {
+          console.log('Account is failed, returning cached metrics only');
+          
+          // Get cached metrics
+          const cachedMetricsRef = adminDb.collection('cachedMetrics').doc(accountId);
+          const cachedMetricsDoc = await cachedMetricsRef.get();
+          
+          if (!cachedMetricsDoc.exists) {
+            return NextResponse.json({ 
+              error: 'No cached metrics available for failed account',
+              accountStatus: 'failed'
+            }, { status: 404 });
+          }
+          
+          const cachedData = cachedMetricsDoc.data();
+          if (!cachedData) {
+            return NextResponse.json({ 
+              error: 'Invalid cached metrics data',
+              accountStatus: 'failed'
+            }, { status: 500 });
+          }
+          
+          // Return cached data in the expected format
+          return NextResponse.json({
+            metrics: {
               balance: cachedData.balance || 0,
+              equity: cachedData.equity || 0,
+              averageProfit: cachedData.averageProfit || 0,
+              averageLoss: cachedData.averageLoss || 0,
+              numberOfTrades: cachedData.numberOfTrades || 0,
+              wonTrades: cachedData.wonTrades || 0,
+              lostTrades: cachedData.lostTrades || 0,
+              averageRRR: cachedData.averageRRR || 0,
+              lots: cachedData.lots || 0,
+              expectancy: cachedData.expectancy || 0,
+              winRate: cachedData.winRate || 0,
+              profitFactor: cachedData.profitFactor || 0,
               maxDrawdown: cachedData.maxDrawdown || 0,
               dailyDrawdown: cachedData.dailyDrawdown || 0,
               trades: cachedData.numberOfTrades || 0,
-              tradingDays: cachedData.tradingDays || 0
+              avgRRR: cachedData.averageRRR || 0
             },
-            accountType,
-            accountSize
-          ),
-          accountStatus: 'failed'
-        });
+            accountInfo: {
+              accountId,
+              name: cachedData.accountName || 'Failed Account',
+              broker: cachedData.broker || 'Unknown',
+              server: cachedData.server || 'Unknown',
+              balance: cachedData.balance || 0,
+              equity: cachedData.equity || 0,
+              currency: 'USD',
+              leverage: 100,
+              type: 'ACCOUNT_TRADE_MODE_DEMO',
+              platform: accountDoc.platform || 'mt5',
+              state: 'FAILED',
+              connectionStatus: 'DISCONNECTED'
+            },
+            trades: cachedData.lastTrades || [],
+            equityChart: cachedData.lastEquityChart || [],
+            objectives: cachedData.lastObjectives || calculateTradingObjectives(
+              {
+                balance: cachedData.balance || 0,
+                maxDrawdown: cachedData.maxDrawdown || 0,
+                dailyDrawdown: cachedData.dailyDrawdown || 0,
+                trades: cachedData.numberOfTrades || 0,
+                tradingDays: cachedData.tradingDays || 0
+              },
+              accountType,
+              accountSize
+            ),
+            accountStatus: 'failed'
+          });
+        }
       }
     } catch (error) {
       console.error('Database query error:', error);
@@ -358,6 +365,42 @@ export async function POST(req: NextRequest) {
     };
     
     console.log(`Returning ${response.trades.length} trades and ${response.equityChart.length} equity points`);
+
+    // Save to Firebase cache (if real data, not mock)
+    if (!USE_MOCK_DATA) {
+      try {
+        const metricsToCache = {
+          accountId,
+          balance: response.metrics.balance,
+          equity: response.metrics.equity,
+          averageProfit: response.metrics.averageWin,
+          averageLoss: response.metrics.averageLoss,
+          numberOfTrades: response.metrics.trades,
+          averageRRR: response.metrics.avgRRR,
+          lots: response.metrics.lots,
+          expectancy: response.metrics.expectancy,
+          winRate: response.metrics.winRate,
+          profitFactor: response.metrics.profitFactor,
+          maxDrawdown: response.metrics.maxDrawdown,
+          dailyDrawdown: response.metrics.relativeDrawdown,
+          currentProfit: response.metrics.profit,
+          tradingDays: response.objectives.minTradingDays.current,
+          accountName: response.accountInfo.name,
+          broker: response.accountInfo.broker,
+          server: response.accountInfo.server,
+          lastTrades: response.trades,
+          lastEquityChart: response.equityChart,
+          lastObjectives: response.objectives,
+          lastUpdated: new Date()
+        };
+
+        await adminDb.collection('cachedMetrics').doc(accountId).set(metricsToCache);
+        console.log('Metrics cached to Firebase for account:', accountId);
+      } catch (cacheError) {
+        console.error('Error caching metrics to Firebase:', cacheError);
+        // Don't fail the request if caching fails
+      }
+    }
 
     return NextResponse.json(response);
   } catch (error: any) {

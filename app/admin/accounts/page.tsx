@@ -864,7 +864,7 @@ export default function AdminAccountsPage() {
                       <td className="p-4">
                         <div className="flex items-center justify-center gap-2">
                           <button
-                            onClick={() => window.open(`/dashboard/accounts/${config?.accountId}`, '_blank')}
+                            onClick={() => window.open(`/admin/accounts/${config?.accountId}`, '_blank')}
                             className="p-1.5 text-gray-400 hover:text-[#0FF1CE] transition-colors"
                             title="View Account"
                           >
