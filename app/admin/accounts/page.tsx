@@ -31,7 +31,9 @@ import {
   Shield,
   Trash2,
   X,
-  Plus
+  Plus,
+  Clock,
+  Mail
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -75,53 +77,58 @@ export default function AdminAccountsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [searchUserEmail, setSearchUserEmail] = useState('');
   const [searchedUser, setSearchedUser] = useState<UserData | null>(null);
+  const [refreshingAccounts, setRefreshingAccounts] = useState<Set<string>>(new Set());
+  const [bulkRefreshing, setBulkRefreshing] = useState(false);
+  const [refreshQueue, setRefreshQueue] = useState<string[]>([]);
+  const [processedAlerts, setProcessedAlerts] = useState<Set<string>>(new Set());
+
+  // Load all accounts function
+  const loadAllAccounts = async () => {
+    setLoading(true);
+    try {
+      // Query userMetaApiAccounts directly instead of loading all users
+      const accountsRef = collection(db, 'userMetaApiAccounts');
+      const accountsSnapshot = await getDocs(accountsRef);
+      
+      const accountPromises = accountsSnapshot.docs.map(async (doc) => {
+        const accountData = doc.data() as UserMetaApiAccount;
+        
+        // Get user data for this account
+        const userRef = collection(db, 'users');
+        const userQuery = query(userRef, where('uid', '==', accountData.userId), limit(1));
+        const userSnapshot = await getDocs(userQuery);
+        
+        if (!userSnapshot.empty) {
+          const userData = userSnapshot.docs[0].data() as UserData;
+          
+          // Get cached metrics
+          const metrics = await getCachedMetrics(accountData.accountId);
+          
+          return {
+            ...userData,
+            metaApiAccount: accountData,
+            cachedMetrics: metrics
+          };
+        }
+        return null;
+      });
+      
+      const users = (await Promise.all(accountPromises)).filter(Boolean) as UserWithAccount[];
+      
+      setAllAccounts(users);
+      setFilteredAccounts(users);
+      
+      // Check for alerts
+      checkForAlerts(users);
+    } catch (error) {
+      console.error('Error loading accounts:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Load all accounts with real-time updates
   useEffect(() => {
-    const loadAllAccounts = async () => {
-      setLoading(true);
-      try {
-        // Query userMetaApiAccounts directly instead of loading all users
-        const accountsRef = collection(db, 'userMetaApiAccounts');
-        const accountsSnapshot = await getDocs(accountsRef);
-        
-        const accountPromises = accountsSnapshot.docs.map(async (doc) => {
-          const accountData = doc.data() as UserMetaApiAccount;
-          
-          // Get user data for this account
-          const userRef = collection(db, 'users');
-          const userQuery = query(userRef, where('uid', '==', accountData.userId), limit(1));
-          const userSnapshot = await getDocs(userQuery);
-          
-          if (!userSnapshot.empty) {
-            const userData = userSnapshot.docs[0].data() as UserData;
-            
-            // Get cached metrics
-            const metrics = await getCachedMetrics(accountData.accountId);
-            
-            return {
-              ...userData,
-              metaApiAccount: accountData,
-              cachedMetrics: metrics
-            };
-          }
-          return null;
-        });
-        
-        const users = (await Promise.all(accountPromises)).filter(Boolean) as UserWithAccount[];
-        
-        setAllAccounts(users);
-        setFilteredAccounts(users);
-        
-        // Check for alerts
-        checkForAlerts(users);
-      } catch (error) {
-        console.error('Error loading accounts:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadAllAccounts();
     
     // Set up real-time listener for account updates
@@ -148,10 +155,16 @@ export default function AdminAccountsPage() {
       const metrics = account.cachedMetrics;
       const config = account.metaApiAccount;
       
+      // Create unique alert keys to prevent duplicates
+      const maxDDKey = `${account.uid}-maxdd-${metrics.maxDrawdown?.toFixed(2)}`;
+      const dailyDDKey = `${account.uid}-dailydd-${(metrics.maxDailyDrawdown || metrics.dailyDrawdown)?.toFixed(2)}`;
+      const profitKey = `${account.uid}-profit-${((metrics.balance - config.accountSize) / config.accountSize * 100).toFixed(2)}`;
+      const warningKey = `${account.uid}-warning-${metrics.maxDrawdown?.toFixed(2)}`;
+      
       // Check for objective breaches
-      if (metrics.maxDrawdown > (config.accountType === 'standard' ? 15 : 12)) {
+      if (metrics.maxDrawdown > (config.accountType === 'standard' ? 15 : 12) && !processedAlerts.has(maxDDKey)) {
         newAlerts.push({
-          id: `${account.uid}-maxdd-${Date.now()}`,
+          id: maxDDKey,
           type: 'breach',
           accountId: config.accountId,
           userEmail: account.email,
@@ -159,27 +172,29 @@ export default function AdminAccountsPage() {
           timestamp: new Date(),
           read: false
         });
+        setProcessedAlerts(prev => new Set(prev).add(maxDDKey));
       }
       
-      if (metrics.dailyDrawdown > (config.accountType === 'standard' ? 8 : 4)) {
+      if ((metrics.maxDailyDrawdown || metrics.dailyDrawdown) > (config.accountType === 'standard' ? 8 : 4) && !processedAlerts.has(dailyDDKey)) {
         newAlerts.push({
-          id: `${account.uid}-dailydd-${Date.now()}`,
+          id: dailyDDKey,
           type: 'breach',
           accountId: config.accountId,
           userEmail: account.email,
-          message: `Daily drawdown breach: ${metrics.dailyDrawdown.toFixed(2)}%`,
+          message: `Daily drawdown breach: ${(metrics.maxDailyDrawdown || metrics.dailyDrawdown).toFixed(2)}%`,
           timestamp: new Date(),
           read: false
         });
+        setProcessedAlerts(prev => new Set(prev).add(dailyDDKey));
       }
       
       // Check for profit target achievement
       const profitPercent = ((metrics.balance - config.accountSize) / config.accountSize) * 100;
       const targetProfit = config.accountType === 'standard' ? 10 : 12;
       
-      if (profitPercent >= targetProfit && config.status === 'active') {
+      if (profitPercent >= targetProfit && config.status === 'active' && !processedAlerts.has(profitKey)) {
         newAlerts.push({
-          id: `${account.uid}-profit-${Date.now()}`,
+          id: profitKey,
           type: 'pass',
           accountId: config.accountId,
           userEmail: account.email,
@@ -187,13 +202,15 @@ export default function AdminAccountsPage() {
           timestamp: new Date(),
           read: false
         });
+        setProcessedAlerts(prev => new Set(prev).add(profitKey));
       }
       
       // Warning for approaching limits
       if (metrics.maxDrawdown > (config.accountType === 'standard' ? 12 : 10) && 
-          metrics.maxDrawdown < (config.accountType === 'standard' ? 15 : 12)) {
+          metrics.maxDrawdown < (config.accountType === 'standard' ? 15 : 12) &&
+          !processedAlerts.has(warningKey)) {
         newAlerts.push({
-          id: `${account.uid}-warning-${Date.now()}`,
+          id: warningKey,
           type: 'warning',
           accountId: config.accountId,
           userEmail: account.email,
@@ -201,10 +218,89 @@ export default function AdminAccountsPage() {
           timestamp: new Date(),
           read: false
         });
+        setProcessedAlerts(prev => new Set(prev).add(warningKey));
       }
     });
     
-    setAlerts(prev => [...newAlerts, ...prev].slice(0, 50)); // Keep last 50 alerts
+    if (newAlerts.length > 0) {
+      setAlerts(prev => [...newAlerts, ...prev].slice(0, 50)); // Keep last 50 alerts
+    }
+  };
+
+  // Refresh single account metrics
+  const refreshAccount = async (account: UserWithAccount) => {
+    if (!account.metaApiAccount) return;
+    
+    const { accountId, accountToken, accountType, accountSize } = account.metaApiAccount;
+    
+    setRefreshingAccounts(prev => new Set(prev).add(account.uid));
+    
+    try {
+      const response = await fetch('/api/metaapi/metrics', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          accountId,
+          accountToken,
+          accountType,
+          accountSize,
+          isAdmin: true
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to refresh metrics');
+      }
+      
+      // Reload accounts to get updated data
+      await loadAllAccounts();
+    } catch (error) {
+      console.error('Error refreshing account:', error);
+      setMessage({ type: 'error', text: `Failed to refresh account ${accountId}` });
+    } finally {
+      setRefreshingAccounts(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(account.uid);
+        return newSet;
+      });
+    }
+  };
+
+  // Process refresh queue
+  useEffect(() => {
+    const processQueue = async () => {
+      if (refreshQueue.length === 0 || bulkRefreshing) return;
+      
+      setBulkRefreshing(true);
+      const accountId = refreshQueue[0];
+      const account = allAccounts.find(a => a.uid === accountId);
+      
+      if (account) {
+        await refreshAccount(account);
+      }
+      
+      setRefreshQueue(prev => prev.slice(1));
+      setBulkRefreshing(false);
+    };
+    
+    processQueue();
+  }, [refreshQueue, bulkRefreshing, allAccounts]);
+
+  // Bulk refresh accounts
+  const handleBulkRefresh = () => {
+    const accountsToRefresh = selectedAccounts.length > 0 
+      ? selectedAccounts 
+      : filteredAccounts.filter(a => a.metaApiAccount?.status === 'active').map(a => a.uid);
+    
+    if (accountsToRefresh.length === 0) {
+      setMessage({ type: 'error', text: 'No active accounts to refresh' });
+      return;
+    }
+    
+    setRefreshQueue(accountsToRefresh);
+    setMessage({ type: 'info', text: `Refreshing ${accountsToRefresh.length} accounts...` });
   };
 
   // Filter accounts
@@ -255,11 +351,8 @@ export default function AdminAccountsPage() {
         setMessage({ type: 'success', text: 'Account disconnected successfully' });
         
         // Reload accounts after update
-        const loadAllAccounts = async () => {
-          await new Promise(resolve => setTimeout(resolve, 500)); // Small delay to ensure update is processed
-          window.location.reload();
-        };
-        loadAllAccounts();
+        await new Promise(resolve => setTimeout(resolve, 500)); // Small delay to ensure update is processed
+        window.location.reload();
       } else {
         setMessage({ type: 'error', text: 'Account not found' });
       }
@@ -290,11 +383,8 @@ export default function AdminAccountsPage() {
         setMessage({ type: 'success', text: 'Account marked as failed' });
         
         // Reload accounts after update
-        const loadAllAccounts = async () => {
-          await new Promise(resolve => setTimeout(resolve, 500)); // Small delay to ensure update is processed
-          window.location.reload();
-        };
-        loadAllAccounts();
+        await new Promise(resolve => setTimeout(resolve, 500)); // Small delay to ensure update is processed
+        window.location.reload();
       } else {
         setMessage({ type: 'error', text: 'Account not found' });
       }
@@ -391,6 +481,7 @@ export default function AdminAccountsPage() {
       equity: account.cachedMetrics?.equity,
       maxDrawdown: account.cachedMetrics?.maxDrawdown,
       dailyDrawdown: account.cachedMetrics?.dailyDrawdown,
+      maxDailyDrawdown: account.cachedMetrics?.maxDailyDrawdown || account.cachedMetrics?.dailyDrawdown,
       profitFactor: account.cachedMetrics?.profitFactor,
       winRate: account.cachedMetrics?.winRate,
       trades: account.cachedMetrics?.numberOfTrades
@@ -514,6 +605,130 @@ export default function AdminAccountsPage() {
     failed: allAccounts.filter(a => a.metaApiAccount?.status === 'failed').length,
     totalBalance: allAccounts.reduce((sum, a) => sum + (a.cachedMetrics?.balance || 0), 0),
     totalEquity: allAccounts.reduce((sum, a) => sum + (a.cachedMetrics?.equity || 0), 0)
+  };
+
+  // Send challenge pass email
+  const sendPassEmail = async (account: UserWithAccount) => {
+    if (!account.metaApiAccount) return;
+    
+    const { accountType, step, accountSize } = account.metaApiAccount;
+    const isStandard = accountType === 'standard';
+    const stepText = isStandard ? (step === 1 ? 'Step 1' : 'Step 2') : 'Instant Challenge';
+    
+    try {
+      const response = await fetch('/api/send-challenge-emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: 'pass',
+          email: account.email,
+          name: account.displayName || `${account.firstName} ${account.lastName}`.trim() || account.email,
+          challengeType: accountType,
+          step: stepText,
+          accountSize,
+          adminEmail: 'support@shockwave-capital.com'
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
+      
+      setMessage({ type: 'success', text: `Pass email sent to ${account.email}` });
+    } catch (error) {
+      console.error('Error sending pass email:', error);
+      setMessage({ type: 'error', text: 'Failed to send pass email' });
+    }
+  };
+
+  // Send challenge fail email
+  const sendFailEmail = async (account: UserWithAccount) => {
+    if (!account.metaApiAccount) return;
+    
+    const { accountType, accountSize } = account.metaApiAccount;
+    const metrics = account.cachedMetrics;
+    
+    // Determine breach type
+    let breachType = '';
+    const maxDDLimit = accountType === 'standard' ? 15 : 12;
+    const dailyDDLimit = accountType === 'standard' ? 8 : 4;
+    
+    const maxDDBreached = metrics?.maxDrawdown > maxDDLimit;
+    const dailyDDBreached = (metrics?.maxDailyDrawdown || metrics?.dailyDrawdown) > dailyDDLimit;
+    
+    if (maxDDBreached && dailyDDBreached) {
+      breachType = 'both';
+    } else if (maxDDBreached) {
+      breachType = 'maxDrawdown';
+    } else if (dailyDDBreached) {
+      breachType = 'dailyDrawdown';
+    }
+    
+    try {
+      const response = await fetch('/api/send-challenge-emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: 'fail',
+          email: account.email,
+          name: account.displayName || `${account.firstName} ${account.lastName}`.trim() || account.email,
+          challengeType: accountType,
+          accountSize,
+          breachType,
+          maxDrawdown: metrics?.maxDrawdown || 0,
+          dailyDrawdown: metrics?.maxDailyDrawdown || metrics?.dailyDrawdown || 0,
+          adminEmail: 'support@shockwave-capital.com'
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
+      
+      setMessage({ type: 'success', text: `Fail email sent to ${account.email}` });
+    } catch (error) {
+      console.error('Error sending fail email:', error);
+      setMessage({ type: 'error', text: 'Failed to send fail email' });
+    }
+  };
+
+  // Send drawdown warning email
+  const sendDrawdownWarningEmail = async (account: UserWithAccount) => {
+    if (!account.metaApiAccount || !account.cachedMetrics) return;
+    
+    const { accountType, accountSize } = account.metaApiAccount;
+    const { maxDrawdown } = account.cachedMetrics;
+    
+    try {
+      const response = await fetch('/api/send-challenge-emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: 'drawdown-warning',
+          email: account.email,
+          name: account.displayName || `${account.firstName} ${account.lastName}`.trim() || account.email,
+          challengeType: accountType,
+          accountSize,
+          currentDrawdown: maxDrawdown,
+          adminEmail: 'support@shockwave-capital.com'
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
+      
+      setMessage({ type: 'success', text: `Drawdown warning email sent to ${account.email}` });
+    } catch (error) {
+      console.error('Error sending drawdown warning email:', error);
+      setMessage({ type: 'error', text: 'Failed to send drawdown warning email' });
+    }
   };
 
   return (
@@ -697,6 +912,20 @@ export default function AdminAccountsPage() {
               <option value="failed">Failed</option>
             </select>
             
+            <button
+              onClick={handleBulkRefresh}
+              disabled={bulkRefreshing || refreshQueue.length > 0}
+              className="bg-[#0FF1CE]/10 text-[#0FF1CE] px-4 py-2 rounded-lg hover:bg-[#0FF1CE]/20 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw size={16} className={bulkRefreshing || refreshQueue.length > 0 ? 'animate-spin' : ''} />
+              {refreshQueue.length > 0 
+                ? `Refreshing (${refreshQueue.length})` 
+                : selectedAccounts.length > 0 
+                  ? `Refresh (${selectedAccounts.length})`
+                  : 'Refresh All'
+              }
+            </button>
+            
             {selectedAccounts.length > 0 && (
               <button
                 onClick={handleBulkDisconnect}
@@ -764,7 +993,8 @@ export default function AdminAccountsPage() {
                   <th className="text-right p-4 text-sm font-medium text-gray-400">Balance</th>
                   <th className="text-right p-4 text-sm font-medium text-gray-400">Equity</th>
                   <th className="text-right p-4 text-sm font-medium text-gray-400">Max DD</th>
-                  <th className="text-right p-4 text-sm font-medium text-gray-400">Daily DD</th>
+                  <th className="text-right p-4 text-sm font-medium text-gray-400" title="Highest daily drawdown achieved during the challenge">Daily DD (Peak)</th>
+                  <th className="text-left p-4 text-sm font-medium text-gray-400">Last Updated</th>
                   <th className="text-center p-4 text-sm font-medium text-gray-400">Actions</th>
                 </tr>
               </thead>
@@ -774,7 +1004,7 @@ export default function AdminAccountsPage() {
                   const config = account.metaApiAccount;
                   const isBreached = metrics && (
                     metrics.maxDrawdown > (config?.accountType === 'standard' ? 15 : 12) ||
-                    metrics.dailyDrawdown > (config?.accountType === 'standard' ? 8 : 4)
+                    (metrics.maxDailyDrawdown || metrics.dailyDrawdown) > (config?.accountType === 'standard' ? 8 : 4)
                   );
                   
                   return (
@@ -852,23 +1082,41 @@ export default function AdminAccountsPage() {
                       </td>
                       <td className="p-4 text-right">
                         <p className={`text-sm font-medium ${
-                          metrics && metrics.dailyDrawdown > (config?.accountType === 'standard' ? 8 : 4)
+                          metrics && (metrics.maxDailyDrawdown || metrics.dailyDrawdown) > (config?.accountType === 'standard' ? 8 : 4)
                             ? 'text-red-400'
-                            : metrics && metrics.dailyDrawdown > (config?.accountType === 'standard' ? 6 : 3)
+                            : metrics && (metrics.maxDailyDrawdown || metrics.dailyDrawdown) > (config?.accountType === 'standard' ? 6 : 3)
                             ? 'text-yellow-400'
                             : 'text-gray-300'
                         }`}>
-                          {metrics?.dailyDrawdown?.toFixed(2) || '-'}%
+                          {(metrics?.maxDailyDrawdown || metrics?.dailyDrawdown)?.toFixed(2) || '-'}%
+                        </p>
+                      </td>
+                      <td className="p-4">
+                        <p className="text-sm text-gray-400">
+                          {metrics?.lastUpdated 
+                            ? formatDistanceToNow(metrics.lastUpdated.toDate ? metrics.lastUpdated.toDate() : new Date(metrics.lastUpdated), { addSuffix: true })
+                            : config?.updatedAt 
+                              ? formatDistanceToNow(config.updatedAt.toDate(), { addSuffix: true })
+                              : 'Never'
+                          }
                         </p>
                       </td>
                       <td className="p-4">
                         <div className="flex items-center justify-center gap-2">
                           <button
-                            onClick={() => window.open(`/admin/accounts/${config?.accountId}`, '_blank')}
+                            onClick={() => window.location.href = `/admin/accounts/${config?.accountId}`}
                             className="p-1.5 text-gray-400 hover:text-[#0FF1CE] transition-colors"
                             title="View Account"
                           >
                             <Eye size={16} />
+                          </button>
+                          <button
+                            onClick={() => refreshAccount(account)}
+                            disabled={refreshingAccounts.has(account.uid)}
+                            className="p-1.5 text-gray-400 hover:text-[#0FF1CE] transition-colors disabled:opacity-50"
+                            title="Refresh Account"
+                          >
+                            <RefreshCw size={16} className={refreshingAccounts.has(account.uid) ? 'animate-spin' : ''} />
                           </button>
                           <button
                             onClick={() => {
@@ -889,6 +1137,58 @@ export default function AdminAccountsPage() {
                           >
                             <Edit2 size={16} />
                           </button>
+                          
+                          {/* Email Actions */}
+                          {(config?.status === 'active' || config?.status === 'failed' || config?.status === 'passed') && (
+                            <div className="flex items-center gap-1 border-l border-[#2F2F2F]/50 pl-2 ml-1">
+                              {config?.status === 'passed' && (
+                                <button
+                                  onClick={() => sendPassEmail(account)}
+                                  className="p-1.5 text-gray-400 hover:text-green-400 transition-colors"
+                                  title="Send Pass Email"
+                                >
+                                  <Mail size={16} />
+                                </button>
+                              )}
+                              {config?.status === 'failed' && (
+                                <button
+                                  onClick={() => sendFailEmail(account)}
+                                  className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"
+                                  title="Send Fail Email"
+                                >
+                                  <Mail size={16} />
+                                </button>
+                              )}
+                              {config?.status === 'active' && (
+                                <>
+                                  <button
+                                    onClick={() => sendPassEmail(account)}
+                                    className="p-1.5 text-gray-400 hover:text-green-400 transition-colors"
+                                    title="Send Pass Email"
+                                  >
+                                    <Mail size={16} />
+                                  </button>
+                                  <button
+                                    onClick={() => sendFailEmail(account)}
+                                    className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"
+                                    title="Send Fail Email"
+                                  >
+                                    <Mail size={16} />
+                                  </button>
+                                  {metrics && metrics.maxDrawdown >= 6 && (
+                                    <button
+                                      onClick={() => sendDrawdownWarningEmail(account)}
+                                      className="p-1.5 text-gray-400 hover:text-yellow-400 transition-colors"
+                                      title="Send Drawdown Warning Email"
+                                    >
+                                      <Mail size={16} />
+                                    </button>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          )}
+                          
                           {config?.status === 'active' && (
                             <>
                               <button

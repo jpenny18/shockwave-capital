@@ -137,7 +137,10 @@ export async function POST(req: NextRequest) {
                 tradingDays: cachedData.tradingDays || 0
               },
               accountType,
-              accountSize
+              accountSize,
+              undefined,
+              undefined,
+              cachedData.maxDailyDrawdown // Pass the cached max daily drawdown
             ),
             accountStatus: 'failed'
           });
@@ -296,14 +299,20 @@ export async function POST(req: NextRequest) {
     const avgRRR = metricsData.averageLoss !== 0 ? Math.abs(metricsData.averageWin / metricsData.averageLoss) : 0;
 
     // Calculate trading objectives
-    const objectives = calculateTradingObjectives(metricsData, accountType, accountSize, equityData);
+    const objectives = calculateTradingObjectives(metricsData, accountType, accountSize, equityData, tradesData, USE_MOCK_DATA ? undefined : await getCachedMaxDailyDrawdown(accountId));
+
+    // Calculate daily drawdown from equity data
+    const calculatedDailyDrawdown = equityData && equityData.length > 0 
+      ? calculateDailyDrawdown(equityData)
+      : metricsData.relativeDrawdown || 0; // Use relativeDrawdown as fallback
 
     // Format response
     const response = {
       metrics: {
         ...metricsData,
         winRate,
-        avgRRR
+        avgRRR,
+        dailyDrawdown: calculatedDailyDrawdown
       },
       accountInfo: accountData || {
         accountId,
@@ -365,10 +374,28 @@ export async function POST(req: NextRequest) {
     };
     
     console.log(`Returning ${response.trades.length} trades and ${response.equityChart.length} equity points`);
+    console.log(`Daily Drawdown: ${calculatedDailyDrawdown.toFixed(2)}%`);
 
     // Save to Firebase cache (if real data, not mock)
     if (!USE_MOCK_DATA) {
       try {
+        // Get existing cached metrics to check for max daily drawdown
+        let maxDailyDrawdown = calculatedDailyDrawdown;
+        try {
+          const existingCached = await adminDb.collection('cachedMetrics').doc(accountId).get();
+          if (existingCached.exists) {
+            const existingData = existingCached.data();
+            // Keep the higher value between current and previously recorded max daily drawdown
+            maxDailyDrawdown = Math.max(
+              calculatedDailyDrawdown,
+              existingData?.maxDailyDrawdown || 0
+            );
+          }
+        } catch (err) {
+          // If no existing cache, use current value
+          console.log('No existing cache found, using current daily drawdown');
+        }
+        
         const metricsToCache = {
           accountId,
           balance: response.metrics.balance,
@@ -382,7 +409,8 @@ export async function POST(req: NextRequest) {
           winRate: response.metrics.winRate,
           profitFactor: response.metrics.profitFactor,
           maxDrawdown: response.metrics.maxDrawdown,
-          dailyDrawdown: response.metrics.relativeDrawdown,
+          dailyDrawdown: calculatedDailyDrawdown,
+          maxDailyDrawdown, // Store the maximum daily drawdown ever achieved
           currentProfit: response.metrics.profit,
           tradingDays: response.objectives.minTradingDays.current,
           accountName: response.accountInfo.name,
@@ -396,6 +424,7 @@ export async function POST(req: NextRequest) {
 
         await adminDb.collection('cachedMetrics').doc(accountId).set(metricsToCache);
         console.log('Metrics cached to Firebase for account:', accountId);
+        console.log(`Max Daily Drawdown recorded: ${maxDailyDrawdown.toFixed(2)}%`);
       } catch (cacheError) {
         console.error('Error caching metrics to Firebase:', cacheError);
         // Don't fail the request if caching fails
@@ -558,11 +587,27 @@ function calculateDailyDrawdown(equityData: any[]): number {
   return maxDailyDrawdown;
 }
 
+// Helper function to get cached max daily drawdown
+async function getCachedMaxDailyDrawdown(accountId: string): Promise<number | undefined> {
+  try {
+    const cachedDoc = await adminDb.collection('cachedMetrics').doc(accountId).get();
+    if (cachedDoc.exists) {
+      const data = cachedDoc.data();
+      return data?.maxDailyDrawdown;
+    }
+  } catch (error) {
+    console.error('Error fetching cached max daily drawdown:', error);
+  }
+  return undefined;
+}
+
 function calculateTradingObjectives(
   metrics: any,
   challengeType: 'standard' | 'instant',
   accountStartBalance: number,
-  equityData?: any[]
+  equityData?: any[],
+  tradesData?: any[],
+  cachedMaxDailyDrawdown?: number
 ) {
   const currentBalance = metrics.balance || 0;
   const currentDrawdown = metrics.maxDrawdown || 0;
@@ -572,7 +617,15 @@ function calculateTradingObjectives(
   
   if (equityData && equityData.length > 0) {
     // Use our detailed calculation from equity data
-    maxDailyDrawdown = calculateDailyDrawdown(equityData);
+    const currentDailyDrawdown = calculateDailyDrawdown(equityData);
+    // Compare with cached max daily drawdown and use the higher value
+    maxDailyDrawdown = Math.max(
+      currentDailyDrawdown,
+      cachedMaxDailyDrawdown || 0
+    );
+  } else if (cachedMaxDailyDrawdown !== undefined) {
+    // Use cached max daily drawdown if no equity data
+    maxDailyDrawdown = cachedMaxDailyDrawdown;
   } else {
     // Fallback to metrics data if available
     maxDailyDrawdown = Math.max(
@@ -589,7 +642,7 @@ function calculateTradingObjectives(
   
   const targets = {
     standard: {
-      minTradingDays: 4,
+      minTradingDays: 5,
       maxDrawdown: 15,
       maxDailyDrawdown: 8,
       profitTargetStep1: 10,
@@ -606,52 +659,40 @@ function calculateTradingObjectives(
   
   const target = targets[challengeType] || targets.standard;
   
-  // Calculate trading days based on MetaStats data
-  // A trading day is counted when there's at least 0.5% gain from the starting day balance
+  // Calculate trading days based on trades data
+  // A trading day is counted when there are at least 2 trades on that day
   let tradingDays = 0;
   
-  if (metrics.tradingDays) {
+  if (tradesData && tradesData.length > 0) {
+    // Group trades by day
+    const tradesByDay: { [key: string]: number } = {};
+    
+    tradesData.forEach(trade => {
+      const tradeDate = trade.openTime || trade.time || trade.date;
+      if (tradeDate) {
+        const date = new Date(tradeDate);
+        const dayKey = date.toISOString().slice(0, 10); // YYYY-MM-DD
+        
+        if (!tradesByDay[dayKey]) {
+          tradesByDay[dayKey] = 0;
+        }
+        tradesByDay[dayKey]++;
+      }
+    });
+    
+    // Count days with at least 2 trades
+    Object.values(tradesByDay).forEach(tradesCount => {
+      if (tradesCount >= 2) {
+        tradingDays++;
+      }
+    });
+  } else if (metrics.tradingDays) {
     // If MetaStats provides trading days directly
     tradingDays = metrics.tradingDays;
-  } else if (equityData && equityData.length > 0) {
-    // Calculate from equity data - count days with 0.5% or more profit
-    const dailyProfits: { [key: string]: { start: number, end: number } } = {};
-    
-    equityData.forEach(point => {
-      const date = new Date(point.brokerTime || point.endBrokerTime || point.date);
-      const dayKey = date.toISOString().slice(0, 10);
-      
-      if (!dailyProfits[dayKey]) {
-        const startBalance = parseFloat(point.startBalance || point.balance || 0);
-        dailyProfits[dayKey] = { start: startBalance, end: startBalance };
-      }
-      
-      const endBalance = parseFloat(point.lastBalance || point.balance || 0);
-      dailyProfits[dayKey].end = Math.max(dailyProfits[dayKey].end, endBalance);
-    });
-    
-    // Count days with at least 0.5% gain
-    Object.values(dailyProfits).forEach(day => {
-      if (day.start > 0) {
-        const dayGain = ((day.end - day.start) / day.start) * 100;
-        if (dayGain >= 0.5) {
-          tradingDays++;
-        }
-      }
-    });
   } else if (metrics.trades > 0) {
-    // Fallback estimation
-    const avgWinPerTrade = metrics.averageWin || 0;
-    const wonTrades = metrics.wonTrades || 0;
-    const requiredDailyProfit = accountStartBalance * 0.005; // 0.5% of start balance
-    
-    if (avgWinPerTrade > 0 && requiredDailyProfit > 0) {
-      const totalProfit = currentBalance - accountStartBalance;
-      const daysFromProfit = Math.floor(totalProfit / requiredDailyProfit);
-      tradingDays = Math.min(daysFromProfit, 30); // Cap at 30 days
-    } else {
-      tradingDays = Math.min(Math.floor(metrics.trades / 2), 10);
-    }
+    // Fallback estimation - assume trades are distributed across days
+    // with an average of 3 trades per trading day
+    tradingDays = Math.min(Math.floor(metrics.trades / 3), 30);
   }
   
   return {
@@ -786,18 +827,20 @@ function generateMockEquityChart(startBalance: number) {
   return points;
 }
 
-function calculateMockObjectives(accountType: string, accountSize: number, currentBalance: number, equityData?: any[]) {
+function calculateMockObjectives(accountType: string, accountSize: number, currentBalance: number, equityData?: any[], cachedMaxDailyDrawdown?: number) {
   const profitPercentage = ((currentBalance - accountSize) / accountSize) * 100;
   
   // Calculate daily drawdown from equity data if available
   let maxDailyDrawdown = 2.3; // Default mock value
-  if (equityData && equityData.length > 0) {
+  if (cachedMaxDailyDrawdown !== undefined) {
+    maxDailyDrawdown = cachedMaxDailyDrawdown;
+  } else if (equityData && equityData.length > 0) {
     maxDailyDrawdown = calculateDailyDrawdown(equityData);
   }
   
   return {
     minTradingDays: {
-      target: accountType === 'standard' ? 4 : 0,
+      target: 5,
       current: 5,
       passed: true
     },

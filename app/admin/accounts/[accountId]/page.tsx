@@ -109,7 +109,7 @@ const TradingObjectivesTable = ({ objectives }: { objectives: TradingObjectives 
       format: 'percent'
     },
     { 
-      label: 'Max Daily Drawdown %', 
+      label: 'Max Daily Drawdown % (Highest Achieved)', 
       target: objectives.maxDailyDrawdown.target,
       current: objectives.maxDailyDrawdown.current,
       passed: objectives.maxDailyDrawdown.passed,
@@ -249,8 +249,8 @@ export default function AdminAccountDetailsPage() {
           },
           maxDailyDrawdown: {
             target: targetDailyDrawdown,
-            current: cachedData.dailyDrawdown || 0,
-            passed: (cachedData.dailyDrawdown || 0) <= targetDailyDrawdown
+            current: cachedData.maxDailyDrawdown || cachedData.dailyDrawdown || 0,
+            passed: (cachedData.maxDailyDrawdown || cachedData.dailyDrawdown || 0) <= targetDailyDrawdown
           },
           profitTarget: {
             target: targetProfit,
@@ -361,6 +361,7 @@ export default function AdminAccountDetailsPage() {
         profitFactor: data.metrics.profitFactor,
         maxDrawdown: data.metrics.maxDrawdown,
         dailyDrawdown: data.metrics.relativeDrawdown,
+        maxDailyDrawdown: data.objectives.maxDailyDrawdown.current,
         currentProfit: data.metrics.profit,
         tradingDays: data.objectives.minTradingDays.current
       });

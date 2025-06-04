@@ -132,6 +132,7 @@ export interface CachedMetrics {
   profitFactor: number;
   maxDrawdown: number;
   dailyDrawdown: number;
+  maxDailyDrawdown: number; // Maximum daily drawdown achieved during the challenge
   currentProfit: number;
   tradingDays: number;
   lastUpdated: Timestamp;
