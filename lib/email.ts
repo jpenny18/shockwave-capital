@@ -444,4 +444,213 @@ export async function sendCryptoOrderEmail(order: {
     console.error('Error sending crypto order emails:', error);
     return { success: false, error };
   }
+}
+
+/**
+ * Send template-based email with variable replacement
+ * @param template Email template object
+ * @param user User object containing recipient details
+ * @param testValues Optional test values to override template variables
+ * @returns Email send result
+ */
+export async function sendTemplateEmail(
+  template: {
+    name: string;
+    subject: string;
+    body: string;
+    variables: string[];
+  },
+  user: {
+    email: string;
+    displayName?: string;
+    firstName?: string;
+    lastName?: string;
+    [key: string]: any;
+  },
+  testValues?: { [key: string]: string }
+) {
+  try {
+    console.log('Sending template email to:', user.email);
+    
+    // Prepare variable values
+    const variableValues: { [key: string]: string } = {};
+    
+    // Set default values from user object
+    template.variables.forEach(variable => {
+      switch (variable) {
+        case 'firstName':
+          variableValues[variable] = user.firstName || user.displayName?.split(' ')[0] || 'Valued Customer';
+          break;
+        case 'lastName':
+          variableValues[variable] = user.lastName || user.displayName?.split(' ')[1] || '';
+          break;
+        case 'email':
+          variableValues[variable] = user.email;
+          break;
+        case 'displayName':
+          variableValues[variable] = user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Valued Customer';
+          break;
+        default:
+          // Check if user object has this property
+          variableValues[variable] = user[variable] || `{{${variable}}}`;
+      }
+    });
+    
+    // Override with test values if provided
+    if (testValues) {
+      Object.keys(testValues).forEach(key => {
+        if (testValues[key] && testValues[key].trim()) {
+          variableValues[key] = testValues[key];
+        }
+      });
+    }
+    
+    // Replace variables in subject and body
+    let processedSubject = template.subject;
+    let processedBody = template.body;
+    
+    Object.entries(variableValues).forEach(([key, value]) => {
+      const regex = new RegExp(`{{${key}}}`, 'g');
+      processedSubject = processedSubject.replace(regex, value);
+      processedBody = processedBody.replace(regex, value);
+    });
+    
+    // Enhanced HTML body with better styling and logo
+    const styledBody = `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333; line-height: 1.6; background-color: #f5f5f5;">
+        <!-- Header with Clean Text Branding -->
+        <div style="background: #f7f7f7; padding: 30px 20px; margin-bottom: 30px; border-radius: 12px; text-align: center;">
+          <h1 style="color: #1a1a1a; margin: 0; font-size: 32px; font-weight: 700; letter-spacing: 1px;">SHOCKWAVE CAPITAL</h1>
+          <p style="color: #1a1a1a; margin: 5px 0 0 0; font-size: 14px; font-weight: 500; letter-spacing: 2px;">HIGH OCTANE FUNDING</p>
+        </div>
+        
+        <!-- Main Content -->
+        <div style="background-color: #ffffff; padding: 20px; border-radius: 12px; margin-bottom: 30px; border: 1px solid #e5e5e5;">
+          ${processedBody}
+        </div>
+        
+        <!-- Footer -->
+        <div style="background: #f7f7f7; padding: 25px 20px; border-radius: 12px; text-align: center; font-size: 14px; color: #999;">
+          <div style="margin-bottom: 15px;">
+            <p style="margin: 0; color: #1a1a1a; font-weight: 600; font-size: 16px;">SHOCKWAVE CAPITAL</p>
+            <p style="margin: 5px 0 0 0; color: #666; font-size: 12px;">© ${new Date().getFullYear()} All rights reserved. Empowering traders worldwide.</p>
+          </div>
+          <div style="border-top: 1px solid #ddd; padding-top: 15px;">
+            <p style="margin: 0 0 10px 0; color: #666;">This is an automated email. Please do not reply to this message.</p>
+            <p style="margin: 0; font-size: 12px;">
+              Need help? Contact us at <a href="mailto:support@shockwave-capital.com" style="color: #0FF1CE; text-decoration: none; font-weight: 500;">support@shockwave-capital.com</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Create text version by stripping HTML
+    const textBody = processedBody
+      .replace(/<[^>]*>/g, '')
+      .replace(/\n\s*\n/g, '\n\n')
+      .trim();
+    
+    // Send customer email
+    const { data, error } = await resend.emails.send({
+      from: 'support@shockwave-capital.com',
+      to: user.email,
+      subject: processedSubject,
+      html: styledBody,
+      text: `
+        ${processedSubject}
+        
+        ${textBody}
+        
+        ---
+        © ${new Date().getFullYear()} Shockwave Capital. All rights reserved.
+        This is an automated email. Please do not reply to this message.
+        Need help? Contact us at support@shockwave-capital.com
+      `,
+    });
+
+    if (error) {
+      console.error('Error sending template email:', error);
+      return { success: false, error };
+    }
+
+    console.log('Template email sent successfully:', data?.id);
+    
+    // Send admin notification for Login Credentials template
+    if (template.name === 'Login Credentials') {
+      try {
+        console.log('Sending admin notification for login credentials dispatch');
+        
+        await resend.emails.send({
+          from: 'support@shockwave-capital.com',
+          to: 'support@shockwave-capital.com',
+          subject: `Login Credentials Sent - ${user.displayName || user.email}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+              <div style="background-color: #0D0D0D; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                <h1 style="color: #0FF1CE; margin: 0; font-size: 24px;">Login Credentials Dispatched</h1>
+              </div>
+              
+              <div style="margin-bottom: 30px;">
+                <p style="margin-bottom: 5px;"><strong>Timestamp:</strong> ${new Date().toLocaleString()}</p>
+                <p style="margin-bottom: 5px;"><strong>Template:</strong> ${template.name}</p>
+                <p style="margin-bottom: 5px;"><strong>Email Subject:</strong> ${processedSubject}</p>
+              </div>
+              
+              <div style="margin-bottom: 30px;">
+                <h2 style="color: #0FF1CE; font-size: 18px; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Customer Details</h2>
+                <p style="margin-bottom: 5px;"><strong>Name:</strong> ${user.displayName || 'N/A'}</p>
+                <p style="margin-bottom: 5px;"><strong>Email:</strong> ${user.email}</p>
+                <p style="margin-bottom: 5px;"><strong>First Name:</strong> ${user.firstName || 'N/A'}</p>
+                <p style="margin-bottom: 5px;"><strong>Last Name:</strong> ${user.lastName || 'N/A'}</p>
+              </div>
+              
+              <div style="margin-bottom: 30px;">
+                <h2 style="color: #0FF1CE; font-size: 18px; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Credentials Sent</h2>
+                <p style="margin-bottom: 5px;"><strong>Platform:</strong> ${variableValues.platform || 'N/A'}</p>
+                <p style="margin-bottom: 5px;"><strong>Login ID:</strong> ${variableValues.loginId || 'N/A'}</p>
+                <p style="margin-bottom: 5px;"><strong>Password:</strong> ${variableValues.password || 'N/A'}</p>
+                <p style="margin-bottom: 5px;"><strong>Server:</strong> ${variableValues.server || 'N/A'}</p>
+              </div>
+              
+              <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; text-align: center; font-size: 12px; color: #666;">
+                <p>This is an automated notification from Shockwave Capital Admin System.</p>
+              </div>
+            </div>
+          `,
+          text: `
+            Login Credentials Dispatched
+            
+            Timestamp: ${new Date().toLocaleString()}
+            Template: ${template.name}
+            Email Subject: ${processedSubject}
+            
+            Customer Details:
+            Name: ${user.displayName || 'N/A'}
+            Email: ${user.email}
+            First Name: ${user.firstName || 'N/A'}
+            Last Name: ${user.lastName || 'N/A'}
+            
+            Credentials Sent:
+            Platform: ${variableValues.platform || 'N/A'}
+            Login ID: ${variableValues.loginId || 'N/A'}
+            Password: ${variableValues.password || 'N/A'}
+            Server: ${variableValues.server || 'N/A'}
+            
+            This is an automated notification from Shockwave Capital Admin System.
+          `,
+        });
+        
+        console.log('Admin notification for login credentials sent successfully');
+      } catch (adminError) {
+        console.error('Error sending admin notification:', adminError);
+        // Don't fail the main email send if admin notification fails
+      }
+    }
+    
+    return { success: true, data };
+  } catch (error) {
+    console.error('Error sending template email:', error);
+    return { success: false, error };
+  }
 } 

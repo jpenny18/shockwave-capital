@@ -1,0 +1,1919 @@
+Delivered-To: ascendantcapitalinvestments@gmail.com
+Received: by 2002:a05:7301:e8a:b0:172:343a:db24 with SMTP id mk10csp2496746dyb;
+        Mon, 2 Jun 2025 01:11:54 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFMwzm7Kyike86yJHG6w17pIMv+L9hHX1ND1jJh3bUySVNdZKt1RYw4VAHsdOEDl/vFtF8J
+X-Received: by 2002:a05:690c:4d04:b0:70f:84c8:3134 with SMTP id 00721157ae682-70f97e321c3mr167843447b3.3.1748851914358;
+        Mon, 02 Jun 2025 01:11:54 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1748851914; cv=none;
+        d=google.com; s=arc-20240605;
+        b=KccGXYi0pNGtyo1ky9BJCHCggJej9eJ1zONONar7WSmYYprhMKjkLrCdlCnc1aYcPb
+         2/0x26VFAsJX1O+cdyM2H1ld8X5mWmAyf0xUJfIWAdf6uuaK7NtX/mc33HW53yqC/CQR
+         w6kiKgvKY6k98uaFLQnObLHlJXp3a4TMN77rykh6S6IE34/1Cx1rG0B8M4D0PBNC5YJe
+         5NGsMgEXxE2VomXnWU3atMAMKWen8k8uJaO/NQBJREhbppoGtw+ab1Zp0YND0sNbbulw
+         FLKsO8lbJm7Xl0mcjLJxaAgMmu/270yPQlnvt9lVjMzuhNzykhn/WOqHvi2oQkM8WW3s
+         c8og==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=from:subject:reply-to:mime-version:date:message-id:to
+         :dkim-signature;
+        bh=Ik1pPouir5yf4N9q4nnAS0JESIoUOnE/TpQDNK467Ng=;
+        fh=YECeL87eWPFsHVQ5YfQUOEfb0+1KHfRxXQ7OfdFhyy8=;
+        b=Yp1zitNp8V0EyDLqOFS83p8zNLFBvMf7sBNN+h2uW3JLCT5MeIXpn8y+MzhZ8N0X4R
+         5F7XSyX5Ni2ptw59KWvAKhzkXjRRfYe2CwQdg/XEhIHRKoYLx9DhbDWHMeqavIuvtIY/
+         hcQoqoljJ0NW4n/gkXkz00IQTeqc6gC7IDYBa/UCzwoMDrgegOIw2lzglH7ddmjAjHmv
+         iJYcbSPP1leQwvXXic7Sj/tniPCL3Jiz2OVlNR9oWn9GX98CwqJ66AIAAH15SDxSSLoN
+         ULY7zwB4OMhn12Ta1KdGj05h1gTBddf1J7g91K7zjHSPGJF1fSds/G4tj3NB2BlCKQ74
+         binA==;
+        dara=google.com
+ARC-Authentication-Results: i=1; mx.google.com;
+       dkim=pass header.i=@t.fusionmarkets.com header.s=scph1024 header.b=JvD4xt4l;
+       spf=pass (google.com: domain of msprvs1=202484msh5_we=bounces-266693-1430@t.fusionmarkets.com designates 137.22.238.183 as permitted sender) smtp.mailfrom="msprvs1=202484mSH5_wE=bounces-266693-1430@t.fusionmarkets.com";
+       dmarc=pass (p=NONE sp=NONE dis=NONE) header.from=fusionmarkets.com
+Return-Path: <msprvs1=202484mSH5_wE=bounces-266693-1430@t.fusionmarkets.com>
+Received: from fyeq6hqp.t.fusionmarkets.com (fyeq6hqp.t.fusionmarkets.com. [137.22.238.183])
+        by mx.google.com with ESMTPS id 00721157ae682-70f96b2343bsi64267397b3.164.2025.06.02.01.11.53
+        for <ascendantcapitalinvestments@gmail.com>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 02 Jun 2025 01:11:54 -0700 (PDT)
+Received-SPF: pass (google.com: domain of msprvs1=202484msh5_we=bounces-266693-1430@t.fusionmarkets.com designates 137.22.238.183 as permitted sender) client-ip=137.22.238.183;
+Authentication-Results: mx.google.com;
+       dkim=pass header.i=@t.fusionmarkets.com header.s=scph1024 header.b=JvD4xt4l;
+       spf=pass (google.com: domain of msprvs1=202484msh5_we=bounces-266693-1430@t.fusionmarkets.com designates 137.22.238.183 as permitted sender) smtp.mailfrom="msprvs1=202484mSH5_wE=bounces-266693-1430@t.fusionmarkets.com";
+       dmarc=pass (p=NONE sp=NONE dis=NONE) header.from=fusionmarkets.com
+Return-Path: <msprvs1=202484mSH5_wE=bounces-266693-1430@t.fusionmarkets.com>
+X-MSFBL: 083U2je0oVFn1XC/ZsWTBeU5Qk0/KHw+uTipmxHjoJI=|eyJtZXNzYWdlX2lkIjo iNjgyZmM5NWMzZDY4N2NlNDQ5ZWQiLCJjdXN0b21lcl9pZCI6IjI2NjY5MyIsInR lbmFudF9pZCI6InNwYyIsInN1YmFjY291bnRfaWQiOiIxNDMwIiwiciI6ImFzY2V uZGFudGNhcGl0YWxpbnZlc3RtZW50c0BnbWFpbC5jb20ifQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=t.fusionmarkets.com; s=scph1024; t=1748851913; i=@t.fusionmarkets.com; bh=Ik1pPouir5yf4N9q4nnAS0JESIoUOnE/TpQDNK467Ng=; h=To:Message-ID:Date:Content-Type:Subject:From:From:To:Cc:Subject; b=JvD4xt4lu8FE2Vlk66Tg7woB23qIWtgdv6cgcGf9k7u1meHf2OUUlmPcRyE9yr/A0
+	 PqbF0ruLjf5jT68Pyy59u/wVVAwC3HI+PsRZfnCcjv/RU1XUGXwEACGpMkt8aN82U2
+	 S9/SO4uIs+3fhQsP9ScP5VnOOKT/wIVvwBmV9GUdxCwUE2NuQD7NbMk68k3/f82mUz
+	 7gvNKnYIQ9Lk4n/PbTu2uhwavpNfiKjbda+JzzxI09DBaWc3oQnln17maZbKcl2GYJ
+	 Dxj1Aflpslgas2Tk5Tma5xMLEk/VL6eEu4mS2ZBS+T5JnaJUvMC90mmqS/mzxaNxPr
+	 SzCeeJti9R9IA==
+Received: from [10.90.28.91] ([10.90.28.91]) by i-0f068f8c8d731460f.mta1vrest.sd.prd.sparkpost (ecelerity 5.0.0.74392 r(msys-ecelerity:tags/5.0.0.3)) with REST id DE/94-18957-9CC5D386; Mon, 02 Jun 2025 08:11:53 +0000
+To: ascendantcapitalinvestments@gmail.com
+Message-ID: <DE.94.18957.9CC5D386@i-0f068f8c8d731460f.mta1vrest.sd.prd.sparkpost>
+Date: Mon, 02 Jun 2025 08:11:53 +0000
+Content-Type: multipart/alternative; boundary="_----Y4lTzuQ10mR14QFnqRa5FA===_ED/94-18957-9CC5D386"
+MIME-Version: 1.0
+Reply-To: help@fusionmarkets.com
+Subject: Your MetaTrader 5 demo
+From: Fusion Markets <help@t.fusionmarkets.com>
+
+--_----Y4lTzuQ10mR14QFnqRa5FA===_ED/94-18957-9CC5D386
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="UTF-8"
+
+Here=E2=80=99s your MT5 login details and how to access the platform =E2=80=
+=87=CD=8F
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=
+=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=
+=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=
+=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=
+=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=
+=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=
+=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=
+=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=
+=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=
+=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=
+=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=
+=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=
+=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=
+=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=
+=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=
+=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=
+=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=
+=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=
+=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=
+=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =
+=C2=AD =C2=AD =C2=AD =C2=AD =C2=AD
+=C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=
+=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =
+=C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=
+=AD =C2=AD
+=C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=
+=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =
+=C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=
+=AD =C2=AD
+=C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=
+=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =
+=C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=
+=AD =C2=AD
+=C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD             =
+ Logo=20
+( https://clicks.fusionmarkets.com/f/a/VcOp27UvX_JFtKochAtBRA~~/AAQRxRA~/T1=
+46CeHX2oAVmAQdzmgOJspmoeKMULcr2zocDzc1gbMictvM6Rk4HEIIsZ7taF8DS33VbLsgxxAY_=
+u1C9-ZZ1sBsRBuIm5dxKMtwLklAlW8kQAK7D7iVaGW7hZj_IwZcSst-6z7B1C5PTUukPgKiQA~~=
+ )          CLIENT LOGIN=20
+( https://clicks.fusionmarkets.com/f/a/x7C-DlWCeYx2vswaRym8tw~~/AAQRxRA~/yn=
+4-oXsGKJe3F6p1gNcrxQ9W4U7RBsM_ovRKzLFBR1s3c0LCYT5qdws4ELtSPmnR8zWNEjTAzB2b9=
+evFjLnDPqq0q-vqdhWa5hd-YhiUxFIm6xG-tiN2Cj6H3R1htE1RoMJsRhRAtB9TaQUdFFK2Bizr=
+h2s21WfZ3qyITC-CpgQ~ )   Logo
+Logo ( https://clicks.fusionmarkets.com/f/a/VcOp27UvX_JFtKochAtBRA~~/AAQRxR=
+A~/T146CeHX2oAVmAQdzmgOJspmoeKMULcr2zocDzc1gbMictvM6Rk4HEIIsZ7taF8DS33VbLsg=
+xxAY_u1C9-ZZ1sBsRBuIm5dxKMtwLklAlW8kQAK7D7iVaGW7hZj_IwZcSst-6z7B1C5PTUukPgK=
+iQA~~ )              CLIENT LOGIN=20
+( https://clicks.fusionmarkets.com/f/a/x7C-DlWCeYx2vswaRym8tw~~/AAQRxRA~/yn=
+4-oXsGKJe3F6p1gNcrxQ9W4U7RBsM_ovRKzLFBR1s3c0LCYT5qdws4ELtSPmnR8zWNEjTAzB2b9=
+evFjLnDPqq0q-vqdhWa5hd-YhiUxFIm6xG-tiN2Cj6H3R1htE1RoMJsRhRAtB9TaQUdFFK2Bizr=
+h2s21WfZ3qyITC-CpgQ~ )   Logo
+
+**********************
+Your MetaTrader 5 Demo
+**********************
+
+Hi ACIT,     Welcome to Fusion Markets.
+It=E2=80=99s great to have you with us and thanks for giving us a try.
+Here are your MT5 login details:
+
+Login: 176618   Server: FusionMarkets-Demo   Password:
+R6m3D49kB!   Account type: Classic   Currency: USD   Leverage:
+1:200   Demo expiry: 30 days                        To login,
+install the MT5 platform on your preferred device:
+Logo  MT5 for Windows =20
+( https://clicks.fusionmarkets.com/f/a/MQrrlt4yNCZkvAVZhExmGQ~~/AAQRxRA~/eX=
+rvhAUbBJ1Qs7HHJBYHsL1Z3aWHHLagzvfJc_wvvYkA-j8_Zx3olXLXo7_RFFzNH8dhVF4hGg5xg=
+IyCfSxJgYxw5IZlyQtbKQRzt92ViatUl8UcGKKQE3Ta2iewag5g22lC0lY5IegfOIuLnQMFnyqw=
+_x7TxlMPqaPpMmjitFVW6zklG8JHKwXXdTnxzdDkqnzOX2C0BA3VwtoDg361PA~~ )
+   Logo  MT5 for MacOS =20
+( https://clicks.fusionmarkets.com/f/a/y270xrwtHx04RlQtfZPFEg~~/AAQRxRA~/JZ=
+0m80QSE-FcqzO7Ql5dw24i5UvLU-fxhXSONlFoO5WrvPzbqgrfwlcXgJQ2VexIBz4f2nUsJSTpT=
+3WD1GLeYdC-VNRGOITn4tCR4f5kffA1URAQBhG2NcsQnBW-Unaxpo1Bh9wJrARsJLnMZJKkAT1L=
+hqPLmkKFCm3gtBKXPhhYreKu3L6e1fzfQylLIrEVSKZNG9sPdrzKjWVmYJ3o8TahAVv4glmaZLW=
+wQaB6YzLd06uIRNs0b1TkxD8tgBDTz2Q3nptB9lxX0y4WvmH7iI10FjSJIc5fTqhgX1xDIYQ~ )
+     Logo  MT5 for Android =20
+( https://clicks.fusionmarkets.com/f/a/IA-kWnj0FFQm1euPb0bYlA~~/AAQRxRA~/Oy=
+IWISqi3UeUQfkzoVta0_m22knJFcZuC_-u3Hhg3zObM4qOQRpL26Wr8m1Wtuh2w2J0FcLs0zqO0=
+S3U8kap1KzQbzCvVnJotn6Cc2XIWL-kXQ9q4Avif6eudfRL7E9BG_kHNIt7NyRWFocA936FgVKA=
+mUwcbvPeyYQ_ptOmDITXCOq4ZgXlCbXn4PLInGmLnLAuRSIKXthfy40E3UKHPTSimtwQN0REedE=
+XOexgyzo~ )
+   Logo  MT5 for iOS =20
+( https://clicks.fusionmarkets.com/f/a/eXGi4uY_ujfPdeqeTZ5qpw~~/AAQRxRA~/Nh=
+XeHek9WJtJ7TWgmpC5b33NN1hk2I_FSXQhnQEycHHWlO82sellKgmCrpaZLmVFHGm-U2J-yghyZ=
+kGWaNCKgZr_hIFizv-WjCNzI2E5Gk9684XTpadf9WHJHlrUFTXDKHodD1VCdr2APiZpuetpMe7I=
+IK3L4jq27tTEsXeydYM3_vIPnpMW56XoBg2lYmA31pMFby31w-tS26A972p4MnmurDC5TpYviNz=
+eUebePvs~ )
+     Logo  WebTrader for MT5 =20
+( https://clicks.fusionmarkets.com/f/a/FWL-d_W_6TLDfdB0sZHQ2w~~/AAQRxRA~/Zo=
+S_yGb6JmSE-09Mis2EEKQiPebyhvXe2mqXPgwM0u0lOD0eoP7rIDfqDN60d41T1J3mdcWaXUpR6=
+tUChy18ryEpHh-9acESOmIDJD8IztZu66APmvNfRQ2EpfBaJ9W6n6IzrmuqxaTxX5NaYn6lkQ~~=
+ )            Logo  MT5 for
+Windows =20
+( https://clicks.fusionmarkets.com/f/a/MQrrlt4yNCZkvAVZhExmGQ~~/AAQRxRA~/eX=
+rvhAUbBJ1Qs7HHJBYHsL1Z3aWHHLagzvfJc_wvvYkA-j8_Zx3olXLXo7_RFFzNH8dhVF4hGg5xg=
+IyCfSxJgYxw5IZlyQtbKQRzt92ViatUl8UcGKKQE3Ta2iewag5g22lC0lY5IegfOIuLnQMFnyqw=
+_x7TxlMPqaPpMmjitFVW6zklG8JHKwXXdTnxzdDkqnzOX2C0BA3VwtoDg361PA~~ )
+     Logo  MT5 for Android =20
+( https://clicks.fusionmarkets.com/f/a/IA-kWnj0FFQm1euPb0bYlA~~/AAQRxRA~/Oy=
+IWISqi3UeUQfkzoVta0_m22knJFcZuC_-u3Hhg3zObM4qOQRpL26Wr8m1Wtuh2w2J0FcLs0zqO0=
+S3U8kap1KzQbzCvVnJotn6Cc2XIWL-kXQ9q4Avif6eudfRL7E9BG_kHNIt7NyRWFocA936FgVKA=
+mUwcbvPeyYQ_ptOmDITXCOq4ZgXlCbXn4PLInGmLnLAuRSIKXthfy40E3UKHPTSimtwQN0REedE=
+XOexgyzo~ )
+     Logo  MT5 for MacOS =20
+( https://clicks.fusionmarkets.com/f/a/y270xrwtHx04RlQtfZPFEg~~/AAQRxRA~/JZ=
+0m80QSE-FcqzO7Ql5dw24i5UvLU-fxhXSONlFoO5WrvPzbqgrfwlcXgJQ2VexIBz4f2nUsJSTpT=
+3WD1GLeYdC-VNRGOITn4tCR4f5kffA1URAQBhG2NcsQnBW-Unaxpo1Bh9wJrARsJLnMZJKkAT1L=
+hqPLmkKFCm3gtBKXPhhYreKu3L6e1fzfQylLIrEVSKZNG9sPdrzKjWVmYJ3o8TahAVv4glmaZLW=
+wQaB6YzLd06uIRNs0b1TkxD8tgBDTz2Q3nptB9lxX0y4WvmH7iI10FjSJIc5fTqhgX1xDIYQ~ )
+     Logo  MT5 for iOS =20
+( https://clicks.fusionmarkets.com/f/a/eXGi4uY_ujfPdeqeTZ5qpw~~/AAQRxRA~/Nh=
+XeHek9WJtJ7TWgmpC5b33NN1hk2I_FSXQhnQEycHHWlO82sellKgmCrpaZLmVFHGm-U2J-yghyZ=
+kGWaNCKgZr_hIFizv-WjCNzI2E5Gk9684XTpadf9WHJHlrUFTXDKHodD1VCdr2APiZpuetpMe7I=
+IK3L4jq27tTEsXeydYM3_vIPnpMW56XoBg2lYmA31pMFby31w-tS26A972p4MnmurDC5TpYviNz=
+eUebePvs~ )
+     Logo  WebTrader for MT5 =20
+( https://clicks.fusionmarkets.com/f/a/FWL-d_W_6TLDfdB0sZHQ2w~~/AAQRxRA~/Zo=
+S_yGb6JmSE-09Mis2EEKQiPebyhvXe2mqXPgwM0u0lOD0eoP7rIDfqDN60d41T1J3mdcWaXUpR6=
+tUChy18ryEpHh-9acESOmIDJD8IztZu66APmvNfRQ2EpfBaJ9W6n6IzrmuqxaTxX5NaYn6lkQ~~=
+ )
+What=E2=80=99s Next?
+
+Your account manager will be in touch in the next few
+days to get to know you and see how they can help. In the
+meantime, start exploring the platform and place your first demo
+trades.
+
+----------------
+Have a Question?
+----------------
+
+We're here to help 24 hours a day, 7 days a week. You can
+start a chat from our website, ( https://clicks.fusionmarkets.com/f/a/NMF8s=
+Jf9_VqaI9Qz-sNfdw~~/AAQRxRA~/HGLC0myfT8Ufentx3EGpJL5_MjS5XwdScnbmPGXWS8xQ1b=
+mhlleR4Qx5lVxjiXwcW69gIGAz4uHO9Ft2kz4Vst90qYMOlgIG4kuJeo1s6GBfWhoGnmx8FKFYG=
+ibioFLc5PcpR4hOJV_JQ6Nd_42-aw~~ ) or
+email help@fusionmarkets.com.
+
+-------------
+Helpful Links
+-------------
+
+=E2=80=A2   Check out our trade ideas on Instagram=20
+( https://clicks.fusionmarkets.com/f/a/hMSxqSr7zV5y1RyQ2y5-jQ~~/AAQRxRA~/yI=
+cnDQWfFNQ1RoHsFBrfi09i2gjJrEHGmTqN6-3GYGDKQQc38mNFfGHz9WhBZIC_5CjzEHIWeUTbA=
+vRlor2nsh3F1Z8SmoZ1cs5wHLTxtVNM4qnXG0mbAZhdMCU1SQ1nj_mV_IbPIekjRQhOLO9FchaE=
+o8j7iC6CtIZS-JN9wOs~ )     =E2=80=A2   Find
+upcoming market-moving events with our Economic Calendar=20
+( https://clicks.fusionmarkets.com/f/a/OhvS_8UPQ-yQoKtqgByqCg~~/AAQRxRA~/AF=
+TS3gJ8Og2vliW2dr2CfOhxytgaFxc66SEZz4pXgnf6a5279GHQXxKOuPuNw0PbwxO2N0bX4i9Az=
+SgMRfsouq71-o5D98-cZ4BEAF9XRc9gvngyEZwSb3eZry0HoYk9wyLVaMfwfJ0FP3iPpjztsdkw=
+25hM-V176JAoAvi552M~ )     =E2=80=A2
+Calculate required margin, position sizes, swaps, leverage and
+more on our Quick Calculators=20
+( https://clicks.fusionmarkets.com/f/a/toRTdWTU6UEhrN7rtEkT2w~~/AAQRxRA~/RS=
+Wzh_rhqeehGKw9yW26q7XrW3eyNU3nRcL7fNi4pFKmkkRh82Q-IzwYSaeqSy5nWQIWNSJT5UVvR=
+1UvL5cjaC8v3wFnPpbJdzTaI7r2ob9w40WZ9pDIu0XjoCRnFVUIZXDUwmhxw0HgrHg7hFL8gDX2=
+2US9vo5rycaxAQKz9jk~ )     =E2=80=A2
+See our historical and live spreads for any asset with our
+Spreads Tool=20
+( https://clicks.fusionmarkets.com/f/a/MGOBdaXv5B1jnHDaCvfV-w~~/AAQRxRA~/AF=
+TS3gJ8Og2vliW2dr2CfOhxytgaFxc66SEZz4pXgnfbHcigTnrBit7N08xk21rlvX3mZZFpIu1f_=
+iW1nXXl1YdYq9NnlsjTjq0Cuqoo5kBhqfvgLknfpiZNkYb1UZ32paE_U6AvvaCiQ6HESw2ueoHA=
+j5z5-lHNY4P1fsfNrDo~ )
+
+-------
+Support
+-------
+
+We=E2=80=99re working around the clock to answer any questions you may
+have
+
+=E2=80=A2   Find answers at our FAQ page=20
+( https://clicks.fusionmarkets.com/f/a/tMpxAJOsey2LWL2in4rLPw~~/AAQRxRA~/7B=
+FnmawqVuykCzjBi0PuPPnQxU5D3pBfAjQ8uHZI4iSsgNaLXXxlVunEccuMpsXCn_dsv1qCCYw3h=
+84MhkBieF-i_c9bAX7uS-iQtDGkRDIjfPd8I7uB7HKUWUhIGR2eYUgJXfxCGspmr8fc8f5aPA~~=
+ )     =E2=80=A2   Submit a support
+request at help@fusionmarkets.com     =E2=80=A2   Start a live chat from
+our website, ( https://clicks.fusionmarkets.com/f/a/NMF8sJf9_VqaI9Qz-sNfdw~=
+~/AAQRxRA~/HGLC0myfT8Ufentx3EGpJL5_MjS5XwdScnbmPGXWS8xQ1bmhlleR4Qx5lVxjiXwc=
+W69gIGAz4uHO9Ft2kz4Vst90qYMOlgIG4kuJeo1s6GBfWhoGnmx8FKFYGibioFLc5PcpR4hOJV_=
+JQ6Nd_42-aw~~ ) we=E2=80=99re available 24/7
+1df7d549-152f-ff93-6d0e-f67cf682a3bf.png=20
+( https://clicks.fusionmarkets.com/f/a/hMSxqSr7zV5y1RyQ2y5-jQ~~/AAQRxRA~/yI=
+cnDQWfFNQ1RoHsFBrfi09i2gjJrEHGmTqN6-3GYGDKQQc38mNFfGHz9WhBZIC_5CjzEHIWeUTbA=
+vRlor2nsh3F1Z8SmoZ1cs5wHLTxtVNM4qnXG0mbAZhdMCU1SQ1nj_mV_IbPIekjRQhOLO9FchaE=
+o8j7iC6CtIZS-JN9wOs~ )
+d5fd3f18-79b3-4752-ffdf-e6ca2447492f.png=20
+( https://clicks.fusionmarkets.com/f/a/xolLF8Ukrh0C-eyMGXDXGQ~~/AAQRxRA~/yI=
+cnDQWfFNQ1RoHsFBrfiwa126nJYjLew5QaukQNq9LG-q8z8rc9XlFWa_q9wkjw4VB9E4p2-yn0S=
+LgnAhK4ws5c1DThiHBfjQ3rOxwQ81OaO0hvBmj48DeojI0aywOmjhjMpzJg2x5u8wa0vjGX_FvP=
+U3Evz9qewtf2nd4FajM~ )
+7f8c7501-2ca3-84d3-85a1-64eff6055eab.png=20
+( https://clicks.fusionmarkets.com/f/a/U68vCr-Z56EvfaRdon5zuw~~/AAQRxRA~/nV=
+2BnwnDuuNGVoqu_V4IH9bnInL4SzHq4X5GPFac_nCKKKjAcssenwb6K_K29v9p2apBHztZOVbSs=
+5ZcxyOFzimKzR2iM_HZLvyV7a9Qr8hj35akVBWqrajNNKSJhDBPbjMXAP4ORSY4CgCtNernhg~~=
+ )
+7f8c7501-2ca3-84d3-85a1-64eff6055eab.png=20
+( https://clicks.fusionmarkets.com/f/a/fVWHTkClSZqIQPlktFbIrw~~/AAQRxRA~/R_=
+BTKPyTSyYT5PP16XzhInRtT_T35a1u-A1-3fowVCziO6URFtWsBJkYCO4OjMXobp_jOzaTVeGnT=
+HB393_sA3R_UhhU4qi8mDUQY02psFNAblqdY3Z4ByggbCQnkVQ4jgVQ-F8m2ivNlWREDfBLS8nj=
+-dkYdpfiWEP59CGgxaDZKmFPWXgrlKW-wEEOGKi0 )
+8c07813c-65bc-fc45-144c-0ef3ab1d5206.png=20
+( https://clicks.fusionmarkets.com/f/a/mvghxxI1QsmzqnNu1jxuVg~~/AAQRxRA~/T1=
+46CeHX2oAVmAQdzmgOJlspQqw7TnpX8NNJ8caLH1pBBvVlH3uOrYKBsLSbp6PHlxZraUb6Kp-pv=
+nEqON4CYumALRvj4yE1Q9t2KiZ0NcRKwRh85o9RHgfXdzGesJWFqcGs4rkHUsKjgMyDfZ53Xg~~=
+ )                 Follow us on our
+socials above to get regular access to our charts and updates.
+
+Level 10, 627 Chapel St, South Yarra
+VIC 3141, Australia                 +61 3 8376 2706
+help@fusionmarkets.com               The information contained
+in this email is general information only. Any advice is general
+advice only. Neither your personal objectives, financial
+situation nor needs have been taken into consideration.
+Accordingly, you should consider how appropriate the advice (if
+any) is to those objectives, financial situation and needs,
+before acting on the advice.
+
+Fusion Markets is a trading name of FMGP Trading Group Pty Ltd
+(ABN 74 146 086 017) and is regulated and licensed in Australia
+to provide financial services under Australian Financial Services
+License No. 385620. Gleneagle Securities Pty Limited trading as
+Fusion Markets EN is a registered Vanuatu company (company number
+40256) and is regulated by the VFSC. Fusion Markets International
+as Fusion Markets is a registered Securities Dealer regulated by
+the Financial Services Authority of Seychelles (license number
+SD096).
+--_----Y4lTzuQ10mR14QFnqRa5FA===_ED/94-18957-9CC5D386
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/html; charset="UTF-8"
+
+<!DOCTYPE html>
+<html lang=3D"en">
+  <head>
+    <title></title>
+    <meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8=
+">
+    <meta name=3D"viewport" content=3D"width=3Ddevice-width, initial-scale=
+=3D1.0">
+    <meta http-equiv=3D"X-UA-Compatible" content=3D"IE=3Dedge">
+   =20
+  <style>@media screen {
+  @font-face {
+    font-family: 'Lato'; font-style: normal; font-weight: 400; src: local('=
+Lato Regular'), local('Lato-Regular'), url(https://fonts.gstatic.com/s/lato=
+/v11/qIIYRU-oROkIk8vfvxw6QvesZW2xOQ-xsNqO47m55DA.woff) format('woff');
+  }
+  @font-face {
+    font-family: 'Lato'; font-style: normal; font-weight: 700; src: local('=
+Lato Bold'), local('Lato-Bold'), url(https://fonts.gstatic.com/s/lato/v11/q=
+dgUG4U09HnJwhYI-uK18wLUuEpTyoUstqEm5AMlJo4.woff) format('woff');
+  }
+  @font-face {
+    font-family: 'Lato'; font-style: italic; font-weight: 400; src: local('=
+Lato Italic'), local('Lato-Italic'), url(https://fonts.gstatic.com/s/lato/v=
+11/RYyZNoeFgb0l7W3Vu1aSWOvvDin1pK8aKteLpeZ5c0A.woff) format('woff');
+  }
+  @font-face {
+    font-family: 'Lato'; font-style: italic; font-weight: 700; src: local('=
+Lato Bold Italic'), local('Lato-BoldItalic'), url(https://fonts.gstatic.com=
+/s/lato/v11/HkF_qI1x_noxlxhrhMQYELO3LdcAZYWl9Si6vvxL-qU.woff) format('woff'=
+);
+  }
+}
+body {
+-webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;
+}
+img {
+-ms-interpolation-mode: bicubic;
+}
+img {
+border: 0; height: auto; line-height: 100%; outline: none; text-decoration:=
+ none;
+}
+body {
+height: 100% !important; margin: 0 !important; padding: 0 !important; width=
+: 100% !important;
+}
+@media all and (max-width:621px) {
+  h1 {
+    font-size: 24px !important; line-height: 26px !important;
+  }
+  .mobilecontent {
+    display: table-row !important; max-height: none !important;
+  }
+  .desktopcontent {
+    mso-hide: all; display: none !important; max-height: 0px; overflow: hid=
+den;
+  }
+}
+</style>
+</head>
+  <body style=3D"-webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%=
+; height: 100% !important; width: 100% !important; margin: 0; padding: 0;" =
+bgcolor=3D"#f4f4f4">
+<span class=3D"mcnPreviewText" style=3D"display: none !important; font-size=
+: 0px; line-height: 0px; max-height: 0px; max-width: 0px; opacity: 0; overf=
+low: hidden; visibility: hidden; mso-hide: all;">Here=E2=80=99s your MT5 lo=
+gin details and how to access the platform</span>
+    <div style=3D"display: none;">=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F
+
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F
+
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=
+=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F
+
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F
+
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=
+=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F
+
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F
+
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=
+=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F
+
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F
+
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=
+=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F
+
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F
+
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=
+=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F
+
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F
+
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=
+=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F
+
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F
+
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=
+=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F
+
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F
+
+=C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=
+=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =
+=C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD
+
+=C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=
+=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =
+=C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD
+
+=C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=
+=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =
+=C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD
+
+=C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=
+=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =
+=C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD
+
+=C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=
+=AD =C2=AD =C2=AD </div>
+    <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cellspacing=
+=3D"0" width=3D"100%" style=3D"border-collapse: collapse !important; table-=
+layout: fixed; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; =
+mso-table-lspace: 0pt; mso-table-rspace: 0pt; margin: 0;">
+      <!-- HEADER -->
+      <tr>
+        <td bgcolor=3D"#c5b1ff" align=3D"center" style=3D"-webkit-text-size=
+-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table=
+-rspace: 0pt;">
+          <!--[if (gte mso 9)|(IE)]>
+          <table role=3D"presentation" align=3D"center" border=3D"0" cellsp=
+acing=3D"0" cellpadding=3D"0" width=3D"600">
+            <tr>
+              <td align=3D"center" valign=3D"top" width=3D"600">
+                <![endif]-->
+                <table role=3D"presentation" border=3D"0" cellpadding=3D"0"=
+ cellspacing=3D"0" width=3D"100%" style=3D"border-collapse: collapse !impor=
+tant; table-layout: fixed; max-width: 600px; -webkit-text-size-adjust: 100%=
+; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt;=
+ margin: 0;">
+                  <tr class=3D"desktopcontent">
+                    <td align=3D"left" valign=3D"top" style=3D"-webkit-text=
+-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-=
+table-rspace: 0pt; padding: 40px 10px 40px 20px;">
+                      <a href=3D"https://clicks.fusionmarkets.com/f/a/VcOp2=
+7UvX_JFtKochAtBRA~~/AAQRxRA~/T146CeHX2oAVmAQdzmgOJspmoeKMULcr2zocDzc1gbMict=
+vM6Rk4HEIIsZ7taF8DS33VbLsgxxAY_u1C9-ZZ1sBsRBuIm5dxKMtwLklAlW8kQAK7D7iVaGW7h=
+Zj_IwZcSst-6z7B1C5PTUukPgKiQA~~" target=3D"_blank" style=3D"-webkit-text-si=
+ze-adjust: 100%; -ms-text-size-adjust: 100%;">
+                      <img alt=3D"Logo" src=3D"https://mcusercontent.com/5e=
+19c3262725b9c48b50569e0/images/3650b985-8111-680b-2856-57080efef038.png" wi=
+dth=3D"119" height=3D"50" style=3D"display: block; width: 119px; max-width:=
+ 119px; min-width: 119px; -ms-interpolation-mode: bicubic; height: auto; li=
+ne-height: 100%; outline: none; text-decoration: none; border-width: 0;" bo=
+rder=3D"0">
+                      </a>
+                    </td>
+                    <td align=3D"right" valign=3D"top" style=3D"-webkit-tex=
+t-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso=
+-table-rspace: 0pt; padding: 40px 20px 40px 10px;">
+                     =20
+                      <table border=3D"0" cellpadding=3D"0" cellspacing=3D"=
+0" style=3D"border-collapse: separate !important; border-top-left-radius: 4=
+px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-b=
+ottom-left-radius: 4px; -webkit-text-size-adjust: 100%; -ms-text-size-adjus=
+t: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #f=
+fffff;" bgcolor=3D"#c5b1ff">
+                        <tbody>
+                          <tr>
+                            <td align=3D"center" valign=3D"middle" style=3D=
+"font-family: Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif; font-si=
+ze: 14px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-t=
+able-lspace: 0pt; mso-table-rspace: 0pt; padding: 14px;">
+                              <table style=3D"-webkit-text-size-adjust: 100=
+%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt=
+; border-collapse: collapse !important;">
+                                <tr>
+                                  <td style=3D"-webkit-text-size-adjust: 10=
+0%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0p=
+t;">
+                                    <a title=3D"CLIENT LOGIN" href=3D"https=
+://clicks.fusionmarkets.com/f/a/x7C-DlWCeYx2vswaRym8tw~~/AAQRxRA~/yn4-oXsGK=
+Je3F6p1gNcrxQ9W4U7RBsM_ovRKzLFBR1s3c0LCYT5qdws4ELtSPmnR8zWNEjTAzB2b9evFjLnD=
+Pqq0q-vqdhWa5hd-YhiUxFIm6xG-tiN2Cj6H3R1htE1RoMJsRhRAtB9TaQUdFFK2Bizrh2s21Wf=
+Z3qyITC-CpgQ~" target=3D"_blank" style=3D"font-weight: normal; letter-spaci=
+ng: normal; line-height: 100%; text-align: center; text-decoration: none; c=
+olor: #ffffff; padding-right: 10px; -webkit-text-size-adjust: 100%; -ms-tex=
+t-size-adjust: 100%;">CLIENT LOGIN</a>
+                                  </td>
+                                  <td style=3D"-webkit-text-size-adjust: 10=
+0%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0p=
+t;">
+                                    <img alt=3D"Logo" src=3D"https://mcuser=
+content.com/5e19c3262725b9c48b50569e0/images/885115c7-3dbb-4755-83c8-6e0259=
+a63d30.png" width=3D"17" height=3D"17" style=3D"display: block; width: 17px=
+; max-width: 17px; min-width: 17px; -ms-interpolation-mode: bicubic; height=
+: auto; line-height: 100%; outline: none; text-decoration: none; border-wid=
+th: 0;" border=3D"0">
+                                  </td>
+                                </tr>
+                             </table>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                     =20
+                    </td>
+                  </tr>
+                  <!--[if !mso]><!-->
+                  <tr class=3D"mobilecontent" style=3D"display: none; max-h=
+eight: 0px; overflow: hidden;">
+                    <td align=3D"center" valign=3D"top" style=3D"-webkit-te=
+xt-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; ms=
+o-table-rspace: 0pt; padding: 40px 10px 20px;">
+                      <a href=3D"https://clicks.fusionmarkets.com/f/a/VcOp2=
+7UvX_JFtKochAtBRA~~/AAQRxRA~/T146CeHX2oAVmAQdzmgOJspmoeKMULcr2zocDzc1gbMict=
+vM6Rk4HEIIsZ7taF8DS33VbLsgxxAY_u1C9-ZZ1sBsRBuIm5dxKMtwLklAlW8kQAK7D7iVaGW7h=
+Zj_IwZcSst-6z7B1C5PTUukPgKiQA~~" target=3D"_blank" style=3D"-webkit-text-si=
+ze-adjust: 100%; -ms-text-size-adjust: 100%;">
+                      <img alt=3D"Logo" src=3D"https://mcusercontent.com/5e=
+19c3262725b9c48b50569e0/images/3650b985-8111-680b-2856-57080efef038.png" wi=
+dth=3D"119" height=3D"50" style=3D"display: block; width: 119px; max-width:=
+ 119px; min-width: 119px; font-family: 'Lato', Helvetica, Arial, sans-serif=
+; color: #ffffff; font-size: 18px; -ms-interpolation-mode: bicubic; height:=
+ auto; line-height: 100%; outline: none; text-decoration: none; border-widt=
+h: 0;" border=3D"0">
+                      </a>
+                    </td>
+                  </tr>
+                  <!--<![endif]-->
+                  <!--[if !mso]><!-->
+                  <tr class=3D"mobilecontent" style=3D"display: none; max-h=
+eight: 0px; overflow: hidden;">
+                    <td align=3D"center" valign=3D"top" style=3D"-webkit-te=
+xt-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; ms=
+o-table-rspace: 0pt; padding: 0px 10px 40px;">
+                      <table border=3D"0" cellpadding=3D"0" cellspacing=3D"=
+0" style=3D"border-collapse: separate !important; border-top-left-radius: 4=
+px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-b=
+ottom-left-radius: 4px; -webkit-text-size-adjust: 100%; -ms-text-size-adjus=
+t: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #f=
+fffff;" bgcolor=3D"#c5b1ff">
+                        <tbody>
+                          <tr>
+                            <td align=3D"center" valign=3D"middle" style=3D=
+"font-family: Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif; font-si=
+ze: 14px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-t=
+able-lspace: 0pt; mso-table-rspace: 0pt; padding: 14px;">
+                              <table style=3D"-webkit-text-size-adjust: 100=
+%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt=
+; border-collapse: collapse !important;">
+                                <tr>
+                                  <td style=3D"-webkit-text-size-adjust: 10=
+0%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0p=
+t;">
+                                    <a title=3D"`CLIENT" login href=3D"http=
+s://clicks.fusionmarkets.com/f/a/x7C-DlWCeYx2vswaRym8tw~~/AAQRxRA~/yn4-oXsG=
+KJe3F6p1gNcrxQ9W4U7RBsM_ovRKzLFBR1s3c0LCYT5qdws4ELtSPmnR8zWNEjTAzB2b9evFjLn=
+DPqq0q-vqdhWa5hd-YhiUxFIm6xG-tiN2Cj6H3R1htE1RoMJsRhRAtB9TaQUdFFK2Bizrh2s21W=
+fZ3qyITC-CpgQ~" target=3D"_blank" style=3D"font-weight: normal; letter-spac=
+ing: normal; line-height: 100%; text-align: center; text-decoration: none; =
+color: #ffffff; padding-right: 10px; -webkit-text-size-adjust: 100%; -ms-te=
+xt-size-adjust: 100%;">CLIENT LOGIN</a>
+                                  </td>
+                                  <td style=3D"-webkit-text-size-adjust: 10=
+0%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0p=
+t;">
+                                    <img alt=3D"Logo" src=3D"https://mcuser=
+content.com/5e19c3262725b9c48b50569e0/images/885115c7-3dbb-4755-83c8-6e0259=
+a63d30.png" width=3D"17" height=3D"17" style=3D"display: block; width: 17px=
+; max-width: 17px; min-width: 17px; -ms-interpolation-mode: bicubic; height=
+: auto; line-height: 100%; outline: none; text-decoration: none; border-wid=
+th: 0;" border=3D"0">
+                                  </td>
+                                </tr>
+                              </table>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                  <!--<![endif]-->
+                </table>
+                <!--[if (gte mso 9)|(IE)]>
+              </td>
+            </tr>
+          </table>
+          <![endif]-->
+        </td>
+      </tr>
+
+
+<tr>
+    <td bgcolor=3D"#c5b1ff" align=3D"center" style=3D"-webkit-text-size-adj=
+ust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rsp=
+ace: 0pt; margin: 0; padding: 0px 20px; border-style: none;">
+      <!--[if (gte mso 9)|(IE)]>
+      <table role=3D"presentation" align=3D"center" border=3D"0" cellspacin=
+g=3D"0" cellpadding=3D"0" width=3D"600">
+        <tr>
+          <td align=3D"left" valign=3D"top" width=3D"600">
+            <![endif]-->
+            <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cel=
+lspacing=3D"0" width=3D"100%" style=3D"max-width: 600px; -webkit-text-size-=
+adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-=
+rspace: 0pt; border-collapse: collapse !important; margin: 0;">
+              <tr>
+                <td align=3D"left" valign=3D"top" bgcolor=3D"#ffffff" style=
+=3D"border-radius: 10px 10px 0px 0px; color: #0D1350; font-family: 'Lato', =
+Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-heigh=
+t: 48px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-ta=
+ble-lspace: 0pt; mso-table-rspace: 0pt; margin: 0; padding: 30px 100px 10px=
+ 40px;">
+                  <h1 style=3D"font-size: 22px; line-height: 34px; font-wei=
+ght: 600; margin: 0;">
+                    Your MetaTrader 5 Demo
+                  </h1>
+                </td>
+              </tr>
+            </table>
+            <!--[if (gte mso 9)|(IE)]>
+          </td>
+        </tr>
+      </table>
+      <![endif]-->
+    </td>
+  </tr>
+
+
+<tr>
+  <td bgcolor=3D"#f4f4f4" align=3D"center" style=3D"width: 100% !important;=
+ -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspa=
+ce: 0pt; mso-table-rspace: 0pt; margin: 0; padding: 0px 20px;">
+    <!--[if (gte mso 9)|(IE)]>
+    <table role=3D"presentation" align=3D"center" border=3D"0" cellspacing=
+=3D"0" cellpadding=3D"0" width=3D"600">
+      <tr>
+        <td align=3D"center" valign=3D"top" width=3D"600">
+    <![endif]-->
+    <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cellspacing=
+=3D"0" width=3D"100%" style=3D"border-collapse: collapse !important; table-=
+layout: fixed; max-width: 600px; width: 100% !important; -webkit-text-size-=
+adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-=
+rspace: 0pt; margin: 0;">
+     =20
+      <tr>
+        <td bgcolor=3D" #ffffff " align=3D"left" style=3D"color: #0D1350; o=
+pacity: 1; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size: 14=
+px; font-weight: 400; line-height: 26px; width: 100% !important; -webkit-te=
+xt-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; ms=
+o-table-rspace: 0pt; padding: 0px 40px 40px;">
+
+          <table cellspacing=3D"0" cellpadding=3D"0" border=3D"0" role=3D"p=
+resentation" style=3D"-webkit-text-size-adjust: 100%; -ms-text-size-adjust:=
+ 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: colla=
+pse !important;">
+           =20
+            <tr style=3D"display: block; margin: 20px 0;">
+              <td style=3D"-webkit-text-size-adjust: 100%; -ms-text-size-ad=
+just: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+               =20
+                  Hi ACIT,
+                =20
+              </td>
+            </tr>
+           =20
+            <tr style=3D"display: block; margin: 0;">
+              <td style=3D"-webkit-text-size-adjust: 100%; -ms-text-size-ad=
+just: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+               =20
+                  Welcome to Fusion Markets.
+                =20
+              </td>
+            </tr>
+           =20
+            <tr style=3D"display: block; margin: 0;">
+              <td style=3D"-webkit-text-size-adjust: 100%; -ms-text-size-ad=
+just: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+               =20
+                  It=E2=80=99s great to have you with us and thanks for giv=
+ing us a try.
+                =20
+              </td>
+            </tr>
+           =20
+          </table>
+        </td>
+      </tr>
+    </table>
+    <!--[if (gte mso 9)|(IE)]>
+          </td>
+        </tr>
+      </table>
+    <![endif]-->
+  </td>
+</tr>
+
+
+<tr>
+  <td bgcolor=3D"#f4f4f4" align=3D"center" style=3D"width: 100% !important;=
+ -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspa=
+ce: 0pt; mso-table-rspace: 0pt; margin: 0; padding: 0px 20px;">
+    <table bgcolor=3D"#ffffff" border=3D"0" cellpadding=3D"0" cellspacing=
+=3D"0" width=3D"100%" style=3D"max-width: 600px; -webkit-text-size-adjust: =
+100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: =
+0pt; border-collapse: collapse !important;">
+      <tr>
+        <td align=3D"center" valign=3D"top" width=3D"600" style=3D"padding-=
+bottom: 45px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; m=
+so-table-lspace: 0pt; mso-table-rspace: 0pt;">
+          <table bgcolor=3D"#f4f0ff" role=3D"presentation" border=3D"0" cel=
+lpadding=3D"0" cellspacing=3D"0" width=3D"100%" style=3D"max-width: 600px; =
+-webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspac=
+e: 0pt; mso-table-rspace: 0pt; border-collapse: collapse !important;">
+           =20
+            <tr>
+              <td align=3D"left" style=3D"color: #0D1350; font-family: 'Lat=
+o', Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-h=
+eight: 26px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; ms=
+o-table-lspace: 0pt; mso-table-rspace: 0pt; padding: 0px 40px;">
+                <p style=3D"font-size: 14px;">
+                  Here are your MT5 login details:
+                </p>
+              </td>
+            </tr>
+           =20
+            <tr>
+              <td align=3D"left" style=3D"color: #01082b; font-family: 'Lat=
+o', Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-h=
+eight: 26px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; ms=
+o-table-lspace: 0pt; mso-table-rspace: 0pt; padding: 0px 40px 30px;">
+                <table bgcolor=3D"#f4f0ff" cellpadding=3D"0" cellspacing=3D=
+"0" style=3D"border-collapse: collapse !important; table-layout: fixed; wid=
+th: 100% !important; border-radius: 10px; overflow: hidden; -webkit-text-si=
+ze-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-tab=
+le-rspace: 0pt; border: 1px solid #f4f0ff;">
+                 =20
+                  <tr>
+                    <td scope=3D"col" bgcolor=3D"#fff" valign=3D"left" styl=
+e=3D"width: 30%; color: #515581; font-weight: 100; font-family: 'Lato', Hel=
+vetica, Arial, sans-serif; font-size: 12px; line-height: 18px; border-top-l=
+eft-radius: 6px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%=
+; mso-table-lspace: 0pt; mso-table-rspace: 0pt; padding: 12px 15px; border:=
+ 2px solid #f4f0ff;">Login:</td>
+                    <td valign=3D"left" style=3D"color: #010538; font-weigh=
+t: 100; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size: 14px;=
+ line-height: 17px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 1=
+00%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; padding: 20px; border-co=
+lor: #f4f0ff; border-style: solid; border-width: 2px 1px 2px 2px;" bgcolor=
+=3D"#fff">176618</td>
+                  </tr>
+                 =20
+                  <tr>
+                    <td scope=3D"col" bgcolor=3D"#fff" valign=3D"left" styl=
+e=3D"width: 30%; color: #515581; font-weight: 100; font-family: 'Lato', Hel=
+vetica, Arial, sans-serif; font-size: 12px; line-height: 18px; border-top-l=
+eft-radius: 6px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%=
+; mso-table-lspace: 0pt; mso-table-rspace: 0pt; padding: 12px 15px; border:=
+ 2px solid #f4f0ff;">Server:</td>
+                    <td valign=3D"left" style=3D"color: #010538; font-weigh=
+t: 100; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size: 14px;=
+ line-height: 17px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 1=
+00%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; padding: 20px; border-co=
+lor: #f4f0ff; border-style: solid; border-width: 2px 1px 2px 2px;" bgcolor=
+=3D"#fff">FusionMarkets-Demo</td>
+                  </tr>
+                 =20
+                  <tr>
+                    <td scope=3D"col" bgcolor=3D"#fff" valign=3D"left" styl=
+e=3D"width: 30%; color: #515581; font-weight: 100; font-family: 'Lato', Hel=
+vetica, Arial, sans-serif; font-size: 12px; line-height: 18px; border-top-l=
+eft-radius: 6px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%=
+; mso-table-lspace: 0pt; mso-table-rspace: 0pt; padding: 12px 15px; border:=
+ 2px solid #f4f0ff;">Password:</td>
+                    <td valign=3D"left" style=3D"color: #010538; font-weigh=
+t: 100; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size: 14px;=
+ line-height: 17px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 1=
+00%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; padding: 20px; border-co=
+lor: #f4f0ff; border-style: solid; border-width: 2px 1px 2px 2px;" bgcolor=
+=3D"#fff">R6m3D49kB!</td>
+                  </tr>
+                 =20
+                  <tr>
+                    <td scope=3D"col" bgcolor=3D"#fff" valign=3D"left" styl=
+e=3D"width: 30%; color: #515581; font-weight: 100; font-family: 'Lato', Hel=
+vetica, Arial, sans-serif; font-size: 12px; line-height: 18px; border-top-l=
+eft-radius: 6px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%=
+; mso-table-lspace: 0pt; mso-table-rspace: 0pt; padding: 12px 15px; border:=
+ 2px solid #f4f0ff;">Account type:</td>
+                    <td valign=3D"left" style=3D"color: #010538; font-weigh=
+t: 100; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size: 14px;=
+ line-height: 17px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 1=
+00%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; padding: 20px; border-co=
+lor: #f4f0ff; border-style: solid; border-width: 2px 1px 2px 2px;" bgcolor=
+=3D"#fff">Classic</td>
+                  </tr>
+                 =20
+                  <tr>
+                    <td scope=3D"col" bgcolor=3D"#fff" valign=3D"left" styl=
+e=3D"width: 30%; color: #515581; font-weight: 100; font-family: 'Lato', Hel=
+vetica, Arial, sans-serif; font-size: 12px; line-height: 18px; border-top-l=
+eft-radius: 6px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%=
+; mso-table-lspace: 0pt; mso-table-rspace: 0pt; padding: 12px 15px; border:=
+ 2px solid #f4f0ff;">Currency:</td>
+                    <td valign=3D"left" style=3D"color: #010538; font-weigh=
+t: 100; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size: 14px;=
+ line-height: 17px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 1=
+00%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; padding: 20px; border-co=
+lor: #f4f0ff; border-style: solid; border-width: 2px 1px 2px 2px;" bgcolor=
+=3D"#fff">USD</td>
+                  </tr>
+                 =20
+                  <tr>
+                    <td scope=3D"col" bgcolor=3D"#fff" valign=3D"left" styl=
+e=3D"width: 30%; color: #515581; font-weight: 100; font-family: 'Lato', Hel=
+vetica, Arial, sans-serif; font-size: 12px; line-height: 18px; border-top-l=
+eft-radius: 6px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%=
+; mso-table-lspace: 0pt; mso-table-rspace: 0pt; padding: 12px 15px; border:=
+ 2px solid #f4f0ff;">Leverage:</td>
+                    <td valign=3D"left" style=3D"color: #010538; font-weigh=
+t: 100; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size: 14px;=
+ line-height: 17px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 1=
+00%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; padding: 20px; border-co=
+lor: #f4f0ff; border-style: solid; border-width: 2px 1px 2px 2px;" bgcolor=
+=3D"#fff">1:200</td>
+                  </tr>
+                 =20
+                  <tr>
+                    <td scope=3D"col" bgcolor=3D"#fff" valign=3D"left" styl=
+e=3D"width: 30%; color: #515581; font-weight: 100; font-family: 'Lato', Hel=
+vetica, Arial, sans-serif; font-size: 12px; line-height: 18px; border-top-l=
+eft-radius: 6px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%=
+; mso-table-lspace: 0pt; mso-table-rspace: 0pt; padding: 12px 15px; border:=
+ 2px solid #f4f0ff;">Demo expiry:</td>
+                    <td valign=3D"left" style=3D"color: #010538; font-weigh=
+t: 100; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size: 14px;=
+ line-height: 17px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 1=
+00%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; padding: 20px; border-co=
+lor: #f4f0ff; border-style: solid; border-width: 2px 1px 2px 2px;" bgcolor=
+=3D"#fff">30 days</td>
+                  </tr>
+                 =20
+                </table>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </td>
+</tr>
+
+
+<tr>
+  <td bgcolor=3D"#f4f4f4" align=3D"center" style=3D"width: 100% !important;=
+ -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspa=
+ce: 0pt; mso-table-rspace: 0pt; margin: 0; padding: 0px 20px;">
+    <!--[if (gte mso 9)|(IE)]>
+    <table role=3D"presentation" align=3D"center" border=3D"0" cellspacing=
+=3D"0" cellpadding=3D"0" width=3D"600">
+      <tr>
+        <td align=3D"center" valign=3D"top" width=3D"600">
+    <![endif]-->
+    <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cellspacing=
+=3D"0" width=3D"100%" style=3D"border-collapse: collapse !important; table-=
+layout: fixed; max-width: 600px; width: 100% !important; -webkit-text-size-=
+adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-=
+rspace: 0pt; margin: 0;">
+     =20
+      <tr>
+        <td bgcolor=3D" #ffffff " align=3D"left" style=3D"color: #0D1350; o=
+pacity: 1; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size: 14=
+px; font-weight: 400; line-height: 26px; width: 100% !important; -webkit-te=
+xt-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; ms=
+o-table-rspace: 0pt; padding: 0px 40px 0;">
+
+          <table cellspacing=3D"0" cellpadding=3D"0" border=3D"0" role=3D"p=
+resentation" style=3D"-webkit-text-size-adjust: 100%; -ms-text-size-adjust:=
+ 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: colla=
+pse !important;">
+           =20
+            <tr style=3D"display: block; margin: 0 0 20px;">
+              <td style=3D"-webkit-text-size-adjust: 100%; -ms-text-size-ad=
+just: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+               =20
+                  To login, install the  MT5  platform on your preferred de=
+vice:
+                =20
+              </td>
+            </tr>
+           =20
+          </table>
+        </td>
+      </tr>
+    </table>
+    <!--[if (gte mso 9)|(IE)]>
+          </td>
+        </tr>
+      </table>
+    <![endif]-->
+  </td>
+</tr>
+
+
+ =20
+    <tr>
+  <td bgcolor=3D"#f4f4f4" align=3D"center" style=3D"-webkit-text-size-adjus=
+t: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspac=
+e: 0pt; padding: 0px 20px;">
+    <!--[if (gte mso 9)|(IE)]>
+      <table role=3D"presentation" align=3D"center" border=3D"0" cellspacin=
+g=3D"0" cellpadding=3D"0" width=3D"600">
+        <tr>
+          <td align=3D"center" valign=3D"top" width=3D"600">
+    <![endif]-->
+    <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cellspacing=
+=3D"0" width=3D"100%" style=3D"max-width: 600px; -webkit-text-size-adjust: =
+100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: =
+0pt; border-collapse: collapse !important;">
+
+      <tr class=3D"desktopcontent">
+        <td valign=3D"middle" bgcolor=3D"#ffffff" align=3D"left" style=3D"c=
+olor: #0D1350; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size=
+: 16px; font-weight: 400; line-height: 25px; -webkit-text-size-adjust: 100%=
+; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt;=
+ padding: 0px 40px 20px;">
+          <table valign=3D"middle" border=3D"0" cellpadding=3D"2px" cellspa=
+cing=3D"4px" style=3D"width: 100% !important; border-collapse: separate !im=
+portant; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-ta=
+ble-lspace: 0pt; mso-table-rspace: 0pt; border-width: 0;">
+            <tr>
+              <td valign=3D"middle" align=3D"center" width=3D"50%" style=3D=
+"-webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspa=
+ce: 0pt; mso-table-rspace: 0pt; padding: 0;">
+                <a href=3D"https://clicks.fusionmarkets.com/f/a/MQrrlt4yNCZ=
+kvAVZhExmGQ~~/AAQRxRA~/eXrvhAUbBJ1Qs7HHJBYHsL1Z3aWHHLagzvfJc_wvvYkA-j8_Zx3o=
+lXLXo7_RFFzNH8dhVF4hGg5xgIyCfSxJgYxw5IZlyQtbKQRzt92ViatUl8UcGKKQE3Ta2iewag5=
+g22lC0lY5IegfOIuLnQMFnyqw_x7TxlMPqaPpMmjitFVW6zklG8JHKwXXdTnxzdDkqnzOX2C0BA=
+3VwtoDg361PA~~" style=3D"display: block; width: 100%; text-decoration: none=
+; background-color: #f4f0ff; border-radius: 10px; text-align: center; font-=
+family: 'Lato', Helvetica, Arial, sans-serif; font-size: 14px; line-height:=
+ 20px; color: #0D1350; box-sizing: border-box; -webkit-text-size-adjust: 10=
+0%; -ms-text-size-adjust: 100%; padding: 15px; border: 1px solid #E8E4F4;">
+                  <img src=3D"https://mcusercontent.com/5e19c3262725b9c48b5=
+0569e0/images/e9e691f0-44fe-a3fc-73de-0ed8861645e6.png" alt=3D"Logo" style=
+=3D"display: inline-block; width: 24px; height: 24px; vertical-align: middl=
+e; margin-right: 10px; object-fit: contain; -ms-interpolation-mode: bicubic=
+; line-height: 100%; outline: none; text-decoration: none; border-width: 0;=
+">
+                  <span style=3D"vertical-align: middle;">
+                    MT5 for Windows
+                  </span>
+                </a>
+              </td>
+              <td valign=3D"middle" align=3D"center" width=3D"50%" style=3D=
+"-webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspa=
+ce: 0pt; mso-table-rspace: 0pt; padding: 0;">
+                <a href=3D"https://clicks.fusionmarkets.com/f/a/y270xrwtHx0=
+4RlQtfZPFEg~~/AAQRxRA~/JZ0m80QSE-FcqzO7Ql5dw24i5UvLU-fxhXSONlFoO5WrvPzbqgrf=
+wlcXgJQ2VexIBz4f2nUsJSTpT3WD1GLeYdC-VNRGOITn4tCR4f5kffA1URAQBhG2NcsQnBW-Una=
+xpo1Bh9wJrARsJLnMZJKkAT1LhqPLmkKFCm3gtBKXPhhYreKu3L6e1fzfQylLIrEVSKZNG9sPdr=
+zKjWVmYJ3o8TahAVv4glmaZLWwQaB6YzLd06uIRNs0b1TkxD8tgBDTz2Q3nptB9lxX0y4WvmH7i=
+I10FjSJIc5fTqhgX1xDIYQ~" style=3D"display: block; width: 100%; text-decorat=
+ion: none; background-color: #f4f0ff; border-radius: 10px; text-align: cent=
+er; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size: 14px; lin=
+e-height: 20px; color: #0D1350; box-sizing: border-box; -webkit-text-size-a=
+djust: 100%; -ms-text-size-adjust: 100%; padding: 15px; border: 1px solid #=
+E8E4F4;">
+                  <img src=3D"https://mcusercontent.com/5e19c3262725b9c48b5=
+0569e0/images/eb7c1d82-42a7-fa97-df7e-b0e9451557d7.png" alt=3D"Logo" style=
+=3D"display: inline-block; width: 24px; height: 24px; vertical-align: middl=
+e; margin-right: 10px; object-fit: contain; -ms-interpolation-mode: bicubic=
+; line-height: 100%; outline: none; text-decoration: none; border-width: 0;=
+">
+                  <span style=3D"vertical-align: middle;">
+                    MT5 for MacOS
+                  </span>
+                </a>
+              </td>
+            </tr>
+            <tr>
+              <td valign=3D"middle" align=3D"center" width=3D"50%" style=3D=
+"-webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspa=
+ce: 0pt; mso-table-rspace: 0pt; padding: 0;">
+                <a href=3D"https://clicks.fusionmarkets.com/f/a/IA-kWnj0FFQ=
+m1euPb0bYlA~~/AAQRxRA~/OyIWISqi3UeUQfkzoVta0_m22knJFcZuC_-u3Hhg3zObM4qOQRpL=
+26Wr8m1Wtuh2w2J0FcLs0zqO0S3U8kap1KzQbzCvVnJotn6Cc2XIWL-kXQ9q4Avif6eudfRL7E9=
+BG_kHNIt7NyRWFocA936FgVKAmUwcbvPeyYQ_ptOmDITXCOq4ZgXlCbXn4PLInGmLnLAuRSIKXt=
+hfy40E3UKHPTSimtwQN0REedEXOexgyzo~" style=3D"display: block; width: 100%; t=
+ext-decoration: none; background-color: #f4f0ff; border-radius: 10px; text-=
+align: center; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size=
+: 14px; line-height: 20px; color: #0D1350; box-sizing: border-box; -webkit-=
+text-size-adjust: 100%; -ms-text-size-adjust: 100%; padding: 15px; border: =
+1px solid #E8E4F4;">
+                  <img src=3D"https://mcusercontent.com/5e19c3262725b9c48b5=
+0569e0/images/08e9a823-40ed-9eae-7819-2e36acdbf4aa.png" alt=3D"Logo" style=
+=3D"display: inline-block; width: 24px; height: 24px; vertical-align: middl=
+e; margin-right: 10px; object-fit: contain; -ms-interpolation-mode: bicubic=
+; line-height: 100%; outline: none; text-decoration: none; border-width: 0;=
+">
+                  <span style=3D"vertical-align: middle;">
+                    MT5 for Android
+                  </span>
+                </a>
+              </td>
+              <td valign=3D"middle" align=3D"center" width=3D"50%" style=3D=
+"-webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspa=
+ce: 0pt; mso-table-rspace: 0pt; padding: 0;">
+                <a href=3D"https://clicks.fusionmarkets.com/f/a/eXGi4uY_ujf=
+PdeqeTZ5qpw~~/AAQRxRA~/NhXeHek9WJtJ7TWgmpC5b33NN1hk2I_FSXQhnQEycHHWlO82sell=
+KgmCrpaZLmVFHGm-U2J-yghyZkGWaNCKgZr_hIFizv-WjCNzI2E5Gk9684XTpadf9WHJHlrUFTX=
+DKHodD1VCdr2APiZpuetpMe7IIK3L4jq27tTEsXeydYM3_vIPnpMW56XoBg2lYmA31pMFby31w-=
+tS26A972p4MnmurDC5TpYviNzeUebePvs~" style=3D"display: block; width: 100%; t=
+ext-decoration: none; background-color: #f4f0ff; border-radius: 10px; text-=
+align: center; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size=
+: 14px; line-height: 20px; color: #0D1350; box-sizing: border-box; -webkit-=
+text-size-adjust: 100%; -ms-text-size-adjust: 100%; padding: 15px; border: =
+1px solid #E8E4F4;">
+                  <img src=3D"https://mcusercontent.com/5e19c3262725b9c48b5=
+0569e0/images/938ff90b-ec18-3fa7-af21-ba3f32b84a74.png" alt=3D"Logo" style=
+=3D"display: inline-block; width: 24px; height: 24px; vertical-align: middl=
+e; margin-right: 10px; object-fit: contain; -ms-interpolation-mode: bicubic=
+; line-height: 100%; outline: none; text-decoration: none; border-width: 0;=
+">
+                  <span style=3D"vertical-align: middle;">
+                    MT5 for iOS
+                  </span>
+                </a>
+              </td>
+            </tr>
+            <tr>
+              <td valign=3D"middle" align=3D"center" width=3D"100%" colspan=
+=3D"2" style=3D"-webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;=
+ mso-table-lspace: 0pt; mso-table-rspace: 0pt; padding: 0;">
+                <a href=3D"https://clicks.fusionmarkets.com/f/a/FWL-d_W_6TL=
+DfdB0sZHQ2w~~/AAQRxRA~/ZoS_yGb6JmSE-09Mis2EEKQiPebyhvXe2mqXPgwM0u0lOD0eoP7r=
+IDfqDN60d41T1J3mdcWaXUpR6tUChy18ryEpHh-9acESOmIDJD8IztZu66APmvNfRQ2EpfBaJ9W=
+6n6IzrmuqxaTxX5NaYn6lkQ~~" style=3D"display: block; width: 100%; text-decor=
+ation: none; background-color: #f4f0ff; border-radius: 10px; text-align: ce=
+nter; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size: 14px; l=
+ine-height: 20px; color: #0D1350; box-sizing: border-box; -webkit-text-size=
+-adjust: 100%; -ms-text-size-adjust: 100%; padding: 15px; border: 1px solid=
+ #E8E4F4;">
+                  <img src=3D"https://mcusercontent.com/5e19c3262725b9c48b5=
+0569e0/images/3795181c-c3c3-d462-e8d9-33e29e573387.png" alt=3D"Logo" style=
+=3D"display: inline-block; width: 24px; height: 24px; vertical-align: middl=
+e; margin-right: 10px; object-fit: contain; -ms-interpolation-mode: bicubic=
+; line-height: 100%; outline: none; text-decoration: none; border-width: 0;=
+">
+                  <span style=3D"vertical-align: middle;">
+                    WebTrader for MT5=20
+                  </span>
+                </a>
+              </td>
+            </tr>
+           =20
+          </table>
+        </td>
+      </tr>
+      <!--[if !mso]><!-->
+      <tr class=3D"mobilecontent" style=3D"display: none; max-height: 0px; =
+overflow: hidden;">
+        <td valign=3D"middle" bgcolor=3D"#ffffff" align=3D"center" style=3D=
+"color: #01082b; font-family: 'Lato', Helvetica, Arial, sans-serif; font-si=
+ze: 16px; font-weight: 400; line-height: 25px; -webkit-text-size-adjust: 10=
+0%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0p=
+t; padding: 0px 40px 20px;">
+          <table valign=3D"middle" border=3D"0" cellpadding=3D"3px" cellspa=
+cing=3D"5px" style=3D"border-collapse: separate !important; width: 100%; -w=
+ebkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace:=
+ 0pt; mso-table-rspace: 0pt; border-width: 0;">
+            <tr>
+              <td valign=3D"middle" align=3D"center" width=3D"100%" colspan=
+=3D"2" style=3D"-webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;=
+ mso-table-lspace: 0pt; mso-table-rspace: 0pt; padding: 0;">
+                <a href=3D"https://clicks.fusionmarkets.com/f/a/MQrrlt4yNCZ=
+kvAVZhExmGQ~~/AAQRxRA~/eXrvhAUbBJ1Qs7HHJBYHsL1Z3aWHHLagzvfJc_wvvYkA-j8_Zx3o=
+lXLXo7_RFFzNH8dhVF4hGg5xgIyCfSxJgYxw5IZlyQtbKQRzt92ViatUl8UcGKKQE3Ta2iewag5=
+g22lC0lY5IegfOIuLnQMFnyqw_x7TxlMPqaPpMmjitFVW6zklG8JHKwXXdTnxzdDkqnzOX2C0BA=
+3VwtoDg361PA~~" style=3D"display: block; width: 100%; text-decoration: none=
+; background-color: #f4f0ff; border-radius: 10px; text-align: center; font-=
+family: 'Lato', Helvetica, Arial, sans-serif; font-size: 14px; line-height:=
+ 20px; color: #0D1350; box-sizing: border-box; -webkit-text-size-adjust: 10=
+0%; -ms-text-size-adjust: 100%; padding: 15px; border: 1px solid #E8E4F4;">
+                  <img src=3D"https://mcusercontent.com/5e19c3262725b9c48b5=
+0569e0/images/e9e691f0-44fe-a3fc-73de-0ed8861645e6.png" alt=3D"Logo" style=
+=3D"display: inline-block; width: 24px; height: 24px; vertical-align: middl=
+e; margin-right: 10px; object-fit: contain; -ms-interpolation-mode: bicubic=
+; line-height: 100%; outline: none; text-decoration: none; border-width: 0;=
+">
+                  <span style=3D"vertical-align: middle;">
+                    MT5 for Windows
+                  </span>
+                </a>
+              </td>
+            </tr>
+            <tr>
+              <td valign=3D"middle" align=3D"center" width=3D"100%" colspan=
+=3D"2" style=3D"-webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;=
+ mso-table-lspace: 0pt; mso-table-rspace: 0pt; padding: 0;">
+                <a href=3D"https://clicks.fusionmarkets.com/f/a/IA-kWnj0FFQ=
+m1euPb0bYlA~~/AAQRxRA~/OyIWISqi3UeUQfkzoVta0_m22knJFcZuC_-u3Hhg3zObM4qOQRpL=
+26Wr8m1Wtuh2w2J0FcLs0zqO0S3U8kap1KzQbzCvVnJotn6Cc2XIWL-kXQ9q4Avif6eudfRL7E9=
+BG_kHNIt7NyRWFocA936FgVKAmUwcbvPeyYQ_ptOmDITXCOq4ZgXlCbXn4PLInGmLnLAuRSIKXt=
+hfy40E3UKHPTSimtwQN0REedEXOexgyzo~" style=3D"display: block; width: 100%; t=
+ext-decoration: none; background-color: #f4f0ff; border-radius: 10px; text-=
+align: center; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size=
+: 14px; line-height: 20px; color: #0D1350; box-sizing: border-box; -webkit-=
+text-size-adjust: 100%; -ms-text-size-adjust: 100%; padding: 15px; border: =
+1px solid #E8E4F4;">
+                  <img src=3D"https://mcusercontent.com/5e19c3262725b9c48b5=
+0569e0/images/08e9a823-40ed-9eae-7819-2e36acdbf4aa.png" alt=3D"Logo" style=
+=3D"display: inline-block; width: 24px; height: 24px; vertical-align: middl=
+e; margin-right: 10px; object-fit: contain; -ms-interpolation-mode: bicubic=
+; line-height: 100%; outline: none; text-decoration: none; border-width: 0;=
+">
+                  <span style=3D"vertical-align: middle;">
+                    MT5 for Android
+                  </span>
+                </a>
+              </td>
+            </tr>
+            <tr>
+              <td valign=3D"middle" align=3D"center" width=3D"100%" colspan=
+=3D"2" style=3D"-webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;=
+ mso-table-lspace: 0pt; mso-table-rspace: 0pt; padding: 0;">
+                <a href=3D"https://clicks.fusionmarkets.com/f/a/y270xrwtHx0=
+4RlQtfZPFEg~~/AAQRxRA~/JZ0m80QSE-FcqzO7Ql5dw24i5UvLU-fxhXSONlFoO5WrvPzbqgrf=
+wlcXgJQ2VexIBz4f2nUsJSTpT3WD1GLeYdC-VNRGOITn4tCR4f5kffA1URAQBhG2NcsQnBW-Una=
+xpo1Bh9wJrARsJLnMZJKkAT1LhqPLmkKFCm3gtBKXPhhYreKu3L6e1fzfQylLIrEVSKZNG9sPdr=
+zKjWVmYJ3o8TahAVv4glmaZLWwQaB6YzLd06uIRNs0b1TkxD8tgBDTz2Q3nptB9lxX0y4WvmH7i=
+I10FjSJIc5fTqhgX1xDIYQ~" style=3D"display: block; width: 100%; text-decorat=
+ion: none; background-color: #f4f0ff; border-radius: 10px; text-align: cent=
+er; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size: 14px; lin=
+e-height: 20px; color: #0D1350; box-sizing: border-box; -webkit-text-size-a=
+djust: 100%; -ms-text-size-adjust: 100%; padding: 15px; border: 1px solid #=
+E8E4F4;">
+                  <img src=3D"https://mcusercontent.com/5e19c3262725b9c48b5=
+0569e0/images/eb7c1d82-42a7-fa97-df7e-b0e9451557d7.png" alt=3D"Logo" style=
+=3D"display: inline-block; width: 24px; height: 24px; vertical-align: middl=
+e; margin-right: 10px; object-fit: contain; -ms-interpolation-mode: bicubic=
+; line-height: 100%; outline: none; text-decoration: none; border-width: 0;=
+">
+                  <span style=3D"vertical-align: middle;">
+                    MT5 for MacOS
+                  </span>
+                </a>
+              </td>
+            </tr>
+            <tr>
+              <td valign=3D"middle" align=3D"center" width=3D"100%" colspan=
+=3D"2" style=3D"-webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;=
+ mso-table-lspace: 0pt; mso-table-rspace: 0pt; padding: 0;">
+                <a href=3D"https://clicks.fusionmarkets.com/f/a/eXGi4uY_ujf=
+PdeqeTZ5qpw~~/AAQRxRA~/NhXeHek9WJtJ7TWgmpC5b33NN1hk2I_FSXQhnQEycHHWlO82sell=
+KgmCrpaZLmVFHGm-U2J-yghyZkGWaNCKgZr_hIFizv-WjCNzI2E5Gk9684XTpadf9WHJHlrUFTX=
+DKHodD1VCdr2APiZpuetpMe7IIK3L4jq27tTEsXeydYM3_vIPnpMW56XoBg2lYmA31pMFby31w-=
+tS26A972p4MnmurDC5TpYviNzeUebePvs~" style=3D"display: block; width: 100%; t=
+ext-decoration: none; background-color: #f4f0ff; border-radius: 10px; text-=
+align: center; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size=
+: 14px; line-height: 20px; color: #0D1350; box-sizing: border-box; -webkit-=
+text-size-adjust: 100%; -ms-text-size-adjust: 100%; padding: 15px; border: =
+1px solid #E8E4F4;">
+                  <img src=3D"https://mcusercontent.com/5e19c3262725b9c48b5=
+0569e0/images/938ff90b-ec18-3fa7-af21-ba3f32b84a74.png" alt=3D"Logo" style=
+=3D"display: inline-block; width: 24px; height: 24px; vertical-align: middl=
+e; margin-right: 10px; object-fit: contain; -ms-interpolation-mode: bicubic=
+; line-height: 100%; outline: none; text-decoration: none; border-width: 0;=
+">
+                  <span style=3D"vertical-align: middle;">
+                    MT5 for iOS
+                  </span>
+                </a>
+              </td>
+            </tr>
+            <tr>
+              <td valign=3D"middle" align=3D"center" width=3D"100%" colspan=
+=3D"2" style=3D"-webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;=
+ mso-table-lspace: 0pt; mso-table-rspace: 0pt; padding: 0;">
+                <a href=3D"https://clicks.fusionmarkets.com/f/a/FWL-d_W_6TL=
+DfdB0sZHQ2w~~/AAQRxRA~/ZoS_yGb6JmSE-09Mis2EEKQiPebyhvXe2mqXPgwM0u0lOD0eoP7r=
+IDfqDN60d41T1J3mdcWaXUpR6tUChy18ryEpHh-9acESOmIDJD8IztZu66APmvNfRQ2EpfBaJ9W=
+6n6IzrmuqxaTxX5NaYn6lkQ~~" style=3D"display: block; width: 100%; text-decor=
+ation: none; background-color: #f4f0ff; border-radius: 10px; text-align: ce=
+nter; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size: 14px; l=
+ine-height: 20px; color: #0D1350; box-sizing: border-box; -webkit-text-size=
+-adjust: 100%; -ms-text-size-adjust: 100%; padding: 15px; border: 1px solid=
+ #E8E4F4;">
+                  <img src=3D"https://mcusercontent.com/5e19c3262725b9c48b5=
+0569e0/images/3795181c-c3c3-d462-e8d9-33e29e573387.png" alt=3D"Logo" style=
+=3D"display: inline-block; width: 24px; height: 24px; vertical-align: middl=
+e; margin-right: 10px; object-fit: contain; -ms-interpolation-mode: bicubic=
+; line-height: 100%; outline: none; text-decoration: none; border-width: 0;=
+">
+                  <span style=3D"vertical-align: middle;">
+                    WebTrader for MT5=20
+                  </span>
+                </a>
+              </td>
+            </tr>
+           =20
+          </table>
+        </td>
+      </tr>
+      <!--<![endif]-->
+    </table>
+    <!--[if (gte mso 9)|(IE)]>
+          </td>
+        </tr>
+      </table>
+    <![endif]-->
+  </td>
+</tr>
+
+ =20
+
+
+<tr>
+  <td bgcolor=3D"#f4f4f4" align=3D"center" style=3D"width: 100% !important;=
+ -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspa=
+ce: 0pt; mso-table-rspace: 0pt; margin: 0; padding: 0px 20px;">
+    <!--[if (gte mso 9)|(IE)]>
+    <table role=3D"presentation" align=3D"center" border=3D"0" cellspacing=
+=3D"0" cellpadding=3D"0" width=3D"600">
+      <tr>
+        <td align=3D"center" valign=3D"top" width=3D"600">
+    <![endif]-->
+    <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cellspacing=
+=3D"0" width=3D"100%" style=3D"border-collapse: collapse !important; table-=
+layout: fixed; max-width: 600px; width: 100% !important; -webkit-text-size-=
+adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-=
+rspace: 0pt; margin: 0;">
+     =20
+      <tr>
+        <td bgcolor=3D" #ffffff " align=3D"left" style=3D"color: #0D1350; f=
+ont-family: 'Lato', Helvetica, Arial, sans-serif; font-size: 14px; font-wei=
+ght: 400; line-height: 26px; width: 100% !important; -webkit-text-size-adju=
+st: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspa=
+ce: 0pt; padding: 40px 40px 20px;">
+          <p style=3D"font-family: 'Lato', Helvetica, Arial, sans-serif; fo=
+nt-size: 22px; font-weight: 600; margin: 0;">
+            What=E2=80=99s Next?
+          </p>
+        </td>
+      </tr>
+     =20
+      <tr>
+        <td bgcolor=3D" #ffffff " align=3D"left" style=3D"color: #0D1350; o=
+pacity: 1; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size: 14=
+px; font-weight: 400; line-height: 26px; width: 100% !important; -webkit-te=
+xt-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; ms=
+o-table-rspace: 0pt; padding: 0px 40px 40px;">
+
+          <table cellspacing=3D"0" cellpadding=3D"0" border=3D"0" role=3D"p=
+resentation" style=3D"-webkit-text-size-adjust: 100%; -ms-text-size-adjust:=
+ 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: colla=
+pse !important;">
+           =20
+            <tr style=3D"display: block; margin: 0;">
+              <td style=3D"-webkit-text-size-adjust: 100%; -ms-text-size-ad=
+just: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+               =20
+                  Your account manager will be in touch in the next few day=
+s to get to know you and see how they can help. In the meantime, start expl=
+oring the platform and place your first demo trades.
+                =20
+              </td>
+            </tr>
+           =20
+          </table>
+        </td>
+      </tr>
+    </table>
+    <!--[if (gte mso 9)|(IE)]>
+          </td>
+        </tr>
+      </table>
+    <![endif]-->
+  </td>
+</tr>
+
+
+ =20
+<tr>
+  <td bgcolor=3D"#f4f4f4" align=3D"center" style=3D"-webkit-text-size-adjus=
+t: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspac=
+e: 0pt; padding: 0px 20px;">
+    <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cellspacing=
+=3D"0" width=3D"100%" style=3D"max-width: 600px; -webkit-text-size-adjust: =
+100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: =
+0pt; border-collapse: collapse !important;">
+      <tr>
+        <td align=3D"center" bgcolor=3D"#ffffff" style=3D"-webkit-text-size=
+-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table=
+-rspace: 0pt;">
+          <table role=3D"presentation" cellpadding=3D"0" cellspacing=3D"0" =
+width=3D"100%" style=3D"max-width: 536px; border-radius: 10px; -webkit-text=
+-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-=
+table-rspace: 0pt; border-collapse: collapse !important;" bgcolor=3D"#f4f0f=
+f">
+            <tr>
+              <td align=3D"left" style=3D"color: #0D1350; font-family: 'Lat=
+o', Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 400; line-h=
+eight: 25px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; ms=
+o-table-lspace: 0pt; mso-table-rspace: 0pt; padding: 25px 25px 20px;">
+                <h2 style=3D"font-size: 22px; font-weight: 600; margin: 0;"=
+>
+                  Have a Question?
+                </h2>
+              </td>
+            </tr>
+            <tr>
+              <td align=3D"left" style=3D"color: #0D1350; font-family: 'Lat=
+o', Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-h=
+eight: 26px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; ms=
+o-table-lspace: 0pt; mso-table-rspace: 0pt; padding: 0px 25px 40px;">
+                <p style=3D"margin: 0;">
+                  We're here to help 24 hours a day, 7 days a week. You can
+                  <a title=3D"start a chat from our website," href=3D"https=
+://clicks.fusionmarkets.com/f/a/NMF8sJf9_VqaI9Qz-sNfdw~~/AAQRxRA~/HGLC0myfT=
+8Ufentx3EGpJL5_MjS5XwdScnbmPGXWS8xQ1bmhlleR4Qx5lVxjiXwcW69gIGAz4uHO9Ft2kz4V=
+st90qYMOlgIG4kuJeo1s6GBfWhoGnmx8FKFYGibioFLc5PcpR4hOJV_JQ6Nd_42-aw~~" targe=
+t=3D"_blank" style=3D"color: #985EFF; -webkit-text-size-adjust: 100%; -ms-t=
+ext-size-adjust: 100%;">start a chat from our website,</a>
+                  or email=20
+                  <a title=3D"help@fusionmarkets.com" href=3D"mailto:help@f=
+usionmarkets.com" target=3D"_blank" style=3D"color: #985EFF; -webkit-text-s=
+ize-adjust: 100%; -ms-text-size-adjust: 100%;">help@fusionmarkets.com</a>.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </td>
+</tr>  <tr>
+  <td bgcolor=3D"#f4f4f4" align=3D"center" style=3D"-webkit-text-size-adjus=
+t: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspac=
+e: 0pt; padding: 0px 20px;">
+    <!--[if (gte mso 9)|(IE)]>
+        <table role=3D"presentation" align=3D"center" border=3D"0" cellspac=
+ing=3D"0" cellpadding=3D"0" width=3D"600">
+          <tr>
+            <td align=3D"center" valign=3D"top" width=3D"600">
+    <![endif]-->
+    <table role=3D"presentation" align=3D"center" border=3D"0" cellspacing=
+=3D"0" cellpadding=3D"0" width=3D"100%" style=3D"max-width: 600px; -webkit-=
+text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; =
+mso-table-rspace: 0pt; border-collapse: collapse !important;">
+      <tr>
+        <td align=3D"center" valign=3D"top" width=3D"600" bgcolor=3D"#fffff=
+f" style=3D"-webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso=
+-table-lspace: 0pt; mso-table-rspace: 0pt;">
+
+          <table role=3D"presentation" bgcolor=3D"#fff" border=3D"0" cellpa=
+dding=3D"0" cellspacing=3D"0" width=3D"100%" style=3D"max-width: 536px; bor=
+der-radius: 10px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100=
+%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse =
+!important;">
+            <tr>
+              <td align=3D"left" style=3D"color: #01082b; font-family: 'Lat=
+o', Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 400; line-h=
+eight: 25px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; ms=
+o-table-lspace: 0pt; mso-table-rspace: 0pt; padding: 40px 20px 20px;">
+                <h2 style=3D"font-size: 22px; font-weight: 600; margin: 0;"=
+>
+                  Helpful Links
+                </h2>
+              </td>
+            </tr>
+            <tr>
+              <td align=3D"left" style=3D"color: #01082b; font-family: 'Lat=
+o', Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-h=
+eight: 26px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; ms=
+o-table-lspace: 0pt; mso-table-rspace: 0pt; padding: 0px 20px 40px;">
+                <table style=3D"-webkit-text-size-adjust: 100%; -ms-text-si=
+ze-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-colla=
+pse: collapse !important;">
+                  <tr>
+                    <td valign=3D"top" style=3D"padding-right: 10px; -webki=
+t-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt=
+; mso-table-rspace: 0pt;">
+                      <span style=3D"color: #985EFF; font-size: 16px;">=E2=
+=80=A2</span>
+                    </td>
+                    <td style=3D"-webkit-text-size-adjust: 100%; -ms-text-s=
+ize-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+                      Check out our trade ideas on
+                      <a title=3D"Instagram" href=3D"https://clicks.fusionm=
+arkets.com/f/a/hMSxqSr7zV5y1RyQ2y5-jQ~~/AAQRxRA~/yIcnDQWfFNQ1RoHsFBrfi09i2g=
+jJrEHGmTqN6-3GYGDKQQc38mNFfGHz9WhBZIC_5CjzEHIWeUTbAvRlor2nsh3F1Z8SmoZ1cs5wH=
+LTxtVNM4qnXG0mbAZhdMCU1SQ1nj_mV_IbPIekjRQhOLO9FchaEo8j7iC6CtIZS-JN9wOs~" ta=
+rget=3D"_blank" style=3D"color: #985EFF; -webkit-text-size-adjust: 100%; -m=
+s-text-size-adjust: 100%;">
+                        Instagram
+                      </a>
+                     =20
+                    </td>
+                  </tr>
+                  <tr>
+                    <td valign=3D"top" style=3D"padding-right: 10px; -webki=
+t-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt=
+; mso-table-rspace: 0pt;">
+                      <span style=3D"color: #985EFF; font-size: 16px;">=E2=
+=80=A2</span>
+                    </td>
+                    <td style=3D"-webkit-text-size-adjust: 100%; -ms-text-s=
+ize-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+                      Find upcoming market-moving events with our=20
+                      <a title=3D"Economic Calendar" href=3D"https://clicks=
+.fusionmarkets.com/f/a/OhvS_8UPQ-yQoKtqgByqCg~~/AAQRxRA~/AFTS3gJ8Og2vliW2dr=
+2CfOhxytgaFxc66SEZz4pXgnf6a5279GHQXxKOuPuNw0PbwxO2N0bX4i9AzSgMRfsouq71-o5D9=
+8-cZ4BEAF9XRc9gvngyEZwSb3eZry0HoYk9wyLVaMfwfJ0FP3iPpjztsdkw25hM-V176JAoAvi5=
+52M~" target=3D"_blank" style=3D"color: #985EFF; -webkit-text-size-adjust: =
+100%; -ms-text-size-adjust: 100%;">
+                        Economic Calendar
+                      </a>
+                     =20
+                    </td>
+                  </tr>
+                  <tr>
+                    <td valign=3D"top" style=3D"padding-right: 10px; -webki=
+t-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt=
+; mso-table-rspace: 0pt;">
+                      <span style=3D"color: #985EFF; font-size: 16px;">=E2=
+=80=A2</span>
+                    </td>
+                    <td style=3D"-webkit-text-size-adjust: 100%; -ms-text-s=
+ize-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+                      Calculate required margin, position sizes, swaps, lev=
+erage and more on our=20
+                      <a title=3D"Quick Calculators" href=3D"https://clicks=
+.fusionmarkets.com/f/a/toRTdWTU6UEhrN7rtEkT2w~~/AAQRxRA~/RSWzh_rhqeehGKw9yW=
+26q7XrW3eyNU3nRcL7fNi4pFKmkkRh82Q-IzwYSaeqSy5nWQIWNSJT5UVvR1UvL5cjaC8v3wFnP=
+pbJdzTaI7r2ob9w40WZ9pDIu0XjoCRnFVUIZXDUwmhxw0HgrHg7hFL8gDX22US9vo5rycaxAQKz=
+9jk~" target=3D"_blank" style=3D"color: #985EFF; -webkit-text-size-adjust: =
+100%; -ms-text-size-adjust: 100%;">
+                        Quick Calculators
+                      </a>
+                     =20
+                    </td>
+                  </tr>
+                  <tr>
+                    <td valign=3D"top" style=3D"padding-right: 10px; -webki=
+t-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt=
+; mso-table-rspace: 0pt;">
+                      <span style=3D"color: #985EFF; font-size: 16px;">=E2=
+=80=A2</span>
+                    </td>
+                    <td style=3D"-webkit-text-size-adjust: 100%; -ms-text-s=
+ize-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+                      See our historical and live spreads for any asset wit=
+h our=20
+                      <a title=3D"Spreads Tool" href=3D"https://clicks.fusi=
+onmarkets.com/f/a/MGOBdaXv5B1jnHDaCvfV-w~~/AAQRxRA~/AFTS3gJ8Og2vliW2dr2CfOh=
+xytgaFxc66SEZz4pXgnfbHcigTnrBit7N08xk21rlvX3mZZFpIu1f_iW1nXXl1YdYq9NnlsjTjq=
+0Cuqoo5kBhqfvgLknfpiZNkYb1UZ32paE_U6AvvaCiQ6HESw2ueoHAj5z5-lHNY4P1fsfNrDo~"=
+ target=3D"_blank" style=3D"color: #985EFF; -webkit-text-size-adjust: 100%;=
+ -ms-text-size-adjust: 100%;">
+                        Spreads Tool
+                      </a>
+                     =20
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+
+        </td>
+      </tr>
+    </table>
+
+    <!--[if (gte mso 9)|(IE)]>
+      </td>
+    </tr>
+  </table>
+  <![endif]-->
+
+  </td>
+</tr>
+ =20
+<tr>
+  <td align=3D"center" bgcolor=3D"#f4f4f4" style=3D"-webkit-text-size-adjus=
+t: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspac=
+e: 0pt; padding: 0px 20px;">
+    <!--[if (gte mso 9)|(IE)]>
+      <table role=3D"presentation" align=3D"center" border=3D"0" cellspacin=
+g=3D"0" cellpadding=3D"0" width=3D"600">
+        <tr>
+          <td align=3D"center" valign=3D"top" width=3D"600">
+            <![endif]-->
+
+    <table bgcolor=3D"#f4f0ff" role=3D"presentation" align=3D"center" borde=
+r=3D"0" cellspacing=3D"0" cellpadding=3D"0" width=3D"100%" style=3D"max-wid=
+th: 600px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-=
+table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse !import=
+ant;">
+      <tr>
+        <td align=3D"center" valign=3D"top" style=3D"-webkit-text-size-adju=
+st: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspa=
+ce: 0pt;">
+
+          <table role=3D"presentation" border=3D"0" align=3D"center" cellpa=
+dding=3D"0" cellspacing=3D"0" width=3D"100%" style=3D"max-width: 536px; -we=
+bkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: =
+0pt; mso-table-rspace: 0pt; border-collapse: collapse !important;">
+            <tr>
+              <td align=3D"left" style=3D"color: #0D1350; font-family: 'Lat=
+o', Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 400; line-h=
+eight: 25px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; ms=
+o-table-lspace: 0pt; mso-table-rspace: 0pt; padding: 50px 20px 20px;">
+                <h2 style=3D"font-size: 22px; font-weight: 600; margin: 0;"=
+>
+                  Support
+                </h2>
+                <p style=3D"font-size: 16px; font-weight: 300; margin: 10px=
+ 0 0;">
+                  We=E2=80=99re working around the clock to answer any ques=
+tions you may have
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td align=3D"left" style=3D"color: #0D1350; font-family: 'Lat=
+o', Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-h=
+eight: 26px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; ms=
+o-table-lspace: 0pt; mso-table-rspace: 0pt; padding: 0px 20px 50px;">
+                <table style=3D"-webkit-text-size-adjust: 100%; -ms-text-si=
+ze-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-colla=
+pse: collapse !important;">
+                  <tr>
+                    <td valign=3D"top" style=3D"padding-right: 10px; -webki=
+t-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt=
+; mso-table-rspace: 0pt;">
+                      <span style=3D"color: #985EFF; font-size: 16px;">=E2=
+=80=A2</span>
+                    </td>
+                    <td style=3D"-webkit-text-size-adjust: 100%; -ms-text-s=
+ize-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+                      Find answers at our
+                      <a title=3D"FAQ page" href=3D"https://clicks.fusionma=
+rkets.com/f/a/tMpxAJOsey2LWL2in4rLPw~~/AAQRxRA~/7BFnmawqVuykCzjBi0PuPPnQxU5=
+D3pBfAjQ8uHZI4iSsgNaLXXxlVunEccuMpsXCn_dsv1qCCYw3h84MhkBieF-i_c9bAX7uS-iQtD=
+GkRDIjfPd8I7uB7HKUWUhIGR2eYUgJXfxCGspmr8fc8f5aPA~~" target=3D"_blank" style=
+=3D"color: #985EFF; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 1=
+00%;">FAQ page
+                      </a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td valign=3D"top" style=3D"padding-right: 10px; -webki=
+t-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt=
+; mso-table-rspace: 0pt;">
+                      <span style=3D"color: #985EFF; font-size: 16px;">=E2=
+=80=A2</span>
+                    </td>
+                    <td style=3D"-webkit-text-size-adjust: 100%; -ms-text-s=
+ize-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+                      Submit a support request at
+                      <a title=3D"help@fusionmarkets.com" href=3D"mailto:he=
+lp@fusionmarkets.com" target=3D"_blank" style=3D"color: #985EFF; -webkit-te=
+xt-size-adjust: 100%; -ms-text-size-adjust: 100%;">help@fusionmarkets.com</=
+a>
+                     =20
+                    </td>
+                  </tr>
+                  <tr>
+                    <td valign=3D"top" style=3D"padding-right: 10px; -webki=
+t-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt=
+; mso-table-rspace: 0pt;">
+                      <span style=3D"color: #985EFF; font-size: 16px;">=E2=
+=80=A2</span>
+                    </td>
+                    <td style=3D"-webkit-text-size-adjust: 100%; -ms-text-s=
+ize-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+                      <a title=3D"Start a live chat from our website," href=
+=3D"https://clicks.fusionmarkets.com/f/a/NMF8sJf9_VqaI9Qz-sNfdw~~/AAQRxRA~/=
+HGLC0myfT8Ufentx3EGpJL5_MjS5XwdScnbmPGXWS8xQ1bmhlleR4Qx5lVxjiXwcW69gIGAz4uH=
+O9Ft2kz4Vst90qYMOlgIG4kuJeo1s6GBfWhoGnmx8FKFYGibioFLc5PcpR4hOJV_JQ6Nd_42-aw=
+~~" target=3D"_blank" style=3D"color: #985EFF; -webkit-text-size-adjust: 10=
+0%; -ms-text-size-adjust: 100%;">Start a live chat from our website,</a>
+                      we=E2=80=99re available 24/7
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <!--[if (gte mso 9)|(IE)]>
+        </td>
+      </tr>
+    </table>
+<![endif]-->
+  </td>
+</tr>
+  <tr>
+  <td bgcolor=3D"#f4f4f4" align=3D"center" style=3D"width: 100% !important;=
+ -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspa=
+ce: 0pt; mso-table-rspace: 0pt; margin: 0; padding: 0px 20px;">
+    <table align=3D"center" border=3D"0" cellpadding=3D"0" cellspacing=3D"0=
+" width=3D"100%" style=3D"max-width: 600px; width: 100% !important; -webkit=
+-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt;=
+ mso-table-rspace: 0pt; border-collapse: collapse !important; margin: 0;">
+      <tbody>
+        <tr>
+          <td bgcolor=3D"#ffffff" style=3D"-webkit-text-size-adjust: 100%; =
+-ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+            <table align=3D"center" border=3D"0" cellpadding=3D"0" cellspac=
+ing=3D"0" width=3D"260" style=3D"-webkit-text-size-adjust: 100%; -ms-text-s=
+ize-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-coll=
+apse: collapse !important;">
+              <tbody>
+                <tr>
+                  <td bgcolor=3D"#ffffff" style=3D"color: #01082b; font-fam=
+ily: Lato, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400;=
+ line-height: 27px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 1=
+00%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; padding: 40px 20px 0px 4=
+0px;">
+                    <table align=3D"center" border=3D"0" cellspacing=3D"0" =
+style=3D"width: 180px !important; -webkit-text-size-adjust: 100%; -ms-text-=
+size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-col=
+lapse: collapse !important; border-style: none; border-width: 1px;" bgcolor=
+=3D"#ffffff">
+                      <tbody>
+                        <tr>
+                          <td style=3D"-webkit-text-size-adjust: 100%; -ms-=
+text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+                            <a href=3D"https://clicks.fusionmarkets.com/f/a=
+/hMSxqSr7zV5y1RyQ2y5-jQ~~/AAQRxRA~/yIcnDQWfFNQ1RoHsFBrfi09i2gjJrEHGmTqN6-3G=
+YGDKQQc38mNFfGHz9WhBZIC_5CjzEHIWeUTbAvRlor2nsh3F1Z8SmoZ1cs5wHLTxtVNM4qnXG0m=
+bAZhdMCU1SQ1nj_mV_IbPIekjRQhOLO9FchaEo8j7iC6CtIZS-JN9wOs~" target=3D"_blank=
+" style=3D"-webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;">
+                              <img style=3D"max-width: 24px; width: 24px; h=
+eight: 24px; -ms-interpolation-mode: bicubic; line-height: 100%; outline: n=
+one; text-decoration: none; border-width: 0;" src=3D"https://mcusercontent.=
+com/5e19c3262725b9c48b50569e0/images/1df7d549-152f-ff93-6d0e-f67cf682a3bf.p=
+ng" alt=3D"1df7d549-152f-ff93-6d0e-f67cf682a3bf.png">
+                            </a>
+                          </td>
+                          <td style=3D"-webkit-text-size-adjust: 100%; -ms-=
+text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+                            <a href=3D"https://clicks.fusionmarkets.com/f/a=
+/xolLF8Ukrh0C-eyMGXDXGQ~~/AAQRxRA~/yIcnDQWfFNQ1RoHsFBrfiwa126nJYjLew5QaukQN=
+q9LG-q8z8rc9XlFWa_q9wkjw4VB9E4p2-yn0SLgnAhK4ws5c1DThiHBfjQ3rOxwQ81OaO0hvBmj=
+48DeojI0aywOmjhjMpzJg2x5u8wa0vjGX_FvPU3Evz9qewtf2nd4FajM~" target=3D"_blank=
+" style=3D"-webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;">
+                              <img style=3D"max-width: 24px; width: 24px; h=
+eight: 24px; -ms-interpolation-mode: bicubic; line-height: 100%; outline: n=
+one; text-decoration: none; border-width: 0;" src=3D"https://mcusercontent.=
+com/5e19c3262725b9c48b50569e0/images/d5fd3f18-79b3-4752-ffdf-e6ca2447492f.p=
+ng" alt=3D"d5fd3f18-79b3-4752-ffdf-e6ca2447492f.png">
+                            </a>
+                          </td>
+                          <td style=3D"-webkit-text-size-adjust: 100%; -ms-=
+text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+                            <a href=3D"https://clicks.fusionmarkets.com/f/a=
+/U68vCr-Z56EvfaRdon5zuw~~/AAQRxRA~/nV2BnwnDuuNGVoqu_V4IH9bnInL4SzHq4X5GPFac=
+_nCKKKjAcssenwb6K_K29v9p2apBHztZOVbSs5ZcxyOFzimKzR2iM_HZLvyV7a9Qr8hj35akVBW=
+qrajNNKSJhDBPbjMXAP4ORSY4CgCtNernhg~~" target=3D"_blank" style=3D"-webkit-t=
+ext-size-adjust: 100%; -ms-text-size-adjust: 100%;">
+                              <img style=3D"max-width: 24px; width: 24px; h=
+eight: 24px; -ms-interpolation-mode: bicubic; line-height: 100%; outline: n=
+one; text-decoration: none; border-width: 0;" src=3D"https://mcusercontent.=
+com/5e19c3262725b9c48b50569e0/images/f9b82966-5d3f-b818-8b5a-e7a49f0c66d5.p=
+ng" alt=3D"7f8c7501-2ca3-84d3-85a1-64eff6055eab.png">
+                            </a>
+                          </td>
+                          <td style=3D"-webkit-text-size-adjust: 100%; -ms-=
+text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+                            <a href=3D"https://clicks.fusionmarkets.com/f/a=
+/fVWHTkClSZqIQPlktFbIrw~~/AAQRxRA~/R_BTKPyTSyYT5PP16XzhInRtT_T35a1u-A1-3fow=
+VCziO6URFtWsBJkYCO4OjMXobp_jOzaTVeGnTHB393_sA3R_UhhU4qi8mDUQY02psFNAblqdY3Z=
+4ByggbCQnkVQ4jgVQ-F8m2ivNlWREDfBLS8nj-dkYdpfiWEP59CGgxaDZKmFPWXgrlKW-wEEOGK=
+i0" target=3D"_blank" style=3D"-webkit-text-size-adjust: 100%; -ms-text-siz=
+e-adjust: 100%;">
+                              <img style=3D"max-width: 24px; width: 24px; h=
+eight: 24px; -ms-interpolation-mode: bicubic; line-height: 100%; outline: n=
+one; text-decoration: none; border-width: 0;" src=3D"https://mcusercontent.=
+com/5e19c3262725b9c48b50569e0/images/7f8c7501-2ca3-84d3-85a1-64eff6055eab.p=
+ng" alt=3D"7f8c7501-2ca3-84d3-85a1-64eff6055eab.png">
+                            </a>
+                          </td>
+                          <td style=3D"-webkit-text-size-adjust: 100%; -ms-=
+text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+                            <a href=3D"https://clicks.fusionmarkets.com/f/a=
+/mvghxxI1QsmzqnNu1jxuVg~~/AAQRxRA~/T146CeHX2oAVmAQdzmgOJlspQqw7TnpX8NNJ8caL=
+H1pBBvVlH3uOrYKBsLSbp6PHlxZraUb6Kp-pvnEqON4CYumALRvj4yE1Q9t2KiZ0NcRKwRh85o9=
+RHgfXdzGesJWFqcGs4rkHUsKjgMyDfZ53Xg~~" target=3D"_blank" style=3D"-webkit-t=
+ext-size-adjust: 100%; -ms-text-size-adjust: 100%;">
+                              <img style=3D"max-width: 24px; width: 24px; h=
+eight: 24px; -ms-interpolation-mode: bicubic; line-height: 100%; outline: n=
+one; text-decoration: none; border-width: 0;" src=3D"https://mcusercontent.=
+com/5e19c3262725b9c48b50569e0/images/8c07813c-65bc-fc45-144c-0ef3ab1d5206.p=
+ng" alt=3D"8c07813c-65bc-fc45-144c-0ef3ab1d5206.png">
+                            </a>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" width=3D"100%" =
+style=3D"border-collapse: collapse !important; table-layout: fixed; max-wid=
+th: 600px; width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text=
+-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; margin: 0=
+;">
+      <tr>
+        <td bgcolor=3D"#ffffff" align=3D"center" style=3D"width: 100% !impo=
+rtant; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-tabl=
+e-lspace: 0pt; mso-table-rspace: 0pt; padding: 24px 40px;">
+          <p align=3D"center" style=3D"color: #7D7987; font-family: Lato, H=
+elvetica, Arial, sans-serif; font-size: 14px; letter-spacing: 0; line-heigh=
+t: 26px; margin: 0;">
+            Follow us on our socials above to get regular access to our cha=
+rts and updates.
+          </p>
+        </td>
+      </tr>
+    </table>
+    <table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" width=3D"100%" =
+style=3D"border-collapse: collapse !important; table-layout: fixed; max-wid=
+th: 600px; width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text=
+-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; margin: 0=
+;">
+      <tr>
+        <td bgcolor=3D"#ffffff" valign=3D"top" align=3D"left" style=3D"padd=
+ing-right: 20px; padding-left: 20px; -webkit-text-size-adjust: 100%; -ms-te=
+xt-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+          <hr style=3D"border: 1px solid #e4e4e4;">
+        </td>
+      </tr>
+    </table>
+</td>
+</tr>
+    <tr>
+    <td bgcolor=3D"#f4f4f4" align=3D"center" style=3D"-webkit-text-size-adj=
+ust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rsp=
+ace: 0pt; padding: 0px 20px;">
+      <!--[if (gte mso 9)|(IE)]>
+      <table role=3D"presentation" align=3D"center" border=3D"0" cellspacin=
+g=3D"0" cellpadding=3D"0" width=3D"600">
+        <tr>
+          <td align=3D"center" valign=3D"top" width=3D"600">
+            <![endif]-->
+      <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cellspaci=
+ng=3D"0" width=3D"100%" style=3D"max-width: 600px; -webkit-text-size-adjust=
+: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace=
+: 0pt; border-collapse: collapse !important;">
+        <!-- ADDRESS -->
+        <tr>
+          <td bgcolor=3D"#fff" style=3D"color: #0D1350; font-family: 'Lato'=
+, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-hei=
+ght: 27px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-=
+table-lspace: 0pt; mso-table-rspace: 0pt; padding: 40px 40px 0px;">
+            <table align=3D"left" border=3D"0" cellpadding=3D"0" cellspacin=
+g=3D"0" width=3D"260" style=3D"-webkit-text-size-adjust: 100%; -ms-text-siz=
+e-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collap=
+se: collapse !important;">
+              <tbody>
+                <tr>
+                  <td bgcolor=3D"#fff" style=3D"-webkit-text-size-adjust: 1=
+00%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0=
+pt;">
+                    <table border=3D"0" cellspacing=3D"0" width=3D"100%" st=
+yle=3D"min-width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text=
+-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-co=
+llapse: collapse !important; border-style: none; border-width: 1px;" bgcolo=
+r=3D"#ffffff">
+                      <tbody>
+                        <tr>
+                          <td bgcolor=3D"#fff" valign=3D"top" align=3D"left=
+" style=3D"color: #0D1350; font-family: Lato, 'Helvetica Neue', Helvetica, =
+Arial, sans-serif; font-size: 14px; font-weight: normal; line-height: 26px;=
+ -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspa=
+ce: 0pt; mso-table-rspace: 0pt;">
+                            Level 10, 627 Chapel St, South Yarra<br>VIC 314=
+1, Australia
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <table align=3D"left" border=3D"0" cellpadding=3D"0" cellspacin=
+g=3D"0" width=3D"260" style=3D"-webkit-text-size-adjust: 100%; -ms-text-siz=
+e-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collap=
+se: collapse !important;">
+              <tbody>
+                <tr>
+                  <td style=3D"-webkit-text-size-adjust: 100%; -ms-text-siz=
+e-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+                    <table border=3D"0" cellspacing=3D"0" width=3D"100%" st=
+yle=3D"min-width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text=
+-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-co=
+llapse: collapse !important; border-style: none; border-width: 1px;" bgcolo=
+r=3D"#ffffff">
+                      <tbody>
+                        <tr>
+                          <td bgcolor=3D"#fff" valign=3D"top" style=3D"colo=
+r: #0D1350; font-family: Lato, 'Helvetica Neue', Helvetica, Arial, sans-ser=
+if; font-size: 14px; font-weight: normal; line-height: 26px; -webkit-text-s=
+ize-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-ta=
+ble-rspace: 0pt;" align=3D"right">
+                           =20
+                           =20
+                            <span>+61</span>
+                           =20
+                            <span>3</span>
+                           =20
+                            <span>8376</span>
+                           =20
+                            <span>2706</span>
+                           =20
+                            <br>
+                           =20
+                            <a id=3D"help@fusionmarkets.com" name=3D"help@f=
+usionmarkets.com" href=3D"mailto:help@fusionmarkets.com" style=3D"color: #9=
+85EFF; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;">help@fu=
+sionmarkets.com</a>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>
+        <!-- FOOTNOTE -->
+        <tr>
+          <td bgcolor=3D"#fff" align=3D"left" style=3D"color: #7D7987; font=
+-family: 'Lato', Helvetica, Arial, sans-serif; font-size: 14px; font-weight=
+: 400; line-height: 26px; border-radius: 0px 0px 10px 10px; -webkit-text-si=
+ze-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-tab=
+le-rspace: 0pt; padding: 30px 40px 50px;">
+            <p style=3D"margin: 0;">
+              The information contained in this email is general informatio=
+n only. Any advice is general advice only. Neither your personal objectives=
+, financial situation nor needs have been taken into consideration. Accordi=
+ngly, you should consider how appropriate the advice (if any) is to those o=
+bjectives, financial situation and needs, before acting on the advice.
+            </p>
+            <p style=3D"margin: 0; padding: 20px 0px 0px;">
+              Fusion Markets is a trading name of FMGP Trading Group Pty Lt=
+d (ABN 74 146 086 017) and is regulated and licensed in Australia to provid=
+e financial services under Australian Financial Services License No. 385620=
+. Gleneagle Securities Pty Limited trading as Fusion Markets EN is a regist=
+ered Vanuatu company (company number 40256) and is regulated by the VFSC. F=
+usion Markets International as Fusion Markets is a registered Securities De=
+aler regulated by the Financial Services Authority of Seychelles (license n=
+umber SD096).
+            </p>
+          </td>
+        </tr>
+      </table>
+      <!--[if (gte mso 9)|(IE)]>
+          </td>
+        </tr>
+      </table>
+      <![endif]-->
+    </td>
+  </tr>
+  </table>
+ =20
+<img border=3D"0" width=3D"1" height=3D"1" alt=3D"" src=3D"https://clicks.f=
+usionmarkets.com/q/8Br5d-MibO2DYE2yEFcupA~~/AAQRxRA~/ppVALDhm5nV6OdDb9G8CIp=
+eHSzI29I1IbzfREniikZT0ZGqBDlaPXPkCVKSqSTsHr2out4QuCsPKnQAsfjeO0tvi-7K-nYPO9=
+oA55L3JqpE~">
+</body>
+
+  </html>
+--_----Y4lTzuQ10mR14QFnqRa5FA===_ED/94-18957-9CC5D386--
