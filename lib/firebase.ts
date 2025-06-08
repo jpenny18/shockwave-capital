@@ -136,6 +136,8 @@ export interface CachedMetrics {
   currentProfit: number;
   tradingDays: number;
   lastUpdated: Timestamp;
+  lastRiskEvents?: any[]; // Risk events from MetaAPI Risk Management
+  lastPeriodStats?: any[]; // Period statistics from MetaAPI Risk Management
 }
 
 /**
