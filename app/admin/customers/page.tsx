@@ -84,9 +84,16 @@ export default function CustomersPage() {
         if (order.paymentStatus === 'completed') {
           totalSpent += order.totalAmount;
           orderCount++;
-          const orderDate = order.createdAt?.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
-          if (orderDate && (!lastOrderDate || orderDate > lastOrderDate)) {
-            lastOrderDate = orderDate;
+          
+          try {
+            const orderDate = order.createdAt?.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
+            if (orderDate instanceof Date && !isNaN(orderDate.getTime())) {
+              if (!lastOrderDate || orderDate > lastOrderDate) {
+                lastOrderDate = orderDate;
+              }
+            }
+          } catch (e) {
+            console.warn('Invalid date in order:', order);
           }
         }
       });
@@ -97,9 +104,24 @@ export default function CustomersPage() {
         if (order.status === 'COMPLETED') {
           totalSpent += order.usdAmount;
           orderCount++;
-          const orderDate = typeof order.createdAt === 'string' ? new Date(order.createdAt) : order.createdAt?.toDate?.();
-          if (orderDate && (!lastOrderDate || orderDate > lastOrderDate)) {
-            lastOrderDate = orderDate;
+          
+          try {
+            let orderDate: Date;
+            if (typeof order.createdAt === 'string') {
+              orderDate = new Date(order.createdAt);
+            } else if (order.createdAt && typeof order.createdAt.toDate === 'function') {
+              orderDate = order.createdAt.toDate();
+            } else {
+              orderDate = new Date(order.createdAt);
+            }
+            
+            if (orderDate instanceof Date && !isNaN(orderDate.getTime())) {
+              if (!lastOrderDate || orderDate > lastOrderDate) {
+                lastOrderDate = orderDate;
+              }
+            }
+          } catch (e) {
+            console.warn('Invalid date in crypto order:', order);
           }
         }
       });
@@ -107,7 +129,7 @@ export default function CustomersPage() {
       return {
         actualTotalSpent: totalSpent,
         actualOrderCount: orderCount,
-        lastOrderDate: lastOrderDate ? lastOrderDate.toISOString().split('T')[0] : undefined
+        lastOrderDate: lastOrderDate instanceof Date ? lastOrderDate.toISOString().split('T')[0] : undefined
       };
     } catch (error) {
       console.error('Error fetching customer orders:', error);
