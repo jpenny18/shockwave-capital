@@ -126,10 +126,21 @@ export default function CustomersPage() {
         }
       });
       
+      // Format the last order date safely
+      const formatDate = (date: Date | null): string | undefined => {
+        if (!date) return undefined;
+        try {
+          return date.toISOString().split('T')[0];
+        } catch (e) {
+          console.warn('Error formatting date:', e);
+          return undefined;
+        }
+      };
+
       return {
         actualTotalSpent: totalSpent,
         actualOrderCount: orderCount,
-        lastOrderDate: lastOrderDate instanceof Date ? lastOrderDate.toISOString().split('T')[0] : undefined
+        lastOrderDate: formatDate(lastOrderDate)
       };
     } catch (error) {
       console.error('Error fetching customer orders:', error);
