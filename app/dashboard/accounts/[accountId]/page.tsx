@@ -17,7 +17,8 @@ import {
   AlertCircle,
   Calendar,
   Server,
-  Activity
+  Activity,
+  AlertTriangle
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -27,8 +28,8 @@ const ApexChart = dynamic(() => import('react-apexcharts'), { ssr: false });
 // Define interfaces locally to avoid importing from metaapi-extended
 interface TradingObjectives {
   minTradingDays: { target: number; current: number; passed: boolean };
-  maxDrawdown: { target: number; current: number; passed: boolean };
-  maxDailyDrawdown: { target: number; current: number; passed: boolean };
+  maxDrawdown: { target: number; current: number; passed: boolean; recentBreach?: boolean };
+  maxDailyDrawdown: { target: number; current: number; passed: boolean; recentBreach?: boolean };
   profitTarget: { target: number; current: number; passed: boolean };
 }
 
@@ -51,6 +52,15 @@ interface EquityChartPoint {
   date: string;
   equity: number;
   balance: number;
+}
+
+interface RiskEvent {
+  id: string;
+  type: string;
+  exceededThresholdType: string;
+  relativeDrawdown: number;
+  absoluteDrawdown: number;
+  brokerTime: string;
 }
 
 // Metric Card Component
@@ -234,6 +244,50 @@ const TradingJournal = ({ trades }: { trades: TradeData[] }) => {
   );
 };
 
+// Risk Alert Component for user dashboard
+const RiskAlertBanner = ({ objectives, riskEvents }: { 
+  objectives: TradingObjectives; 
+  riskEvents: RiskEvent[] 
+}) => {
+  const hasRecentBreach = objectives.maxDrawdown.recentBreach || objectives.maxDailyDrawdown.recentBreach;
+  const recentRiskEvents = riskEvents.filter(event => {
+    const eventTime = new Date(event.brokerTime);
+    const dayAgo = new Date();
+    dayAgo.setDate(dayAgo.getDate() - 1);
+    return eventTime > dayAgo;
+  });
+
+  if (!hasRecentBreach && recentRiskEvents.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-6">
+      <div className="flex items-start gap-3">
+        <AlertTriangle className="text-red-400 mt-0.5" size={20} />
+        <div>
+          <h3 className="text-red-400 font-semibold mb-1">Risk Alert</h3>
+          {hasRecentBreach && (
+            <p className="text-gray-300 text-sm mb-2">
+              Recent drawdown threshold breach detected. Please review your risk management.
+            </p>
+          )}
+          {recentRiskEvents.length > 0 && (
+            <div className="text-sm text-gray-300">
+              <p className="mb-1">Recent risk events:</p>
+              {recentRiskEvents.slice(0, 3).map((event, index) => (
+                <p key={index} className="text-xs text-red-400">
+                  • {event.exceededThresholdType}: {event.relativeDrawdown.toFixed(2)}% at {new Date(event.brokerTime).toLocaleString()}
+                </p>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function AccountDetailsPage() {
   const params = useParams();
   const router = useRouter();
@@ -247,6 +301,7 @@ export default function AccountDetailsPage() {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [accountStatus, setAccountStatus] = useState<string>('active');
+  const [riskEvents, setRiskEvents] = useState<RiskEvent[]>([]);
 
   // Chart configuration
   const chartOptions = {
@@ -393,6 +448,7 @@ export default function AccountDetailsPage() {
       setTrades(data.trades);
       setChartData(data.equityChart);
       setObjectives(data.objectives);
+      setRiskEvents(data.riskEvents);
 
       // Don't update cache if account is failed (we're using cached data)
       if (!isFailed) {
@@ -586,6 +642,9 @@ export default function AccountDetailsPage() {
           </div>
         )}
       </div>
+
+      {/* Risk Alert */}
+      {objectives && <RiskAlertBanner objectives={objectives} riskEvents={riskEvents} />}
 
       {/* Trading Journal */}
       <TradingJournal trades={trades} />

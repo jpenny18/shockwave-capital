@@ -627,7 +627,7 @@ export default function EmailTemplatesPage() {
       case 'platform':
         return ['MetaTrader 4', 'MetaTrader 5'];
       case 'server':
-        return ['AXI-US03-DEMO', 'AdmiralGroup-DEMO', 'FusionMarkets-DEMO'];
+        return ['AXI-US03-DEMO', 'AdmiralsGroup-DEMO', 'FusionMarkets-DEMO'];
       default:
         return null;
     }

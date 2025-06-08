@@ -52,6 +52,20 @@ interface Alert {
   read: boolean;
 }
 
+interface ConnectMetaModalStep1Data {
+  login: string;
+  password: string;
+  server: string;
+  platform: 'mt4' | 'mt5';
+  nickname: string;
+}
+
+interface ConnectMetaModalData {
+  step1: ConnectMetaModalStep1Data;
+  accountId: string;
+  authToken: string;
+}
+
 export default function AdminAccountsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [allAccounts, setAllAccounts] = useState<UserWithAccount[]>([]);
@@ -72,6 +86,7 @@ export default function AdminAccountsPage() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [showAlerts, setShowAlerts] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<string>('newest'); // Add sorting state
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -81,6 +96,20 @@ export default function AdminAccountsPage() {
   const [bulkRefreshing, setBulkRefreshing] = useState(false);
   const [refreshQueue, setRefreshQueue] = useState<string[]>([]);
   const [processedAlerts, setProcessedAlerts] = useState<Set<string>>(new Set());
+  const [showConnectModal, setShowConnectModal] = useState(false);
+  const [connectModalStep, setConnectModalStep] = useState<1 | 2>(1);
+  const [connectModalData, setConnectModalData] = useState<ConnectMetaModalData>({
+    step1: {
+      login: '',
+      password: '',
+      server: '',
+      platform: 'mt5',
+      nickname: ''
+    },
+    accountId: '',
+    authToken: ''
+  });
+  const [connectingToMetaAPI, setConnectingToMetaAPI] = useState(false);
 
   // Load all accounts function
   const loadAllAccounts = async () => {
@@ -145,7 +174,7 @@ export default function AdminAccountsPage() {
     return () => unsubscribe();
   }, []);
 
-  // Check for alerts (breaches, passes, etc.)
+  // Check for alerts function - Enhanced with risk events
   const checkForAlerts = (accounts: UserWithAccount[]) => {
     const newAlerts: Alert[] = [];
     
@@ -160,6 +189,25 @@ export default function AdminAccountsPage() {
       const dailyDDKey = `${account.uid}-dailydd-${(metrics.maxDailyDrawdown || metrics.dailyDrawdown)?.toFixed(2)}`;
       const profitKey = `${account.uid}-profit-${((metrics.balance - config.accountSize) / config.accountSize * 100).toFixed(2)}`;
       const warningKey = `${account.uid}-warning-${metrics.maxDrawdown?.toFixed(2)}`;
+      
+      // Check for recent risk events (from MetaAPI Risk Management)
+      if (metrics.lastRiskEvents && metrics.lastRiskEvents.length > 0) {
+        metrics.lastRiskEvents.forEach((event: any) => {
+          const eventKey = `${account.uid}-riskevent-${event.id}`;
+          if (!processedAlerts.has(eventKey)) {
+            newAlerts.push({
+              id: eventKey,
+              type: 'breach',
+              accountId: config.accountId,
+              userEmail: account.email,
+              message: `Risk Event: ${event.exceededThresholdType} threshold exceeded - ${event.relativeDrawdown?.toFixed(2)}%`,
+              timestamp: new Date(event.brokerTime),
+              read: false
+            });
+            setProcessedAlerts(prev => new Set(prev).add(eventKey));
+          }
+        });
+      }
       
       // Check for objective breaches
       if (metrics.maxDrawdown > (config.accountType === 'standard' ? 15 : 12) && !processedAlerts.has(maxDDKey)) {
@@ -303,7 +351,7 @@ export default function AdminAccountsPage() {
     setMessage({ type: 'info', text: `Refreshing ${accountsToRefresh.length} accounts...` });
   };
 
-  // Filter accounts
+  // Filter and sort accounts
   useEffect(() => {
     let filtered = [...allAccounts];
     
@@ -326,9 +374,93 @@ export default function AdminAccountsPage() {
         return emailMatch || accountIdMatch || nameMatch;
       });
     }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      const aMetrics = a.cachedMetrics;
+      const bMetrics = b.cachedMetrics;
+      const aConfig = a.metaApiAccount;
+      const bConfig = b.metaApiAccount;
+
+      switch(sortBy) {
+        case 'newest':
+          // Sort by account creation date (newest first)
+          const aDate = aConfig?.startDate?.toDate ? aConfig.startDate.toDate() : new Date(0);
+          const bDate = bConfig?.startDate?.toDate ? bConfig.startDate.toDate() : new Date(0);
+          return bDate.getTime() - aDate.getTime();
+          
+        case 'oldest':
+          // Sort by account creation date (oldest first)
+          const aDateOld = aConfig?.startDate?.toDate ? aConfig.startDate.toDate() : new Date(0);
+          const bDateOld = bConfig?.startDate?.toDate ? bConfig.startDate.toDate() : new Date(0);
+          return aDateOld.getTime() - bDateOld.getTime();
+          
+        case 'status':
+          // Sort by status: active > passed > failed > inactive
+          const statusOrder = { 'active': 4, 'passed': 3, 'failed': 2, 'inactive': 1 };
+          const aStatus = statusOrder[aConfig?.status as keyof typeof statusOrder] || 0;
+          const bStatus = statusOrder[bConfig?.status as keyof typeof statusOrder] || 0;
+          return bStatus - aStatus;
+          
+        case 'email-az':
+          // Sort by email A-Z
+          return (a.email || '').localeCompare(b.email || '');
+          
+        case 'email-za':
+          // Sort by email Z-A
+          return (b.email || '').localeCompare(a.email || '');
+          
+        case 'account-type':
+          // Sort by account type (instant first, then standard)
+          const aType = aConfig?.accountType === 'instant' ? 1 : 0;
+          const bType = bConfig?.accountType === 'instant' ? 1 : 0;
+          return bType - aType;
+          
+        case 'balance-high':
+          // Sort by balance (highest first)
+          return (bMetrics?.balance || 0) - (aMetrics?.balance || 0);
+          
+        case 'balance-low':
+          // Sort by balance (lowest first)
+          return (aMetrics?.balance || 0) - (bMetrics?.balance || 0);
+          
+        case 'drawdown-high':
+          // Sort by max drawdown (highest risk first)
+          return (bMetrics?.maxDrawdown || 0) - (aMetrics?.maxDrawdown || 0);
+          
+        case 'drawdown-low':
+          // Sort by max drawdown (lowest risk first)
+          return (aMetrics?.maxDrawdown || 0) - (bMetrics?.maxDrawdown || 0);
+          
+        case 'daily-drawdown-high':
+          // Sort by daily drawdown (highest risk first)
+          const aDailyDD = aMetrics?.maxDailyDrawdown || aMetrics?.dailyDrawdown || 0;
+          const bDailyDD = bMetrics?.maxDailyDrawdown || bMetrics?.dailyDrawdown || 0;
+          return bDailyDD - aDailyDD;
+          
+        case 'profit-high':
+          // Sort by profit percentage (highest first)
+          const aProfit = aConfig && aMetrics ? ((aMetrics.balance - aConfig.accountSize) / aConfig.accountSize * 100) : -999;
+          const bProfit = bConfig && bMetrics ? ((bMetrics.balance - bConfig.accountSize) / bConfig.accountSize * 100) : -999;
+          return bProfit - aProfit;
+          
+        case 'last-updated':
+          // Sort by last metrics update (most recent first)
+          const aUpdated = aMetrics?.lastUpdated?.toDate ? aMetrics.lastUpdated.toDate() : new Date(0);
+          const bUpdated = bMetrics?.lastUpdated?.toDate ? bMetrics.lastUpdated.toDate() : new Date(0);
+          return bUpdated.getTime() - aUpdated.getTime();
+          
+        case 'account-size':
+          // Sort by account size (largest first)
+          return (bConfig?.accountSize || 0) - (aConfig?.accountSize || 0);
+          
+        default:
+          return 0;
+      }
+    });
     
     setFilteredAccounts(filtered);
-  }, [allAccounts, statusFilter, searchQuery]);
+  }, [allAccounts, statusFilter, searchQuery, sortBy]); // Add sortBy to dependencies
 
   // Handle account disconnect
   const handleDisconnect = async (userId: string) => {
@@ -731,12 +863,209 @@ export default function AdminAccountsPage() {
     }
   };
 
+  // Helper function to generate transaction ID
+  const generateTransactionId = () => {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < 32; i++) {
+      result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return result;
+  };
+
+  // Handle Step 1 submission - Connect to MetaAPI
+  const handleConnectStep1Submit = async () => {
+    const { login, password, server, platform, nickname } = connectModalData.step1;
+    
+    // Validation
+    if (!login || !password || !server || !platform || !nickname) {
+      setMessage({ type: 'error', text: 'All fields are required for MetaAPI connection.' });
+      return;
+    }
+
+    setConnectingToMetaAPI(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      // Step 1: Create account in MetaAPI
+      const transactionId = generateTransactionId();
+      const createAccountResponse = await fetch('/api/metaapi/create-account', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          login,
+          password,
+          name: nickname,
+          server,
+          platform,
+          magic: 0,
+          keywords: ['Shockwave Capital'],
+          transactionId
+        })
+      });
+
+      if (!createAccountResponse.ok) {
+        const errorData = await createAccountResponse.json();
+        throw new Error(errorData.message || 'Failed to create MetaAPI account');
+      }
+
+      const createAccountData = await createAccountResponse.json();
+      const { accountId } = createAccountData;
+
+      // Check for warnings (e.g., mock responses)
+      if (createAccountData.warning) {
+        console.warn('MetaAPI Warning:', createAccountData.warning);
+      }
+
+      // Step 2: Get auth token
+      const getTokenResponse = await fetch(`/api/metaapi/get-auth-token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          accountId,
+          transactionId: generateTransactionId()
+        })
+      });
+
+      if (!getTokenResponse.ok) {
+        const errorData = await getTokenResponse.json();
+        throw new Error(errorData.message || 'Failed to get auth token');
+      }
+
+      const getTokenData = await getTokenResponse.json();
+      const { authToken } = getTokenData;
+
+      // Check for warnings in token response
+      if (getTokenData.warning) {
+        console.warn('MetaAPI Warning:', getTokenData.warning);
+      }
+
+      // Update modal data and proceed to Step 2
+      setConnectModalData(prev => ({
+        ...prev,
+        accountId,
+        authToken
+      }));
+
+      setConnectModalStep(2);
+      
+      // Show appropriate message based on whether this is a mock or real response
+      const isUsingMocks = createAccountData.warning || getTokenData.warning;
+      if (isUsingMocks) {
+        setMessage({ 
+          type: 'success', 
+          text: 'Connected successfully! (Using mock data - configure METAAPI_AUTH_TOKEN for production)' 
+        });
+      } else {
+        setMessage({ 
+          type: 'success', 
+          text: 'Successfully connected to MetaAPI! Now configure challenge settings.' 
+        });
+      }
+
+    } catch (error) {
+      console.error('Error connecting to MetaAPI:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setMessage({ type: 'error', text: `Failed to connect to MetaAPI: ${errorMessage}` });
+    } finally {
+      setConnectingToMetaAPI(false);
+    }
+  };
+
+  // Handle Step 2 submission - Create challenge account
+  const handleConnectStep2Submit = async () => {
+    if (!searchedUser) {
+      setMessage({ type: 'error', text: 'Please search for a user first.' });
+      return;
+    }
+
+    setSaving(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      await setUserMetaApiAccount({
+        userId: searchedUser.uid,
+        accountId: connectModalData.accountId,
+        accountToken: connectModalData.authToken,
+        accountType: accountForm.accountType,
+        accountSize: accountForm.accountSize,
+        platform: connectModalData.step1.platform,
+        status: accountForm.status,
+        step: accountForm.step,
+        startDate: Timestamp.now()
+      });
+
+      setMessage({ type: 'success', text: 'Challenge account created successfully!' });
+      setShowConnectModal(false);
+      
+      // Reset modal state
+      setConnectModalStep(1);
+      setConnectModalData({
+        step1: {
+          login: '',
+          password: '',
+          server: '',
+          platform: 'mt5',
+          nickname: ''
+        },
+        accountId: '',
+        authToken: ''
+      });
+      setSearchedUser(null);
+      setSearchUserEmail('');
+      
+      // Reload accounts
+      await loadAllAccounts();
+    } catch (error) {
+      console.error('Error creating challenge account:', error);
+      setMessage({ type: 'error', text: 'Failed to create challenge account.' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header with Alerts */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-white">Account Management Dashboard</h1>
         <div className="flex items-center gap-4">
+          <button
+            onClick={() => {
+              setShowConnectModal(true);
+              setConnectModalStep(1);
+              setConnectModalData({
+                step1: {
+                  login: '',
+                  password: '',
+                  server: '',
+                  platform: 'mt5',
+                  nickname: ''
+                },
+                accountId: '',
+                authToken: ''
+              });
+              setSearchUserEmail('');
+              setSearchedUser(null);
+              setAccountForm({
+                accountId: '',
+                accountToken: '',
+                accountType: 'standard' as 'standard' | 'instant',
+                accountSize: 10000,
+                platform: 'mt5' as 'mt4' | 'mt5',
+                status: 'active' as 'active' | 'inactive' | 'passed' | 'failed',
+                step: 1 as 1 | 2
+              });
+            }}
+            className="bg-green-500 text-white font-semibold px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
+          >
+            <Plus size={20} />
+            Connect Demo Account
+          </button>
           <button
             onClick={() => {
               setShowAddModal(true);
@@ -910,6 +1239,38 @@ export default function AdminAccountsPage() {
               <option value="inactive">Inactive</option>
               <option value="passed">Passed</option>
               <option value="failed">Failed</option>
+            </select>
+
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#0FF1CE]/50 min-w-[160px]"
+              title="Sort accounts by"
+            >
+              <optgroup label="Date & Time">
+                <option value="newest">Newest Accounts</option>
+                <option value="oldest">Oldest Accounts</option>
+                <option value="last-updated">Recently Updated</option>
+              </optgroup>
+              <optgroup label="Status & Type">
+                <option value="status">Status Priority</option>
+                <option value="account-type">Account Type</option>
+                <option value="account-size">Account Size</option>
+              </optgroup>
+              <optgroup label="User Info">
+                <option value="email-az">Email A-Z</option>
+                <option value="email-za">Email Z-A</option>
+              </optgroup>
+              <optgroup label="Performance">
+                <option value="balance-high">Highest Balance</option>
+                <option value="balance-low">Lowest Balance</option>
+                <option value="profit-high">Highest Profit %</option>
+              </optgroup>
+              <optgroup label="Risk Management">
+                <option value="drawdown-high">Highest Risk (Max DD)</option>
+                <option value="drawdown-low">Lowest Risk (Max DD)</option>
+                <option value="daily-drawdown-high">Highest Daily DD</option>
+              </optgroup>
             </select>
             
             <button
@@ -1589,6 +1950,376 @@ export default function AdminAccountsPage() {
                     Create Account
                   </button>
                 )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ConnectMetaAccountModal */}
+      {showConnectModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#0D0D0D] border border-[#2F2F2F] rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-[#2F2F2F]">
+              <h2 className="text-xl font-semibold text-white">
+                Connect Demo Account to MetaAPI
+              </h2>
+              <p className="text-sm text-gray-400 mt-1">
+                Step {connectModalStep} of 2: {connectModalStep === 1 ? 'Connect MT4/MT5 Demo Account' : 'Configure Challenge Settings'}
+              </p>
+              
+              {/* Progress Indicator */}
+              <div className="flex items-center mt-4 space-x-4">
+                <div className={`flex items-center space-x-2 ${connectModalStep >= 1 ? 'text-[#0FF1CE]' : 'text-gray-400'}`}>
+                  <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${connectModalStep >= 1 ? 'border-[#0FF1CE] bg-[#0FF1CE]/10' : 'border-gray-400'}`}>
+                    {connectModalStep > 1 ? <CheckCircle size={16} /> : '1'}
+                  </div>
+                  <span className="text-sm font-medium">Connect Account</span>
+                </div>
+                <div className={`h-0.5 flex-1 ${connectModalStep > 1 ? 'bg-[#0FF1CE]' : 'bg-gray-600'}`}></div>
+                <div className={`flex items-center space-x-2 ${connectModalStep >= 2 ? 'text-[#0FF1CE]' : 'text-gray-400'}`}>
+                  <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${connectModalStep >= 2 ? 'border-[#0FF1CE] bg-[#0FF1CE]/10' : 'border-gray-400'}`}>
+                    2
+                  </div>
+                  <span className="text-sm font-medium">Configure Challenge</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              {/* Step 1: MetaTrader Account Details */}
+              {connectModalStep === 1 && (
+                <>
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-white mb-4">MetaTrader Demo Account Details</h3>
+                    <p className="text-sm text-gray-400 mb-6">
+                      Enter the details of your manually created MT4/MT5 demo account to connect it to MetaAPI.
+                    </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">
+                          Login <span className="text-red-400">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={connectModalData.step1.login}
+                          onChange={(e) => setConnectModalData(prev => ({
+                            ...prev,
+                            step1: { ...prev.step1, login: e.target.value }
+                          }))}
+                          placeholder="Enter MT account login"
+                          className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#0FF1CE]/50"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">
+                          Password <span className="text-red-400">*</span>
+                        </label>
+                        <input
+                          type="password"
+                          value={connectModalData.step1.password}
+                          onChange={(e) => setConnectModalData(prev => ({
+                            ...prev,
+                            step1: { ...prev.step1, password: e.target.value }
+                          }))}
+                          placeholder="Enter MT account password"
+                          className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#0FF1CE]/50"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">
+                          Server <span className="text-red-400">*</span>
+                        </label>
+                        <select
+                          value={connectModalData.step1.server}
+                          onChange={(e) => setConnectModalData(prev => ({
+                            ...prev,
+                            step1: { ...prev.step1, server: e.target.value }
+                          }))}
+                          className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#0FF1CE]/50"
+                        >
+                          <option value="">Select Server</option>
+                          <option value="AXI-US03-DEMO">AXI-US03-DEMO</option>
+                          <option value="ADMIRALSGROUP-DEMO">ADMIRALSGROUP-DEMO</option>
+                          <option value="FUSIONMARKETS-DEMO">FUSIONMARKETS-DEMO</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">
+                          Platform <span className="text-red-400">*</span>
+                        </label>
+                        <select
+                          value={connectModalData.step1.platform}
+                          onChange={(e) => setConnectModalData(prev => ({
+                            ...prev,
+                            step1: { ...prev.step1, platform: e.target.value as 'mt4' | 'mt5' }
+                          }))}
+                          className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#0FF1CE]/50"
+                        >
+                          <option value="mt5">MetaTrader 5</option>
+                          <option value="mt4">MetaTrader 4</option>
+                        </select>
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-400 mb-2">
+                          Nickname <span className="text-red-400">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={connectModalData.step1.nickname}
+                          onChange={(e) => setConnectModalData(prev => ({
+                            ...prev,
+                            step1: { ...prev.step1, nickname: e.target.value }
+                          }))}
+                          placeholder="Enter a friendly name for this account"
+                          className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#0FF1CE]/50"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Step 2: Challenge Configuration */}
+              {connectModalStep === 2 && (
+                <>
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-white mb-4">Configure Challenge Settings</h3>
+                    
+                    {/* Connected Account Info */}
+                    <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 mb-6">
+                      <div className="flex items-center gap-3">
+                        <CheckCircle className="text-green-400" size={20} />
+                        <div>
+                          <p className="text-green-400 font-medium">MetaAPI Connection Successful</p>
+                          <p className="text-sm text-gray-400">
+                            Account ID: {connectModalData.accountId.substring(0, 8)}...
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* User Search */}
+                    {!searchedUser && (
+                      <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-400 mb-2">
+                          Search User by Email
+                        </label>
+                        <div className="flex gap-3">
+                          <input
+                            type="email"
+                            value={searchUserEmail}
+                            onChange={(e) => setSearchUserEmail(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && searchUserByEmail()}
+                            placeholder="Enter user email address"
+                            className="flex-1 bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#0FF1CE]/50"
+                          />
+                          <button
+                            onClick={searchUserByEmail}
+                            disabled={!searchUserEmail}
+                            className="bg-[#0FF1CE] text-black font-semibold px-6 py-3 rounded-lg hover:bg-[#0FF1CE]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                          >
+                            <Search size={20} />
+                            Search
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* User Found */}
+                    {searchedUser && (
+                      <>
+                        <div className="bg-[#151515] border border-[#2F2F2F] rounded-lg p-4 mb-6">
+                          <p className="text-sm text-gray-400 mb-1">Configuring account for:</p>
+                          <p className="text-white font-medium">{searchedUser.email}</p>
+                          <p className="text-sm text-gray-400">
+                            {searchedUser.displayName || `${searchedUser.firstName} ${searchedUser.lastName}`.trim() || 'No name'}
+                          </p>
+                        </div>
+
+                        {/* Pre-filled Account Info */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-400 mb-2">
+                              MetaAPI Account ID
+                            </label>
+                            <input
+                              type="text"
+                              value={connectModalData.accountId}
+                              disabled
+                              className="w-full bg-[#0A0A0A] border border-[#2F2F2F] rounded-lg px-4 py-3 text-gray-400 cursor-not-allowed"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-400 mb-2">
+                              MetaAPI Auth Token
+                            </label>
+                            <input
+                              type="password"
+                              value={connectModalData.authToken}
+                              disabled
+                              className="w-full bg-[#0A0A0A] border border-[#2F2F2F] rounded-lg px-4 py-3 text-gray-400 cursor-not-allowed"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-400 mb-2">
+                              Platform
+                            </label>
+                            <input
+                              type="text"
+                              value={connectModalData.step1.platform.toUpperCase()}
+                              disabled
+                              className="w-full bg-[#0A0A0A] border border-[#2F2F2F] rounded-lg px-4 py-3 text-gray-400 cursor-not-allowed"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-400 mb-2">
+                              Account Type
+                            </label>
+                            <select
+                              value={accountForm.accountType}
+                              onChange={(e) => {
+                                const newType = e.target.value as 'standard' | 'instant';
+                                const sizes = getAccountSizes(newType);
+                                setAccountForm({ 
+                                  ...accountForm, 
+                                  accountType: newType,
+                                  accountSize: sizes[0]
+                                });
+                              }}
+                              className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#0FF1CE]/50"
+                            >
+                              <option value="standard">Shockwave Standard</option>
+                              <option value="instant">Shockwave Instant</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-400 mb-2">
+                              Account Size
+                            </label>
+                            <select
+                              value={accountForm.accountSize}
+                              onChange={(e) => setAccountForm({ ...accountForm, accountSize: parseInt(e.target.value) })}
+                              className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#0FF1CE]/50"
+                            >
+                              {getAccountSizes(accountForm.accountType).map((size) => (
+                                <option key={size} value={size}>
+                                  ${size.toLocaleString()}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-400 mb-2">
+                              Challenge Step
+                            </label>
+                            <select
+                              value={accountForm.step}
+                              onChange={(e) => setAccountForm({ ...accountForm, step: parseInt(e.target.value) as 1 | 2 })}
+                              className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#0FF1CE]/50"
+                            >
+                              <option value={1}>Step 1</option>
+                              <option value={2}>Step 2</option>
+                            </select>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* Messages */}
+              {message.text && (
+                <div className={`p-4 rounded-lg mb-4 flex items-center gap-3 ${
+                  message.type === 'error'
+                    ? 'bg-red-500/10 border border-red-500/30 text-red-400'
+                    : message.type === 'success'
+                    ? 'bg-green-500/10 border border-green-500/30 text-green-400'
+                    : 'bg-blue-500/10 border border-blue-500/30 text-blue-400'
+                }`}>
+                  {message.type === 'error' ? (
+                    <AlertCircle size={20} />
+                  ) : message.type === 'success' ? (
+                    <CheckCircle size={20} />
+                  ) : (
+                    <AlertCircle size={20} />
+                  )}
+                  {message.text}
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex justify-between">
+                <div>
+                  {connectModalStep === 2 && (
+                    <button
+                      onClick={() => {
+                        setConnectModalStep(1);
+                        setMessage({ type: '', text: '' });
+                      }}
+                      className="px-6 py-3 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+                    >
+                      <span>← Back</span>
+                    </button>
+                  )}
+                </div>
+                
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => {
+                      setShowConnectModal(false);
+                      setConnectModalStep(1);
+                      setConnectModalData({
+                        step1: {
+                          login: '',
+                          password: '',
+                          server: '',
+                          platform: 'mt5',
+                          nickname: ''
+                        },
+                        accountId: '',
+                        authToken: ''
+                      });
+                      setSearchedUser(null);
+                      setSearchUserEmail('');
+                      setMessage({ type: '', text: '' });
+                    }}
+                    className="px-6 py-3 text-gray-400 hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  
+                  {connectModalStep === 1 ? (
+                    <button
+                      onClick={handleConnectStep1Submit}
+                      disabled={connectingToMetaAPI || !connectModalData.step1.login || !connectModalData.step1.password || !connectModalData.step1.server || !connectModalData.step1.nickname}
+                      className="bg-green-500 text-white font-semibold px-6 py-3 rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      {connectingToMetaAPI ? <Loader2 className="animate-spin" size={20} /> : <Server size={20} />}
+                      Connect to MetaAPI
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleConnectStep2Submit}
+                      disabled={saving || !searchedUser}
+                      className="bg-[#0FF1CE] text-black font-semibold px-6 py-3 rounded-lg hover:bg-[#0FF1CE]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      {saving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+                      Create Challenge Account
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>

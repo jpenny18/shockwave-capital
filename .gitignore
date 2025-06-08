@@ -34,3 +34,15 @@ yarn-error.log*
 next-env.d.ts
 
 /checkout template
+
+create-demo-account.js
+
+# Email templates and demo files
+22_shockwave_launch.html
+create-demo-accounts.js
+example(risk).js
+example(stats).js
+invoice.html
+metaapi-riskmanagement-apimethods.md
+metaapi-riskmanagement-models.md
+testemail.html

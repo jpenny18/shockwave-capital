@@ -15,14 +15,36 @@ import {
   Eye,
   MoreHorizontal,
   ExternalLink,
-  Loader
+  Loader,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { UserData, getAllUsers, updateUser, Timestamp } from '@/lib/firebase';
+import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 interface Customer extends Omit<UserData, 'lastOrderDate'> {
   id: string;
   joinDate: string; // Formatted date string
   lastOrderDate?: string; // Formatted date string
+  actualTotalSpent?: number; // Calculated from actual orders
+  actualOrderCount?: number; // Calculated from actual orders
+}
+
+interface Order {
+  id: string;
+  customerEmail: string;
+  totalAmount: number;
+  paymentStatus: 'pending' | 'processing' | 'completed' | 'failed';
+  createdAt: any;
+}
+
+interface CryptoOrder {
+  id: string;
+  customerEmail: string;
+  usdAmount: number;
+  status: 'PENDING' | 'COMPLETED' | 'CANCELLED';
+  createdAt: any;
 }
 
 export default function CustomersPage() {
@@ -34,11 +56,75 @@ export default function CustomersPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('newest');
   
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
+  const [loadingOrders, setLoadingOrders] = useState(false);
+
+  // Helper function to fetch orders for a customer
+  const fetchCustomerOrders = async (customerEmail: string) => {
+    try {
+      // Fetch regular orders
+      const ordersRef = collection(db, 'orders');
+      const ordersQuery = query(ordersRef, where('customerEmail', '==', customerEmail));
+      const ordersSnapshot = await getDocs(ordersQuery);
+      
+      // Fetch crypto orders
+      const cryptoOrdersRef = collection(db, 'crypto-orders');
+      const cryptoOrdersQuery = query(cryptoOrdersRef, where('customerEmail', '==', customerEmail));
+      const cryptoOrdersSnapshot = await getDocs(cryptoOrdersQuery);
+      
+      let totalSpent = 0;
+      let orderCount = 0;
+      let lastOrderDate: Date | null = null;
+      
+      // Process regular orders
+      ordersSnapshot.forEach((doc) => {
+        const order = doc.data() as Order;
+        if (order.paymentStatus === 'completed') {
+          totalSpent += order.totalAmount;
+          orderCount++;
+          const orderDate = order.createdAt?.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
+          if (!lastOrderDate || orderDate > lastOrderDate) {
+            lastOrderDate = orderDate;
+          }
+        }
+      });
+      
+      // Process crypto orders
+      cryptoOrdersSnapshot.forEach((doc) => {
+        const order = doc.data() as CryptoOrder;
+        if (order.status === 'COMPLETED') {
+          totalSpent += order.usdAmount;
+          orderCount++;
+          const orderDate = typeof order.createdAt === 'string' ? new Date(order.createdAt) : order.createdAt?.toDate();
+          if (!lastOrderDate || orderDate > lastOrderDate) {
+            lastOrderDate = orderDate;
+          }
+        }
+      });
+      
+      return {
+        actualTotalSpent: totalSpent,
+        actualOrderCount: orderCount,
+        lastOrderDate: lastOrderDate ? lastOrderDate.toISOString().split('T')[0] : undefined
+      };
+    } catch (error) {
+      console.error('Error fetching customer orders:', error);
+      return {
+        actualTotalSpent: 0,
+        actualOrderCount: 0,
+        lastOrderDate: undefined
+      };
+    }
+  };
+  
   // Fetch customers from Firebase
   useEffect(() => {
     const fetchCustomers = async () => {
       try {
         setLoading(true);
+        setLoadingOrders(true);
         const usersData = await getAllUsers();
         
         // Transform Firebase user data to Customer interface
@@ -59,12 +145,29 @@ export default function CustomersPage() {
           notes: user.notes || '',
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
-          lastLoginAt: user.lastLoginAt
+          lastLoginAt: user.lastLoginAt,
+          actualTotalSpent: 0,
+          actualOrderCount: 0
         }));
         
         setCustomers(transformedCustomers);
+        
+        // Fetch actual orders data for each customer
+        const customersWithOrders = await Promise.all(
+          transformedCustomers.map(async (customer) => {
+            const orderData = await fetchCustomerOrders(customer.email);
+            return {
+              ...customer,
+              ...orderData
+            };
+          })
+        );
+        
+        setCustomers(customersWithOrders);
+        setLoadingOrders(false);
       } catch (error) {
         console.error('Error fetching customers:', error);
+        setLoadingOrders(false);
       } finally {
         setLoading(false);
       }
@@ -90,9 +193,9 @@ export default function CustomersPage() {
         case 'oldest':
           return new Date(a.joinDate).getTime() - new Date(b.joinDate).getTime();
         case 'highest-spend':
-          return (b.totalSpent || 0) - (a.totalSpent || 0);
+          return (b.actualTotalSpent || 0) - (a.actualTotalSpent || 0);
         case 'most-orders':
-          return (b.orderCount || 0) - (a.orderCount || 0);
+          return (b.actualOrderCount || 0) - (a.actualOrderCount || 0);
         case 'name-az':
           return (a.displayName || '').localeCompare(b.displayName || '');
         case 'name-za':
@@ -101,6 +204,58 @@ export default function CustomersPage() {
           return 0;
       }
     });
+
+  // Pagination calculations
+  const totalItems = filteredCustomers.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedCustomers = filteredCustomers.slice(startIndex, endIndex);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, sortBy, itemsPerPage]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      const startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+      const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+      
+      if (startPage > 1) {
+        pages.push(1);
+        if (startPage > 2) pages.push('...');
+      }
+      
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+      
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
+  };
   
   const handleViewDetails = (customer: Customer) => {
     setSelectedCustomer(customer);
@@ -179,8 +334,8 @@ export default function CustomersPage() {
       customer.phone,
       customer.country,
       customer.joinDate,
-      customer.totalSpent || 0,
-      customer.orderCount || 0,
+      customer.actualTotalSpent || 0,
+      customer.actualOrderCount || 0,
       customer.lastOrderDate || '',
       customer.status,
       // Escape notes to handle commas and quotes
@@ -267,6 +422,23 @@ export default function CustomersPage() {
             <ChevronDown size={16} />
           </div>
         </div>
+
+        {/* Items per page selector */}
+        <div className="relative">
+          <select
+            value={itemsPerPage}
+            onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+            className="appearance-none bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-2.5 pr-8 text-white focus:outline-none focus:border-[#0FF1CE]/50"
+          >
+            <option value={25}>25 per page</option>
+            <option value={50}>50 per page</option>
+            <option value={100}>100 per page</option>
+            <option value={200}>200 per page</option>
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+            <ChevronDown size={16} />
+          </div>
+        </div>
       </div>
 
       {/* Customers List */}
@@ -282,15 +454,21 @@ export default function CustomersPage() {
             <thead>
               <tr className="text-left text-gray-400 text-sm border-b border-[#2F2F2F]">
                 <th className="px-6 py-4 font-medium">Customer</th>
-                <th className="px-6 py-4 font-medium">Orders</th>
-                <th className="px-6 py-4 font-medium">Total Spent</th>
+                <th className="px-6 py-4 font-medium">
+                  Orders
+                  {loadingOrders && <Loader className="inline ml-2 h-3 w-3 animate-spin" />}
+                </th>
+                <th className="px-6 py-4 font-medium">
+                  Total Spent
+                  {loadingOrders && <Loader className="inline ml-2 h-3 w-3 animate-spin" />}
+                </th>
                 <th className="px-6 py-4 font-medium">Status</th>
                 <th className="px-6 py-4 font-medium">Last Order</th>
                 <th className="px-6 py-4 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredCustomers.map((customer) => (
+              {paginatedCustomers.map((customer) => (
                 <tr 
                   key={customer.id} 
                   className="border-b border-[#2F2F2F] last:border-b-0 text-white hover:bg-[#151515] transition-colors"
@@ -301,25 +479,25 @@ export default function CustomersPage() {
                         <User size={18} />
                       </div>
                       <div>
-                          <div className="font-medium">{customer.displayName}</div>
+                        <div className="font-medium">{customer.displayName}</div>
                         <div className="text-gray-400 text-sm">{customer.email}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                      <div className="font-medium">{customer.orderCount || 0}</div>
+                    <div className="font-medium">{customer.actualOrderCount ?? 0}</div>
                     <div className="text-gray-400 text-sm">orders</div>
                   </td>
                   <td className="px-6 py-4">
-                      <div className="font-medium">${(customer.totalSpent || 0).toLocaleString()}</div>
+                    <div className="font-medium">${(customer.actualTotalSpent ?? 0).toLocaleString()}</div>
                     <div className="text-gray-400 text-sm">total</div>
                   </td>
                   <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        customer.status === 'active' 
-                          ? 'bg-green-500/20 text-green-500' 
-                          : 'bg-gray-500/20 text-gray-400'
-                      }`}>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      customer.status === 'active' 
+                        ? 'bg-green-500/20 text-green-500' 
+                        : 'bg-gray-500/20 text-gray-400'
+                    }`}>
                       {customer.status === 'active' ? (
                         <>
                           <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
@@ -334,7 +512,7 @@ export default function CustomersPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                      <div className="font-medium">{customer.lastOrderDate ? new Date(customer.lastOrderDate).toLocaleDateString() : 'No orders'}</div>
+                    <div className="font-medium">{customer.lastOrderDate ? new Date(customer.lastOrderDate).toLocaleDateString() : 'No orders'}</div>
                     <div className="text-gray-400 text-sm">{customer.country}</div>
                   </td>
                   <td className="px-6 py-4">
@@ -365,7 +543,7 @@ export default function CustomersPage() {
                 </tr>
               ))}
               
-              {filteredCustomers.length === 0 && (
+              {paginatedCustomers.length === 0 && !loading && (
                 <tr>
                   <td colSpan={6} className="px-6 py-10 text-center text-gray-500">
                     <User className="mx-auto mb-2" size={24} />
@@ -378,9 +556,53 @@ export default function CustomersPage() {
           )}
         </div>
         
-        <div className="px-6 py-4 border-t border-[#2F2F2F] text-sm text-gray-400">
-          Showing {filteredCustomers.length} of {customers.length} customers
-        </div>
+        {/* Pagination Controls */}
+        {!loading && paginatedCustomers.length > 0 && (
+          <div className="px-6 py-4 border-t border-[#2F2F2F] flex items-center justify-between">
+            <div className="text-sm text-gray-400">
+              Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} customers
+            </div>
+            
+            {totalPages > 1 && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-lg bg-[#151515] border border-[#2F2F2F] text-gray-400 hover:text-white hover:border-[#0FF1CE]/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                
+                {getPageNumbers().map((page, index) => (
+                  <React.Fragment key={index}>
+                    {page === '...' ? (
+                      <span className="px-3 py-2 text-gray-400">...</span>
+                    ) : (
+                      <button
+                        onClick={() => handlePageChange(page as number)}
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          currentPage === page
+                            ? 'bg-[#0FF1CE] text-black'
+                            : 'bg-[#151515] border border-[#2F2F2F] text-gray-400 hover:text-white hover:border-[#0FF1CE]/50'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    )}
+                  </React.Fragment>
+                ))}
+                
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="p-2 rounded-lg bg-[#151515] border border-[#2F2F2F] text-gray-400 hover:text-white hover:border-[#0FF1CE]/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       
       {/* Customer Details Slide-in Panel */}
@@ -464,16 +686,16 @@ export default function CustomersPage() {
               <div className="grid grid-cols-3 gap-4 mb-6">
                 <div className="bg-[#151515] rounded-xl p-5">
                   <div className="text-sm text-gray-400 mb-1">Total Spent</div>
-                  <div className="text-2xl font-semibold text-white">${(selectedCustomer.totalSpent || 0).toLocaleString()}</div>
+                  <div className="text-2xl font-semibold text-white">${(selectedCustomer.actualTotalSpent ?? 0).toLocaleString()}</div>
                 </div>
                 <div className="bg-[#151515] rounded-xl p-5">
                   <div className="text-sm text-gray-400 mb-1">Orders</div>
-                  <div className="text-2xl font-semibold text-white">{selectedCustomer.orderCount || 0}</div>
+                  <div className="text-2xl font-semibold text-white">{selectedCustomer.actualOrderCount ?? 0}</div>
                 </div>
                 <div className="bg-[#151515] rounded-xl p-5">
                   <div className="text-sm text-gray-400 mb-1">Avg. Order Value</div>
                   <div className="text-2xl font-semibold text-white">
-                    ${selectedCustomer.orderCount && selectedCustomer.orderCount > 0 ? Math.round((selectedCustomer.totalSpent || 0) / selectedCustomer.orderCount).toLocaleString() : 0}
+                    ${selectedCustomer.actualOrderCount && selectedCustomer.actualOrderCount > 0 ? Math.round((selectedCustomer.actualTotalSpent || 0) / selectedCustomer.actualOrderCount).toLocaleString() : 0}
                   </div>
                 </div>
               </div>
@@ -499,31 +721,6 @@ export default function CustomersPage() {
                   className="w-full bg-[#0D0D0D] border border-[#2F2F2F] rounded-lg p-3 text-white min-h-24 resize-none focus:outline-none focus:border-[#0FF1CE]/50"
                   placeholder="Add notes about this customer..."
                 />
-              </div>
-              
-              {/* Login Details */}
-              <div className="bg-[#151515] rounded-xl p-6 mb-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Account Info</h3>
-                <div className="space-y-4">
-                  <div>
-                    <div className="text-sm text-gray-400 mb-1">User ID</div>
-                    <div className="text-white font-mono text-sm bg-[#0D0D0D] p-2 rounded overflow-x-auto">
-                      {selectedCustomer.uid}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-400 mb-1">Created</div>
-                    <div className="text-white">
-                      {selectedCustomer.createdAt.toDate().toLocaleString()}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-400 mb-1">Last Updated</div>
-                    <div className="text-white">
-                      {selectedCustomer.updatedAt.toDate().toLocaleString()}
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>

@@ -30,8 +30,8 @@ const ApexChart = dynamic(() => import('react-apexcharts'), { ssr: false });
 // Define interfaces
 interface TradingObjectives {
   minTradingDays: { target: number; current: number; passed: boolean };
-  maxDrawdown: { target: number; current: number; passed: boolean };
-  maxDailyDrawdown: { target: number; current: number; passed: boolean };
+  maxDrawdown: { target: number; current: number; passed: boolean; recentBreach?: boolean };
+  maxDailyDrawdown: { target: number; current: number; passed: boolean; recentBreach?: boolean };
   profitTarget: { target: number; current: number; passed: boolean };
 }
 
@@ -54,6 +54,30 @@ interface EquityChartPoint {
   date: string;
   equity: number;
   balance: number;
+}
+
+interface RiskEvent {
+  id: string;
+  type: string;
+  accountId: string;
+  sequenceNumber: number;
+  brokerTime: string;
+  absoluteDrawdown: number;
+  relativeDrawdown: number;
+  exceededThresholdType: string;
+}
+
+interface PeriodStatistic {
+  period: string;
+  startBrokerTime: string;
+  endBrokerTime: string;
+  balance: number;
+  equity: number;
+  maxDrawdown: number;
+  maxDailyDrawdown: number;
+  profit: number;
+  trades: number;
+  tradingDays: number;
 }
 
 // Metric Card Component
@@ -165,6 +189,124 @@ const TradingObjectivesTable = ({ objectives }: { objectives: TradingObjectives 
   );
 };
 
+// Risk Events Table Component
+const RiskEventsTable = ({ riskEvents }: { riskEvents: RiskEvent[] }) => {
+  if (!riskEvents || riskEvents.length === 0) {
+    return (
+      <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6">
+        <h3 className="text-lg font-semibold text-white mb-4">Risk Events</h3>
+        <p className="text-gray-400 text-sm">No risk events recorded</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6">
+      <h3 className="text-lg font-semibold text-white mb-4">Risk Events</h3>
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-[#2F2F2F]">
+              <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Time</th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Type</th>
+              <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Drawdown %</th>
+              <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {riskEvents.map((event, index) => (
+              <tr key={event.id || index} className="border-b border-[#2F2F2F]/50">
+                <td className="py-3 px-4 text-sm text-white">
+                  {new Date(event.brokerTime).toLocaleString()}
+                </td>
+                <td className="py-3 px-4 text-sm">
+                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                    event.exceededThresholdType === 'drawdown' 
+                      ? 'bg-red-500/20 text-red-400'
+                      : event.exceededThresholdType === 'dailyDrawdown'
+                      ? 'bg-orange-500/20 text-orange-400'
+                      : 'bg-yellow-500/20 text-yellow-400'
+                  }`}>
+                    {event.exceededThresholdType}
+                  </span>
+                </td>
+                <td className="py-3 px-4 text-sm text-right text-red-400 font-medium">
+                  {event.relativeDrawdown.toFixed(2)}%
+                </td>
+                <td className="py-3 px-4 text-sm text-right text-red-400">
+                  ${event.absoluteDrawdown.toLocaleString()}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+// Period Statistics Component
+const PeriodStatsChart = ({ periodStats }: { periodStats: PeriodStatistic[] }) => {
+  if (!periodStats || periodStats.length === 0) {
+    return (
+      <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6">
+        <h3 className="text-lg font-semibold text-white mb-4">Period Statistics</h3>
+        <p className="text-gray-400 text-sm">No period statistics available</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6">
+      <h3 className="text-lg font-semibold text-white mb-4">Daily Performance (Last 30 Days)</h3>
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-[#2F2F2F]">
+              <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Date</th>
+              <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Balance</th>
+              <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Equity</th>
+              <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Profit</th>
+              <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Max DD</th>
+              <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Daily DD</th>
+              <th className="text-center py-3 px-4 text-sm font-medium text-gray-400">Trades</th>
+            </tr>
+          </thead>
+          <tbody>
+            {periodStats.slice(-7).map((stat, index) => ( // Show last 7 days
+              <tr key={index} className="border-b border-[#2F2F2F]/50">
+                <td className="py-3 px-4 text-sm text-white">
+                  {new Date(stat.startBrokerTime).toLocaleDateString()}
+                </td>
+                <td className="py-3 px-4 text-sm text-right text-white">
+                  ${stat.balance.toLocaleString()}
+                </td>
+                <td className="py-3 px-4 text-sm text-right text-white">
+                  ${stat.equity.toLocaleString()}
+                </td>
+                <td className={`py-3 px-4 text-sm text-right font-medium ${
+                  stat.profit >= 0 ? 'text-green-400' : 'text-red-400'
+                }`}>
+                  {stat.profit >= 0 ? '+' : ''}${stat.profit.toLocaleString()}
+                </td>
+                <td className="py-3 px-4 text-sm text-right text-yellow-400">
+                  {stat.maxDrawdown.toFixed(2)}%
+                </td>
+                <td className="py-3 px-4 text-sm text-right text-orange-400">
+                  {stat.maxDailyDrawdown.toFixed(2)}%
+                </td>
+                <td className="py-3 px-4 text-sm text-center text-gray-300">
+                  {stat.trades}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
 export default function AdminAccountDetailsPage() {
   const params = useParams();
   const router = useRouter();
@@ -179,6 +321,8 @@ export default function AdminAccountDetailsPage() {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [accountStatus, setAccountStatus] = useState<string>('active');
+  const [riskEvents, setRiskEvents] = useState<RiskEvent[]>([]);
+  const [periodStats, setPeriodStats] = useState<PeriodStatistic[]>([]);
 
   const fetchAccountData = async () => {
     try {
@@ -225,16 +369,40 @@ export default function AdminAccountDetailsPage() {
           lostTrades: Math.round(cachedData.numberOfTrades * (1 - cachedData.winRate / 100)),
           winRate: cachedData.winRate,
           avgRRR: cachedData.averageRRR,
-          profit: cachedData.currentProfit || ((cachedData.balance - accountData.accountSize) || 0)
+          profit: cachedData.currentProfit || ((cachedData.balance - accountData.accountSize) || 0),
+          riskEvents: cachedData.lastRiskEvents || [],
+          periodStats: cachedData.lastPeriodStats || []
         });
         
-        // Calculate objectives based on account type
+        // Set risk events and period stats
+        setRiskEvents(cachedData.lastRiskEvents || []);
+        setPeriodStats(cachedData.lastPeriodStats || []);
+        
+        // Calculate objectives based on account type with enhanced data
         const targetDrawdown = accountData.accountType === 'standard' ? 15 : 12;
         const targetDailyDrawdown = accountData.accountType === 'standard' ? 8 : 4;
         const targetProfit = accountData.accountType === 'standard' ? 10 : 12;
         const targetTradingDays = accountData.accountType === 'standard' ? 5 : 5;
         
         const profitPercent = ((cachedData.balance - accountData.accountSize) / accountData.accountSize) * 100;
+        
+        // Check for recent breaches in risk events
+        const recentBreaches = {
+          maxDrawdown: false,
+          dailyDrawdown: false
+        };
+        
+        if (cachedData.lastRiskEvents && cachedData.lastRiskEvents.length > 0) {
+          const recentEvents = cachedData.lastRiskEvents.filter((e: any) => {
+            const eventTime = new Date(e.brokerTime);
+            const dayAgo = new Date();
+            dayAgo.setDate(dayAgo.getDate() - 1);
+            return eventTime > dayAgo;
+          });
+          
+          recentBreaches.maxDrawdown = recentEvents.some((e: any) => e.exceededThresholdType === 'drawdown');
+          recentBreaches.dailyDrawdown = recentEvents.some((e: any) => e.exceededThresholdType === 'dailyDrawdown');
+        }
         
         setObjectives({
           minTradingDays: {
@@ -245,12 +413,14 @@ export default function AdminAccountDetailsPage() {
           maxDrawdown: {
             target: targetDrawdown,
             current: cachedData.maxDrawdown || 0,
-            passed: (cachedData.maxDrawdown || 0) <= targetDrawdown
+            passed: (cachedData.maxDrawdown || 0) <= targetDrawdown,
+            recentBreach: recentBreaches.maxDrawdown
           },
           maxDailyDrawdown: {
             target: targetDailyDrawdown,
             current: cachedData.maxDailyDrawdown || cachedData.dailyDrawdown || 0,
-            passed: (cachedData.maxDailyDrawdown || cachedData.dailyDrawdown || 0) <= targetDailyDrawdown
+            passed: (cachedData.maxDailyDrawdown || cachedData.dailyDrawdown || 0) <= targetDailyDrawdown,
+            recentBreach: recentBreaches.dailyDrawdown
           },
           profitTarget: {
             target: targetProfit,
@@ -536,6 +706,12 @@ export default function AdminAccountDetailsPage() {
 
       {/* Trading Objectives */}
       {objectives && <TradingObjectivesTable objectives={objectives} />}
+
+      {/* Risk Events */}
+      {riskEvents.length > 0 && <RiskEventsTable riskEvents={riskEvents} />}
+
+      {/* Period Statistics */}
+      {periodStats.length > 0 && <PeriodStatsChart periodStats={periodStats} />}
     </div>
   );
 } 
