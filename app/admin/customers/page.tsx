@@ -85,7 +85,7 @@ export default function CustomersPage() {
           totalSpent += order.totalAmount;
           orderCount++;
           const orderDate = order.createdAt?.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
-          if (!lastOrderDate || orderDate > lastOrderDate) {
+          if (orderDate && (!lastOrderDate || orderDate > lastOrderDate)) {
             lastOrderDate = orderDate;
           }
         }
@@ -97,8 +97,8 @@ export default function CustomersPage() {
         if (order.status === 'COMPLETED') {
           totalSpent += order.usdAmount;
           orderCount++;
-          const orderDate = typeof order.createdAt === 'string' ? new Date(order.createdAt) : order.createdAt?.toDate();
-          if (!lastOrderDate || orderDate > lastOrderDate) {
+          const orderDate = typeof order.createdAt === 'string' ? new Date(order.createdAt) : order.createdAt?.toDate?.();
+          if (orderDate && (!lastOrderDate || orderDate > lastOrderDate)) {
             lastOrderDate = orderDate;
           }
         }
