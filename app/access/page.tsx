@@ -251,12 +251,12 @@ export default function EarlyAccessPage() {
             <p className="text-gray-400">
               {isLogin ? 'Sign in for access' : 'Create your account to get started'}
             </p>
-            <div className="hidden mt-4 p-4 bg-gradient-to-r from-[#0FF1CE]/10 to-[#00D4FF]/10 rounded-lg border border-[#0FF1CE]/20">
-              <div className="text-lg font-bold text-white mb-1">Limited Time Launch Offer! 🚀</div>
-              <div className="text-2xl font-bold text-[#0FF1CE] mb-1">SAVE 40% on your evaluation fee</div>
+            <div className="mt-4 p-4 bg-gradient-to-r from-[#0FF1CE]/10 to-[#00D4FF]/10 rounded-lg border border-[#0FF1CE]/20">
+              <div className="text-lg font-bold text-white mb-1">SuperCharged Offer! 🚀</div>
+              <div className="text-2xl font-bold text-[#0FF1CE] mb-1">SAVE 30% on your evaluation fee</div>
               <div className="text-sm text-gray-400 mb-2">Use Code:</div>
               <div className="text-xl font-mono font-bold bg-gradient-to-r from-[#0FF1CE] to-[#00D4FF] bg-clip-text text-transparent tracking-wider">
-                SHOCKWAVE
+                OCTANE
               </div>
             </div>
             <div className="mt-6 flex flex-col items-center">
@@ -326,9 +326,9 @@ export default function EarlyAccessPage() {
                 id="disclaimer"
                 checked={acceptDisclaimer}
                 onChange={(e) => setAcceptDisclaimer(e.target.checked)}
-                className="mt-1 w-4 h-4 rounded border-gray-600 text-[#0FF1CE] focus:ring-[#0FF1CE] focus:ring-offset-0 bg-[#1A1A1A]"
+                className="w-4 h-4 rounded border-gray-600 text-[#0FF1CE] focus:ring-[#0FF1CE] focus:ring-offset-0 bg-[#1A1A1A]"
               />
-              <label htmlFor="disclaimer" className="text-sm text-gray-300">
+              <label htmlFor="disclaimer" className="text-xs text-gray-300">
                 I acknowledge that Shockwave Capital provides a simulated trading environment and that all activity is for educational and evaluative purposes only. I agree to the{' '}
                 <Link href="/disclaimer" className="text-[#0FF1CE] hover:underline">
                   Disclaimer

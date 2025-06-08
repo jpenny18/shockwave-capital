@@ -16,7 +16,7 @@ export default function ShockwaveLandingPage() {
     useEffect(() => {
       const unsubscribe = auth.onAuthStateChanged((user) => {
         if (!user && !loading) {
-          router.push('/earlyaccess');
+          router.push('/access');
         }
         setLoading(false);
       });

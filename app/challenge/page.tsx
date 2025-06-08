@@ -535,18 +535,18 @@ export default function ChallengePage() {
       {/* Main Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Launch Day Sale Banner */}
-        <div className="hidden mb-8 p-6 bg-gradient-to-r from-[#0FF1CE]/10 to-[#00D4FF]/10 rounded-lg border border-[#0FF1CE]/20 shadow-lg shadow-[#0FF1CE]/5 relative overflow-hidden">
+        <div className="mb-8 p-6 bg-gradient-to-r from-[#0FF1CE]/10 to-[#00D4FF]/10 rounded-lg border border-[#0FF1CE]/20 shadow-lg shadow-[#0FF1CE]/5 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-[#0FF1CE]/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#00D4FF]/10 rounded-full blur-xl -ml-8 -mb-8"></div>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between relative z-10">
             <div className="flex flex-col items-center md:items-start">
-              <div className="text-sm text-white/70 mb-1">Special Launch Offer!</div>
-              <div className="text-2xl md:text-3xl font-bold text-[#0FF1CE] mb-1 md:mb-0">SAVE 40% OFF</div>
+              <div className="text-sm text-white/70 mb-1">SuperCharged Offer!</div>
+              <div className="text-2xl md:text-3xl font-bold text-[#0FF1CE] mb-1 md:mb-0">SAVE 30% OFF</div>
             </div>
             <div className="flex flex-col items-center md:items-end mt-3 md:mt-0">
               <div className="text-xs text-gray-400 mb-1">Use Code:</div>
               <div className="text-xl font-mono font-bold bg-gradient-to-r from-[#0FF1CE] to-[#00D4FF] bg-clip-text text-transparent tracking-wider px-4 py-2 border border-[#0FF1CE]/30 rounded-md">
-                SHOCKWAVE
+                OCTANE
               </div>
             </div>
           </div>
