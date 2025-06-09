@@ -281,7 +281,7 @@ export default function AdminAccountsPage() {
     
     const { accountId, accountToken, accountType, accountSize } = account.metaApiAccount;
     
-    setRefreshingAccounts(prev => new Set(prev).add(account.uid));
+    setRefreshingAccounts(prev => new Set(prev).add(accountId)); // Use accountId instead of uid
     
     try {
       const response = await fetch('/api/metaapi/metrics', {
@@ -310,7 +310,7 @@ export default function AdminAccountsPage() {
     } finally {
       setRefreshingAccounts(prev => {
         const newSet = new Set(prev);
-        newSet.delete(account.uid);
+        newSet.delete(accountId); // Use accountId instead of uid
         return newSet;
       });
     }
@@ -322,8 +322,8 @@ export default function AdminAccountsPage() {
       if (refreshQueue.length === 0 || bulkRefreshing) return;
       
       setBulkRefreshing(true);
-      const accountId = refreshQueue[0];
-      const account = allAccounts.find(a => a.uid === accountId);
+      const accountIdToRefresh = refreshQueue[0]; // Now this is an accountId
+      const account = allAccounts.find(a => a.metaApiAccount?.accountId === accountIdToRefresh); // Find by accountId
       
       if (account) {
         await refreshAccount(account);
@@ -339,8 +339,8 @@ export default function AdminAccountsPage() {
   // Bulk refresh accounts
   const handleBulkRefresh = () => {
     const accountsToRefresh = selectedAccounts.length > 0 
-      ? selectedAccounts 
-      : filteredAccounts.filter(a => a.metaApiAccount?.status === 'active').map(a => a.uid);
+      ? selectedAccounts // Use accountIds directly
+      : filteredAccounts.filter(a => a.metaApiAccount?.status === 'active').map(a => a.metaApiAccount?.accountId).filter(Boolean) as string[];
     
     if (accountsToRefresh.length === 0) {
       setMessage({ type: 'error', text: 'No active accounts to refresh' });
@@ -463,13 +463,17 @@ export default function AdminAccountsPage() {
   }, [allAccounts, statusFilter, searchQuery, sortBy]); // Add sortBy to dependencies
 
   // Handle account disconnect
-  const handleDisconnect = async (userId: string) => {
+  const handleDisconnect = async (userId: string, accountId: string) => {
     if (!confirm('Are you sure you want to disconnect this account?')) return;
     
     try {
-      // First, find the document ID for this user's account
+      // Find the specific account document by userId AND accountId
       const accountsRef = collection(db, 'userMetaApiAccounts');
-      const q = query(accountsRef, where('userId', '==', userId));
+      const q = query(
+        accountsRef, 
+        where('userId', '==', userId),
+        where('accountId', '==', accountId)
+      );
       const querySnapshot = await getDocs(q);
       
       if (!querySnapshot.empty) {
@@ -495,13 +499,17 @@ export default function AdminAccountsPage() {
   };
 
   // Handle account fail
-  const handleFail = async (userId: string) => {
+  const handleFail = async (userId: string, accountId: string) => {
     if (!confirm('Are you sure you want to mark this account as failed?')) return;
     
     try {
-      // First, find the document ID for this user's account
+      // Find the specific account document by userId AND accountId
       const accountsRef = collection(db, 'userMetaApiAccounts');
-      const q = query(accountsRef, where('userId', '==', userId));
+      const q = query(
+        accountsRef, 
+        where('userId', '==', userId),
+        where('accountId', '==', accountId)
+      );
       const querySnapshot = await getDocs(q);
       
       if (!querySnapshot.empty) {
@@ -573,9 +581,9 @@ export default function AdminAccountsPage() {
     try {
       const accountsRef = collection(db, 'userMetaApiAccounts');
       
-      for (const userId of selectedAccounts) {
-        // Find the document ID for each user's account
-        const q = query(accountsRef, where('userId', '==', userId));
+      for (const accountId of selectedAccounts) {
+        // Find the specific account document by accountId
+        const q = query(accountsRef, where('accountId', '==', accountId));
         const querySnapshot = await getDocs(q);
         
         if (!querySnapshot.empty) {
@@ -919,43 +927,18 @@ export default function AdminAccountsPage() {
         console.warn('MetaAPI Warning:', createAccountData.warning);
       }
 
-      // Step 2: Get auth token
-      const getTokenResponse = await fetch(`/api/metaapi/get-auth-token`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          accountId,
-          transactionId: generateTransactionId()
-        })
-      });
-
-      if (!getTokenResponse.ok) {
-        const errorData = await getTokenResponse.json();
-        throw new Error(errorData.message || 'Failed to get auth token');
-      }
-
-      const getTokenData = await getTokenResponse.json();
-      const { authToken } = getTokenData;
-
-      // Check for warnings in token response
-      if (getTokenData.warning) {
-        console.warn('MetaAPI Warning:', getTokenData.warning);
-      }
-
       // Update modal data and proceed to Step 2
+      // Note: We use the main METAAPI_AUTH_TOKEN for all operations, not a per-account token
       setConnectModalData(prev => ({
         ...prev,
         accountId,
-        authToken
+        authToken: 'use-main-token' // Placeholder - we'll use the main METAAPI_AUTH_TOKEN
       }));
 
       setConnectModalStep(2);
       
       // Show appropriate message based on whether this is a mock or real response
-      const isUsingMocks = createAccountData.warning || getTokenData.warning;
-      if (isUsingMocks) {
+      if (createAccountData.warning) {
         setMessage({ 
           type: 'success', 
           text: 'Connected successfully! (Using mock data - configure METAAPI_AUTH_TOKEN for production)' 
@@ -990,7 +973,7 @@ export default function AdminAccountsPage() {
       await setUserMetaApiAccount({
         userId: searchedUser.uid,
         accountId: connectModalData.accountId,
-        accountToken: connectModalData.authToken,
+        accountToken: 'main-token', // We use the main METAAPI_AUTH_TOKEN for all operations
         accountType: accountForm.accountType,
         accountSize: accountForm.accountSize,
         platform: connectModalData.step1.platform,
@@ -1025,6 +1008,38 @@ export default function AdminAccountsPage() {
       setMessage({ type: 'error', text: 'Failed to create challenge account.' });
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Enable MetaStats and Risk Management APIs on an account
+  const enableAccountFeatures = async (account: UserWithAccount) => {
+    if (!account.metaApiAccount) return;
+    
+    const { accountId } = account.metaApiAccount;
+    
+    try {
+      const response = await fetch('/api/metaapi/enable-features', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ accountId })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to enable features');
+      }
+      
+      const result = await response.json();
+      setMessage({ type: 'success', text: `Features enabled for account ${accountId}. Please wait a few minutes for changes to take effect.` });
+      
+      // Reload accounts after a delay
+      setTimeout(() => {
+        loadAllAccounts();
+      }, 3000);
+    } catch (error) {
+      console.error('Error enabling features:', error);
+      setMessage({ type: 'error', text: `Failed to enable features for account ${accountId}` });
     }
   };
 
@@ -1084,7 +1099,7 @@ export default function AdminAccountsPage() {
             className="bg-[#0FF1CE] text-black font-semibold px-4 py-2 rounded-lg hover:bg-[#0FF1CE]/90 transition-colors flex items-center gap-2"
           >
             <Plus size={20} />
-            Add Account
+            Add Existing Account
           </button>
           <button
             onClick={() => window.location.reload()}
@@ -1336,10 +1351,10 @@ export default function AdminAccountsPage() {
                   <th className="text-left p-4">
                     <input
                       type="checkbox"
-                      checked={selectedAccounts.length === filteredAccounts.length}
+                      checked={selectedAccounts.length === filteredAccounts.length && filteredAccounts.length > 0}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setSelectedAccounts(filteredAccounts.map(a => a.uid));
+                          setSelectedAccounts(filteredAccounts.map(a => a.metaApiAccount?.accountId || '').filter(Boolean));
                         } else {
                           setSelectedAccounts([]);
                         }
@@ -1369,18 +1384,18 @@ export default function AdminAccountsPage() {
                   );
                   
                   return (
-                    <tr key={account.uid} className={`hover:bg-white/5 transition-colors ${
+                    <tr key={config?.accountId || account.uid} className={`hover:bg-white/5 transition-colors ${
                       isBreached ? 'bg-red-500/5' : ''
                     }`}>
                       <td className="p-4">
                         <input
                           type="checkbox"
-                          checked={selectedAccounts.includes(account.uid)}
+                          checked={selectedAccounts.includes(account.metaApiAccount?.accountId || '')}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              setSelectedAccounts([...selectedAccounts, account.uid]);
+                              setSelectedAccounts([...selectedAccounts, account.metaApiAccount?.accountId || '']);
                             } else {
-                              setSelectedAccounts(selectedAccounts.filter(id => id !== account.uid));
+                              setSelectedAccounts(selectedAccounts.filter(id => id !== account.metaApiAccount?.accountId));
                             }
                           }}
                           className="rounded border-gray-600"
@@ -1473,11 +1488,18 @@ export default function AdminAccountsPage() {
                           </button>
                           <button
                             onClick={() => refreshAccount(account)}
-                            disabled={refreshingAccounts.has(account.uid)}
+                            disabled={refreshingAccounts.has(config?.accountId || '')}
                             className="p-1.5 text-gray-400 hover:text-[#0FF1CE] transition-colors disabled:opacity-50"
                             title="Refresh Account"
                           >
-                            <RefreshCw size={16} className={refreshingAccounts.has(account.uid) ? 'animate-spin' : ''} />
+                            <RefreshCw size={16} className={refreshingAccounts.has(config?.accountId || '') ? 'animate-spin' : ''} />
+                          </button>
+                          <button
+                            onClick={() => enableAccountFeatures(account)}
+                            className="p-1.5 text-gray-400 hover:text-blue-400 transition-colors"
+                            title="Enable MetaStats & Risk Management APIs"
+                          >
+                            <Activity size={16} />
                           </button>
                           <button
                             onClick={() => {
@@ -1553,14 +1575,14 @@ export default function AdminAccountsPage() {
                           {config?.status === 'active' && (
                             <>
                               <button
-                                onClick={() => handleDisconnect(account.uid)}
+                                onClick={() => handleDisconnect(account.uid, config?.accountId || '')}
                                 className="p-1.5 text-gray-400 hover:text-yellow-400 transition-colors"
                                 title="Disconnect Account"
                               >
                                 <Power size={16} />
                               </button>
                               <button
-                                onClick={() => handleFail(account.uid)}
+                                onClick={() => handleFail(account.uid, config?.accountId || '')}
                                 className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"
                                 title="Mark as Failed"
                               >
@@ -1761,8 +1783,8 @@ export default function AdminAccountsPage() {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-[#0D0D0D] border border-[#2F2F2F] rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-[#2F2F2F]">
-              <h2 className="text-xl font-semibold text-white">Add New MetaAPI Account</h2>
-              <p className="text-sm text-gray-400 mt-1">Search for a user and configure their MetaAPI account</p>
+              <h2 className="text-xl font-semibold text-white">Add Existing MetaAPI Account</h2>
+              <p className="text-sm text-gray-400 mt-1">Manually add an existing MetaAPI account by entering its credentials</p>
             </div>
             
             <div className="p-6">
@@ -2152,19 +2174,7 @@ export default function AdminAccountsPage() {
                               type="text"
                               value={connectModalData.accountId}
                               disabled
-                              className="w-full bg-[#0A0A0A] border border-[#2F2F2F] rounded-lg px-4 py-3 text-gray-400 cursor-not-allowed"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-400 mb-2">
-                              MetaAPI Auth Token
-                            </label>
-                            <input
-                              type="password"
-                              value={connectModalData.authToken}
-                              disabled
-                              className="w-full bg-[#0A0A0A] border border-[#2F2F2F] rounded-lg px-4 py-3 text-gray-400 cursor-not-allowed"
+                              className="w-full bg-[#0A0A0A] border border-[#2F2F2F] rounded-lg px-4 py-3 text-gray-400 cursor-not-allowed font-mono text-sm"
                             />
                           </div>
 
@@ -2219,7 +2229,7 @@ export default function AdminAccountsPage() {
                             </select>
                           </div>
 
-                          <div>
+                          <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-gray-400 mb-2">
                               Challenge Step
                             </label>

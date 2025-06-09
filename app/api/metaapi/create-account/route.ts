@@ -48,7 +48,10 @@ export async function POST(req: NextRequest) {
       server,
       platform,
       magic,
-      keywords
+      keywords,
+      metastatsApiEnabled: true,  // Enable MetaStats API for metrics
+      riskManagementApiEnabled: true,  // Enable Risk Management API for advanced features
+      reliability: 'high'  // Set high reliability for better performance (recommended for production)
     };
 
     console.log('Creating MetaAPI account:', {
@@ -90,7 +93,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       accountId: data.id,
-      message: 'Account created successfully'
+      message: 'Account created successfully with MetaStats API, Risk Management API, and high reliability enabled'
     });
 
   } catch (error: any) {

@@ -6,7 +6,7 @@ import Particles from '../components/Particles';
 import Image from 'next/image';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Check } from 'lucide-react';
+import { Check, RefreshCw, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 
 // Define the type for challenge options
@@ -255,49 +255,29 @@ interface DiscountCode {
   usageCount: number;
 }
 
-// Function to calculate price based on challenge type and amount
-const calculatePrice = (type: ChallengeType, amount: string): number => {
-  const baseAmount = parseInt(amount.replace(/\$|,/g, ''));
-  
-  switch(type) {
-    case 'Standard':
-      switch(baseAmount) {
-        case 5000: return 79;
-        case 10000: return 149;
-        case 25000: return 299;
-        case 50000: return 349;
-        case 100000: return 599;
-        case 200000: return 999;
-        case 500000: return 1999;
-        default: return 0;
-      }
-    case 'Instant':
-      switch(baseAmount) {
-        case 25000: return 799;
-        case 50000: return 999;
-        case 100000: return 1999;
-        default: return 0;
-      }
-    default:
-      return 0;
-  }
-};
-
-// Function to calculate table values
-const calculateTableValues = (selectedType: ChallengeType | null, selectedAmount: string | null) => {
-  if (!selectedType || !selectedAmount) return null;
-  
-  const baseAmount = parseInt(selectedAmount.replace(/\$|,/g, ''));
-  
-  return {
-    maxDailyLoss: baseAmount * (selectedType === 'Standard' ? 0.08 : 0.04),
-    maxLoss: baseAmount * (selectedType === 'Standard' ? 0.15 : 0.12),
-    profitTargetStep1: baseAmount * (selectedType === 'Standard' ? 0.10 : 0.12),
-    profitTargetStep2: baseAmount * (selectedType === 'Standard' ? 0.05 : 0)
+// Calculate reset prices - significantly discounted
+const calculateResetPrice = (type: ChallengeType, amount: string): number => {
+  const baseResetPrices: Record<ChallengeType, Record<string, number>> = {
+    'Standard': {
+      '$5,000': 29,
+      '$10,000': 39,
+      '$25,000': 49,
+      '$50,000': 69,
+      '$100,000': 89,
+      '$200,000': 109,
+      '$500,000': 149
+    },
+    'Instant': {
+      '$25,000': 199,
+      '$50,000': 299,
+      '$100,000': 399
+    }
   };
+  
+  return baseResetPrices[type]?.[amount] || 0;
 };
 
-export default function ChallengePage() {
+export default function ResetPage() {
   const router = useRouter();
   const [selectedType, setSelectedType] = useState<ChallengeType | null>(null);
   const [selectedAmount, setSelectedAmount] = useState<string | null>(null);
@@ -310,14 +290,12 @@ export default function ChallengePage() {
     country: '',
     discordUsername: ''
   });
-  const [termsAccepted, setTermsAccepted] = useState(false);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [discountCode, setDiscountCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState<DiscountCode | null>(null);
-  const [isValidatingCode, setIsValidatingCode] = useState(false);
-  
-  // Calculate table values when selectedType or selectedAmount changes
-  const tableValues = calculateTableValues(selectedType, selectedAmount);
+  const [isValidatingDiscount, setIsValidatingDiscount] = useState(false);
+  const [discountError, setDiscountError] = useState('');
 
   const handleTypeSelect = (type: ChallengeType) => {
     setSelectedType(type);
@@ -338,56 +316,59 @@ export default function ChallengePage() {
   };
 
   const validateDiscountCode = async (code: string) => {
-    if (!code) {
+    if (!code.trim()) {
       setAppliedDiscount(null);
+      setDiscountError('');
       return;
     }
 
-    setIsValidatingCode(true);
+    setIsValidatingDiscount(true);
+    setDiscountError('');
+
     try {
-      const discountQuery = query(
-        collection(db, 'discounts'),
+      const q = query(
+        collection(db, 'discountCodes'),
         where('code', '==', code.toUpperCase()),
         where('active', '==', true)
       );
       
-      const snapshot = await getDocs(discountQuery);
+      const querySnapshot = await getDocs(q);
       
-      if (snapshot.empty) {
-        setFormErrors(prev => ({ ...prev, discountCode: 'Invalid discount code' }));
+      if (querySnapshot.empty) {
+        setDiscountError('Invalid discount code');
         setAppliedDiscount(null);
+        setIsValidatingDiscount(false);
         return;
       }
-      
-      const discount = {
-        id: snapshot.docs[0].id,
-        ...snapshot.docs[0].data()
-      } as DiscountCode;
-      
-      // Validate expiration
-      if (discount.expiresAt && new Date() > discount.expiresAt.toDate()) {
-        setFormErrors(prev => ({ ...prev, discountCode: 'This code has expired' }));
+
+      const doc = querySnapshot.docs[0];
+      const discountData = { id: doc.id, ...doc.data() } as DiscountCode;
+
+      // Check if code has expired
+      if (discountData.expiresAt && discountData.expiresAt.toDate() < new Date()) {
+        setDiscountError('This discount code has expired');
         setAppliedDiscount(null);
+        setIsValidatingDiscount(false);
         return;
       }
-      
-      // Validate usage limit
-      if (discount.usageLimit !== null && discount.usageCount >= discount.usageLimit) {
-        setFormErrors(prev => ({ ...prev, discountCode: 'This code has reached its usage limit' }));
+
+      // Check usage limit
+      if (discountData.usageLimit && discountData.usageCount >= discountData.usageLimit) {
+        setDiscountError('This discount code has reached its usage limit');
         setAppliedDiscount(null);
+        setIsValidatingDiscount(false);
         return;
       }
-      
-      setFormErrors(prev => ({ ...prev, discountCode: undefined }));
-      setAppliedDiscount(discount);
-      
+
+      setAppliedDiscount(discountData);
+      setDiscountError('');
     } catch (error) {
       console.error('Error validating discount code:', error);
-      setFormErrors(prev => ({ ...prev, discountCode: 'Error validating code' }));
+      setDiscountError('Error validating discount code');
       setAppliedDiscount(null);
-    } finally {
-      setIsValidatingCode(false);
     }
+
+    setIsValidatingDiscount(false);
   };
 
   const calculateDiscountedPrice = (originalPrice: number, discount: DiscountCode | null): number => {
@@ -402,100 +383,73 @@ export default function ChallengePage() {
 
   const getCurrentPrice = () => {
     if (!selectedType || !selectedAmount) return null;
-    const originalPrice = calculatePrice(selectedType, selectedAmount);
+    const originalPrice = calculateResetPrice(selectedType, selectedAmount);
     return calculateDiscountedPrice(originalPrice, appliedDiscount);
   };
 
   const handleProceedToPayment = () => {
-    if (!isFormValid()) {
-      // Show validation errors
-      const errors: FormErrors = {};
-      if (!formData.firstName) errors.firstName = 'First name is required';
-      if (!formData.lastName) errors.lastName = 'Last name is required';
-      if (!formData.email) errors.email = 'Email is required';
-      if (!formData.phone) errors.phone = 'Phone number is required';
-      if (!formData.country) errors.country = 'Country is required';
-      if (!selectedType) errors.type = 'Please select a challenge type';
-      if (!selectedAmount) errors.amount = 'Please select an amount';
-      if (!selectedPlatform) errors.platform = 'Please select a platform';
-      if (!termsAccepted) errors.terms = 'Please accept the terms and conditions';
-      
+    const errors: FormErrors = {};
+    
+    if (!formData.firstName.trim()) errors.firstName = 'First name is required';
+    if (!formData.lastName.trim()) errors.lastName = 'Last name is required';
+    if (!formData.email.trim()) errors.email = 'Email is required';
+    if (!formData.phone.trim()) errors.phone = 'Phone is required';
+    if (!formData.country.trim()) errors.country = 'Country is required';
+    if (!selectedType) errors.type = 'Challenge type is required';
+    if (!selectedAmount) errors.amount = 'Account size is required';
+    if (!selectedPlatform) errors.platform = 'Platform is required';
+    if (!termsAccepted) errors.terms = 'You must accept the terms';
+    
+    if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       return;
     }
     
-    // Store form data in session storage
-    sessionStorage.setItem('challengeData', JSON.stringify({
+    setFormErrors({});
+    
+    const finalPrice = getCurrentPrice();
+    if (finalPrice === null) return;
+    
+    const resetData = {
       type: selectedType,
       amount: selectedAmount,
       platform: selectedPlatform,
-      formData: {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        phone: formData.phone,
-        country: formData.country,
-        discordUsername: formData.discordUsername || ''
-      },
-      price: getCurrentPrice(),
-      discount: appliedDiscount ? {
-        id: appliedDiscount.id,
-        code: appliedDiscount.code,
-        type: appliedDiscount.type,
-        value: appliedDiscount.value
-      } : null
-    }));
+      formData,
+      price: finalPrice,
+      discount: appliedDiscount,
+      isReset: true
+    };
     
-    router.push('/challenge/payment');
+    sessionStorage.setItem('resetData', JSON.stringify(resetData));
+    router.push('/reset/payment');
   };
 
   const isFormValid = () => {
-    return (
-      selectedType &&
-      selectedAmount &&
-      selectedPlatform &&
-      formData.firstName &&
-      formData.lastName &&
-      formData.email &&
-      formData.phone &&
-      formData.country &&
-      termsAccepted
-    );
+    return selectedType && selectedAmount && selectedPlatform && 
+           formData.firstName && formData.lastName && formData.email && 
+           formData.phone && formData.country && termsAccepted;
   };
 
   const renderDiscountSection = () => (
-    <div className="mb-8">
-      <h3 className="text-lg font-medium mb-4 text-white">Discount Code</h3>
-      <div className="flex gap-4">
-        <div className="relative flex-1">
-          <input
-            type="text"
-            value={discountCode}
-            onChange={(e) => {
-              setDiscountCode(e.target.value.toUpperCase());
-              setFormErrors(prev => ({ ...prev, discountCode: undefined }));
-            }}
-            onBlur={() => validateDiscountCode(discountCode)}
-            placeholder="Enter discount code"
-            className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#0FF1CE]/50 focus:border-transparent transition-all"
-          />
-          {isValidatingCode && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <div className="animate-spin rounded-full h-5 w-5 border-2 border-[#0FF1CE] border-t-transparent"></div>
-            </div>
-          )}
-        </div>
+    <div className="mb-6">
+      <label className="block text-sm font-medium text-gray-400 mb-2">Discount Code (Optional)</label>
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={discountCode}
+          onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
+          placeholder="Enter discount code"
+          className="flex-1 bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#0FF1CE]/50"
+        />
         <button
           onClick={() => validateDiscountCode(discountCode)}
-          disabled={isValidatingCode || !discountCode}
-          className="bg-[#0FF1CE] text-black px-6 py-3 rounded-lg font-medium hover:bg-[#0FF1CE]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isValidatingDiscount}
+          className="px-4 py-2.5 bg-[#0FF1CE]/10 hover:bg-[#0FF1CE]/20 border border-[#0FF1CE]/30 rounded-lg text-[#0FF1CE] disabled:opacity-50"
         >
-          Apply
+          {isValidatingDiscount ? <RefreshCw className="animate-spin" size={16} /> : 'Apply'}
         </button>
       </div>
-      {formErrors.discountCode && (
-        <p className="mt-2 text-red-400 text-sm">{formErrors.discountCode}</p>
-      )}
+      {discountError && <p className="mt-1 text-sm text-red-500">{discountError}</p>}
       {appliedDiscount && (
         <div className="mt-2 text-[#0FF1CE] text-sm flex items-center gap-2">
           <Check size={16} />
@@ -510,7 +464,7 @@ export default function ChallengePage() {
   );
 
   const renderPriceSection = () => {
-    const originalPrice = selectedType && selectedAmount ? calculatePrice(selectedType, selectedAmount) : null;
+    const originalPrice = selectedType && selectedAmount ? calculateResetPrice(selectedType, selectedAmount) : null;
     const finalPrice = getCurrentPrice();
     
     if (!originalPrice || !finalPrice) return null;
@@ -534,33 +488,37 @@ export default function ChallengePage() {
 
       {/* Main Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Launch Day Sale Banner */}
-        <div className="mb-8 p-6 bg-gradient-to-r from-[#0FF1CE]/10 to-[#00D4FF]/10 rounded-lg border border-[#0FF1CE]/20 shadow-lg shadow-[#0FF1CE]/5 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-[#0FF1CE]/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#00D4FF]/10 rounded-full blur-xl -ml-8 -mb-8"></div>
+        {/* Reset Special Offer Banner */}
+        <div className="mb-8 p-6 bg-gradient-to-r from-orange-500/10 to-red-500/10 rounded-lg border border-orange-500/20 shadow-lg shadow-orange-500/5 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-red-500/10 rounded-full blur-xl -ml-8 -mb-8"></div>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between relative z-10">
-            <div className="flex flex-col items-center md:items-start">
-              <div className="text-sm text-white/70 mb-1">SuperCharged Offer!</div>
-              <div className="text-2xl md:text-3xl font-bold text-[#0FF1CE] mb-1">SAVE 30% OFF</div>
-              <div className="text-sm text-[#0FF1CE] font-medium">+ FREE retry included!</div>
+            <div className="flex items-center md:items-start gap-4">
+              <AlertTriangle className="text-orange-500" size={32} />
+              <div className="flex flex-col">
+                <div className="text-sm text-white/70 mb-1">⚡ Second Chance Special</div>
+                <div className="text-2xl md:text-3xl font-bold text-orange-500 mb-1 md:mb-0">RESET & RESTART</div>
+                <div className="text-sm text-gray-400">Get back in the game with discounted reset prices</div>
+              </div>
             </div>
             <div className="flex flex-col items-center md:items-end mt-3 md:mt-0">
               <div className="text-xs text-gray-400 mb-1">Use Code:</div>
-              <div className="text-xl font-mono font-bold bg-gradient-to-r from-[#0FF1CE] to-[#00D4FF] bg-clip-text text-transparent tracking-wider px-4 py-2 border border-[#0FF1CE]/30 rounded-md">
-                OCTANE
+              <div className="text-xl font-mono font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent tracking-wider px-4 py-2 border border-orange-500/30 rounded-md">
+                ACTFAST
               </div>
             </div>
           </div>
         </div>
 
-        <h1 className="text-3xl font-bold text-white mb-8">Get Started with Your Challenge</h1>
+        <h1 className="text-3xl font-bold text-white mb-4">Reset Your Challenge Account</h1>
+        <p className="text-gray-400 mb-8">Start fresh with a new challenge account at a significantly discounted price. Perfect for traders who want to get back in the game!</p>
 
         {/* Challenge Selection Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* First Card - Challenge Selection */}
           <div className="lg:col-span-1 bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl p-6 border border-[#2F2F2F]/50">
             <div className="mb-8">
-              <h3 className="text-lg font-medium mb-4 text-white">Select Challenge Type</h3>
+              <h3 className="text-lg font-medium mb-4 text-white">Select Your Previous Challenge Type</h3>
               <div className="grid grid-cols-2 gap-4">
                 {challengeTypes.map((type) => (
                   <button
@@ -614,7 +572,12 @@ export default function ChallengePage() {
                         : 'border-[#2F2F2F]/50 hover:border-[#0FF1CE]/30 text-gray-300'
                     }`}
                   >
-                    {amount}
+                    <div className="font-medium">{amount}</div>
+                    {selectedType && (
+                      <div className="text-xs text-[#0FF1CE] mt-1">
+                        Reset: ${calculateResetPrice(selectedType, amount)}
+                      </div>
+                    )}
                   </button>
                 ))}
               </div>
@@ -774,134 +737,36 @@ export default function ChallengePage() {
           </div>
         </div>
 
-        {/* Challenge Details Table */}
-        {selectedType && selectedAmount && (
-          <div className="mt-12 bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-[#2F2F2F]/50">
-            <h3 className="text-xl font-bold text-[#0FF1CE] mb-6 text-center">Challenge Details</h3>
-            
-            <div className={`${selectedType === 'Standard' ? 'max-w-5xl' : 'max-w-3xl'} mx-auto overflow-x-auto py-4 px-4 md:px-8`}>
-              <div className={`${selectedType === 'Standard' ? 'min-w-[650px]' : 'min-w-[450px]'} md:min-w-0 rounded-2xl transform hover:scale-[1.01] transition-transform duration-300 overflow-hidden mx-auto md:scale-[0.85] md:origin-top`}>
-                <div 
-                  className={`grid ${selectedType === 'Standard' ? 'grid-cols-4' : 'grid-cols-2'} text-xs md:text-sm bg-gradient-to-br from-[#0FF1CE]/10 to-transparent backdrop-blur-sm rounded-2xl border border-[#0FF1CE]/30`}
-                  style={{
-                    boxShadow: '0 0 30px rgba(15, 241, 206, 0.2)'
-                  }}
-                >
-                  {/* Header */}
-                  {selectedType === 'Standard' ? (
-                    <div className="col-span-4 grid grid-cols-4 bg-gradient-to-r from-[#0FF1CE] to-[#0FF1CE]/80">
-                      <div className="p-3 md:p-4 border-r border-black/20 text-black font-bold"></div>
-                      <div className="p-3 md:p-4 border-r border-black/20 text-center text-black font-bold">CHALLENGE</div>
-                      <div className="p-3 md:p-4 border-r border-black/20 text-center text-black font-bold">VERIFICATION</div>
-                      <div className="p-3 md:p-4 text-center text-black font-bold">FUNDED</div>
-                    </div>
-                  ) : (
-                    <div className="col-span-2 grid grid-cols-2 bg-gradient-to-r from-[#0FF1CE] to-[#0FF1CE]/80">
-                      <div className="p-3 md:p-4 border-r border-black/20 text-black font-bold"></div>
-                      <div className="p-3 md:p-4 text-center text-black font-bold">FUNDED</div>
-                    </div>
-                  )}
-
-                  {/* Rows */}
-                  {selectedType === 'Standard' ? (
-                    <>
-                      {[
-                        ['Trading Period', 'Unlimited', 'Unlimited', 'Unlimited'],
-                        ['Minimum Profitable Days', '4 Days', '4 Days', 'X'],
-                        ['Maximum Daily Loss', 
-                          <div key="daily1" className="flex flex-col items-center">
-                            <span className="text-[#0FF1CE] font-bold text-base md:text-lg">8%</span>
-                            <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.maxDailyLoss.toLocaleString()}</span>
-                          </div>, 
-                          <div key="daily2" className="flex flex-col items-center">
-                            <span className="text-[#0FF1CE] font-bold text-base md:text-lg">8%</span>
-                            <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.maxDailyLoss.toLocaleString()}</span>
-                          </div>, 
-                          <div key="daily3" className="flex flex-col items-center">
-                            <span className="text-[#0FF1CE] font-bold text-base md:text-lg">8%</span>
-                            <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.maxDailyLoss.toLocaleString()}</span>
-                          </div>
-                        ],
-                        ['Maximum Loss', 
-                          <div key="max1" className="flex flex-col items-center">
-                            <span className="text-[#0FF1CE] font-bold text-base md:text-lg">15%</span>
-                            <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.maxLoss.toLocaleString()}</span>
-                          </div>,
-                          <div key="max2" className="flex flex-col items-center">
-                            <span className="text-[#0FF1CE] font-bold text-base md:text-lg">15%</span>
-                            <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.maxLoss.toLocaleString()}</span>
-                          </div>,
-                          <div key="max3" className="flex flex-col items-center">
-                            <span className="text-[#0FF1CE] font-bold text-base md:text-lg">15%</span>
-                            <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.maxLoss.toLocaleString()}</span>
-                          </div>
-                        ],
-                        ['Profit Target', 
-                          <div key="profit1" className="flex flex-col items-center">
-                            <span className="text-[#0FF1CE] font-bold text-base md:text-lg">10%</span>
-                            <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.profitTargetStep1.toLocaleString()}</span>
-                          </div>,
-                          <div key="profit2" className="flex flex-col items-center">
-                            <span className="text-[#0FF1CE] font-bold text-base md:text-lg">5%</span>
-                            <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.profitTargetStep2.toLocaleString()}</span>
-                          </div>,
-                          'X'
-                        ],
-                        ['Leverage', '1:200', '1:200', '1:200'],
-                        ['News Trading', 'Allowed', 'Allowed', 'Allowed'],
-                        ['Payout Eligibility', 'X', 'X', '14 Days'],
-                        ['Profit Split', 'X', 'X', '80% (Simulated Payout)'],
-                        ['Refundable Fee', '$79', 'X', 'X']
-                      ].map((row, index) => (
-                        <div key={index} className="contents text-white">
-                          <div className="p-3 md:p-4 border-t border-[#2F2F2F]/50 font-medium">{row[0]}</div>
-                          <div className="p-3 md:p-4 border-t border-l border-[#2F2F2F]/50 text-center">{row[1]}</div>
-                          <div className="p-3 md:p-4 border-t border-l border-[#2F2F2F]/50 text-center">{row[2]}</div>
-                          <div className="p-3 md:p-4 border-t border-l border-[#2F2F2F]/50 text-center">{row[3]}</div>
-                        </div>
-                      ))}
-                    </>
-                  ) : (
-                    <>
-                      {[
-                        ['Trading Period', '30 Days'],
-                        ['Minimum Profitable Days', '5 Days'],
-                        ['Maximum Daily Loss', 
-                          <div key="daily" className="flex flex-col items-center">
-                            <span className="text-[#0FF1CE] font-bold text-base md:text-lg">4%</span>
-                            <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.maxDailyLoss.toLocaleString()}</span>
-                          </div>
-                        ],
-                        ['Maximum Loss', 
-                          <div key="max" className="flex flex-col items-center">
-                            <span className="text-[#0FF1CE] font-bold text-base md:text-lg">12%</span>
-                            <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.maxLoss.toLocaleString()}</span>
-                          </div>
-                        ],
-                        ['Profit Target', 
-                          <div key="profit" className="flex flex-col items-center">
-                            <span className="text-[#0FF1CE] font-bold text-base md:text-lg">12%</span>
-                            <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.profitTargetStep1.toLocaleString()}</span>
-                          </div>
-                        ],
-                        ['Leverage', '1:100'],
-                        ['News Trading', 'Allowed'],
-                        ['Payout Eligibility', '14 Days'],
-                        ['Profit Split', '70% (Simulated Payout)'],
-                        ['Refundable Fee', '$799']
-                      ].map((row, index) => (
-                        <div key={index} className="contents text-white">
-                          <div className="p-3 md:p-4 border-t border-[#2F2F2F]/50 font-medium">{row[0]}</div>
-                          <div className="p-3 md:p-4 border-t border-l border-[#2F2F2F]/50 text-center">{row[1]}</div>
-                        </div>
-                      ))}
-                    </>
-                  )}
-                </div>
+        {/* Reset Benefits */}
+        <div className="mt-12 bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-[#2F2F2F]/50">
+          <h3 className="text-xl font-bold text-[#0FF1CE] mb-6 text-center">Why Choose Account Reset?</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center">
+                <RefreshCw className="text-[#0FF1CE]" size={32} />
               </div>
+              <h4 className="text-lg font-medium text-white mb-2">Fresh Start</h4>
+              <p className="text-gray-400 text-sm">Begin with a clean slate and all your rules reset to zero</p>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center">
+                <AlertTriangle className="text-[#0FF1CE]" size={32} />
+              </div>
+              <h4 className="text-lg font-medium text-white mb-2">Massive Savings</h4>
+              <p className="text-gray-400 text-sm">Save up to 80% compared to purchasing a new challenge</p>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center">
+                <Check className="text-[#0FF1CE]" size={32} />
+              </div>
+              <h4 className="text-lg font-medium text-white mb-2">Instant Access</h4>
+              <p className="text-gray-400 text-sm">Get your new account credentials within minutes of payment</p>
             </div>
           </div>
-        )}
+        </div>
       </div>
 
       <style jsx global>{`

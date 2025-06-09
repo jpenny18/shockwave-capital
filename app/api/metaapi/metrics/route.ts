@@ -10,6 +10,9 @@ const MetaApiClass = USE_MOCK_DATA ? null : require('metaapi.cloud-sdk').default
 const MetaStats = USE_MOCK_DATA ? null : require('metaapi.cloud-sdk').MetaStats;
 const RiskManagement = USE_MOCK_DATA ? null : require('metaapi.cloud-sdk').RiskManagement;
 
+// Get the main MetaAPI auth token
+const METAAPI_AUTH_TOKEN = process.env.METAAPI_AUTH_TOKEN || 'your-metaapi-auth-token-here';
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -29,6 +32,12 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+    
+    // Determine which auth token to use
+    // If accountToken is 'main-token', use the main METAAPI_AUTH_TOKEN
+    const authTokenToUse = (accountToken === 'main-token') ? METAAPI_AUTH_TOKEN : accountToken;
+    
+    console.log('Using auth token:', authTokenToUse === METAAPI_AUTH_TOKEN ? 'main-token' : 'account-specific-token');
     
     // Skip user auth check if admin
     let userId = null;
@@ -160,11 +169,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Real MetaAPI implementation - HYBRID APPROACH
-    const metaApi = new MetaApiClass(accountToken);
-    const metaStats = new MetaStats(accountToken);
-    const riskManagement = new RiskManagement(accountToken);
+    const metaApi = new MetaApiClass(authTokenToUse);
+    const metaStats = new MetaStats(authTokenToUse);
+    const riskManagement = new RiskManagement(authTokenToUse);
     
-    console.log('MetaAPI initialized with token:', accountToken.substring(0, 20) + '...');
+    console.log('MetaAPI initialized with token:', authTokenToUse === METAAPI_AUTH_TOKEN ? 'main-token' : authTokenToUse.substring(0, 20) + '...');
     console.log('Processing request for account:', accountId);
 
     // Initialize response data
@@ -201,6 +210,27 @@ export async function POST(req: NextRequest) {
       });
     } catch (error: any) {
       console.error('Error fetching MetaStats metrics:', error.message);
+      
+      // Check if this is a MetaStats API not enabled error
+      if (error.message && error.message.includes('metastats API you need enable it')) {
+        console.log('MetaStats API is not enabled for this account');
+        
+        // Return helpful error response for admin
+        if (isAdmin) {
+          return NextResponse.json({
+            error: 'MetaStats API is not enabled for this account',
+            solution: 'Please enable MetaStats API in the MetaAPI web UI or recreate the account with MetaStats enabled',
+            accountId,
+            webUIUrl: `https://app.metaapi.cloud/accounts/${accountId}/enable-account-features`
+          }, { status: 400 });
+        }
+        
+        // For non-admin users, provide a more user-friendly message
+        return NextResponse.json({
+          error: 'Account metrics are currently unavailable. Please contact support.',
+          accountStatus: 'configuration_required'
+        }, { status: 503 });
+      }
     }
 
     // 3. Fetch trades using MetaStats

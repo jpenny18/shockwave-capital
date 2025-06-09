@@ -481,18 +481,24 @@ export async function getAllUserMetaApiAccounts(userId: string): Promise<UserMet
 export async function setUserMetaApiAccount(data: Omit<UserMetaApiAccount, 'createdAt' | 'updatedAt'>): Promise<void> {
   try {
     const accountsRef = collection(db, 'userMetaApiAccounts');
-    const existingQuery = query(accountsRef, where('userId', '==', data.userId));
-    const existingSnapshot = await getDocs(existingQuery);
     
-    if (!existingSnapshot.empty) {
-      // Update existing
-      const docId = existingSnapshot.docs[0].id;
+    // Check if this specific accountId already exists for this user (to prevent duplicates)
+    const duplicateQuery = query(
+      accountsRef, 
+      where('userId', '==', data.userId),
+      where('accountId', '==', data.accountId)
+    );
+    const duplicateSnapshot = await getDocs(duplicateQuery);
+    
+    if (!duplicateSnapshot.empty) {
+      // Update existing account with same accountId
+      const docId = duplicateSnapshot.docs[0].id;
       await updateDoc(doc(db, 'userMetaApiAccounts', docId), {
         ...data,
         updatedAt: Timestamp.now()
       });
     } else {
-      // Create new
+      // Create new account (allow multiple accounts per user)
       await addDoc(accountsRef, {
         ...data,
         createdAt: Timestamp.now(),

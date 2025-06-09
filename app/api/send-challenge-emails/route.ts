@@ -176,10 +176,20 @@ export async function POST(req: Request) {
               </ul>
             </div>
             
-            <div style="margin-bottom: 30px; background-color: #f9f9f9; padding: 15px; border-radius: 5px;">
-              <h2 style="color: #333; font-size: 18px; margin-bottom: 15px;">Reset Option Available</h2>
-              <p>If you'd like to reset your account and start fresh, you can purchase a discounted reset for your challenge.</p>
-              <p><a href="https://shockwave-capital.com/reset" style="color: #0FF1CE;">Learn more about account resets →</a></p>
+            <div style="margin-bottom: 30px; background-color: #f9f9f9; padding: 20px; border-radius: 5px; text-align: center;">
+              <h2 style="color: #333; font-size: 18px; margin-bottom: 15px;">💡 Fresh Start Available</h2>
+              <p style="margin-bottom: 20px;">Want to start over with a clean slate? You can reset your account at a heavily discounted price!</p>
+              <div style="margin-bottom: 15px;">
+                <span style="background-color: #ff6b6b; color: white; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: bold;">
+                  Save up to 80% on Account Reset
+                </span>
+              </div>
+              <a href="https://shockwave-capital.com/reset" style="display: inline-block; background-color: #0FF1CE; color: #0D0D0D; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; margin-top: 10px;">
+                Reset My Account Now
+              </a>
+              <p style="margin-top: 15px; font-size: 12px; color: #666; font-style: italic;">
+                Get fresh account credentials within minutes • Same challenge objectives • Clean drawdown
+              </p>
             </div>
             
             <div style="margin-bottom: 30px;">
