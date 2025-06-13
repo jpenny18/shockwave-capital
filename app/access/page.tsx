@@ -243,12 +243,6 @@ export default function EarlyAccessPage() {
       
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-4">
         <div className="w-full max-w-md">
-          <div className="mb-6 p-4 bg-[#ffe066] text-black rounded-lg flex items-center gap-2">
-            <AlertCircle className="w-5 h-5" />
-            <p className="text-sm">
-              Temporary issue affecting logins and metrics visibility. Please monitor your trades closely — analytics and performance data may be delayed. We're working to restore full service ASAP.
-            </p>
-          </div>
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#0FF1CE]/10 mb-4">
               <Rocket className="w-6 h-6 text-[#0FF1CE]" />
