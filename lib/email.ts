@@ -653,4 +653,289 @@ export async function sendTemplateEmail(
     console.error('Error sending template email:', error);
     return { success: false, error };
   }
+}
+
+/**
+ * Send funded account fail email
+ * @param data Email data for funded account failure
+ * @returns Email send result
+ */
+export async function sendFundedFailEmail(data: {
+  email: string;
+  name: string;
+  accountSize: number;
+  breachType: 'maxDrawdown' | 'riskViolation' | 'both';
+  maxDrawdown?: number;
+  dailyDrawdown?: number;
+}) {
+  try {
+    const subject = 'Your Funded Account Has Been Terminated';
+    
+    let breachDetails = '';
+    if (data.breachType === 'maxDrawdown') {
+      breachDetails = `You exceeded the maximum drawdown limit of 15% (current: ${data.maxDrawdown?.toFixed(2)}%).`;
+    } else if (data.breachType === 'riskViolation') {
+      breachDetails = `You violated the risk management rule by exceeding the maximum 2% total risk exposure allowed across all open trades at any time. Your loss of ${data.dailyDrawdown?.toFixed(2)}% confirms this violation.`;
+    } else {
+      breachDetails = `You violated multiple rules: Maximum drawdown limit exceeded (${data.maxDrawdown?.toFixed(2)}%, limit: 15%) and risk management violation by exceeding the maximum 2% total risk exposure allowed across all open trades (loss: ${data.dailyDrawdown?.toFixed(2)}%).`;
+    }
+    
+    const result = await resend.emails.send({
+      from: 'support@shockwave-capital.com',
+      to: data.email,
+      subject,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+          <div style="background-color: #0D0D0D; padding: 20px; margin-bottom: 20px; border-radius: 5px; text-align: center;">
+            <h1 style="color: #FF4444; margin: 0; font-size: 24px;">Funded Account Terminated</h1>
+          </div>
+          
+          <div style="margin-bottom: 30px;">
+            <p>Hello ${data.name},</p>
+            <p>We regret to inform you that your funded account ($${data.accountSize.toLocaleString()}) has been terminated due to rule violations.</p>
+          </div>
+          
+          <div style="margin-bottom: 30px; background-color: #fee; padding: 15px; border-radius: 5px; border-left: 4px solid #f44;">
+            <h2 style="color: #333; font-size: 18px; margin-bottom: 10px;">Violation Details</h2>
+            <p style="margin: 0; color: #666;">${breachDetails}</p>
+          </div>
+          
+          <div style="margin-bottom: 30px;">
+            <h2 style="color: #0FF1CE; font-size: 18px; margin-bottom: 15px;">Funded Account Rules Reminder</h2>
+            <ul style="color: #666; line-height: 1.8;">
+              <li><strong>Maximum Drawdown:</strong> 15% from initial balance</li>
+              <li><strong>Daily Drawdown:</strong> 8% maximum per day</li>
+              <li><strong>Risk Management:</strong> Maximum 2% total risk exposure spread across all open trades at any time</li>
+              <li><strong>Important:</strong> Any loss of 2% or more constitutes a risk management violation</li>
+            </ul>
+          </div>
+          
+          <div style="margin-bottom: 30px;">
+            <h2 style="color: #0FF1CE; font-size: 18px; margin-bottom: 15px;">What's Next?</h2>
+            <p>While this funded account has been terminated, you can:</p>
+            <ul style="color: #666; line-height: 1.8;">
+              <li>Start a new challenge to earn another funded account</li>
+              <li>Purchase a new funded account at the same capital level you were funded at (or above) and maintain your funded trader status!</li>
+              <li>Review your trading strategy to better manage risk</li>
+              <li>Contact support if you have questions about the violation</li>
+            </ul>
+          </div>
+          
+          <div style="margin-bottom: 30px; background-color: #0FF1CE10; border: 2px solid #0FF1CE; border-radius: 10px; padding: 20px; text-align: center;">
+            <h2 style="color: #0FF1CE; font-size: 20px; margin-bottom: 15px;">🚀 Keep Your Funded Status!</h2>
+            <p style="color: #333; font-size: 16px; margin-bottom: 15px;">
+              <strong>Special Offer:</strong> Purchase a new funded account at the same capital level you were funded at (or above) and maintain your funded trader status!
+            </p>
+            <p style="color: #666; font-size: 14px; margin-bottom: 20px;">
+              Save <strong>10% on your new funded account</strong> if purchased within the next 24 hours using code:
+            </p>
+            <div style="background-color: #0FF1CE; color: #000; padding: 10px 20px; border-radius: 5px; font-weight: bold; font-size: 18px; margin-bottom: 20px; display: inline-block;">
+              STAYFUNDED
+            </div>
+            <div>
+              <a href="https://www.shockwave-capital.com/challenge" style="display: inline-block; background-color: #0FF1CE; color: #000; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; margin-top: 10px;">
+                Get New Funded Account - Save 10%
+              </a>
+            </div>
+            <p style="color: #999; font-size: 12px; margin-top: 15px;">
+              *Offer expires 24 hours from this email. Use code STAYFUNDED at checkout.
+            </p>
+          </div>
+          
+          <div style="text-align: center; margin-top: 40px;">
+            <a href="https://www.shockwave-capital.com/challenge" style="display: inline-block; background-color: #0FF1CE; color: #000; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Start New Challenge</a>
+          </div>
+          
+          <div style="margin-top: 40px;">
+            <p style="margin-bottom: 0;">Best regards,</p>
+            <p style="margin-top: 5px;"><strong>The Shockwave Capital Team</strong></p>
+          </div>
+          
+          <div style="background-color: #0D0D0D; padding: 15px; border-radius: 5px; text-align: center; font-size: 12px; color: #999; margin-top: 40px;">
+            <p style="margin-bottom: 5px;">© ${new Date().getFullYear()} Shockwave Capital. All rights reserved.</p>
+            <p style="margin: 0;">This is an automated email, please do not reply.</p>
+          </div>
+        </div>
+      `,
+      text: `
+        Funded Account Terminated
+        
+        Hello ${data.name},
+        
+        We regret to inform you that your funded account ($${data.accountSize.toLocaleString()}) has been terminated due to rule violations.
+        
+        Violation Details:
+        ${breachDetails}
+        
+        Funded Account Rules Reminder:
+        - Maximum Drawdown: 15% from initial balance
+        - Daily Drawdown: 8% maximum per day
+        - Risk Management: Maximum 2% total risk exposure spread across all open trades at any time
+        - Important: Any loss of 2% or more constitutes a risk management violation
+        
+        What's Next?
+        While this funded account has been terminated, you can:
+        - Start a new challenge to earn another funded account
+        - Review your trading strategy to better manage risk
+        - Contact support if you have questions about the violation
+        
+        🚀 KEEP YOUR FUNDED STATUS! 🚀
+        
+        Special Offer: Purchase a new funded account at the same capital level you were funded at (or above) and maintain your funded trader status!
+        
+        Save 10% on your new funded account if purchased within the next 24 hours using code: STAYFUNDED
+        
+        Visit https://www.shockwave-capital.com/challenge to get your new funded account and save 10%!
+        
+        *Offer expires 24 hours from this email. Use code STAYFUNDED at checkout.
+        
+        Visit https://www.shockwave-capital.com/challenge to start a new funded account.
+        
+        Best regards,
+        The Shockwave Capital Team
+      `,
+    });
+
+    if ('error' in result && result.error) {
+      console.error('Error sending funded fail email:', result.error);
+      return { success: false, error: result.error };
+    }
+
+    // Send admin notification
+    await resend.emails.send({
+      from: 'support@shockwave-capital.com',
+      to: 'support@shockwave-capital.com',
+      subject: `Funded Account Terminated - ${data.name}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2>Funded Account Termination</h2>
+          <p><strong>User:</strong> ${data.name} (${data.email})</p>
+          <p><strong>Account Size:</strong> $${data.accountSize.toLocaleString()}</p>
+          <p><strong>Breach Type:</strong> ${data.breachType}</p>
+          ${data.maxDrawdown ? `<p><strong>Max Drawdown:</strong> ${data.maxDrawdown.toFixed(2)}%</p>` : ''}
+          ${data.dailyDrawdown ? `<p><strong>Daily Loss:</strong> ${data.dailyDrawdown.toFixed(2)}%</p>` : ''}
+          <p><strong>Timestamp:</strong> ${new Date().toLocaleString()}</p>
+        </div>
+      `
+    });
+
+    return { success: true, data: result };
+  } catch (error) {
+    console.error('Error sending funded fail email:', error);
+    return { success: false, error };
+  }
+}
+
+/**
+ * Send funded account drawdown warning email
+ * @param data Email data for funded account warning
+ * @returns Email send result
+ */
+export async function sendFundedDrawdownWarningEmail(data: {
+  email: string;
+  name: string;
+  accountSize: number;
+  currentDrawdown: number;
+  warningType: 'approaching-max' | 'approaching-risk-limit';
+}) {
+  try {
+    const subject = data.warningType === 'approaching-max' 
+      ? 'Warning: Approaching Maximum Drawdown Limit'
+      : 'Warning: Approaching Risk Management Violation';
+    
+    const warningDetails = data.warningType === 'approaching-max'
+      ? `Your current drawdown is ${data.currentDrawdown.toFixed(2)}%, approaching the 15% maximum limit.`
+      : `Your current risk exposure is approaching dangerous levels. You must maintain a maximum 2% total risk exposure spread across all open trades at any time. Any loss of 2% or more will result in immediate account termination for risk management violation.`;
+    
+    const result = await resend.emails.send({
+      from: 'support@shockwave-capital.com',
+      to: data.email,
+      subject,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+          <div style="background-color: #0D0D0D; padding: 20px; margin-bottom: 20px; border-radius: 5px; text-align: center;">
+            <h1 style="color: #FFA500; margin: 0; font-size: 24px;">Risk Warning</h1>
+          </div>
+          
+          <div style="margin-bottom: 30px;">
+            <p>Hello ${data.name},</p>
+            <p>This is an important risk management alert for your funded account ($${data.accountSize.toLocaleString()}).</p>
+          </div>
+          
+          <div style="margin-bottom: 30px; background-color: #fff3cd; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107;">
+            <h2 style="color: #333; font-size: 18px; margin-bottom: 10px;">Warning Details</h2>
+            <p style="margin: 0; color: #666;">${warningDetails}</p>
+          </div>
+          
+          <div style="margin-bottom: 30px;">
+            <h2 style="color: #0FF1CE; font-size: 18px; margin-bottom: 15px;">Immediate Action Required</h2>
+            <ul style="color: #666; line-height: 1.8;">
+              <li>Review and close any high-risk positions</li>
+              <li>Reduce your position sizes immediately</li>
+              <li>Consider hedging your current exposure</li>
+              <li>Take a break from trading if necessary</li>
+            </ul>
+          </div>
+          
+          <div style="margin-bottom: 30px; background-color: #f9f9f9; padding: 15px; border-radius: 5px;">
+            <h3 style="color: #333; font-size: 16px; margin-bottom: 10px;">Funded Account Rules</h3>
+            <ul style="color: #666; line-height: 1.6; margin: 0;">
+              <li>Maximum Drawdown: 15%</li>
+              <li>Daily Drawdown: 8% maximum</li>
+              <li>Risk Management: Maximum 2% total risk exposure spread across all open trades</li>
+              <li>Violation: Any loss of 2% or more constitutes a risk management violation</li>
+            </ul>
+          </div>
+          
+          <div style="margin-top: 40px;">
+            <p>Stay disciplined and protect your funded account.</p>
+            <p style="margin-bottom: 0;">Best regards,</p>
+            <p style="margin-top: 5px;"><strong>The Shockwave Capital Team</strong></p>
+          </div>
+          
+          <div style="background-color: #0D0D0D; padding: 15px; border-radius: 5px; text-align: center; font-size: 12px; color: #999; margin-top: 40px;">
+            <p style="margin-bottom: 5px;">© ${new Date().getFullYear()} Shockwave Capital. All rights reserved.</p>
+            <p style="margin: 0;">This is an automated risk management notification.</p>
+          </div>
+        </div>
+      `,
+      text: `
+        Risk Warning
+        
+        Hello ${data.name},
+        
+        This is an important risk management alert for your funded account ($${data.accountSize.toLocaleString()}).
+        
+        Warning Details:
+        ${warningDetails}
+        
+        Immediate Action Required:
+        - Review and close any high-risk positions
+        - Reduce your position sizes immediately
+        - Consider hedging your current exposure
+        - Take a break from trading if necessary
+        
+        Funded Account Rules:
+        - Maximum Drawdown: 15%
+        - Daily Drawdown: 8% maximum
+        - Risk Management: Maximum 2% total risk exposure spread across all open trades
+        - Violation: Any loss of 2% or more constitutes a risk management violation
+        
+        Stay disciplined and protect your funded account.
+        
+        Best regards,
+        The Shockwave Capital Team
+      `,
+    });
+
+    if ('error' in result && result.error) {
+      console.error('Error sending funded drawdown warning email:', result.error);
+      return { success: false, error: result.error };
+    }
+
+    return { success: true, data: result };
+  } catch (error) {
+    console.error('Error sending funded drawdown warning email:', error);
+    return { success: false, error };
+  }
 } 

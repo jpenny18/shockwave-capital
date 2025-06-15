@@ -99,10 +99,12 @@ const MetricCard = ({ title, value, icon: Icon, format = 'number', prefix = '', 
 };
 
 // Trading Objectives Table Component
-const TradingObjectivesTable = ({ objectives }: { objectives: TradingObjectives }) => {
+const TradingObjectivesTable = ({ objectives, accountStatus }: { objectives: TradingObjectives; accountStatus?: string }) => {
+  const isFunded = accountStatus === 'funded';
+  
   const rows = [
     { 
-      label: 'Min Trading Days', 
+      label: isFunded ? 'Min Trading Days (0.5% gain required)' : 'Min Trading Days', 
       target: objectives.minTradingDays.target,
       current: objectives.minTradingDays.current,
       passed: objectives.minTradingDays.passed,
@@ -172,8 +174,49 @@ const TradingObjectivesTable = ({ objectives }: { objectives: TradingObjectives 
   );
 };
 
-// Trading Journal Component
+// Trading Journal Component with Pagination
 const TradingJournal = ({ trades }: { trades: TradeData[] }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const tradesPerPage = 20;
+  
+  // Calculate pagination
+  const totalPages = Math.ceil(trades.length / tradesPerPage);
+  const startIndex = (currentPage - 1) * tradesPerPage;
+  const endIndex = startIndex + tradesPerPage;
+  const currentTrades = trades.slice(startIndex, endIndex);
+  
+  // Generate page numbers to show
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxPagesToShow = 5;
+    
+    if (totalPages <= maxPagesToShow) {
+      // Show all pages if total is less than max
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Show first, last, and pages around current
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
+  };
+  
   return (
     <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6">
       <div className="flex items-center justify-between mb-4">
@@ -202,7 +245,7 @@ const TradingJournal = ({ trades }: { trades: TradeData[] }) => {
                 <td colSpan={8} className="py-8 text-center text-gray-400">No trades found</td>
               </tr>
             ) : (
-              trades.map((trade) => (
+              currentTrades.map((trade) => (
                 <tr key={trade.id} className="hover:bg-white/5 transition-colors">
                   <td className="py-3 px-4 text-sm text-white">{trade.symbol}</td>
                   <td className="py-3 px-4 text-sm">
@@ -240,6 +283,56 @@ const TradingJournal = ({ trades }: { trades: TradeData[] }) => {
           </tbody>
         </table>
       </div>
+      
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-6 pt-4 border-t border-[#2F2F2F]/50">
+          <div className="text-sm text-gray-400">
+            Showing {startIndex + 1} to {Math.min(endIndex, trades.length)} of {trades.length} trades
+          </div>
+          
+          <div className="flex items-center gap-1">
+            {/* Previous button */}
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1.5 text-sm font-medium text-gray-400 bg-[#151515] border border-[#2F2F2F] rounded-lg hover:bg-[#1A1A1A] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            
+            {/* Page numbers */}
+            <div className="flex items-center gap-1 mx-2">
+              {getPageNumbers().map((page, index) => (
+                page === '...' ? (
+                  <span key={`ellipsis-${index}`} className="px-2 text-gray-500">...</span>
+                ) : (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page as number)}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                      currentPage === page
+                        ? 'bg-[#0FF1CE] text-black'
+                        : 'text-gray-400 bg-[#151515] border border-[#2F2F2F] hover:bg-[#1A1A1A] hover:text-white'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )
+              ))}
+            </div>
+            
+            {/* Next button */}
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1.5 text-sm font-medium text-gray-400 bg-[#151515] border border-[#2F2F2F] rounded-lg hover:bg-[#1A1A1A] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -302,6 +395,7 @@ export default function AccountDetailsPage() {
   const [error, setError] = useState<string | null>(null);
   const [accountStatus, setAccountStatus] = useState<string>('active');
   const [riskEvents, setRiskEvents] = useState<RiskEvent[]>([]);
+  const [userAccount, setUserAccount] = useState<any>(null);
 
   // Chart configuration
   const chartOptions = {
@@ -385,9 +479,13 @@ export default function AccountDetailsPage() {
         return;
       }
 
+      // Store user account data for display
+      setUserAccount(userAccount);
+
       // Check if account is failed and show notice
       const isFailed = userAccount.status === 'failed';
-      setAccountStatus(userAccount.status);
+      const isFunded = userAccount.status === 'funded' || userAccount.step === 3;
+      setAccountStatus(isFunded ? 'funded' : userAccount.status);
 
       // Check if we have recent cached data (less than 30 minutes old)
       const cachedData = await getCachedMetrics(userAccount.accountId);
@@ -427,7 +525,8 @@ export default function AccountDetailsPage() {
           accountId: userAccount.accountId,
           accountToken: userAccount.accountToken,
           accountType: userAccount.accountType,
-          accountSize: userAccount.accountSize
+          accountSize: userAccount.accountSize,
+          step: userAccount.step
         })
       });
 
@@ -562,92 +661,135 @@ export default function AccountDetailsPage() {
         </div>
       )}
 
-      {/* Key Metrics Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
-        <MetricCard title="Balance" value={metrics?.balance || 0} icon={DollarSign} format="currency" />
-        <MetricCard title="Equity" value={metrics?.equity || 0} icon={TrendingUp} format="currency" />
-        <MetricCard title="Average Profit" value={metrics?.averageWin || 0} icon={TrendingUp} format="currency" />
-        <MetricCard title="Average Loss" value={Math.abs(metrics?.averageLoss || 0)} icon={TrendingDown} format="currency" />
-        <MetricCard title="Number of Trades" value={metrics?.trades || 0} icon={BarChart2} />
-        <MetricCard title="Average RRR" value={avgRRR} icon={Target} suffix=":1" />
-        <MetricCard title="Lots" value={metrics?.lots || 0} icon={Activity} />
-        <MetricCard title="Expectancy" value={metrics?.expectancy || 0} icon={Target} format="currency" />
-        <MetricCard title="Win Rate" value={winRate} icon={CheckCircle} format="percent" />
-        <MetricCard title="Profit Factor" value={metrics?.profitFactor || 0} icon={TrendingUp} />
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* Trading Objectives */}
-        <div className="lg:col-span-1">
-          {objectives && <TradingObjectivesTable objectives={objectives} />}
+      {/* Funded Account Notice */}
+      {accountStatus === 'funded' && (
+        <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4 mb-8">
+          <div className="flex items-start gap-3">
+            <CheckCircle className="text-purple-400 mt-0.5" size={20} />
+            <div>
+              <h3 className="text-purple-400 font-semibold mb-1">Funded Account Active</h3>
+              <p className="text-gray-300 text-sm">
+                Congratulations! Your account is now funded. Remember to maintain proper risk management:
+              </p>
+              <ul className="text-gray-300 text-sm mt-2 list-disc list-inside">
+                <li>Maximum drawdown: 15%</li>
+                <li>Daily drawdown: 8%</li>
+                <li>Risk limit: Maximum 2% risk on open positions</li>
+                <li>Payout eligibility: Minimum 5 trading days with 0.5% gain from starting balance</li>
+              </ul>
+            </div>
+          </div>
         </div>
+      )}
 
-        {/* Account Information */}
-        <div className="lg:col-span-2">
-          <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Account Information</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <div>
-                <p className="text-xs text-gray-400 mb-1">Status</p>
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${
-                    accountInfo?.connectionStatus === 'CONNECTED' ? 'bg-green-400' : 'bg-red-400'
-                  }`} />
+      {/* Main Dashboard Layout */}
+      <div className="space-y-8">
+        {/* Row 1: Trading Objectives (60%) + Account Information (40%) */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          {/* Trading Objectives - 60% width */}
+          <div className="lg:col-span-3">
+            {objectives && <TradingObjectivesTable objectives={objectives} accountStatus={accountStatus} />}
+          </div>
+
+          {/* Account Information - 40% width */}
+          <div className="lg:col-span-2">
+            <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6">
+              <h3 className="text-lg font-semibold text-white mb-4">Account Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-400 mb-1">Status</p>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${
+                      accountInfo?.connectionStatus === 'CONNECTED' ? 'bg-green-400' : 'bg-red-400'
+                    }`} />
+                    <p className="text-sm text-white">
+                      {accountInfo?.state || 'In Progress'}
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 mb-1">Start Date</p>
                   <p className="text-sm text-white">
-                    {accountInfo?.state || 'In Progress'}
+                    {userAccount?.startDate ? 
+                      (userAccount.startDate.toDate ? userAccount.startDate.toDate().toLocaleDateString() : new Date(userAccount.startDate).toLocaleDateString()) 
+                      : '-'
+                    }
                   </p>
                 </div>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 mb-1">Start Date</p>
-                <p className="text-sm text-white">
-                  {accountInfo?.createdAt ? new Date(accountInfo.createdAt).toLocaleDateString() : '-'}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 mb-1">Account Size</p>
-                <p className="text-sm text-white">${accountInfo?.balance?.toLocaleString() || '-'}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 mb-1">Account Type</p>
-                <p className="text-sm text-white">Shockwave Standard</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 mb-1">Platform</p>
-                <p className="text-sm text-white uppercase">{accountInfo?.platform || 'MT5'}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 mb-1">Server</p>
-                <p className="text-sm text-white">{accountInfo?.server || '-'}</p>
+                <div>
+                  <p className="text-xs text-gray-400 mb-1">Account Size</p>
+                  <p className="text-sm text-white">
+                    ${userAccount?.accountSize?.toLocaleString() || '-'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 mb-1">Challenge Step</p>
+                  <p className="text-sm text-white">
+                    {userAccount?.step === 3 ? 'Step 3 (Funded)' : userAccount?.step === 2 ? 'Step 2' : userAccount?.step === 1 ? 'Step 1' : '-'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 mb-1">Account Type</p>
+                  <p className="text-sm text-white">
+                    {userAccount?.accountType === 'instant' ? 'Shockwave Instant' : 'Shockwave Standard'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 mb-1">Platform</p>
+                  <p className="text-sm text-white uppercase">{userAccount?.platform || accountInfo?.platform || 'MT5'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 mb-1">Server</p>
+                  <p className="text-sm text-white">{accountInfo?.server || '-'}</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Equity Growth Chart */}
-      <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6 mb-8">
-        <h3 className="text-lg font-semibold text-white mb-4">Equity Growth</h3>
-        {chartData.length > 0 ? (
-          <ApexChart
-            options={chartOptions}
-            series={chartSeries}
-            type="area"
-            height={350}
-          />
-        ) : (
-          <div className="h-[350px] flex items-center justify-center border border-dashed border-[#2F2F2F] rounded-lg">
-            <p className="text-gray-500">No chart data available</p>
+        {/* Row 2: Key Metrics Grid - 100% width */}
+        <div>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <MetricCard title="Balance" value={metrics?.balance || 0} icon={DollarSign} format="currency" />
+            <MetricCard title="Equity" value={metrics?.equity || 0} icon={TrendingUp} format="currency" />
+            <MetricCard title="Average Profit" value={metrics?.averageWin || 0} icon={TrendingUp} format="currency" />
+            <MetricCard title="Average Loss" value={Math.abs(metrics?.averageLoss || 0)} icon={TrendingDown} format="currency" />
+            <MetricCard title="Number of Trades" value={metrics?.trades || 0} icon={BarChart2} />
+            <MetricCard title="Average RRR" value={avgRRR} icon={Target} suffix=":1" />
+            <MetricCard title="Lots" value={metrics?.lots || 0} icon={Activity} />
+            <MetricCard title="Expectancy" value={metrics?.expectancy || 0} icon={Target} format="currency" />
+            <MetricCard title="Win Rate" value={winRate} icon={CheckCircle} format="percent" />
+            <MetricCard title="Profit Factor" value={metrics?.profitFactor || 0} icon={TrendingUp} />
           </div>
-        )}
+        </div>
+
+        {/* Row 3: Equity Growth Chart - 100% width */}
+        <div>
+          <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Equity Growth</h3>
+            {chartData.length > 0 ? (
+              <ApexChart
+                options={chartOptions}
+                series={chartSeries}
+                type="area"
+                height={350}
+              />
+            ) : (
+              <div className="h-[350px] flex items-center justify-center border border-dashed border-[#2F2F2F] rounded-lg">
+                <p className="text-gray-500">No chart data available</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Risk Alert */}
+        {objectives && <RiskAlertBanner objectives={objectives} riskEvents={riskEvents} />}
+
+        {/* Row 4: Trading Journal - 100% width */}
+        <div>
+          <TradingJournal trades={trades} />
+        </div>
       </div>
-
-      {/* Risk Alert */}
-      {objectives && <RiskAlertBanner objectives={objectives} riskEvents={riskEvents} />}
-
-      {/* Trading Journal */}
-      <TradingJournal trades={trades} />
     </div>
   );
 } 

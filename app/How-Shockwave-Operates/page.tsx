@@ -179,7 +179,7 @@ export default function HowShockwaveOperatesPage() {
                     <div className="w-6 h-6 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center mt-1">
                       <span className="text-[#0FF1CE]">✓</span>
                     </div>
-                    <span className="text-gray-300">Minimum profitable days: 4 — ensures consistent trading, not flukes</span>
+                    <span className="text-gray-300">Minimum trading days: 5 — ensures consistent trading, not flukes</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <div className="w-6 h-6 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center mt-1">
@@ -259,14 +259,199 @@ export default function HowShockwaveOperatesPage() {
             </p>
 
             <div className="space-y-6">
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center mt-1">
-                    <span className="text-[#0FF1CE]">✓</span>
+              {/* Funded Account Risk Rules Section */}
+              <div className="space-y-6">
+                <h3 className="text-xl font-bold text-[#0FF1CE] mb-4">Funded Account Risk Rules & Real-World Scenarios</h3>
+                
+                {/* Core Risk Limits */}
+                <div className="bg-[#1A1A1A] rounded-lg p-6 border border-[#2F2F2F]/50">
+                  <h4 className="text-lg font-bold text-white mb-4 flex items-center">
+                    <span className="text-[#0FF1CE] mr-2"></span>Core Risk Limits
+                  </h4>
+                  <ul className="space-y-3">
+                    <li className="flex items-start gap-3">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
+                      <span className="text-gray-300">
+                        <span className="text-white font-medium">Max Daily Drawdown:</span> 8% of account balance
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
+                      <span className="text-gray-300">
+                        <span className="text-white font-medium">Max Total Drawdown:</span> 15% of account balance
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
+                      <span className="text-gray-300">
+                        <span className="text-white font-medium">Max Total Risk Exposure at Any Time:</span> 2% of account balance <em>spread across all open positions combined</em>
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
+                      <span className="text-gray-300">
+                        <span className="text-white font-medium">Stop Loss & Take Profit:</span> <em>Highly recommended</em> but not enforced — you are fully responsible for managing your total open risk at all times.
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
+                      <span className="text-gray-300">
+                        <span className="text-white font-medium">Responsibility:</span> You must trade conservatively enough to absorb real-world execution factors, including spread, slippage, commissions, swaps, and unexpected price movements.
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* How This Works in Practice */}
+                <div className="bg-[#1A1A1A] rounded-lg p-6 border border-[#2F2F2F]/50">
+                  <h4 className="text-lg font-bold text-white mb-4 flex items-center">
+                    <span className="text-[#FF6B6B] mr-2"></span>How This Works in Practice
+                  </h4>
+                  <div className="space-y-4">
+                    <p className="text-gray-300">
+                      You are allowed to risk up to <span className="text-white font-medium">2% of your account balance in total, across all open trades at any time</span>.
+                      Your daily drawdown limit is <span className="text-white font-medium">8%</span>, but if you lose more than 2% in a single day, this strongly indicates that you exceeded the allowed 2% total risk exposure.
+                    </p>
+                    <div className="bg-[#FF6B6B]/10 rounded-lg p-4 border border-[#FF6B6B]/20">
+                      <p className="text-gray-300 font-medium">
+                        Your funding may be restricted or terminated if you breach this limit, regardless of how the loss occurs.
+                      </p>
+                    </div>
                   </div>
-                  <span className="text-gray-300">
-                    <span className="text-white font-medium">Max Position Risk: 2%</span> - Ensures traders are not gambling and know how effectively manage risk while generating consistent profits.
-                  </span>
+                </div>
+
+                {/* Examples & Edge Cases */}
+                <div className="bg-[#1A1A1A] rounded-lg p-6 border border-[#2F2F2F]/50">
+                  <h4 className="text-lg font-bold text-white mb-4 flex items-center">
+                    <span className="text-[#0FF1CE] mr-2"></span>Examples & Edge Cases
+                  </h4>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-[#2F2F2F]/50">
+                          <th className="text-left text-white font-medium py-3 pr-4">Scenario</th>
+                          <th className="text-left text-white font-medium py-3">How it affects your risk exposure</th>
+                        </tr>
+                      </thead>
+                      <tbody className="space-y-2">
+                        <tr className="border-b border-[#2F2F2F]/30">
+                          <td className="py-3 pr-4 text-gray-300 font-medium">No Stop Loss Used</td>
+                          <td className="py-3 text-gray-300">If you do not use stop losses, your open positions can run well past your intended risk amount. This easily leads to exceeding the 2% risk exposure rule.</td>
+                        </tr>
+                        <tr className="border-b border-[#2F2F2F]/30">
+                          <td className="py-3 pr-4 text-gray-300 font-medium">Market Gaps / Slippage</td>
+                          <td className="py-3 text-gray-300">Sudden price jumps (e.g., news releases) can cause orders to fill worse than expected, turning a properly sized trade into an oversized risk. If your total risk exposure was too tight to begin with, this can push actual losses beyond what is allowed.</td>
+                        </tr>
+                        <tr className="border-b border-[#2F2F2F]/30">
+                          <td className="py-3 pr-4 text-gray-300 font-medium">Swaps, Commissions, Spreads</td>
+                          <td className="py-3 text-gray-300">Holding trades overnight or during volatile periods can incur swap fees and higher spreads, increasing your realized loss beyond your planned risk. You must leave buffer room within your 2% total risk to account for these costs.</td>
+                        </tr>
+                        <tr className="border-b border-[#2F2F2F]/30">
+                          <td className="py-3 pr-4 text-gray-300 font-medium">Major News Events</td>
+                          <td className="py-3 text-gray-300">Trading during high-impact economic news can create huge spikes and fast moves that cause unexpected losses. If your total open risk is too high, a sudden move can lead to a loss far above 2% before you can react.</td>
+                        </tr>
+                        <tr className="border-b border-[#2F2F2F]/30">
+                          <td className="py-3 pr-4 text-gray-300 font-medium">Low Liquidity / Illiquid Sessions</td>
+                          <td className="py-3 text-gray-300">Trading during quiet times (late night, holidays, weekends) often leads to wider spreads and bigger gaps. This can magnify losses if you are near your total risk limit.</td>
+                        </tr>
+                        <tr className="border-b border-[#2F2F2F]/30">
+                          <td className="py-3 pr-4 text-gray-300 font-medium">Stacking Multiple Trades</td>
+                          <td className="py-3 text-gray-300">Opening many small trades can quietly add up to more than 2% total risk. If the market turns, you can lose more than allowed in a single move.</td>
+                        </tr>
+                        <tr className="border-b border-[#2F2F2F]/30">
+                          <td className="py-3 pr-4 text-gray-300 font-medium">Not Actively Managing Trades</td>
+                          <td className="py-3 text-gray-300">Leaving trades unattended or relying solely on manual closure increases the chance of your losses exceeding the 2% total risk you are allowed.</td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 pr-4 text-gray-300 font-medium">No Take Profit</td>
+                          <td className="py-3 text-gray-300">Not setting take profits can cause you to miss opportunities to lock in profits — and if the trade reverses, your open risk remains active, counting towards your total allowed exposure.</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Key Takeaway */}
+                <div className="bg-[#0FF1CE]/5 rounded-lg p-6 border border-[#0FF1CE]/20">
+                  <h4 className="text-lg font-bold text-white mb-4 flex items-center">
+                    <span className="text-[#0FF1CE] mr-2"></span>Key Takeaway
+                  </h4>
+              <div className="space-y-3">
+                    <p className="text-gray-300">
+                      <span className="text-white font-medium">Your total combined risk across all open trades must never exceed 2% of your account balance.</span>
+                      You are fully responsible for managing your lot sizes, stop levels, and trade timing to keep your exposure within this limit.
+                    </p>
+                    <p className="text-gray-300">
+                      If you lose more than 2% in a single day, this demonstrates that you exceeded the allowed risk and failed to manage it properly.
+                      This is treated as a clear violation of your funded account rules — regardless of slippage, news events, or any other factors.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Best Practices */}
+                <div className="bg-[#1A1A1A] rounded-lg p-6 border border-[#2F2F2F]/50">
+                  <h4 className="text-lg font-bold text-white mb-4 flex items-center">
+                    <span className="text-[#0FF1CE] mr-2"></span>Best Practices (Strongly Recommended)
+                  </h4>
+                  <ul className="space-y-2">
+                    <li className="flex items-center gap-2">
+                      <span className="text-[#0FF1CE]"></span>
+                      <span className="text-gray-300">Always use a stop loss and take profit on every trade.</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-[#0FF1CE]"></span>
+                      <span className="text-gray-300">Keep total risk <em>below</em> 2% to leave room for fees and slippage.</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-[#0FF1CE]"></span>
+                      <span className="text-gray-300">Avoid trading during high-impact news or illiquid times unless you fully understand the risk.</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-[#0FF1CE]"></span>
+                      <span className="text-gray-300">Monitor your trades actively — do not leave positions unmanaged.</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-[#0FF1CE]"></span>
+                      <span className="text-gray-300">Trade conservatively to protect your funded capital and qualify for payouts.</span>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Monitoring & Enforcement */}
+                <div className="bg-[#1A1A1A] rounded-lg p-6 border border-[#2F2F2F]/50">
+                  <h4 className="text-lg font-bold text-white mb-4 flex items-center">
+                    <span className="text-[#0FF1CE] mr-2"></span>How We Monitor & Enforce
+                  </h4>
+                  <div className="space-y-4">
+                    <p className="text-gray-300">We track your open risk and your daily drawdown in real time.</p>
+                    <ul className="space-y-2">
+                      <li className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
+                        <span className="text-gray-300">If your total open risk exceeds 2% across all trades, you are in violation.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
+                        <span className="text-gray-300">If you lose more than 2% in a single day, this shows you exceeded your allowed risk exposure.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
+                        <span className="text-gray-300">If you hit the 8% daily drawdown limit, your account will be breached immediately.</span>
+                      </li>
+                    </ul>
+                    <div className="bg-[#FF6B6B]/10 rounded-lg p-4 border border-[#FF6B6B]/20 mt-4">
+                      <p className="text-gray-300">
+                        Violations may result in account restrictions, termination of funding, and forfeiture of any fees paid.
+                        No exceptions will be made due to market conditions.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Final Message */}
+                <div className="bg-gradient-to-r from-[#0FF1CE]/10 to-[#0FF1CE]/5 rounded-lg p-6 border border-[#0FF1CE]/20 text-center">
+                  <p className="text-white font-bold text-lg">
+                    Stay disciplined, manage your exposure wisely, and protect your funded account to keep earning payouts like a professional.
+                  </p>
                 </div>
               </div>
 

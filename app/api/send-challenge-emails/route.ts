@@ -6,7 +6,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export async function POST(req: Request) {
   try {
     const data = await req.json();
-    const { type, email, name, challengeType, step, accountSize, currentDrawdown, adminEmail, breachType, maxDrawdown, dailyDrawdown } = data;
+    const { type, email, name, challengeType, step, accountSize, currentDrawdown, adminEmail, breachType, maxDrawdown, dailyDrawdown, warningType } = data;
 
     let subject = '';
     let customerHtml = '';
@@ -205,6 +205,200 @@ export async function POST(req: Request) {
         `;
         adminSubject = `Drawdown Warning Sent: ${email} - ${currentDrawdown?.toFixed(2)}%`;
         adminHtml = `<p>Drawdown warning sent to ${email}. Current drawdown: ${currentDrawdown?.toFixed(2)}%. Challenge type: ${challengeType}, Account size: $${accountSize?.toLocaleString() || 'N/A'}</p>`;
+        break;
+
+      case 'funded-pass':
+        subject = `🎉 Welcome to Your Funded Account - $${accountSize?.toLocaleString() || 'N/A'}`;
+        customerHtml = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+            <div style="background-color: #0D0D0D; padding: 20px; margin-bottom: 20px; border-radius: 5px; text-align: center;">
+              <h1 style="color: #0FF1CE; margin: 0; font-size: 24px;">Welcome to Your Funded Account! 🎉</h1>
+            </div>
+            
+            <div style="margin-bottom: 30px;">
+              <p>Hello ${name},</p>
+              <p>Congratulations! You've successfully completed all challenge phases and earned your funded account.</p>
+              <p>Your $${accountSize?.toLocaleString() || 'N/A'} funded account is now active and ready for trading.</p>
+            </div>
+            
+            <div style="margin-bottom: 30px; background-color: #f9f9f9; padding: 20px; border-radius: 5px;">
+              <h2 style="color: #333; font-size: 18px; margin-bottom: 15px;">Funded Account Rules</h2>
+              <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
+                <li><strong>Maximum Drawdown:</strong> 15% from initial balance</li>
+                <li><strong>Daily Drawdown:</strong> 8% maximum per day</li>
+                <li><strong>Risk Limit:</strong> Maximum 2% risk on open positions at any time</li>
+                <li><strong>Important:</strong> Daily drawdown exceeding 2% indicates risking more than allowed (violation)</li>
+                <li><strong>Profit Split:</strong> Keep 80% of your profits</li>
+                <li><strong>Trading Days:</strong> No minimum requirement, trade at your own pace</li>
+              </ul>
+            </div>
+            
+            <div style="margin-bottom: 30px; background-color: #e8f5e9; padding: 20px; border-radius: 5px; border: 1px solid #c8e6c9;">
+              <h2 style="color: #2e7d32; font-size: 18px; margin-bottom: 15px;">Key Points to Remember</h2>
+              <ul style="margin: 0; padding-left: 20px;">
+                <li>Trade conservatively to protect your funded status</li>
+                <li>The 2% risk limit is strictly enforced - violations result in immediate termination</li>
+                <li>Request payouts anytime you're in profit</li>
+                <li>Continue using the same login credentials</li>
+              </ul>
+            </div>
+            
+            <div style="margin-bottom: 30px;">
+              <h2 style="color: #0FF1CE; font-size: 18px; margin-bottom: 15px;">Next Steps</h2>
+              <ol style="margin: 0; padding-left: 20px; line-height: 1.8;">
+                <li>Review the funded account rules carefully</li>
+                <li>Continue trading with your existing account</li>
+                <li>Request your first payout when ready</li>
+                <li>Contact support if you have any questions</li>
+              </ol>
+            </div>
+            
+            <div style="text-align: center; margin: 40px 0;">
+              <a href="https://shockwave-capital.com/dashboard" style="display: inline-block; background-color: #0FF1CE; color: #000; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Dashboard</a>
+            </div>
+            
+            <div style="margin-bottom: 30px;">
+              <p>We're excited to see your continued success as a funded trader!</p>
+              <p style="margin-bottom: 0;">Best regards,</p>
+              <p style="margin-top: 5px;"><strong>The Shockwave Capital Team</strong></p>
+            </div>
+            
+            <div style="background-color: #0D0D0D; padding: 15px; border-radius: 5px; text-align: center; font-size: 12px; color: #999;">
+              <p style="margin: 0;">© ${new Date().getFullYear()} Shockwave Capital. All rights reserved.</p>
+            </div>
+          </div>
+        `;
+        adminSubject = `Funded Account Activated: ${email} - $${accountSize?.toLocaleString() || 'N/A'}`;
+        adminHtml = `<p>User ${email} has been granted a funded account. Account size: $${accountSize?.toLocaleString() || 'N/A'}</p>`;
+        break;
+
+      case 'funded-fail':
+        subject = `Your Funded Account Has Been Terminated`;
+        
+        let fundedBreachDetails = '';
+        if (breachType === 'maxDrawdown') {
+          fundedBreachDetails = `You exceeded the maximum drawdown limit of 15% (current: ${maxDrawdown?.toFixed(2)}%).`;
+        } else if (breachType === 'riskViolation') {
+          fundedBreachDetails = `You violated the 2% risk limit rule. Your daily drawdown of ${dailyDrawdown?.toFixed(2)}% indicates you were risking more than 2% of your account on open positions.`;
+        } else {
+          fundedBreachDetails = `You violated multiple rules: Maximum drawdown limit exceeded (${maxDrawdown?.toFixed(2)}%, limit: 15%) and risk limit violation (daily drawdown: ${dailyDrawdown?.toFixed(2)}%, which exceeds the 2% risk limit).`;
+        }
+        
+        customerHtml = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+            <div style="background-color: #0D0D0D; padding: 20px; margin-bottom: 20px; border-radius: 5px; text-align: center;">
+              <h1 style="color: #FF4444; margin: 0; font-size: 24px;">Funded Account Terminated</h1>
+            </div>
+            
+            <div style="margin-bottom: 30px;">
+              <p>Hello ${name},</p>
+              <p>We regret to inform you that your funded account ($${accountSize?.toLocaleString()}) has been terminated due to rule violations.</p>
+            </div>
+            
+            <div style="margin-bottom: 30px; background-color: #fee; padding: 15px; border-radius: 5px; border-left: 4px solid #f44;">
+              <h2 style="color: #333; font-size: 18px; margin-bottom: 10px;">Violation Details</h2>
+              <p style="margin: 0; color: #666;">${fundedBreachDetails}</p>
+            </div>
+            
+            <div style="margin-bottom: 30px;">
+              <h2 style="color: #0FF1CE; font-size: 18px; margin-bottom: 15px;">Funded Account Rules Reminder</h2>
+              <ul style="color: #666; line-height: 1.8;">
+                <li><strong>Maximum Drawdown:</strong> 15% from initial balance</li>
+                <li><strong>Daily Drawdown:</strong> 8% maximum per day</li>
+                <li><strong>Risk Limit:</strong> Maximum 2% risk on open positions at any time</li>
+                <li><strong>Important:</strong> Daily drawdown exceeding 2% indicates risking more than allowed (violation)</li>
+              </ul>
+            </div>
+            
+            <div style="margin-bottom: 30px;">
+              <h2 style="color: #0FF1CE; font-size: 18px; margin-bottom: 15px;">What's Next?</h2>
+              <p>While this funded account has been terminated, you can:</p>
+              <ul style="color: #666; line-height: 1.8;">
+                <li>Start a new challenge to earn another funded account</li>
+                <li>Review your trading strategy to better manage risk</li>
+                <li>Contact support if you have questions about the violation</li>
+              </ul>
+            </div>
+            
+            <div style="text-align: center; margin-top: 40px;">
+              <a href="https://shockwave-capital.com/challenge" style="display: inline-block; background-color: #0FF1CE; color: #000; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Start New Challenge</a>
+            </div>
+            
+            <div style="margin-top: 40px;">
+              <p style="margin-bottom: 0;">Best regards,</p>
+              <p style="margin-top: 5px;"><strong>The Shockwave Capital Team</strong></p>
+            </div>
+            
+            <div style="background-color: #0D0D0D; padding: 15px; border-radius: 5px; text-align: center; font-size: 12px; color: #999; margin-top: 40px;">
+              <p style="margin-bottom: 5px;">© ${new Date().getFullYear()} Shockwave Capital. All rights reserved.</p>
+              <p style="margin: 0;">This is an automated email, please do not reply.</p>
+            </div>
+          </div>
+        `;
+        adminSubject = `Funded Account Terminated: ${email} - ${breachType}`;
+        adminHtml = `<p>Funded account terminated for ${email}. Breach type: ${breachType}, Max DD: ${maxDrawdown?.toFixed(2)}%, Daily DD: ${dailyDrawdown?.toFixed(2)}%</p>`;
+        break;
+
+      case 'funded-drawdown-warning':
+        const fundedWarningSubject = warningType === 'approaching-max' 
+          ? 'Warning: Approaching Maximum Drawdown Limit'
+          : 'Warning: Approaching Risk Limit Violation';
+        
+        const fundedWarningDetails = warningType === 'approaching-max'
+          ? `Your current drawdown is ${currentDrawdown?.toFixed(2)}%, approaching the 15% maximum limit.`
+          : `Your current risk exposure is approaching the 2% limit. Remember, if your daily drawdown exceeds 2%, it means you're risking more than allowed.`;
+        
+        subject = fundedWarningSubject;
+        customerHtml = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+            <div style="background-color: #0D0D0D; padding: 20px; margin-bottom: 20px; border-radius: 5px; text-align: center;">
+              <h1 style="color: #FFA500; margin: 0; font-size: 24px;">Risk Warning</h1>
+            </div>
+            
+            <div style="margin-bottom: 30px;">
+              <p>Hello ${name},</p>
+              <p>This is an important risk management alert for your funded account ($${accountSize?.toLocaleString()}).</p>
+            </div>
+            
+            <div style="margin-bottom: 30px; background-color: #fff3cd; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107;">
+              <h2 style="color: #333; font-size: 18px; margin-bottom: 10px;">Warning Details</h2>
+              <p style="margin: 0; color: #666;">${fundedWarningDetails}</p>
+            </div>
+            
+            <div style="margin-bottom: 30px;">
+              <h2 style="color: #0FF1CE; font-size: 18px; margin-bottom: 15px;">Immediate Action Required</h2>
+              <ul style="color: #666; line-height: 1.8;">
+                <li>Review and close any high-risk positions</li>
+                <li>Reduce your position sizes immediately</li>
+                <li>Consider hedging your current exposure</li>
+                <li>Take a break from trading if necessary</li>
+              </ul>
+            </div>
+            
+            <div style="margin-bottom: 30px; background-color: #f9f9f9; padding: 15px; border-radius: 5px;">
+              <h3 style="color: #333; font-size: 16px; margin-bottom: 10px;">Funded Account Rules</h3>
+              <ul style="color: #666; line-height: 1.6; margin: 0;">
+                <li>Maximum Drawdown: 15%</li>
+                <li>Daily Drawdown: 8% maximum</li>
+                <li>Risk Limit: 2% maximum on open positions</li>
+                <li>Violation: Daily drawdown exceeding 2% (indicates risking more than 2%)</li>
+              </ul>
+            </div>
+            
+            <div style="margin-top: 40px;">
+              <p>Stay disciplined and protect your funded account.</p>
+              <p style="margin-bottom: 0;">Best regards,</p>
+              <p style="margin-top: 5px;"><strong>The Shockwave Capital Team</strong></p>
+            </div>
+            
+            <div style="background-color: #0D0D0D; padding: 15px; border-radius: 5px; text-align: center; font-size: 12px; color: #999; margin-top: 40px;">
+              <p style="margin-bottom: 5px;">© ${new Date().getFullYear()} Shockwave Capital. All rights reserved.</p>
+              <p style="margin: 0;">This is an automated risk management notification.</p>
+            </div>
+          </div>
+        `;
+        adminSubject = `Funded Account Warning: ${email} - ${warningType}`;
+        adminHtml = `<p>Funded account warning sent to ${email}. Warning type: ${warningType}, Current drawdown: ${currentDrawdown?.toFixed(2)}%</p>`;
         break;
 
       default:

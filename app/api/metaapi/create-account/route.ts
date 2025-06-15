@@ -69,17 +69,37 @@ export async function POST(req: NextRequest) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch (parseError) {
+        // If response isn't JSON, get text content
+        const textResponse = await response.text();
+        errorData = { message: textResponse, raw: textResponse };
+      }
+      
       console.error('MetaAPI create account error:', {
         status: response.status,
         statusText: response.statusText,
         error: errorData
       });
       
+      // Provide more specific error messages based on status code
+      let errorMessage = errorData.message || `MetaAPI request failed with status ${response.status}`;
+      
+      if (response.status === 401) {
+        errorMessage = 'MetaAPI authentication failed. Please check if your METAAPI_AUTH_TOKEN is valid and has the correct permissions.';
+      } else if (response.status === 403) {
+        errorMessage = 'MetaAPI access forbidden. Your token may not have permission to create accounts.';
+      } else if (response.status === 429) {
+        errorMessage = 'MetaAPI rate limit exceeded. Please try again later.';
+      }
+      
       return NextResponse.json(
         { 
-          error: errorData.message || `MetaAPI request failed with status ${response.status}`,
-          details: errorData
+          error: errorMessage,
+          details: errorData,
+          status: response.status
         },
         { status: response.status }
       );

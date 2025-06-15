@@ -807,7 +807,7 @@ export default function ChallengePage() {
                     <>
                       {[
                         ['Trading Period', 'Unlimited', 'Unlimited', 'Unlimited'],
-                        ['Minimum Profitable Days', '4 Days', '4 Days', 'X'],
+                        ['Minimum Trading Days', '5 Days', '5 Days', 'X'],
                         ['Maximum Daily Loss', 
                           <div key="daily1" className="flex flex-col items-center">
                             <span className="text-[#0FF1CE] font-bold text-base md:text-lg">8%</span>

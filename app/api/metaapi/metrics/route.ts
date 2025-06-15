@@ -16,13 +16,14 @@ const METAAPI_AUTH_TOKEN = process.env.METAAPI_AUTH_TOKEN || 'your-metaapi-auth-
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { accountId, accountToken, accountType, accountSize, isAdmin } = body;
+    const { accountId, accountToken, accountType, accountSize, step, isAdmin } = body;
     
     console.log('Request body:', { 
       accountId, 
       hasToken: !!accountToken, 
       accountType, 
-      accountSize 
+      accountSize,
+      step 
     });
     
     // Validate required parameters
@@ -147,6 +148,9 @@ export async function POST(req: NextRequest) {
               },
               accountType,
               accountSize,
+              step || 1,
+              undefined,
+              undefined,
               undefined,
               undefined,
               cachedData.maxDailyDrawdown // Pass the cached max daily drawdown
@@ -164,7 +168,7 @@ export async function POST(req: NextRequest) {
 
     // Use mock data for testing
     if (USE_MOCK_DATA) {
-      const mockResponse = generateMockData(accountId, accountType, accountSize);
+      const mockResponse = generateMockData(accountId, accountType, accountSize, step);
       return NextResponse.json(mockResponse);
     }
 
@@ -317,7 +321,7 @@ export async function POST(req: NextRequest) {
         
         if (needsSetup) {
           console.log(`Account has ${existingTrackers.length} trackers, setting up automated risk monitoring...`);
-          trackers = await setupRiskTrackers(riskApi, accountId, accountType, accountSize);
+          trackers = await setupRiskTrackers(riskApi, accountId, accountType, accountSize, step);
           console.log(`Risk tracker setup completed: ${trackers.length} active trackers`);
         } else {
           console.log(`Account already has ${existingTrackers.length} trackers configured`);
@@ -403,6 +407,7 @@ export async function POST(req: NextRequest) {
       combinedMetrics, 
       accountType, 
       accountSize, 
+      step || 1,
       equityData, 
       tradesData, 
       riskEvents,
@@ -565,7 +570,7 @@ export async function POST(req: NextRequest) {
 }
 
 // Enhanced function to set up automated risk trackers
-async function setupRiskTrackers(riskApi: any, accountId: string, accountType: 'standard' | 'instant', accountSize: number) {
+async function setupRiskTrackers(riskApi: any, accountId: string, accountType: 'standard' | 'instant', accountSize: number, step: number = 1) {
   try {
     // Check if riskApi is available
     if (!riskApi) {
@@ -577,20 +582,21 @@ async function setupRiskTrackers(riskApi: any, accountId: string, accountType: '
     const existingTrackers = await riskApi.getTrackers(accountId);
     console.log(`Found ${existingTrackers.length} existing trackers`);
     
-    // Define the trackers we need based on challenge type
-    const targetDrawdown = accountType === 'standard' ? 15 : 12;
-    const targetDailyDrawdown = accountType === 'standard' ? 8 : 4;
+    // Define the trackers we need based on challenge type and step
+    const isFunded = step === 3;
+    const targetDrawdown = isFunded ? 15 : (accountType === 'standard' ? 15 : 12); // Funded uses same 15% as standard
+    const targetDailyDrawdown = isFunded ? 8 : (accountType === 'standard' ? 8 : 4); // Funded uses same 8% as standard
     
     // Required trackers using correct NewTracker format
     const requiredTrackers = [
       {
-        name: 'Max Drawdown Monitor',
+        name: isFunded ? 'Funded Max Drawdown Monitor' : 'Max Drawdown Monitor',
         period: 'day',
         relativeDrawdownThreshold: targetDrawdown / 100,
         absoluteDrawdownThreshold: (accountSize * targetDrawdown) / 100
       },
       {
-        name: 'Daily Drawdown Monitor', 
+        name: isFunded ? 'Funded Risk Limit Monitor' : 'Daily Drawdown Monitor', 
         period: 'day',
         relativeDrawdownThreshold: targetDailyDrawdown / 100,
         absoluteDrawdownThreshold: (accountSize * targetDailyDrawdown) / 100
@@ -825,6 +831,7 @@ function calculateTradingObjectives(
   metrics: any,
   challengeType: 'standard' | 'instant',
   accountStartBalance: number,
+  step: number = 1,
   equityData?: any[],
   tradesData?: any[],
   riskEvents?: any[],
@@ -884,16 +891,35 @@ function calculateTradingObjectives(
       maxDailyDrawdown: 4,
       profitTargetStep1: 12,
       profitTargetStep2: 0
+    },
+    funded: {
+      minTradingDays: 5, // 5 days with 0.5% gain required for payout eligibility
+      maxDrawdown: 15,    // 15% max drawdown (same as standard step 1)
+      maxDailyDrawdown: 8, // 8% max daily drawdown (same as standard)
+      profitTarget: 0,   // No profit target for funded accounts
+      maxRiskLimit: 2, // Special rule: violation if daily drawdown > 2% (means risking more than 2%)
+      minDailyGain: 0.5 // Minimum 0.5% gain required for a day to count as a trading day
     }
   };
   
-  const target = targets[challengeType] || targets.standard;
+  // For funded accounts (step 3), use special rules
+  const isFunded = step === 3;
+  const target = isFunded ? targets.funded : (targets[challengeType] || targets.standard);
   
-  // Enhanced trading days calculation using period statistics
+  // Enhanced trading days calculation
   let tradingDays = 0;
   
-  if (periodStats && periodStats.length > 0) {
-    // Use the most recent period stat's trading days count
+  if (isFunded && periodStats && periodStats.length > 0) {
+    // For funded accounts: count days with 0.5% gain from starting balance
+    const gainThreshold = accountStartBalance * 0.005; // 0.5% of starting balance
+    
+    periodStats.forEach(stat => {
+      if (stat.profit >= gainThreshold) {
+        tradingDays++;
+      }
+    });
+  } else if (periodStats && periodStats.length > 0) {
+    // For challenge accounts: Use the most recent period stat's trading days count
     const latestStat = periodStats[periodStats.length - 1];
     tradingDays = latestStat.tradingDays || 0;
   } else if (tradesData && tradesData.length > 0) {
@@ -931,7 +957,8 @@ function calculateTradingObjectives(
   // Check for recent breaches in risk events
   const recentBreaches = {
     maxDrawdown: false,
-    dailyDrawdown: false
+    dailyDrawdown: false,
+    fundedRiskViolation: false
   };
   
   if (riskEvents && riskEvents.length > 0) {
@@ -944,8 +971,48 @@ function calculateTradingObjectives(
     
     recentBreaches.maxDrawdown = recentEvents.some(e => e.exceededThresholdType === 'drawdown');
     recentBreaches.dailyDrawdown = recentEvents.some(e => e.exceededThresholdType === 'dailyDrawdown');
+    
+    // For funded accounts, check if daily drawdown went above 2%
+    if (isFunded) {
+      recentBreaches.fundedRiskViolation = recentEvents.some(e => 
+        e.exceededThresholdType === 'dailyDrawdown' && e.relativeDrawdown > 0.02
+      );
+    }
   }
   
+  // Special handling for funded accounts
+  if (isFunded) {
+    return {
+      minTradingDays: {
+        target: target.minTradingDays,
+        current: tradingDays,
+        passed: tradingDays >= target.minTradingDays // Must have 5 days with 0.5% gain for payout eligibility
+      },
+      maxDrawdown: {
+        target: target.maxDrawdown,
+        current: currentDrawdown,
+        passed: currentDrawdown <= target.maxDrawdown,
+        recentBreach: recentBreaches.maxDrawdown
+      },
+      maxDailyDrawdown: {
+        target: target.maxDailyDrawdown,
+        current: maxDailyDrawdown,
+        passed: maxDailyDrawdown <= target.maxDailyDrawdown, // Must be under 8%
+        recentBreach: recentBreaches.dailyDrawdown || recentBreaches.fundedRiskViolation,
+        fundedRiskViolation: maxDailyDrawdown > 2 // Risk violation if DD > 2%
+      },
+      profitTarget: {
+        target: 0,
+        current: profitPercentage,
+        passed: true // No profit target for funded accounts
+      },
+      fundedStatus: true,
+      tradingDaysWithGain: tradingDays, // For funded accounts, this represents days with 0.5% gain
+      fundedPayoutEligible: tradingDays >= target.minTradingDays // True when 5+ days with 0.5% gain
+    };
+  }
+  
+  // Regular challenge account objectives
   return {
     minTradingDays: {
       target: target.minTradingDays,
@@ -965,14 +1032,16 @@ function calculateTradingObjectives(
       recentBreach: recentBreaches.dailyDrawdown
     },
     profitTarget: {
-      target: target.profitTargetStep1,
+      target: step === 2 && 'profitTargetStep2' in target ? target.profitTargetStep2 : ('profitTargetStep1' in target ? target.profitTargetStep1 : 0),
       current: profitPercentage,
-      passed: profitPercentage >= target.profitTargetStep1
+      passed: step === 2 && 'profitTargetStep2' in target 
+        ? profitPercentage >= target.profitTargetStep2 
+        : ('profitTargetStep1' in target ? profitPercentage >= target.profitTargetStep1 : true)
     }
   };
 }
 
-function generateMockData(accountId: string, accountType: string, accountSize: number) {
+function generateMockData(accountId: string, accountType: string, accountSize: number, step: number = 1) {
   const balance = accountSize * 1.05; // 5% profit
   const equity = balance - 150; // Small floating loss
   const trades = 47;
@@ -1021,10 +1090,10 @@ function generateMockData(accountId: string, accountType: string, accountSize: n
     },
     trades: generateMockTrades(),
     equityChart: generateMockEquityChart(accountSize),
-    objectives: calculateMockObjectives(accountType, accountSize, balance, []),
+    objectives: calculateMockObjectives(accountType, accountSize, balance, step, [], undefined),
     riskEvents: generateMockRiskEvents(),
     periodStats: generateMockPeriodStats(),
-    trackers: generateMockTrackers(accountType, accountSize)
+    trackers: generateMockTrackers(accountType, accountSize, step)
   };
 }
 
@@ -1120,21 +1189,22 @@ function generateMockPeriodStats() {
   return stats;
 }
 
-function generateMockTrackers(accountType: string, accountSize: number) {
-  const targetDrawdown = accountType === 'standard' ? 15 : 12;
-  const targetDailyDrawdown = accountType === 'standard' ? 8 : 4;
+function generateMockTrackers(accountType: string, accountSize: number, step: number = 1) {
+  const isFunded = step === 3;
+  const targetDrawdown = isFunded ? 15 : (accountType === 'standard' ? 15 : 12); // Funded uses same 15% as standard
+  const targetDailyDrawdown = isFunded ? 8 : (accountType === 'standard' ? 8 : 4); // Funded uses same 8% as standard
   
   return [
     {
       id: 'tracker1',
-      name: 'Max Drawdown Monitor',
+      name: isFunded ? 'Funded Max Drawdown Monitor' : 'Max Drawdown Monitor',
       type: 'drawdown',
       absoluteDrawdownThreshold: (accountSize * targetDrawdown) / 100,
       relativeDrawdownThreshold: targetDrawdown / 100
     },
     {
       id: 'tracker2',
-      name: 'Daily Drawdown Monitor',
+      name: isFunded ? 'Funded Risk Limit Monitor' : 'Daily Drawdown Monitor',
       type: 'dailyDrawdown',
       absoluteDrawdownThreshold: (accountSize * targetDailyDrawdown) / 100,
       relativeDrawdownThreshold: targetDailyDrawdown / 100
@@ -1142,7 +1212,7 @@ function generateMockTrackers(accountType: string, accountSize: number) {
   ];
 }
 
-function calculateMockObjectives(accountType: string, accountSize: number, currentBalance: number, equityData?: any[], cachedMaxDailyDrawdown?: number) {
+function calculateMockObjectives(accountType: string, accountSize: number, currentBalance: number, step: number = 1, equityData?: any[], cachedMaxDailyDrawdown?: number) {
   const profitPercentage = ((currentBalance - accountSize) / accountSize) * 100;
   
   // Calculate daily drawdown from equity data if available
@@ -1153,6 +1223,41 @@ function calculateMockObjectives(accountType: string, accountSize: number, curre
     maxDailyDrawdown = calculateDailyDrawdown(equityData);
   }
   
+  const isFunded = step === 3;
+  
+  if (isFunded) {
+    // Funded account objectives
+    return {
+      minTradingDays: {
+        target: 5, // 5 days with 0.5% gain required for payout eligibility
+        current: 3, // Mock: simulate 3 days with 0.5% gain (not yet eligible)
+        passed: false // Need 5 days with 0.5% gain
+      },
+      maxDrawdown: {
+        target: 15, // 15% max drawdown for funded
+        current: 4.5,
+        passed: true,
+        recentBreach: false
+      },
+      maxDailyDrawdown: {
+        target: 8, // 8% max daily drawdown for funded
+        current: maxDailyDrawdown,
+        passed: maxDailyDrawdown <= 8, // Must be under 8%
+        recentBreach: false,
+        fundedRiskViolation: maxDailyDrawdown > 2 // Risk violation if DD > 2%
+      },
+      profitTarget: {
+        target: 0,
+        current: profitPercentage,
+        passed: true
+      },
+      fundedStatus: true,
+      tradingDaysWithGain: 3, // Mock: 3 days with 0.5% gain so far
+      fundedPayoutEligible: false // Not yet eligible (need 5 days)
+    };
+  }
+  
+  // Challenge account objectives
   return {
     minTradingDays: {
       target: 5,
@@ -1172,9 +1277,9 @@ function calculateMockObjectives(accountType: string, accountSize: number, curre
       recentBreach: false
     },
     profitTarget: {
-      target: accountType === 'standard' ? 10 : 12,
+      target: step === 2 ? 5 : (accountType === 'standard' ? 10 : 12),
       current: profitPercentage,
-      passed: profitPercentage >= (accountType === 'standard' ? 10 : 12)
+      passed: profitPercentage >= (step === 2 ? 5 : (accountType === 'standard' ? 10 : 12))
     }
   };
 }

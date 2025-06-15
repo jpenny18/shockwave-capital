@@ -134,7 +134,7 @@ Add to `.env.local`:
 
 ```bash
 # MetaAPI Configuration
-NEXT_PUBLIC_METAAPI_TOKEN=your_metaapi_token
+METAAPI_AUTH_TOKEN=your_metaapi_auth_token
 ```
 
 ### Firebase Collections

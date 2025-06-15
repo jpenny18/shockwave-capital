@@ -77,6 +77,8 @@ export default function MyAccountsPage() {
         return 'bg-blue-500/20 text-blue-400';
       case 'failed':
         return 'bg-red-500/20 text-red-400';
+      case 'funded':
+        return 'bg-purple-500/20 text-purple-400';
       case 'inactive':
         return 'bg-gray-500/20 text-gray-400';
       default:
@@ -92,6 +94,8 @@ export default function MyAccountsPage() {
         return 'hover:border-blue-400/30';
       case 'failed':
         return 'hover:border-red-400/30';
+      case 'funded':
+        return 'hover:border-purple-400/30';
       case 'inactive':
         return 'hover:border-gray-400/30';
       default:
@@ -107,6 +111,8 @@ export default function MyAccountsPage() {
         return 'bg-blue-500/10 text-blue-400';
       case 'failed':
         return 'bg-red-500/10 text-red-400';
+      case 'funded':
+        return 'bg-purple-500/10 text-purple-400';
       case 'inactive':
         return 'bg-gray-500/10 text-gray-400';
       default:
@@ -168,7 +174,7 @@ export default function MyAccountsPage() {
                       {account.accountType === 'standard' ? 'Shockwave Standard' : 'Shockwave Instant'}
                     </h3>
                     <p className="text-sm text-gray-400 mt-1">
-                      ${account.accountSize.toLocaleString()} • Step {account.step}
+                      ${account.accountSize.toLocaleString()} • {account.step === 3 ? 'Funded' : `Step ${account.step}`}
                     </p>
                   </div>
                   <span className={`px-3 py-1 ${getStatusStyle(account.status)} text-xs font-medium rounded-full`}>

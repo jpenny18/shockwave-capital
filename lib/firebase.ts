@@ -106,13 +106,14 @@ export interface UserMetaApiAccount {
   accountType: 'standard' | 'instant';
   accountSize: number;
   platform: 'mt4' | 'mt5';
-  status: 'active' | 'inactive' | 'passed' | 'failed';
-  step: 1 | 2; // For challenge steps
+  status: 'active' | 'inactive' | 'passed' | 'failed' | 'funded';
+  step: 1 | 2 | 3; // 1 = Step 1, 2 = Step 2, 3 = Funded
   startDate: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;
   lastMetricsUpdate?: Timestamp;
   trackerId?: string; // Risk management tracker ID
+  fundedDate?: Timestamp; // Date when account became funded
 }
 
 /**
@@ -136,8 +137,18 @@ export interface CachedMetrics {
   currentProfit: number;
   tradingDays: number;
   lastUpdated: Timestamp;
+  // Additional cached data from enhanced metrics
+  accountName?: string;
+  broker?: string;
+  server?: string;
+  wonTrades?: number;
+  lostTrades?: number;
+  lastTrades?: any[];
+  lastEquityChart?: any[];
+  lastObjectives?: any;
   lastRiskEvents?: any[]; // Risk events from MetaAPI Risk Management
   lastPeriodStats?: any[]; // Period statistics from MetaAPI Risk Management
+  lastTrackers?: any[]; // Risk management trackers
 }
 
 /**

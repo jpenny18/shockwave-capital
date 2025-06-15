@@ -20,7 +20,8 @@ import {
   Activity,
   RefreshCw,
   User,
-  ArrowLeft
+  ArrowLeft,
+  Eye
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -116,10 +117,12 @@ const MetricCard = ({ title, value, icon: Icon, format = 'number', prefix = '', 
 };
 
 // Trading Objectives Table Component
-const TradingObjectivesTable = ({ objectives }: { objectives: TradingObjectives }) => {
+const TradingObjectivesTable = ({ objectives, accountInfo }: { objectives: TradingObjectives; accountInfo?: any }) => {
+  const isFunded = accountInfo?.step === 3 || accountInfo?.status === 'funded';
+  
   const rows = [
     { 
-      label: 'Min Trading Days', 
+      label: isFunded ? 'Min Trading Days (0.5% gain required)' : 'Min Trading Days', 
       target: objectives.minTradingDays.target,
       current: objectives.minTradingDays.current,
       passed: objectives.minTradingDays.passed,
@@ -307,6 +310,169 @@ const PeriodStatsChart = ({ periodStats }: { periodStats: PeriodStatistic[] }) =
   );
 };
 
+// Trading Journal Component with Pagination
+const TradingJournal = ({ trades }: { trades: TradeData[] }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const tradesPerPage = 20;
+  
+  // Calculate pagination
+  const totalPages = Math.ceil(trades.length / tradesPerPage);
+  const startIndex = (currentPage - 1) * tradesPerPage;
+  const endIndex = startIndex + tradesPerPage;
+  const currentTrades = trades.slice(startIndex, endIndex);
+  
+  // Generate page numbers to show
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxPagesToShow = 5;
+    
+    if (totalPages <= maxPagesToShow) {
+      // Show all pages if total is less than max
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Show first, last, and pages around current
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
+  };
+  
+  return (
+    <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-white">Trading Journal</h3>
+        <span className="text-sm text-gray-400">
+          {trades.length} {trades.length === 1 ? 'Trade' : 'Trades'} Total
+        </span>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[800px]">
+          <thead>
+            <tr className="border-b border-[#2F2F2F]">
+              <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase">Symbol</th>
+              <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase">Type</th>
+              <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase">Volume</th>
+              <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase">Open Price</th>
+              <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase">Close Price</th>
+              <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase">Profit</th>
+              <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase">Open Time</th>
+              <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase">Status</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#2F2F2F]/50">
+            {trades.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="py-8 text-center text-gray-400">No trades found</td>
+              </tr>
+            ) : (
+              currentTrades.map((trade) => (
+                <tr key={trade.id} className="hover:bg-white/5 transition-colors">
+                  <td className="py-3 px-4 text-sm text-white">{trade.symbol}</td>
+                  <td className="py-3 px-4 text-sm">
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      trade.type === 'buy' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                    }`}>
+                      {trade.type?.toUpperCase() || 'N/A'}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-sm text-gray-300">{trade.volume != null ? trade.volume.toFixed(2) : '-'}</td>
+                  <td className="py-3 px-4 text-sm text-gray-300">{trade.openPrice != null ? trade.openPrice.toFixed(5) : '-'}</td>
+                  <td className="py-3 px-4 text-sm text-gray-300">
+                    {trade.closePrice != null ? trade.closePrice.toFixed(5) : '-'}
+                  </td>
+                  <td className="py-3 px-4 text-sm">
+                    <span className={trade.profit != null && trade.profit >= 0 ? 'text-green-400' : 'text-red-400'}>
+                      {trade.profit != null ? `$${trade.profit.toFixed(2)}` : '-'}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-sm text-gray-300">
+                    {trade.openTime ? formatDistanceToNow(new Date(trade.openTime), { addSuffix: true }) : '-'}
+                  </td>
+                  <td className="py-3 px-4 text-sm">
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      trade.state === 'opened' 
+                        ? 'bg-blue-500/20 text-blue-400' 
+                        : 'bg-gray-500/20 text-gray-400'
+                    }`}>
+                      {trade.state || 'unknown'}
+                    </span>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+      
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-6 pt-4 border-t border-[#2F2F2F]/50">
+          <div className="text-sm text-gray-400">
+            Showing {startIndex + 1} to {Math.min(endIndex, trades.length)} of {trades.length} trades
+          </div>
+          
+          <div className="flex items-center gap-1">
+            {/* Previous button */}
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1.5 text-sm font-medium text-gray-400 bg-[#151515] border border-[#2F2F2F] rounded-lg hover:bg-[#1A1A1A] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            
+            {/* Page numbers */}
+            <div className="flex items-center gap-1 mx-2">
+              {getPageNumbers().map((page, index) => (
+                page === '...' ? (
+                  <span key={`ellipsis-${index}`} className="px-2 text-gray-500">...</span>
+                ) : (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page as number)}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                      currentPage === page
+                        ? 'bg-[#0FF1CE] text-black'
+                        : 'text-gray-400 bg-[#151515] border border-[#2F2F2F] hover:bg-[#1A1A1A] hover:text-white'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )
+              ))}
+            </div>
+            
+            {/* Next button */}
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1.5 text-sm font-medium text-gray-400 bg-[#151515] border border-[#2F2F2F] rounded-lg hover:bg-[#1A1A1A] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function AdminAccountDetailsPage() {
   const params = useParams();
   const router = useRouter();
@@ -323,6 +489,76 @@ export default function AdminAccountDetailsPage() {
   const [accountStatus, setAccountStatus] = useState<string>('active');
   const [riskEvents, setRiskEvents] = useState<RiskEvent[]>([]);
   const [periodStats, setPeriodStats] = useState<PeriodStatistic[]>([]);
+  const [trades, setTrades] = useState<TradeData[]>([]);
+  const [chartData, setChartData] = useState<EquityChartPoint[]>([]);
+
+  // Chart configuration
+  const chartOptions = {
+    chart: {
+      type: 'area' as const,
+      height: 350,
+      background: 'transparent',
+      toolbar: { show: false },
+      zoom: { enabled: false }
+    },
+    dataLabels: { enabled: false },
+    stroke: { curve: 'smooth' as const, width: 2 },
+    colors: ['#0FF1CE', '#3B82F6'],
+    fill: {
+      type: 'gradient',
+      gradient: {
+        shadeIntensity: 1,
+        opacityFrom: 0.2,
+        opacityTo: 0,
+        stops: [0, 100]
+      }
+    },
+    xaxis: {
+      type: 'datetime' as const,
+      labels: { style: { colors: '#9CA3AF' } },
+      axisBorder: { show: false },
+      axisTicks: { show: false }
+    },
+    yaxis: {
+      labels: {
+        style: { colors: '#9CA3AF' },
+        formatter: (value: number) => `$${value.toLocaleString()}`
+      }
+    },
+    grid: {
+      borderColor: '#374151',
+      strokeDashArray: 5,
+      xaxis: { lines: { show: false } }
+    },
+    legend: {
+      show: true,
+      position: 'top' as const,
+      horizontalAlign: 'right' as const,
+      labels: { colors: '#9CA3AF' }
+    },
+    tooltip: {
+      theme: 'dark',
+      x: { format: 'dd MMM yyyy' },
+      y: { formatter: (value: number) => `$${value.toLocaleString()}` }
+    }
+  };
+
+  const chartSeries = [
+    {
+      name: 'Equity',
+      data: chartData.map(point => ({
+        x: new Date(point.date).getTime(),
+        y: point.equity
+      }))
+    },
+    {
+      name: 'Balance',
+      data: chartData.map(point => ({
+        x: new Date(point.date).getTime(),
+        y: point.balance
+      }))
+    }
+  ];
 
   const fetchAccountData = async () => {
     try {
@@ -371,63 +607,107 @@ export default function AdminAccountDetailsPage() {
           avgRRR: cachedData.averageRRR,
           profit: cachedData.currentProfit || ((cachedData.balance - accountData.accountSize) || 0),
           riskEvents: cachedData.lastRiskEvents || [],
-          periodStats: cachedData.lastPeriodStats || []
+          periodStats: cachedData.lastPeriodStats || [],
+          lastTrades: cachedData.lastTrades || [],
+          lastEquityChart: cachedData.lastEquityChart || []
         });
         
         // Set risk events and period stats
         setRiskEvents(cachedData.lastRiskEvents || []);
         setPeriodStats(cachedData.lastPeriodStats || []);
+        setTrades(cachedData.lastTrades || []);
+        setChartData(cachedData.lastEquityChart || []);
         
-        // Calculate objectives based on account type with enhanced data
-        const targetDrawdown = accountData.accountType === 'standard' ? 15 : 12;
-        const targetDailyDrawdown = accountData.accountType === 'standard' ? 8 : 4;
-        const targetProfit = accountData.accountType === 'standard' ? 10 : 12;
-        const targetTradingDays = accountData.accountType === 'standard' ? 5 : 5;
-        
-        const profitPercent = ((cachedData.balance - accountData.accountSize) / accountData.accountSize) * 100;
-        
-        // Check for recent breaches in risk events
-        const recentBreaches = {
-          maxDrawdown: false,
-          dailyDrawdown: false
-        };
-        
-        if (cachedData.lastRiskEvents && cachedData.lastRiskEvents.length > 0) {
-          const recentEvents = cachedData.lastRiskEvents.filter((e: any) => {
-            const eventTime = new Date(e.brokerTime);
-            const dayAgo = new Date();
-            dayAgo.setDate(dayAgo.getDate() - 1);
-            return eventTime > dayAgo;
-          });
+        // Use cached objectives if available (which include funded state calculations)
+        if (cachedData.lastObjectives) {
+          setObjectives(cachedData.lastObjectives);
+        } else {
+          // Fallback: Calculate objectives based on account type and step
+          const isFunded = accountData.step === 3 || accountData.status === 'funded';
           
-          recentBreaches.maxDrawdown = recentEvents.some((e: any) => e.exceededThresholdType === 'drawdown');
-          recentBreaches.dailyDrawdown = recentEvents.some((e: any) => e.exceededThresholdType === 'dailyDrawdown');
-        }
-        
-        setObjectives({
-          minTradingDays: {
-            target: targetTradingDays,
-            current: cachedData.tradingDays || 0,
-            passed: (cachedData.tradingDays || 0) >= targetTradingDays
-          },
-          maxDrawdown: {
-            target: targetDrawdown,
-            current: cachedData.maxDrawdown || 0,
-            passed: (cachedData.maxDrawdown || 0) <= targetDrawdown,
-            recentBreach: recentBreaches.maxDrawdown
-          },
-          maxDailyDrawdown: {
-            target: targetDailyDrawdown,
-            current: cachedData.maxDailyDrawdown || cachedData.dailyDrawdown || 0,
-            passed: (cachedData.maxDailyDrawdown || cachedData.dailyDrawdown || 0) <= targetDailyDrawdown,
-            recentBreach: recentBreaches.dailyDrawdown
-          },
-          profitTarget: {
-            target: targetProfit,
-            current: profitPercent,
-            passed: profitPercent >= targetProfit
+          if (isFunded) {
+            // Funded account objectives
+            const profitPercent = ((cachedData.balance - accountData.accountSize) / accountData.accountSize) * 100;
+            
+            setObjectives({
+              minTradingDays: {
+                target: 5, // 5 days with 0.5% gain required for payout eligibility
+                current: cachedData.tradingDays || 0,
+                passed: (cachedData.tradingDays || 0) >= 5
+              },
+              maxDrawdown: {
+                target: 15, // 15% for funded accounts
+                current: cachedData.maxDrawdown || 0,
+                passed: (cachedData.maxDrawdown || 0) <= 15,
+                recentBreach: false
+              },
+              maxDailyDrawdown: {
+                target: 8, // 8% for funded accounts
+                current: cachedData.maxDailyDrawdown || cachedData.dailyDrawdown || 0,
+                passed: (cachedData.maxDailyDrawdown || cachedData.dailyDrawdown || 0) <= 8,
+                recentBreach: false
+              },
+              profitTarget: {
+                target: 0, // No profit target for funded accounts
+                current: profitPercent,
+                passed: true
+              }
+            });
+          } else {
+            // Regular challenge objectives
+            const targetDrawdown = accountData.accountType === 'standard' ? 15 : 12;
+            const targetDailyDrawdown = accountData.accountType === 'standard' ? 8 : 4;
+            const targetProfit = accountData.accountType === 'standard' 
+              ? (accountData.step === 1 ? 10 : 5)  // Standard: Step 1 = 10%, Step 2 = 5%
+              : 12;  // Instant: 12%
+            const targetTradingDays = 5;
+            
+            const profitPercent = ((cachedData.balance - accountData.accountSize) / accountData.accountSize) * 100;
+            
+            // Check for recent breaches in risk events
+            const recentBreaches = {
+              maxDrawdown: false,
+              dailyDrawdown: false
+            };
+            
+            if (cachedData.lastRiskEvents && cachedData.lastRiskEvents.length > 0) {
+              const recentEvents = cachedData.lastRiskEvents.filter((e: any) => {
+                const eventTime = new Date(e.brokerTime);
+                const dayAgo = new Date();
+                dayAgo.setDate(dayAgo.getDate() - 1);
+                return eventTime > dayAgo;
+              });
+              
+              recentBreaches.maxDrawdown = recentEvents.some((e: any) => e.exceededThresholdType === 'drawdown');
+              recentBreaches.dailyDrawdown = recentEvents.some((e: any) => e.exceededThresholdType === 'dailyDrawdown');
+            }
+            
+            setObjectives({
+              minTradingDays: {
+                target: targetTradingDays,
+                current: cachedData.tradingDays || 0,
+                passed: (cachedData.tradingDays || 0) >= targetTradingDays
+              },
+              maxDrawdown: {
+                target: targetDrawdown,
+                current: cachedData.maxDrawdown || 0,
+                passed: (cachedData.maxDrawdown || 0) <= targetDrawdown,
+                recentBreach: recentBreaches.maxDrawdown
+              },
+              maxDailyDrawdown: {
+                target: targetDailyDrawdown,
+                current: cachedData.maxDailyDrawdown || cachedData.dailyDrawdown || 0,
+                passed: (cachedData.maxDailyDrawdown || cachedData.dailyDrawdown || 0) <= targetDailyDrawdown,
+                recentBreach: recentBreaches.dailyDrawdown
+              },
+              profitTarget: {
+                target: targetProfit,
+                current: profitPercent,
+                passed: profitPercent >= targetProfit
+              }
+            });
           }
-        });
+        }
         
         setLastUpdate(cachedData.lastUpdated.toDate());
         
@@ -501,7 +781,8 @@ export default function AdminAccountDetailsPage() {
           accountToken: accountData.accountToken,
           accountType: accountData.accountType,
           accountSize: accountData.accountSize,
-          isAdmin: true // Add flag to bypass user auth check
+          isAdmin: true, // Add flag to bypass user auth check
+          step: accountData.step
         })
       });
 
@@ -515,6 +796,10 @@ export default function AdminAccountDetailsPage() {
       // Update the UI
       setMetrics(data.metrics);
       setObjectives(data.objectives);
+      setTrades(data.trades || []);
+      setChartData(data.equityChart || []);
+      setRiskEvents(data.riskEvents || []);
+      setPeriodStats(data.periodStats || []);
       
       // Update cached metrics in Firebase
       await updateCachedMetrics(accountId, {
@@ -635,14 +920,23 @@ export default function AdminAccountDetailsPage() {
             )}
           </div>
         </div>
-        <button
-          onClick={refreshMetrics}
-          disabled={refreshing}
-          className="bg-[#0FF1CE] text-black font-semibold py-2 px-4 rounded-lg hover:bg-[#0FF1CE]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-        >
-          <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
-          Refresh Data
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => window.open(`/dashboard/accounts/${accountId}`, '_blank')}
+            className="bg-white/10 text-white font-semibold py-2 px-4 rounded-lg hover:bg-white/20 transition-colors flex items-center gap-2"
+          >
+            <Eye size={16} />
+            View as User
+          </button>
+          <button
+            onClick={refreshMetrics}
+            disabled={refreshing}
+            className="bg-[#0FF1CE] text-black font-semibold py-2 px-4 rounded-lg hover:bg-[#0FF1CE]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
+            Refresh Data
+          </button>
+        </div>
       </div>
 
       {/* Account Status Notice */}
@@ -655,6 +949,28 @@ export default function AdminAccountDetailsPage() {
               <p className="text-gray-300 text-sm">
                 This challenge has been marked as failed. The data shown represents the final state of the account.
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Funded Account Notice */}
+      {(accountStatus === 'funded' || accountInfo?.step === 3) && (
+        <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4 mb-8">
+          <div className="flex items-start gap-3">
+            <CheckCircle className="text-purple-400 mt-0.5" size={20} />
+            <div>
+              <h3 className="text-purple-400 font-semibold mb-1">Funded Account</h3>
+              <p className="text-gray-300 text-sm">
+                This is a funded account with the following rules:
+              </p>
+              <ul className="text-gray-300 text-sm mt-2 list-disc list-inside">
+                <li>Maximum drawdown: 15% (from initial balance)</li>
+                <li>Daily drawdown: 8% maximum per day</li>
+                <li>Risk limit: Maximum 2% risk on open positions at any time</li>
+                <li>Payout eligibility: Minimum 5 trading days with 0.5% gain from starting balance</li>
+                <li>No profit target requirement</li>
+              </ul>
             </div>
           </div>
         </div>
@@ -684,7 +1000,9 @@ export default function AdminAccountDetailsPage() {
             </div>
             <div>
               <p className="text-gray-400 text-xs mb-1">Challenge Step</p>
-              <p className="text-white font-medium">Step {accountInfo.step}</p>
+              <p className="text-white font-medium">
+                {accountInfo.step === 3 || accountInfo.status === 'funded' ? 'Funded' : `Step ${accountInfo.step}`}
+              </p>
             </div>
           </div>
         </div>
@@ -705,13 +1023,33 @@ export default function AdminAccountDetailsPage() {
       </div>
 
       {/* Trading Objectives */}
-      {objectives && <TradingObjectivesTable objectives={objectives} />}
+      {objectives && <TradingObjectivesTable objectives={objectives} accountInfo={accountInfo} />}
+
+      {/* Equity Growth Chart */}
+      <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6 mb-8 mt-8">
+        <h3 className="text-lg font-semibold text-white mb-4">Equity Growth</h3>
+        {chartData.length > 0 ? (
+          <ApexChart
+            options={chartOptions}
+            series={chartSeries}
+            type="area"
+            height={350}
+          />
+        ) : (
+          <div className="h-[350px] flex items-center justify-center border border-dashed border-[#2F2F2F] rounded-lg">
+            <p className="text-gray-500">No chart data available</p>
+          </div>
+        )}
+      </div>
 
       {/* Risk Events */}
       {riskEvents.length > 0 && <RiskEventsTable riskEvents={riskEvents} />}
 
       {/* Period Statistics */}
       {periodStats.length > 0 && <PeriodStatsChart periodStats={periodStats} />}
+
+      {/* Trading Journal */}
+      <TradingJournal trades={trades} />
     </div>
   );
 } 

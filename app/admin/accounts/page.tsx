@@ -77,8 +77,8 @@ export default function AdminAccountsPage() {
     accountType: 'standard' as 'standard' | 'instant',
     accountSize: 10000,
     platform: 'mt5' as 'mt4' | 'mt5',
-    status: 'active' as 'active' | 'inactive' | 'passed' | 'failed',
-    step: 1 as 1 | 2
+    status: 'active' as 'active' | 'inactive' | 'passed' | 'failed' | 'funded',
+    step: 1 as 1 | 2 | 3
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -238,7 +238,75 @@ export default function AdminAccountsPage() {
       
       // Check for profit target achievement
       const profitPercent = ((metrics.balance - config.accountSize) / config.accountSize) * 100;
-      const targetProfit = config.accountType === 'standard' ? 10 : 12;
+      const isFunded = config.step === 3 || config.status === 'funded';
+      
+      if (isFunded) {
+        // Special checks for funded accounts
+        const fundedMaxDDKey = `${account.uid}-funded-maxdd-${metrics.maxDrawdown?.toFixed(2)}`;
+        const fundedRiskKey = `${account.uid}-funded-risk-${(metrics.maxDailyDrawdown || metrics.dailyDrawdown)?.toFixed(2)}`;
+        
+        // Check for funded account max drawdown breach (15%)
+        if (metrics.maxDrawdown > 15 && !processedAlerts.has(fundedMaxDDKey)) {
+          newAlerts.push({
+            id: fundedMaxDDKey,
+            type: 'breach',
+            accountId: config.accountId,
+            userEmail: account.email,
+            message: `Funded account max drawdown breach: ${metrics.maxDrawdown.toFixed(2)}% (limit: 15%)`,
+            timestamp: new Date(),
+            read: false
+          });
+          setProcessedAlerts(prev => new Set(prev).add(fundedMaxDDKey));
+        }
+        
+        // Check for funded account daily drawdown breach (8%)
+        if ((metrics.maxDailyDrawdown || metrics.dailyDrawdown) > 8 && !processedAlerts.has(fundedRiskKey)) {
+          newAlerts.push({
+            id: fundedRiskKey,
+            type: 'breach',
+            accountId: config.accountId,
+            userEmail: account.email,
+            message: `Funded account daily drawdown breach: ${(metrics.maxDailyDrawdown || metrics.dailyDrawdown).toFixed(2)}% (limit: 8%)`,
+            timestamp: new Date(),
+            read: false
+          });
+          setProcessedAlerts(prev => new Set(prev).add(fundedRiskKey));
+        }
+        
+        // Check for funded account risk violation (daily drawdown > 2% means risking more than 2%)
+        const fundedRiskViolationKey = `${account.uid}-funded-risk-violation-${(metrics.maxDailyDrawdown || metrics.dailyDrawdown)?.toFixed(2)}`;
+        if ((metrics.maxDailyDrawdown || metrics.dailyDrawdown) > 2 && (metrics.maxDailyDrawdown || metrics.dailyDrawdown) < 8 && !processedAlerts.has(fundedRiskViolationKey)) {
+          newAlerts.push({
+            id: fundedRiskViolationKey,
+            type: 'breach',
+            accountId: config.accountId,
+            userEmail: account.email,
+            message: `Funded account risk violation: Daily drawdown of ${(metrics.maxDailyDrawdown || metrics.dailyDrawdown).toFixed(2)}% indicates risking more than 2% (violation)`,
+            timestamp: new Date(),
+            read: false
+          });
+          setProcessedAlerts(prev => new Set(prev).add(fundedRiskViolationKey));
+        }
+        
+        // Warning for approaching funded account limits
+        const fundedWarningKey = `${account.uid}-funded-warning-${metrics.maxDrawdown?.toFixed(2)}`;
+        if (metrics.maxDrawdown > 12 && metrics.maxDrawdown <= 15 && !processedAlerts.has(fundedWarningKey)) {
+          newAlerts.push({
+            id: fundedWarningKey,
+            type: 'warning',
+            accountId: config.accountId,
+            userEmail: account.email,
+            message: `Approaching funded account max drawdown limit: ${metrics.maxDrawdown.toFixed(2)}%`,
+            timestamp: new Date(),
+            read: false
+          });
+          setProcessedAlerts(prev => new Set(prev).add(fundedWarningKey));
+        }
+      } else {
+        // Regular challenge account checks
+        const targetProfit = config.accountType === 'standard' 
+          ? (config.step === 1 ? 10 : 5)  // Standard: Step 1 = 10%, Step 2 = 5%
+          : 12;  // Instant: 12%
       
       if (profitPercent >= targetProfit && config.status === 'active' && !processedAlerts.has(profitKey)) {
         newAlerts.push({
@@ -267,6 +335,7 @@ export default function AdminAccountsPage() {
           read: false
         });
         setProcessedAlerts(prev => new Set(prev).add(warningKey));
+        }
       }
     });
     
@@ -539,9 +608,13 @@ export default function AdminAccountsPage() {
     if (!confirm('Are you sure you want to permanently delete this account? This action cannot be undone.')) return;
     
     try {
-      // First, find the document ID for this user's account
+      // Find the specific account document by userId AND accountId
       const accountsRef = collection(db, 'userMetaApiAccounts');
-      const q = query(accountsRef, where('userId', '==', userId));
+      const q = query(
+        accountsRef, 
+        where('userId', '==', userId),
+        where('accountId', '==', accountId)
+      );
       const querySnapshot = await getDocs(q);
       
       if (!querySnapshot.empty) {
@@ -743,6 +816,7 @@ export default function AdminAccountsPage() {
     active: allAccounts.filter(a => a.metaApiAccount?.status === 'active').length,
     passed: allAccounts.filter(a => a.metaApiAccount?.status === 'passed').length,
     failed: allAccounts.filter(a => a.metaApiAccount?.status === 'failed').length,
+    funded: allAccounts.filter(a => a.metaApiAccount?.status === 'funded').length,
     totalBalance: allAccounts.reduce((sum, a) => sum + (a.cachedMetrics?.balance || 0), 0),
     totalEquity: allAccounts.reduce((sum, a) => sum + (a.cachedMetrics?.equity || 0), 0)
   };
@@ -868,6 +942,125 @@ export default function AdminAccountsPage() {
     } catch (error) {
       console.error('Error sending drawdown warning email:', error);
       setMessage({ type: 'error', text: 'Failed to send drawdown warning email' });
+    }
+  };
+
+  // Send funded account pass email
+  const sendFundedPassEmail = async (account: UserWithAccount) => {
+    if (!account.metaApiAccount) return;
+    
+    const { accountSize } = account.metaApiAccount;
+    
+    try {
+      const response = await fetch('/api/send-challenge-emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: 'funded-pass',
+          email: account.email,
+          name: account.displayName || `${account.firstName} ${account.lastName}`.trim() || account.email,
+          accountSize,
+          adminEmail: 'support@shockwave-capital.com'
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
+      
+      setMessage({ type: 'success', text: `Funded account pass email sent to ${account.email}` });
+    } catch (error) {
+      console.error('Error sending funded pass email:', error);
+      setMessage({ type: 'error', text: 'Failed to send funded pass email' });
+    }
+  };
+
+  // Send funded account fail email
+  const sendFundedFailEmail = async (account: UserWithAccount) => {
+    if (!account.metaApiAccount) return;
+    
+    const { accountSize } = account.metaApiAccount;
+    const metrics = account.cachedMetrics;
+    
+    // Determine breach type for funded accounts
+    let breachType: 'maxDrawdown' | 'riskViolation' | 'both' = 'maxDrawdown';
+    const maxDDBreached = metrics?.maxDrawdown > 15;
+    const riskViolation = (metrics?.maxDailyDrawdown || metrics?.dailyDrawdown) > 2 && (metrics?.maxDailyDrawdown || metrics?.dailyDrawdown) < 8;
+    
+    if (maxDDBreached && riskViolation) {
+      breachType = 'both';
+    } else if (riskViolation) {
+      breachType = 'riskViolation';
+    }
+    
+    try {
+      const response = await fetch('/api/send-challenge-emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: 'funded-fail',
+          email: account.email,
+          name: account.displayName || `${account.firstName} ${account.lastName}`.trim() || account.email,
+          accountSize,
+          breachType,
+          maxDrawdown: metrics?.maxDrawdown || 0,
+          dailyDrawdown: metrics?.maxDailyDrawdown || metrics?.dailyDrawdown || 0,
+          adminEmail: 'support@shockwave-capital.com'
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
+      
+      setMessage({ type: 'success', text: `Funded fail email sent to ${account.email}` });
+    } catch (error) {
+      console.error('Error sending funded fail email:', error);
+      setMessage({ type: 'error', text: 'Failed to send funded fail email' });
+    }
+  };
+
+  // Send funded account drawdown warning email
+  const sendFundedDrawdownWarningEmail = async (account: UserWithAccount) => {
+    if (!account.metaApiAccount || !account.cachedMetrics) return;
+    
+    const { accountSize } = account.metaApiAccount;
+    const metrics = account.cachedMetrics;
+    
+    // Determine warning type
+    const warningType = metrics.maxDrawdown > 6 
+      ? 'approaching-max' 
+      : 'approaching-risk-limit';
+    
+    try {
+      const response = await fetch('/api/send-challenge-emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: 'funded-drawdown-warning',
+          email: account.email,
+          name: account.displayName || `${account.firstName} ${account.lastName}`.trim() || account.email,
+          accountSize,
+          currentDrawdown: metrics.maxDrawdown || 0,
+          warningType,
+          adminEmail: 'support@shockwave-capital.com'
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
+      
+      setMessage({ type: 'success', text: `Funded drawdown warning email sent to ${account.email}` });
+    } catch (error) {
+      console.error('Error sending funded drawdown warning email:', error);
+      setMessage({ type: 'error', text: 'Failed to send funded drawdown warning email' });
     }
   };
 
@@ -1072,8 +1265,8 @@ export default function AdminAccountsPage() {
                 accountType: 'standard' as 'standard' | 'instant',
                 accountSize: 10000,
                 platform: 'mt5' as 'mt4' | 'mt5',
-                status: 'active' as 'active' | 'inactive' | 'passed' | 'failed',
-                step: 1 as 1 | 2
+                status: 'active' as 'active' | 'inactive' | 'passed' | 'failed' | 'funded',
+                step: 1 as 1 | 2 | 3
               });
             }}
             className="bg-green-500 text-white font-semibold px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
@@ -1092,8 +1285,8 @@ export default function AdminAccountsPage() {
                 accountType: 'standard' as 'standard' | 'instant',
                 accountSize: 10000,
                 platform: 'mt5' as 'mt4' | 'mt5',
-                status: 'active' as 'active' | 'inactive' | 'passed' | 'failed',
-                step: 1 as 1 | 2
+                status: 'active' as 'active' | 'inactive' | 'passed' | 'failed' | 'funded',
+                step: 1 as 1 | 2 | 3
               });
             }}
             className="bg-[#0FF1CE] text-black font-semibold px-4 py-2 rounded-lg hover:bg-[#0FF1CE]/90 transition-colors flex items-center gap-2"
@@ -1159,7 +1352,7 @@ export default function AdminAccountsPage() {
       </div>
 
       {/* Overview Statistics */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
         <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-4">
           <div className="flex items-center gap-3">
             <Users className="text-[#0FF1CE]" size={20} />
@@ -1196,6 +1389,16 @@ export default function AdminAccountsPage() {
             <div>
               <p className="text-2xl font-bold text-white">{stats.failed}</p>
               <p className="text-xs text-gray-400">Failed</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-4">
+          <div className="flex items-center gap-3">
+            <Shield className="text-purple-400" size={20} />
+            <div>
+              <p className="text-2xl font-bold text-white">{stats.funded}</p>
+              <p className="text-xs text-gray-400">Funded</p>
             </div>
           </div>
         </div>
@@ -1254,6 +1457,7 @@ export default function AdminAccountsPage() {
               <option value="inactive">Inactive</option>
               <option value="passed">Passed</option>
               <option value="failed">Failed</option>
+              <option value="funded">Funded</option>
             </select>
 
             <select
@@ -1422,6 +1626,8 @@ export default function AdminAccountsPage() {
                             ? 'bg-blue-500/20 text-blue-400'
                             : config?.status === 'failed'
                             ? 'bg-red-500/20 text-red-400'
+                            : config?.status === 'funded'
+                            ? 'bg-purple-500/20 text-purple-400'
                             : 'bg-gray-500/20 text-gray-400'
                         }`}>
                           {config?.status?.toUpperCase() || 'UNKNOWN'}
@@ -1432,6 +1638,7 @@ export default function AdminAccountsPage() {
                           <Shield size={14} className="text-gray-400" />
                           <span className="text-sm text-gray-300">
                             {config?.accountType === 'standard' ? 'Standard' : 'Instant'}
+                            {config?.step && ` - ${config.step === 3 ? 'Funded' : `Step ${config.step}`}`}
                           </span>
                         </div>
                       </td>
@@ -1522,7 +1729,7 @@ export default function AdminAccountsPage() {
                           </button>
                           
                           {/* Email Actions */}
-                          {(config?.status === 'active' || config?.status === 'failed' || config?.status === 'passed') && (
+                          {(config?.status === 'active' || config?.status === 'failed' || config?.status === 'passed' || config?.status === 'funded') && (
                             <div className="flex items-center gap-1 border-l border-[#2F2F2F]/50 pl-2 ml-1">
                               {config?.status === 'passed' && (
                                 <button
@@ -1535,12 +1742,39 @@ export default function AdminAccountsPage() {
                               )}
                               {config?.status === 'failed' && (
                                 <button
-                                  onClick={() => sendFailEmail(account)}
+                                  onClick={() => config.step === 3 ? sendFundedFailEmail(account) : sendFailEmail(account)}
                                   className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"
-                                  title="Send Fail Email"
+                                  title={config.step === 3 ? "Send Funded Fail Email" : "Send Fail Email"}
                                 >
                                   <Mail size={16} />
                                 </button>
+                              )}
+                              {config?.status === 'funded' && (
+                                <>
+                                  <button
+                                    onClick={() => sendFundedPassEmail(account)}
+                                    className="p-1.5 text-gray-400 hover:text-purple-400 transition-colors"
+                                    title="Send Funded Welcome Email"
+                                  >
+                                    <Mail size={16} />
+                                  </button>
+                                  <button
+                                    onClick={() => sendFundedFailEmail(account)}
+                                    className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"
+                                    title="Send Funded Fail Email"
+                                  >
+                                    <Mail size={16} />
+                                  </button>
+                                  {metrics && (metrics.maxDrawdown >= 6 || (metrics.maxDailyDrawdown || metrics.dailyDrawdown) <= 3) && (
+                                    <button
+                                      onClick={() => sendFundedDrawdownWarningEmail(account)}
+                                      className="p-1.5 text-gray-400 hover:text-yellow-400 transition-colors"
+                                      title="Send Funded Risk Warning Email"
+                                    >
+                                      <Mail size={16} />
+                                    </button>
+                                  )}
+                                </>
                               )}
                               {config?.status === 'active' && (
                                 <>
@@ -1655,18 +1889,29 @@ export default function AdminAccountsPage() {
                   <select
                     value={accountForm.accountType}
                     onChange={(e) => {
-                      const newType = e.target.value as 'standard' | 'instant';
+                      const newType = e.target.value as 'standard' | 'instant' | 'funded';
+                      // For funded accounts, set step to 3 automatically
+                      if (newType === 'funded') {
+                        setAccountForm({ 
+                          ...accountForm, 
+                          accountType: 'standard', // Funded accounts use standard rules
+                          step: 3 // Step 3 indicates funded status
+                        });
+                      } else {
                       const sizes = getAccountSizes(newType);
                       setAccountForm({ 
                         ...accountForm, 
                         accountType: newType,
-                        accountSize: sizes[0] // Reset to first available size for the new type
+                          accountSize: sizes[0], // Reset to first available size for the new type
+                          step: 1 // Reset to step 1 for non-funded accounts
                       });
+                      }
                     }}
                     className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#0FF1CE]/50"
                   >
                     <option value="standard">Shockwave Standard</option>
                     <option value="instant">Shockwave Instant</option>
+                    <option value="funded">Funded Account</option>
                   </select>
                 </div>
 
@@ -1714,6 +1959,7 @@ export default function AdminAccountsPage() {
                     <option value="inactive">Inactive</option>
                     <option value="passed">Passed</option>
                     <option value="failed">Failed</option>
+                    <option value="funded">Funded</option>
                   </select>
                 </div>
 
@@ -1723,11 +1969,13 @@ export default function AdminAccountsPage() {
                   </label>
                   <select
                     value={accountForm.step}
-                    onChange={(e) => setAccountForm({ ...accountForm, step: parseInt(e.target.value) as 1 | 2 })}
+                    onChange={(e) => setAccountForm({ ...accountForm, step: parseInt(e.target.value) as 1 | 2 | 3 })}
                     className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#0FF1CE]/50"
+                    disabled={accountForm.status === 'funded' || accountForm.step === 3}
                   >
                     <option value={1}>Step 1</option>
                     <option value={2}>Step 2</option>
+                    <option value={3}>Funded</option>
                   </select>
                 </div>
               </div>
@@ -1863,18 +2111,29 @@ export default function AdminAccountsPage() {
                       <select
                         value={accountForm.accountType}
                         onChange={(e) => {
-                          const newType = e.target.value as 'standard' | 'instant';
+                          const newType = e.target.value as 'standard' | 'instant' | 'funded';
+                          // For funded accounts, set step to 3 automatically
+                          if (newType === 'funded') {
+                            setAccountForm({ 
+                              ...accountForm, 
+                              accountType: 'standard', // Funded accounts use standard rules
+                              step: 3 // Step 3 indicates funded status
+                            });
+                          } else {
                           const sizes = getAccountSizes(newType);
                           setAccountForm({ 
                             ...accountForm, 
                             accountType: newType,
-                            accountSize: sizes[0] // Reset to first available size for the new type
+                              accountSize: sizes[0], // Reset to first available size for the new type
+                              step: 1 // Reset to step 1 for non-funded accounts
                           });
+                          }
                         }}
                         className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#0FF1CE]/50"
                       >
                         <option value="standard">Shockwave Standard</option>
                         <option value="instant">Shockwave Instant</option>
+                        <option value="funded">Funded Account</option>
                       </select>
                     </div>
 
@@ -1915,11 +2174,13 @@ export default function AdminAccountsPage() {
                       </label>
                       <select
                         value={accountForm.step}
-                        onChange={(e) => setAccountForm({ ...accountForm, step: parseInt(e.target.value) as 1 | 2 })}
+                        onChange={(e) => setAccountForm({ ...accountForm, step: parseInt(e.target.value) as 1 | 2 | 3 })}
                         className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#0FF1CE]/50"
+                        disabled={accountForm.status === 'funded' || accountForm.step === 3}
                       >
                         <option value={1}>Step 1</option>
                         <option value={2}>Step 2</option>
+                        <option value={3}>Funded</option>
                       </select>
                     </div>
                   </div>
@@ -2197,18 +2458,29 @@ export default function AdminAccountsPage() {
                             <select
                               value={accountForm.accountType}
                               onChange={(e) => {
-                                const newType = e.target.value as 'standard' | 'instant';
+                                const newType = e.target.value as 'standard' | 'instant' | 'funded';
+                                // For funded accounts, set step to 3 automatically
+                                if (newType === 'funded') {
+                                  setAccountForm({ 
+                                    ...accountForm, 
+                                    accountType: 'standard', // Funded accounts use standard rules
+                                    step: 3 // Step 3 indicates funded status
+                                  });
+                                } else {
                                 const sizes = getAccountSizes(newType);
                                 setAccountForm({ 
                                   ...accountForm, 
                                   accountType: newType,
-                                  accountSize: sizes[0]
+                                    accountSize: sizes[0], // Reset to first available size for the new type
+                                    step: 1 // Reset to step 1 for non-funded accounts
                                 });
+                                }
                               }}
                               className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#0FF1CE]/50"
                             >
                               <option value="standard">Shockwave Standard</option>
                               <option value="instant">Shockwave Instant</option>
+                              <option value="funded">Funded Account</option>
                             </select>
                           </div>
 
@@ -2235,11 +2507,13 @@ export default function AdminAccountsPage() {
                             </label>
                             <select
                               value={accountForm.step}
-                              onChange={(e) => setAccountForm({ ...accountForm, step: parseInt(e.target.value) as 1 | 2 })}
+                              onChange={(e) => setAccountForm({ ...accountForm, step: parseInt(e.target.value) as 1 | 2 | 3 })}
                               className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#0FF1CE]/50"
+                              disabled={accountForm.status === 'funded' || accountForm.step === 3}
                             >
                               <option value={1}>Step 1</option>
                               <option value={2}>Step 2</option>
+                              <option value={3}>Funded</option>
                             </select>
                           </div>
                         </div>
