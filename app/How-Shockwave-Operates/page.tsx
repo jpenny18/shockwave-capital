@@ -309,9 +309,40 @@ export default function HowShockwaveOperatesPage() {
                   </h4>
                   <div className="space-y-4">
                     <p className="text-gray-300">
-                      You are allowed to risk up to <span className="text-white font-medium">2% of your account balance in total, across all open trades at any time</span>.
-                      Your daily drawdown limit is <span className="text-white font-medium">8%</span>, but if you lose more than 2% in a single day, this strongly indicates that you exceeded the allowed 2% total risk exposure.
+                      In practice:
                     </p>
+                    <ul className="space-y-3">
+                      <li className="flex items-start gap-3">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
+                        <span className="text-gray-300">
+                          You can open a trade(s) with up to <span className="text-white font-medium">2% risk</span>, close it, and later open another trade(s) with up to <span className="text-white font-medium">2% risk</span> again — as long as you never have more than <span className="text-white font-medium">2% total open risk at the same time</span>.
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
+                        <span className="text-gray-300">
+                          However, please keep in mind that if your open trades are affected by real-world market conditions such as slippage, gaps, spread widening, liquidity or illiquidity, swaps, or commission costs — and the resulting total loss from those positions exceeds the 2% risk limit — this will be treated as a violation.
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
+                        <span className="text-gray-300">
+                          This policy exists to ensure that traders remain fully responsible for execution realities and true market conditions, just as they would be when managing actual live capital.
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
+                        <span className="text-gray-300">
+                          Therefore, while you can theoretically risk up to 2% per trade, we strongly recommend using a slight risk buffer to account for these variables and avoid unintentional breaches.
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
+                        <span className="text-gray-300">
+                        You may lose up to your allowed daily drawdown limit of 8%. The 2% risk limit applies to exposure at a given moment, whereas the daily drawdown limit covers your total realized losses within a trading day.
+                        </span>
+                      </li>
+                    </ul>
                     <div className="bg-[#FF6B6B]/10 rounded-lg p-4 border border-[#FF6B6B]/20">
                       <p className="text-gray-300 font-medium">
                         Your funding may be restricted or terminated if you breach this limit, regardless of how the loss occurs.
@@ -382,8 +413,7 @@ export default function HowShockwaveOperatesPage() {
                       You are fully responsible for managing your lot sizes, stop levels, and trade timing to keep your exposure within this limit.
                     </p>
                     <p className="text-gray-300">
-                      If you lose more than 2% in a single day, this demonstrates that you exceeded the allowed risk and failed to manage it properly.
-                      This is treated as a clear violation of your funded account rules — regardless of slippage, news events, or any other factors.
+                      If you lose more than 2% in a single day, our risk advisors will closely monitor all positions taken on your account going forward to ensure strict compliance with our risk exposure rules.
                     </p>
                   </div>
                 </div>
@@ -431,7 +461,7 @@ export default function HowShockwaveOperatesPage() {
                       </li>
                       <li className="flex items-start gap-2">
                         <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
-                        <span className="text-gray-300">If you lose more than 2% in a single day, this shows you exceeded your allowed risk exposure.</span>
+                        <span className="text-gray-300">If you lose 2% or more in a single day, our risk team will closely monitor and review all subsequent trades to ensure no positions exceed the 2% maximum risk exposure.</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
