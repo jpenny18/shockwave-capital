@@ -279,9 +279,9 @@ export async function POST(req: Request) {
         if (breachType === 'maxDrawdown') {
           fundedBreachDetails = `You exceeded the maximum drawdown limit of 15% (current: ${maxDrawdown?.toFixed(2)}%).`;
         } else if (breachType === 'riskViolation') {
-          fundedBreachDetails = `You violated the 2% risk limit rule. Your daily drawdown of ${dailyDrawdown?.toFixed(2)}% indicates you were risking more than 2% of your account on open positions.`;
+          fundedBreachDetails = `You violated the risk management rule by exceeding the maximum 2% total risk exposure allowed across all open trades at any time. Your loss of ${dailyDrawdown?.toFixed(2)}% confirms this violation.`;
         } else {
-          fundedBreachDetails = `You violated multiple rules: Maximum drawdown limit exceeded (${maxDrawdown?.toFixed(2)}%, limit: 15%) and risk limit violation (daily drawdown: ${dailyDrawdown?.toFixed(2)}%, which exceeds the 2% risk limit).`;
+          fundedBreachDetails = `You violated multiple rules: Maximum drawdown limit exceeded (${maxDrawdown?.toFixed(2)}%, limit: 15%) and risk management violation by exceeding the maximum 2% total risk exposure allowed across all open trades (loss: ${dailyDrawdown?.toFixed(2)}%).`;
         }
         
         customerHtml = `
@@ -305,8 +305,8 @@ export async function POST(req: Request) {
               <ul style="color: #666; line-height: 1.8;">
                 <li><strong>Maximum Drawdown:</strong> 15% from initial balance</li>
                 <li><strong>Daily Drawdown:</strong> 8% maximum per day</li>
-                <li><strong>Risk Limit:</strong> Maximum 2% risk on open positions at any time</li>
-                <li><strong>Important:</strong> Daily drawdown exceeding 2% indicates risking more than allowed (violation)</li>
+                <li><strong>Risk Management:</strong> Maximum 2% total risk exposure spread across all open trades at any time</li>
+                <li><strong>Important:</strong> Any loss of 2% or more constitutes a risk management violation</li>
               </ul>
             </div>
             
@@ -315,13 +315,35 @@ export async function POST(req: Request) {
               <p>While this funded account has been terminated, you can:</p>
               <ul style="color: #666; line-height: 1.8;">
                 <li>Start a new challenge to earn another funded account</li>
+                <li>Purchase a new funded account at the same capital level you were funded at (or above) and maintain your funded trader status!</li>
                 <li>Review your trading strategy to better manage risk</li>
                 <li>Contact support if you have questions about the violation</li>
               </ul>
             </div>
             
+            <div style="margin-bottom: 30px; background-color: #0FF1CE10; border: 2px solid #0FF1CE; border-radius: 10px; padding: 20px; text-align: center;">
+              <h2 style="color: #0FF1CE; font-size: 20px; margin-bottom: 15px;">🚀 Keep Your Funded Status!</h2>
+              <p style="color: #333; font-size: 16px; margin-bottom: 15px;">
+                <strong>Special Offer:</strong> Purchase a new funded account at the same capital level you were funded at (or above) and maintain your funded trader status!
+              </p>
+              <p style="color: #666; font-size: 14px; margin-bottom: 20px;">
+                Save <strong>10% on your new funded account</strong> if purchased within the next 24 hours using code:
+              </p>
+              <div style="background-color: #0FF1CE; color: #000; padding: 10px 20px; border-radius: 5px; font-weight: bold; font-size: 18px; margin-bottom: 20px; display: inline-block;">
+                STAYFUNDED
+              </div>
+              <div>
+                <a href="https://www.shockwave-capital.com/challenge" style="display: inline-block; background-color: #0FF1CE; color: #000; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; margin-top: 10px;">
+                  Get New Funded Account - Save 10%
+                </a>
+              </div>
+              <p style="color: #999; font-size: 12px; margin-top: 15px;">
+                *Offer expires 24 hours from this email. Use code STAYFUNDED at checkout.
+              </p>
+            </div>
+            
             <div style="text-align: center; margin-top: 40px;">
-              <a href="https://shockwave-capital.com/challenge" style="display: inline-block; background-color: #0FF1CE; color: #000; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Start New Challenge</a>
+              <a href="https://www.shockwave-capital.com/challenge" style="display: inline-block; background-color: #0FF1CE; color: #000; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Start New Challenge</a>
             </div>
             
             <div style="margin-top: 40px;">
