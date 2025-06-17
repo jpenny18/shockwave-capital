@@ -251,7 +251,7 @@ export default function EarlyAccessPage() {
             <p className="text-gray-400">
               {isLogin ? 'Sign in for access' : 'Create your account to get started'}
             </p>
-            <div className="mt-4 p-4 bg-gradient-to-r from-[#0FF1CE]/10 to-[#00D4FF]/10 rounded-lg border border-[#0FF1CE]/20">
+            <div className="mt-4 p-4 bg-gradient-to-r from-[#0FF1CE]/10 to-[#00D4FF]/10 rounded-lg border border-[#0FF1CE]/20 hidden">
               <div className="text-lg font-bold text-white mb-1">SuperCharged Offer! 🚀</div>
               <div className="text-2xl font-bold text-[#0FF1CE] mb-1">SAVE 30% on your evaluation fee</div>
               <div className="text-sm text-[#0FF1CE] mb-2">+ FREE retry included!</div>

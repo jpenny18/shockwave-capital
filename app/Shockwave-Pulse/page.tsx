@@ -98,7 +98,7 @@ export default function ShockwavePulsePage() {
   };
 
   const fetchComments = async () => {
-    const querySnapshot = await getDocs(query(collection(db, 'comments'), orderBy('createdAt', 'desc')));
+    const querySnapshot = await getDocs(query(collection(db, 'comments'), orderBy('createdAt', 'asc')));
     const commentsData = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
