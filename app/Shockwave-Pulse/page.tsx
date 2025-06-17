@@ -52,6 +52,16 @@ export default function ShockwavePulsePage() {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
+  // Helper function to format text with line breaks
+  const formatText = (text: string) => {
+    return text.split('\n').map((line, index) => (
+      <React.Fragment key={index}>
+        {line}
+        {index < text.split('\n').length - 1 && <br />}
+      </React.Fragment>
+    ));
+  };
+
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
@@ -400,12 +410,12 @@ export default function ShockwavePulsePage() {
                       value={newPollDescription}
                       onChange={(e) => setNewPollDescription(e.target.value)}
                       className="w-full bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg px-4 py-3 text-white h-32 resize-none focus:outline-none focus:ring-2 focus:ring-[#0FF1CE]/50 focus:border-transparent transition-all"
-                      placeholder="Describe your poll in detail to get meaningful responses"
-                      maxLength={500}
+                      placeholder="Describe your poll in detail. Press Enter to create new paragraphs."
+                      maxLength={1000}
                       required
                     />
                     <p className="text-xs text-gray-400 mt-2">
-                      {newPollDescription.length}/500 characters
+                      {newPollDescription.length}/1000 characters • Tip: Press Enter for line breaks
                     </p>
                   </div>
                   
@@ -437,7 +447,7 @@ export default function ShockwavePulsePage() {
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h3 className="text-xl font-bold text-white mb-2">{poll.title}</h3>
-                    <p className="text-gray-300">{poll.description}</p>
+                    <p className="text-gray-300">{formatText(poll.description)}</p>
                   </div>
                   <div className="text-sm text-gray-400">
                     by {poll.createdBy}
@@ -468,20 +478,22 @@ export default function ShockwavePulsePage() {
 
                 {/* Comments Section */}
                 <div className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <input
-                      type="text"
+                  <div className="flex items-start gap-4">
+                    <textarea
                       value={selectedPollId === poll.id ? newComment : ''}
                       onChange={(e) => {
                         setSelectedPollId(poll.id);
                         setNewComment(e.target.value);
                       }}
-                      className="flex-1 bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg px-4 py-2 text-white"
-                      placeholder="Add a comment..."
+                      className="flex-1 bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg px-4 py-2 text-white resize-none focus:outline-none focus:ring-2 focus:ring-[#0FF1CE]/50 focus:border-transparent transition-all"
+                      placeholder="Add a comment... (Press Enter for line breaks)"
+                      rows={2}
+                      maxLength={600}
                     />
                     <button
                       onClick={() => handleAddComment(poll.id)}
-                      className="bg-[#0FF1CE] text-black px-4 py-2 rounded-full font-bold hover:scale-105 transition-transform"
+                      disabled={!newComment.trim()}
+                      className="bg-[#0FF1CE] text-black px-4 py-2 rounded-full font-bold hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed mt-1"
                     >
                       <MessageSquare size={20} />
                     </button>
@@ -499,7 +511,7 @@ export default function ShockwavePulsePage() {
                               {comment.createdAt?.toDate().toLocaleDateString()}
                             </span>
                           </div>
-                          <p className="text-gray-300">{comment.text}</p>
+                          <p className="text-gray-300">{formatText(comment.text)}</p>
                         </div>
                       ))}
                   </div>
