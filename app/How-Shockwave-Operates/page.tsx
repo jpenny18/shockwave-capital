@@ -432,7 +432,7 @@ export default function HowShockwaveOperatesPage() {
                     <li className="flex items-start gap-3">
                       <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
                       <span className="text-gray-300 text-sm md:text-base">
-                        <span className="text-white font-medium">Max Total Risk Exposure at Any Time:</span> 2% of account balance <em>spread across all open positions combined</em>
+                        <span className="text-white font-medium">Max Total Risk Exposure at Any Time:</span> 2% of initial account balance <em>spread across all open positions combined</em>
                       </span>
                     </li>
                     <li className="flex items-start gap-3">
