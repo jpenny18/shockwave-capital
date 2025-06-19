@@ -437,7 +437,7 @@ export async function POST(req: NextRequest) {
         state: 'UNKNOWN',
         connectionStatus: 'UNKNOWN'
       },
-      trades: tradesData.slice(0, 50).map((trade: any) => ({
+      trades: tradesData.map((trade: any) => ({
         id: trade._id || trade.id || `trade_${Date.now()}_${Math.random()}`,
         symbol: trade.symbol || 'Unknown',
         type: mapTradeType(trade.type),
