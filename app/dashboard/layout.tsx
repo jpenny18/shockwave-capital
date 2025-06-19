@@ -11,7 +11,8 @@ import {
   Settings,
   LogOut,
   Menu,
-  X
+  X,
+  Shield
 } from 'lucide-react';
 import { auth, signOut } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
@@ -19,6 +20,7 @@ import { useRouter } from 'next/navigation';
 const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: BarChart2 },
   { name: 'My Accounts', href: '/dashboard/accounts', icon: Users },
+  { name: 'KYC Verification', href: '/dashboard/kyc', icon: Shield },
   { name: 'Payouts', href: '/dashboard/payouts', icon: Wallet },
   { name: 'Support', href: '/dashboard/support', icon: MessageCircle },
   { name: 'FAQ', href: '/dashboard/faq', icon: HelpCircle },

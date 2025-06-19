@@ -23,6 +23,13 @@ import {
   User as FirebaseUser,
   UserCredential
 } from 'firebase/auth';
+import { 
+  getStorage, 
+  ref, 
+  uploadBytes, 
+  getDownloadURL,
+  deleteObject 
+} from 'firebase/storage';
 
 // Your Firebase configuration
 const firebaseConfig = {
@@ -51,6 +58,7 @@ if (!getApps().length) {
 // Initialize services
 const db = getFirestore(app);
 const auth = getAuth(app);
+const storage = getStorage(app);
 
 /**
  * Interface for user data to be stored in Firestore
@@ -149,6 +157,39 @@ export interface CachedMetrics {
   lastRiskEvents?: any[]; // Risk events from MetaAPI Risk Management
   lastPeriodStats?: any[]; // Period statistics from MetaAPI Risk Management
   lastTrackers?: any[]; // Risk management trackers
+}
+
+/**
+ * Interface for KYC submission data
+ */
+export interface KYCSubmission {
+  userId: string;
+  email: string;
+  status: 'pending' | 'approved' | 'rejected' | 'needs_resubmission';
+  personalInfo: {
+    firstName: string;
+    lastName: string;
+    address: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    country: string;
+    phone: string;
+    email: string;
+  };
+  documents: {
+    governmentIdUrl?: string;
+    governmentIdFileName?: string;
+    proofOfAddressUrl?: string;
+    proofOfAddressFileName?: string;
+    tradingAgreementUrl?: string;
+    tradingAgreementSignedAt?: Timestamp;
+  };
+  reviewNotes?: string;
+  submittedAt: Timestamp;
+  reviewedAt?: Timestamp;
+  reviewedBy?: string;
+  updatedAt: Timestamp;
 }
 
 /**
@@ -556,4 +597,208 @@ export async function updateCachedMetrics(accountId: string, metrics: Omit<Cache
   }
 }
 
-export { app, db, auth, Timestamp }; 
+export { app, db, auth, storage, Timestamp };
+
+/**
+ * Upload a file to Firebase Storage
+ * @param file The file to upload
+ * @param path The storage path
+ * @returns The download URL
+ */
+export async function uploadFile(file: File, path: string): Promise<string> {
+  try {
+    const storageRef = ref(storage, path);
+    const snapshot = await uploadBytes(storageRef, file);
+    const downloadUrl = await getDownloadURL(snapshot.ref);
+    return downloadUrl;
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    throw error;
+  }
+}
+
+/**
+ * Delete a file from Firebase Storage
+ * @param path The storage path
+ */
+export async function deleteFile(path: string): Promise<void> {
+  try {
+    const storageRef = ref(storage, path);
+    await deleteObject(storageRef);
+  } catch (error) {
+    console.error('Error deleting file:', error);
+    throw error;
+  }
+}
+
+/**
+ * Create or update KYC submission
+ * @param userId The user ID
+ * @param kycData The KYC data
+ * @returns The submission ID
+ */
+export async function createOrUpdateKYCSubmission(
+  userId: string, 
+  kycData: Partial<KYCSubmission>
+): Promise<string> {
+  try {
+    const kycRef = doc(db, 'kycSubmissions', userId);
+    const existingDoc = await getDoc(kycRef);
+    
+    if (existingDoc.exists()) {
+      // Update existing submission
+      const existingData = existingDoc.data() as KYCSubmission;
+      
+      // Merge documents field properly
+      const mergedData: any = {
+        ...kycData,
+        updatedAt: Timestamp.now()
+      };
+      
+      // If documents field is being updated, merge it with existing documents
+      if (kycData.documents) {
+        mergedData.documents = {
+          ...existingData.documents,
+          ...kycData.documents
+        };
+      }
+      
+      await updateDoc(kycRef, mergedData);
+      return userId;
+    } else {
+      // Create new submission
+      await setDoc(kycRef, {
+        userId,
+        status: 'pending',
+        ...kycData,
+        submittedAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
+      });
+      return userId;
+    }
+  } catch (error) {
+    console.error('Error creating/updating KYC submission:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get KYC submission by user ID
+ * @param userId The user ID
+ * @returns The KYC submission data
+ */
+export async function getKYCSubmission(userId: string): Promise<KYCSubmission | null> {
+  try {
+    const kycRef = doc(db, 'kycSubmissions', userId);
+    const kycSnap = await getDoc(kycRef);
+    
+    if (kycSnap.exists()) {
+      return kycSnap.data() as KYCSubmission;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching KYC submission:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get all KYC submissions (admin only)
+ * @param statusFilter Optional status filter
+ * @returns Array of KYC submissions
+ */
+export async function getAllKYCSubmissions(
+  statusFilter?: KYCSubmission['status']
+): Promise<(KYCSubmission & { id: string })[]> {
+  try {
+    const kycRef = collection(db, 'kycSubmissions');
+    let q = query(kycRef);
+    
+    if (statusFilter) {
+      q = query(kycRef, where('status', '==', statusFilter));
+    }
+    
+    const querySnapshot = await getDocs(q);
+    const submissions: (KYCSubmission & { id: string })[] = [];
+    
+    querySnapshot.forEach((doc) => {
+      submissions.push({ 
+        ...(doc.data() as KYCSubmission), 
+        id: doc.id 
+      });
+    });
+    
+    return submissions;
+  } catch (error) {
+    console.error('Error fetching KYC submissions:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update KYC submission status (admin only)
+ * @param userId The user ID
+ * @param status The new status
+ * @param reviewNotes Optional review notes
+ * @param reviewedBy The reviewer's ID
+ */
+export async function updateKYCStatus(
+  userId: string,
+  status: KYCSubmission['status'],
+  reviewNotes?: string,
+  reviewedBy?: string
+): Promise<void> {
+  try {
+    const kycRef = doc(db, 'kycSubmissions', userId);
+    const updateData: Partial<KYCSubmission> = {
+      status,
+      reviewedAt: Timestamp.now(),
+      updatedAt: Timestamp.now()
+    };
+    
+    if (reviewNotes) {
+      updateData.reviewNotes = reviewNotes;
+    }
+    
+    if (reviewedBy) {
+      updateData.reviewedBy = reviewedBy;
+    }
+    
+    await updateDoc(kycRef, updateData);
+    
+    // If approved and trader passed challenge, update user status
+    if (status === 'approved') {
+      const userRef = doc(db, 'users', userId);
+      await updateDoc(userRef, {
+        kycVerified: true,
+        kycVerifiedAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
+      });
+    }
+  } catch (error) {
+    console.error('Error updating KYC status:', error);
+    throw error;
+  }
+}
+
+/**
+ * Check if user is eligible for KYC (passed challenge)
+ * @param userId The user ID
+ * @returns Whether user is eligible
+ */
+export async function isUserEligibleForKYC(userId: string): Promise<boolean> {
+  try {
+    const accountsRef = collection(db, 'userMetaApiAccounts');
+    const q = query(
+      accountsRef, 
+      where('userId', '==', userId),
+      where('status', 'in', ['passed', 'funded'])
+    );
+    const querySnapshot = await getDocs(q);
+    
+    return !querySnapshot.empty;
+  } catch (error) {
+    console.error('Error checking KYC eligibility:', error);
+    return false;
+  }
+} 
