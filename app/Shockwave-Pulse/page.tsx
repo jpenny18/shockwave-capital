@@ -342,6 +342,16 @@ export default function ShockwavePulsePage() {
               Participating as: <span className="text-[#0FF1CE]">{username}</span>
             </p>
           )}
+          
+          {/* Important Notice Card */}
+          <div className="mt-8 max-w-3xl mx-auto bg-[#0FF1CE]/10 border border-[#0FF1CE]/30 rounded-lg p-6 backdrop-blur-sm">
+            <div className="flex items-start gap-3">
+              <div className="w-2 h-2 bg-[#0FF1CE] rounded-full mt-2 flex-shrink-0"></div>
+              <p className="text-sm text-gray-200 leading-relaxed">
+                <span className="text-[#0FF1CE] font-semibold">Important:</span> This forum is exclusively for proposing new features and changes to the firm. Please do not use it to ask questions or submit support tickets. For general inquiries and support, please email our support team. All polls that don't propose a new feature or change will be removed.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 

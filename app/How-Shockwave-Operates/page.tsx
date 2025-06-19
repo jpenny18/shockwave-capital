@@ -142,7 +142,6 @@ export default function HowShockwaveOperatesPage() {
             </div>
             </ul>
           </div>
-
           {/* Section 3: Risk Controls */}
           <div className="relative bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl p-8 border border-[#2F2F2F]/50">
             <h2 className="text-2xl md:text-3xl font-bold text-[#0FF1CE] mb-6">Risk Controls & Why They Exist</h2>
@@ -165,7 +164,19 @@ export default function HowShockwaveOperatesPage() {
                 </div>
                 <span className="text-gray-300">Minimum profitable days: Ensure consistent performance and reduces gamblers</span>
               </li>
+              <li className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center mt-1">
+                  <span className="text-[#0FF1CE]">✓</span>
+                </div>
+                <span className="text-gray-300">Blacklisted gambling behaviour: Ensures you're a consistent profitable trader, not a gambler</span>
+              </li>
             </ul>
+            
+            <div className="mt-6 p-4 bg-[#1A1A1A]/50 rounded-lg border border-[#2F2F2F]/30">
+              <p className="text-gray-300 text-sm">
+                <span className="text-[#0FF1CE] font-medium">Important:</span> All drawdown and gambling behaviour calculations are based off of balance and/or floating equity if there are open trades.
+              </p>
+            </div>
           </div>
 
           {/* Section 4: Trading Objectives */}
@@ -251,7 +262,95 @@ export default function HowShockwaveOperatesPage() {
             </div>
           </div>
 
-          {/* Section 5: Funded Account Rules */}
+          {/* Section 5: Instant Challenge Rules */}
+          <div className="relative bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl p-8 border border-[#2F2F2F]/50">
+            <h2 className="text-2xl md:text-3xl font-bold text-[#0FF1CE] mb-6">Instant Challenge Rules</h2>
+            <p className="text-gray-300 leading-relaxed mb-6">
+              Our Instant Challenge is designed to fast-track skilled traders to get paid in just 30 days. Unlike our Standard Challenge, there's only one phase before you're eligible for a payout. Here are the specific rules and requirements you must meet to successfully complete the challenge.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-[#0FF1CE] rounded-full mt-2 flex-shrink-0"></div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-2">Trading Period</h3>
+                    <p className="text-gray-300 text-sm">You have exactly <strong>30 calendar days</strong> from activation to complete all objectives. This timeframe is fixed and cannot be extended.</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-[#0FF1CE] rounded-full mt-2 flex-shrink-0"></div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-2">Profit Target</h3>
+                    <p className="text-gray-300 text-sm">Achieve a <strong>12% profit</strong> from your starting balance. This target must be reached within the 30-day period while maintaining all risk parameters.</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-[#0FF1CE] rounded-full mt-2 flex-shrink-0"></div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-2">Minimum Profitable Days</h3>
+                    <p className="text-gray-300 text-sm">You must have at least <strong>5 profitable trading days</strong> during the challenge period. This ensures consistent performance rather than lucky streaks.</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-2">Maximum Drawdown</h3>
+                    <p className="text-gray-300 text-sm">Never exceed <strong>12% drawdown</strong> from your highest balance and/or equity achieved. This is calculated from your peak balance, not your starting balance.</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-2">Maximum Daily Loss</h3>
+                    <p className="text-gray-300 text-sm">Never lose more than <strong>4% in a single day</strong>. This limit resets at midnight EST and helps enforce proper risk management.</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-yellow-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-2">Free Reset Policy</h3>
+                    <p className="text-gray-300 text-sm">Your <strong>free reset resets your account balance to the starting amount</strong> but does NOT reset the 30-day timer. Use it wisely as it's a balance reset, not a time extension.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-[#0FF1CE]/10 border border-[#0FF1CE]/30 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-[#0FF1CE] mb-3">Key Differences from Standard Challenge</h3>
+              <ul className="text-gray-300 text-sm space-y-2">
+              <li className="flex items-start gap-2">
+                  <span className="text-[#0FF1CE] mt-1">•</span>
+                  <span>Get paid within 6 days of starting</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#0FF1CE] mt-1">•</span>
+                  <span>Immediate funding instead of two phases</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#0FF1CE] mt-1">•</span>
+                  <span>Higher profit target (12% vs 10% + 5%)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#0FF1CE] mt-1">•</span>
+                  <span>Stricter drawdown limits (12% vs 15%)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#0FF1CE] mt-1">•</span>
+                  <span>Fixed 30-day timeframe with no extensions</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Section 6: Funded Account Rules */}
           <div className="relative bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl p-8 border border-[#2F2F2F]/50">
             <h2 className="text-2xl md:text-3xl font-bold text-[#0FF1CE] mb-6">Funded Account Rules</h2>
             <p className="text-gray-300 leading-relaxed mb-6">
@@ -792,6 +891,40 @@ export default function HowShockwaveOperatesPage() {
               </li>
             </ul>
           </div>
+
+          {/* Final Disclaimer Card */}
+                <div className="mt-12 bg-gradient-to-br from-[#1A1A1A] via-[#0D0D0D] to-[#1A1A1A] rounded-2xl p-8 border-2 border-[#0FF1CE]/20 shadow-2xl">
+                  <div className="flex items-start gap-4 mb-6">
+                    <div className="w-8 h-8 rounded-full bg-[#0FF1CE]/20 flex items-center justify-center flex-shrink-0">
+                      <span className="text-[#0FF1CE] font-bold">!</span>
+                    </div>
+                    <h3 className="text-xl font-bold text-[#0FF1CE]">Important Legal Disclaimer & Risk Management Authority</h3>
+                  </div>
+                  
+                  <div className="space-y-4 text-gray-300 leading-relaxed">
+                    <p>
+                      <span className="text-white font-semibold">Discretionary Authority:</span> Shockwave Capital reserves the absolute and sole discretion to determine compliance with all trading rules, risk management protocols, and operational guidelines. Our risk management team maintains final authority over all trading activity assessments, account status determinations, and monetization decisions.
+                    </p>
+                    
+                    <p>
+                      <span className="text-white font-semibold">No Guarantee of Compensation:</span> Participation in our evaluation programs and funded trading opportunities does not constitute a guarantee of compensation, profit sharing, or continued account funding. All trading activities are subject to our comprehensive risk assessment and compliance review processes.
+                    </p>
+                    
+                    <p>
+                      <span className="text-white font-semibold">Not Investment Products:</span> Our challenge programs and simulated trading accounts are proprietary evaluation tools and do not constitute investment products, securities, or financial instruments. No client funds are managed, and participants do not hold any ownership interest in trading capital or profits generated.
+                    </p>
+                    
+                    <p className="text-sm text-gray-400 italic">
+                      This discretionary authority framework is standard practice across the proprietary trading industry. Shockwave Capital distinguishes itself by providing transparent disclosure of these policies, unlike many competitors who maintain similar authority without explicit communication to participants.
+                    </p>
+                  </div>
+                  
+                  <div className="mt-6 pt-4 border-t border-[#2F2F2F]">
+                    <p className="text-center text-[#0FF1CE] font-medium">
+                      By participating in our programs, you acknowledge and accept these terms, our comprehensive risk management framework, and all trading rules, objectives, and operational guidelines outlined herein.
+                    </p>
+                  </div>
+                </div>
 
           {/* CTA Section */}
           <div className="relative bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl p-12 border border-[#2F2F2F]/50 text-center">
