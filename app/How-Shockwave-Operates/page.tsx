@@ -86,7 +86,7 @@ export default function HowShockwaveOperatesPage() {
                   <div>
                     <h3 className="text-white font-semibold mb-2 text-base md:text-lg">Simulated Funded Trading</h3>
                     <p className="text-gray-400 text-sm md:text-base leading-relaxed">
-                      Upon successfully completing your challenge, you'll begin trading on a simulated funded account. After demonstrating consistent profitability with three successful payouts, our risk management team conducts a comprehensive strategy review. The three initial payouts are paid through our substantial reserve pool and failed challenge fees. Traders are then elevated to A-Book status and transition to our Live Copy Trading system.
+                      Upon successfully completing your challenge, you'll begin trading on a simulated funded account. After demonstrating consistent profitability with five successful payouts, our risk management team conducts a comprehensive strategy review. The five initial payouts are paid through our substantial reserve pool and failed challenge fees. Traders are then elevated to A-Book status and transition to our Live Copy Trading system.
                     </p>
                   </div>
                 </div>
@@ -178,17 +178,13 @@ export default function HowShockwaveOperatesPage() {
                 <CheckCircle className="w-5 h-5 text-[#0FF1CE] mt-0.5 flex-shrink-0" />
                 <span className="text-gray-300 text-sm md:text-base">Minimum profitable days: Ensure consistent performance and reduces gamblers</span>
               </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-[#0FF1CE] mt-0.5 flex-shrink-0" />
-                <span className="text-gray-300 text-sm md:text-base">Blacklisted gambling behaviour: Ensures you're a consistent profitable trader, not a gambler</span>
-              </div>
             </div>
             
             <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 md:p-5">
               <div className="flex gap-3">
                 <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
                 <p className="text-gray-300 text-sm md:text-base">
-                  <span className="text-yellow-500 font-semibold">Important:</span> All drawdown and gambling behaviour calculations are based off of balance and/or floating equity if there are open trades.
+                  <span className="text-yellow-500 font-semibold">Important:</span> All drawdown calculations are based off of balance and/or floating equity if there are open trades.
                 </p>
               </div>
             </div>
@@ -632,37 +628,6 @@ export default function HowShockwaveOperatesPage() {
                   </p>
                 </div>
               </div>
-
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-yellow-500 mt-0.5 flex-shrink-0" />
-                  <div className="text-gray-300 text-sm md:text-base">
-                    <span className="text-white font-medium">Gambling Behaviour:</span> Gambling behaviour is defined as a trader not trading with a profitable strategy but rather trying to take advantage of our high drawdowns/leverages for a quick payout. We are looking for consistent profitable traders not gamblers. Our drawdowns and leverage are made to give real profitable traders more breathing room not for gamblers to hike one position and hope for the best. Gambling activity will result in a failure of your funded account and forfeit of all generated profits with no potential for a refund.
-                  </div>
-                </div>
-
-                <div className="ml-9 mt-4">
-                  <p className="text-white font-medium mb-3 text-sm md:text-base">Behaviours on our funded account that get investigated for gambling activity:</p>
-                  <ul className="space-y-2">
-                    <li className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE]"></div>
-                      <span className="text-gray-300 text-sm">Drastically increasing lot sizes.</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE]"></div>
-                      <span className="text-gray-300 text-sm">No defined stop losses.</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE]"></div>
-                      <span className="text-gray-300 text-sm">Making more than 6% on a single trading day</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE]"></div>
-                      <span className="text-gray-300 text-sm">Having a losing day of 5%+ on a single trading day and making an additional 10%+ on the next trading day or two.</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -683,7 +648,7 @@ export default function HowShockwaveOperatesPage() {
               {/* Simulated Funded Accounts */}
               <div>
                 <h3 className="text-lg md:text-xl font-bold text-white mb-4 flex items-center">
-                  <span className="text-[#0FF1CE] mr-2">90%</span> Profit Split — Simulated Funded Accounts
+                  <span className="text-[#0FF1CE] mr-2">50%</span> Profit Split — Simulated Funded Accounts
                 </h3>
                 
                 <div className="space-y-4 md:space-y-6">
@@ -718,7 +683,7 @@ export default function HowShockwaveOperatesPage() {
                     <div>
                       <h4 className="text-white font-medium mb-2">Monthly Withdrawal Cap</h4>
                       <p className="text-gray-300 text-sm md:text-base">
-                        Maximum withdrawal of $10,000 per month after profit split. This applies regardless of account size or total profits generated. Each withdrawal requires meeting the minimum profitable days criterion again.
+                        Maximum withdrawal of $5,000 per month after profit split. This applies regardless of account size or total profits generated. Each withdrawal requires meeting the minimum profitable days criterion again.
                       </p>
                     </div>
                   </div>
@@ -737,7 +702,7 @@ export default function HowShockwaveOperatesPage() {
 
                   <div className="bg-[#0FF1CE]/5 rounded-lg p-4 border border-[#0FF1CE]/20">
                     <p className="text-gray-300 text-sm">
-                      <span className="text-white font-medium">Important:</span> After 3 successful withdrawals, traders undergo strategy analysis for potential transition to Live Copy Trading. Any remaining profits in simulated accounts are forfeited during transition. This transition is mandatory for continued program participation.
+                      <span className="text-white font-medium">Important:</span> After 5 successful withdrawals, traders undergo strategy analysis for potential transition to Live Copy Trading. Any remaining profits in simulated accounts are forfeited during transition. This transition is mandatory for continued program participation.
                     </p>
                   </div>
 
@@ -753,11 +718,11 @@ export default function HowShockwaveOperatesPage() {
                       </li>
                       <li className="flex items-start gap-2">
                         <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
-                        <span className="text-gray-300 text-sm">Requires 5 minimum profitable days (0.5% daily gain) for first $10,000 withdrawal</span>
+                        <span className="text-gray-300 text-sm">Requires 5 minimum profitable days (0.5% daily gain) for first $5,000 withdrawal</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
-                        <span className="text-gray-300 text-sm">After first withdrawal, needs another 5 profitable days before next month's $10,000 withdrawal</span>
+                        <span className="text-gray-300 text-sm">After first withdrawal, needs another 5 profitable days before next month's $5,000 withdrawal</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
