@@ -889,8 +889,8 @@ export default function KYCPage() {
                   <CheckCircle className="w-10 h-10 text-green-500" />
                 </div>
                 <h2 className="text-2xl font-bold text-white mb-4">KYC Approved!</h2>
-                <p className="text-gray-400 mb-8">
-                  Your KYC verification has been approved. You are now eligible to receive payouts as a funded trader.
+                <p className="text-gray-400 mb-8 max-w-2xl mx-auto leading-relaxed text-center px-4 sm:px-0">
+                  Your KYC verification has been approved. You are now eligible to receive payouts and start trading as a funded trader. You will receive your funded account credentials shortly but please allow up to 48hrs from KYC approval to receive your credentials.
                 </p>
                 <button
                   onClick={() => router.push('/dashboard')}

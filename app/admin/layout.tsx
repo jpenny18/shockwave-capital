@@ -19,7 +19,8 @@ import {
   Tag,
   Bitcoin,
   Server,
-  Shield
+  Shield,
+  DollarSign
 } from 'lucide-react';
 
 const navItems = [
@@ -28,6 +29,7 @@ const navItems = [
   { name: 'Crypto Orders', href: '/admin/crypto-orders', icon: Bitcoin },
   { name: 'Customers', href: '/admin/customers', icon: Users },
   { name: 'KYC Management', href: '/admin/kyc', icon: Shield },
+  { name: 'Withdrawals', href: '/admin/withdrawals', icon: DollarSign },
   { name: 'MetaAPI Accounts', href: '/admin/accounts', icon: Server },
   { name: 'Email Templates', href: '/admin/emails', icon: Mail },
   { name: 'Pulse Management', href: '/admin/pulse', icon: MessageSquare },

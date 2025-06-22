@@ -193,6 +193,29 @@ export interface KYCSubmission {
 }
 
 /**
+ * Interface for withdrawal request data
+ */
+export interface WithdrawalRequest {
+  userId: string;
+  userEmail: string;
+  status: 'pending' | 'approved' | 'rejected' | 'completed';
+  amountOwed: number;
+  profitSplit: number; // Percentage (e.g., 80 for 80%)
+  payoutAmount: number; // Calculated amount after profit split
+  paymentMethod: 'usdc_solana' | 'usdt_trc20';
+  walletAddress?: string;
+  transactionHash?: string;
+  submittedAt?: Timestamp;
+  enabledAt: Timestamp;
+  enabledBy: string; // Admin who enabled
+  reviewedAt?: Timestamp;
+  reviewedBy?: string;
+  reviewNotes?: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+/**
  * Register a new user with email and password
  * @param email User's email
  * @param password User's password
@@ -489,10 +512,29 @@ export async function getOrdersByPaymentIntentId(paymentIntentId: string) {
 
 /**
  * Get user's MetaAPI account mapping
+ * @param userId The user ID
+ * @param accountId Optional specific account ID to fetch
  */
-export async function getUserMetaApiAccount(userId: string): Promise<UserMetaApiAccount | null> {
+export async function getUserMetaApiAccount(userId: string, accountId?: string): Promise<UserMetaApiAccount | null> {
   try {
     const accountsRef = collection(db, 'userMetaApiAccounts');
+    
+    // If accountId is provided, fetch that specific account
+    if (accountId) {
+      const q = query(
+        accountsRef, 
+        where('userId', '==', userId), 
+        where('accountId', '==', accountId)
+      );
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        return querySnapshot.docs[0].data() as UserMetaApiAccount;
+      }
+      return null;
+    }
+    
+    // Otherwise, get the first active account (original behavior)
     const q = query(accountsRef, where('userId', '==', userId), where('status', '==', 'active'));
     const querySnapshot = await getDocs(q);
     
@@ -502,6 +544,31 @@ export async function getUserMetaApiAccount(userId: string): Promise<UserMetaApi
     return null;
   } catch (error) {
     console.error('Error fetching user MetaAPI account:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get a specific MetaAPI account by accountId for a user
+ * @param userId The user ID
+ * @param accountId The specific account ID
+ */
+export async function getUserMetaApiAccountById(userId: string, accountId: string): Promise<UserMetaApiAccount | null> {
+  try {
+    const accountsRef = collection(db, 'userMetaApiAccounts');
+    const q = query(
+      accountsRef, 
+      where('userId', '==', userId), 
+      where('accountId', '==', accountId)
+    );
+    const querySnapshot = await getDocs(q);
+    
+    if (!querySnapshot.empty) {
+      return querySnapshot.docs[0].data() as UserMetaApiAccount;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching specific MetaAPI account:', error);
     throw error;
   }
 }
@@ -799,6 +866,187 @@ export async function isUserEligibleForKYC(userId: string): Promise<boolean> {
     return !querySnapshot.empty;
   } catch (error) {
     console.error('Error checking KYC eligibility:', error);
+    return false;
+  }
+}
+
+/**
+ * Enable withdrawal for a user (admin only)
+ * @param userId The user ID
+ * @param userEmail The user's email
+ * @param amountOwed Total amount owed to the user
+ * @param profitSplit Profit split percentage
+ * @param enabledBy Admin user ID who enabled
+ */
+export async function enableUserWithdrawal(
+  userId: string,
+  userEmail: string,
+  amountOwed: number,
+  profitSplit: number,
+  enabledBy: string
+): Promise<string> {
+  try {
+    const withdrawalRef = doc(db, 'withdrawalRequests', userId);
+    const payoutAmount = (amountOwed * profitSplit) / 100;
+    
+    await setDoc(withdrawalRef, {
+      userId,
+      userEmail,
+      status: 'pending',
+      amountOwed,
+      profitSplit,
+      payoutAmount,
+      enabledAt: Timestamp.now(),
+      enabledBy,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now()
+    });
+    
+    return userId;
+  } catch (error) {
+    console.error('Error enabling withdrawal:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get withdrawal request by user ID
+ * @param userId The user ID
+ * @returns The withdrawal request data
+ */
+export async function getWithdrawalRequest(userId: string): Promise<WithdrawalRequest | null> {
+  try {
+    const withdrawalRef = doc(db, 'withdrawalRequests', userId);
+    const withdrawalSnap = await getDoc(withdrawalRef);
+    
+    if (withdrawalSnap.exists()) {
+      return withdrawalSnap.data() as WithdrawalRequest;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching withdrawal request:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update withdrawal request (user submitting wallet details)
+ * @param userId The user ID
+ * @param paymentMethod Payment method chosen
+ * @param walletAddress Wallet address
+ */
+export async function submitWithdrawalDetails(
+  userId: string,
+  paymentMethod: 'usdc_solana' | 'usdt_trc20',
+  walletAddress: string
+): Promise<void> {
+  try {
+    const withdrawalRef = doc(db, 'withdrawalRequests', userId);
+    await updateDoc(withdrawalRef, {
+      paymentMethod,
+      walletAddress,
+      submittedAt: Timestamp.now(),
+      updatedAt: Timestamp.now()
+    });
+  } catch (error) {
+    console.error('Error submitting withdrawal details:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get all withdrawal requests (admin only)
+ * @param statusFilter Optional status filter
+ * @returns Array of withdrawal requests
+ */
+export async function getAllWithdrawalRequests(
+  statusFilter?: WithdrawalRequest['status']
+): Promise<(WithdrawalRequest & { id: string })[]> {
+  try {
+    const withdrawalsRef = collection(db, 'withdrawalRequests');
+    let q = query(withdrawalsRef);
+    
+    if (statusFilter) {
+      q = query(withdrawalsRef, where('status', '==', statusFilter));
+    }
+    
+    const querySnapshot = await getDocs(q);
+    const withdrawals: (WithdrawalRequest & { id: string })[] = [];
+    
+    querySnapshot.forEach((doc) => {
+      withdrawals.push({ 
+        ...(doc.data() as WithdrawalRequest), 
+        id: doc.id 
+      });
+    });
+    
+    return withdrawals;
+  } catch (error) {
+    console.error('Error fetching withdrawal requests:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update withdrawal request status (admin only)
+ * @param userId The user ID
+ * @param status The new status
+ * @param reviewNotes Optional review notes
+ * @param reviewedBy The reviewer's ID
+ * @param transactionHash Optional transaction hash for completed withdrawals
+ */
+export async function updateWithdrawalStatus(
+  userId: string,
+  status: WithdrawalRequest['status'],
+  reviewNotes?: string,
+  reviewedBy?: string,
+  transactionHash?: string
+): Promise<void> {
+  try {
+    const withdrawalRef = doc(db, 'withdrawalRequests', userId);
+    const updateData: Partial<WithdrawalRequest> = {
+      status,
+      reviewedAt: Timestamp.now(),
+      updatedAt: Timestamp.now()
+    };
+    
+    if (reviewNotes) {
+      updateData.reviewNotes = reviewNotes;
+    }
+    
+    if (reviewedBy) {
+      updateData.reviewedBy = reviewedBy;
+    }
+    
+    if (transactionHash) {
+      updateData.transactionHash = transactionHash;
+    }
+    
+    await updateDoc(withdrawalRef, updateData);
+  } catch (error) {
+    console.error('Error updating withdrawal status:', error);
+    throw error;
+  }
+}
+
+/**
+ * Check if user has a funded account (eligible for withdrawal)
+ * @param userId The user ID
+ * @returns Whether user is eligible
+ */
+export async function isUserEligibleForWithdrawal(userId: string): Promise<boolean> {
+  try {
+    const accountsRef = collection(db, 'userMetaApiAccounts');
+    const q = query(
+      accountsRef, 
+      where('userId', '==', userId),
+      where('status', '==', 'funded')
+    );
+    const querySnapshot = await getDocs(q);
+    
+    return !querySnapshot.empty;
+  } catch (error) {
+    console.error('Error checking withdrawal eligibility:', error);
     return false;
   }
 } 

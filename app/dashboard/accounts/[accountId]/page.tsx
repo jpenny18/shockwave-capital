@@ -472,10 +472,13 @@ export default function AccountDetailsPage() {
       if (showLoading) setLoading(true);
       setError(null);
 
-      // Get user's MetaAPI account mapping
-      const userAccount = await getUserMetaApiAccount(user.uid);
+      // Get the accountId from URL params
+      const accountId = params.accountId as string;
+      
+      // Get user's specific MetaAPI account using the accountId from URL
+      const userAccount = await getUserMetaApiAccount(user.uid, accountId);
       if (!userAccount) {
-        setError('No active trading account found.');
+        setError('Account not found or you do not have access to this account.');
         return;
       }
 
@@ -582,15 +585,17 @@ export default function AccountDetailsPage() {
   };
 
   useEffect(() => {
-    if (user) {
+    if (user && params.accountId) {
       fetchMetrics();
-      
+    }
+  }, [user, params.accountId]);
+
+  // Separate effect for auto-refresh
+  useEffect(() => {
+    if (user && accountStatus !== 'failed') {
       // Set up auto-refresh every 30 minutes (only for non-failed accounts)
-      // We'll check the status after the first fetch
       const interval = setInterval(() => {
-        if (accountStatus !== 'failed') {
-          fetchMetrics(false);
-        }
+        fetchMetrics(false);
       }, 30 * 60 * 1000);
 
       return () => clearInterval(interval);

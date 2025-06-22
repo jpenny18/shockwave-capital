@@ -1,6 +1,12 @@
 'use client';
-import React, { useState } from 'react';
-import Particles from '../../components/Particles';
+import React, { useState, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { 
+  auth, 
+  getWithdrawalRequest, 
+  submitWithdrawalDetails
+} from '../../../lib/firebase';
 import { 
   ChevronDown, 
   ChevronUp, 
@@ -14,8 +20,16 @@ import {
   CreditCard,
   Building,
   Bitcoin,
-  Lock
+  Lock,
+  DollarSign,
+  AlertTriangle,
+  Copy,
+  ExternalLink,
+  Info,
+  Loader2
 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import Particles from '../../components/Particles';
 
 interface Transaction {
   id: string;
@@ -152,45 +166,129 @@ const PaymentMethodCard = ({
 );
 
 export default function PayoutsPage() {
-  const [activeTab, setActiveTab] = useState<'history' | 'new'>('history');
-  const [selectedMethod, setSelectedMethod] = useState<string>('bank');
+  const router = useRouter();
+  const pathname = usePathname();
+  const [user] = useAuthState(auth);
+  const [loading, setLoading] = useState(true);
+  const [withdrawalRequest, setWithdrawalRequest] = useState<any>(null);
+  const [paymentMethod, setPaymentMethod] = useState<'usdc_solana' | 'usdt_trc20' | ''>('');
+  const [walletAddress, setWalletAddress] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  // Sample transaction data (replace with real data from API)
-  const transactions: Transaction[] = [
-    {
-      id: 'TRX-98765432',
-      date: 'May 15, 2023',
-      amount: 2450.75,
-      status: 'completed',
-      method: 'Bank Transfer',
-      reference: 'Profit Withdrawal'
-    },
-    {
-      id: 'TRX-87654321',
-      date: 'Apr 28, 2023',
-      amount: 1200.00,
-      status: 'completed',
-      method: 'Credit Card',
-      reference: 'Monthly Payout'
-    },
-    {
-      id: 'TRX-76543210',
-      date: 'Apr 12, 2023',
-      amount: 3500.50,
-      status: 'pending',
-      method: 'Bank Transfer',
-      reference: 'Profit Withdrawal'
-    },
-    {
-      id: 'TRX-65432109',
-      date: 'Mar 29, 2023',
-      amount: 500.00,
-      status: 'failed',
-      method: 'Crypto',
-      reference: 'Bitcoin Withdrawal'
+  useEffect(() => {
+    const checkEligibilityAndFetchData = async () => {
+      if (!user) {
+        router.push('/signin');
+        return;
+      }
+
+      try {
+        // Check for existing withdrawal request enabled by admin
+        const request = await getWithdrawalRequest(user.uid);
+        setWithdrawalRequest(request);
+        
+        // If request exists and has payment method, set it
+        if (request?.paymentMethod) {
+          setPaymentMethod(request.paymentMethod);
+        }
+        if (request?.walletAddress) {
+          setWalletAddress(request.walletAddress);
+        }
+      } catch (error) {
+        console.error('Error loading payout data:', error);
+        toast.error('Failed to load payout information');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkEligibilityAndFetchData();
+  }, [user, router]);
+
+  const handleSubmitDetails = async () => {
+    console.log('Submit button clicked', { paymentMethod, walletAddress, user });
+    
+    if (!paymentMethod || !walletAddress.trim()) {
+      toast.error('Please select payment method and enter wallet address');
+      return;
     }
-  ];
 
+    // Basic wallet address validation
+    if (paymentMethod === 'usdc_solana' && walletAddress.length < 32) {
+      toast.error('Invalid Solana wallet address');
+      return;
+    }
+    if (paymentMethod === 'usdt_trc20' && !walletAddress.startsWith('T')) {
+      toast.error('Invalid TRC20 wallet address');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      console.log('Submitting withdrawal details...', { userId: user!.uid, paymentMethod, walletAddress });
+      await submitWithdrawalDetails(user!.uid, paymentMethod, walletAddress);
+      
+      // Refresh withdrawal request
+      const updatedRequest = await getWithdrawalRequest(user!.uid);
+      setWithdrawalRequest(updatedRequest);
+      
+      toast.success('Withdrawal details submitted successfully');
+    } catch (error) {
+      console.error('Error submitting withdrawal details:', error);
+      toast.error('Failed to submit withdrawal details');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+    toast.success('Copied to clipboard');
+  };
+
+  const getStatusColor = (status?: string) => {
+    switch (status) {
+      case 'pending': return 'text-yellow-400 bg-yellow-400/10';
+      case 'approved': return 'text-blue-400 bg-blue-400/10';
+      case 'rejected': return 'text-red-400 bg-red-400/10';
+      case 'completed': return 'text-green-400 bg-green-400/10';
+      default: return 'text-gray-400 bg-gray-400/10';
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0FF1CE]"></div>
+      </div>
+    );
+  }
+
+  // If not eligible (no withdrawal request)
+  if (!withdrawalRequest) {
+    return (
+      <div className="relative min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <h1 className="text-3xl font-bold text-white mb-8">Payouts</h1>
+          
+          <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-8 max-w-md mx-auto text-center">
+            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-yellow-400/10 flex items-center justify-center">
+              <Clock className="text-yellow-400" size={32} />
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-3">Pending Approval</h2>
+            <p className="text-gray-400">
+              Your payout request is being reviewed by our team. We'll notify you once it's ready for you to submit your withdrawal details.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Main payout interface
   return (
     <div className="relative min-h-screen">
       {/* Background Effects */}
@@ -205,9 +303,9 @@ export default function PayoutsPage() {
         {/* Tabs */}
         <div className="flex space-x-1 mb-6 bg-[#1A1A1A]/50 backdrop-blur-sm rounded-lg p-1 max-w-xs">
           <button
-            onClick={() => setActiveTab('history')}
+            onClick={() => router.push('/dashboard/payouts')}
             className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-              activeTab === 'history'
+              pathname === '/dashboard/payouts'
                 ? 'bg-[#0FF1CE] text-black'
                 : 'text-gray-400 hover:text-white'
             }`}
@@ -215,9 +313,9 @@ export default function PayoutsPage() {
             History
           </button>
           <button
-            onClick={() => setActiveTab('new')}
+            onClick={() => router.push('/dashboard/payouts/new')}
             className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-              activeTab === 'new'
+              pathname === '/dashboard/payouts/new'
                 ? 'bg-[#0FF1CE] text-black'
                 : 'text-gray-400 hover:text-white'
             }`}
@@ -226,110 +324,296 @@ export default function PayoutsPage() {
           </button>
         </div>
 
-        {/* Tab Content */}
-        {activeTab === 'history' ? (
-          <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl p-6 border border-[#2F2F2F]/50">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-bold text-white">Transaction History</h2>
-              <button className="flex items-center gap-2 px-3 py-1.5 text-sm bg-[#151515] border border-[#2F2F2F]/50 rounded-lg text-white hover:border-[#0FF1CE]/30 transition-colors">
-                <Calendar size={14} />
-                <span>Filter by Date</span>
-                <ChevronDown size={14} />
-              </button>
-            </div>
-            <div className="text-center text-gray-400 py-8">
-              No withdrawal history available
-            </div>
-          </div>
-        ) : (
-          <div className="relative">
-            {/* Blurred payout form */}
-            <div className="blur-sm pointer-events-none">
-              <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl p-6 border border-[#2F2F2F]/50">
-                <h2 className="text-lg font-bold text-white mb-6">Request Payout</h2>
-                
-                <div className="space-y-6">
-                  {/* Account Selection */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">Select Account</label>
-                    <div className="relative">
-                      <select className="w-full bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg px-4 py-2.5 text-white appearance-none">
-                        <option>Standard Challenge - $100,000</option>
-                      </select>
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <ChevronDown size={18} className="text-gray-400" />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Amount */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">Amount</label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                        <span className="text-gray-400">$</span>
-                      </div>
-                      <input
-                        type="number"
-                        placeholder="0.00"
-                        className="w-full bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg px-4 py-2.5 pl-8 text-white"
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* Payment Method */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">Payment Method</label>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <PaymentMethodCard
-                        icon={Building}
-                        title="Bank Transfer"
-                        description="3-5 business days"
-                        isSelected={selectedMethod === 'bank'}
-                        onSelect={() => setSelectedMethod('bank')}
-                      />
-                      <PaymentMethodCard
-                        icon={CreditCard}
-                        title="Credit Card"
-                        description="Instant processing"
-                        isSelected={selectedMethod === 'card'}
-                        onSelect={() => setSelectedMethod('card')}
-                      />
-                      <PaymentMethodCard
-                        icon={Bitcoin}
-                        title="Cryptocurrency"
-                        description="Bitcoin, Ethereum, USDT"
-                        isSelected={selectedMethod === 'crypto'}
-                        onSelect={() => setSelectedMethod('crypto')}
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* Submit Button */}
-                  <div className="pt-4 border-t border-[#2F2F2F]">
-                    <button className="w-full md:w-auto px-6 py-3 bg-[#0FF1CE] text-black font-semibold rounded-lg flex items-center justify-center gap-2">
-                      <Wallet size={18} />
-                      <span>Request Payout</span>
-                    </button>
-                  </div>
-                </div>
+        {/* Status Banner */}
+        {withdrawalRequest.status === 'rejected' && (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-8">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="text-red-400 mt-0.5" size={20} />
+              <div>
+                <h3 className="text-red-400 font-semibold mb-1">Withdrawal Rejected</h3>
+                {withdrawalRequest.reviewNotes && (
+                  <p className="text-gray-300 text-sm">{withdrawalRequest.reviewNotes}</p>
+                )}
               </div>
             </div>
+          </div>
+        )}
 
-            {/* Locked overlay */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="bg-[#0D0D0D]/95 backdrop-blur-sm rounded-2xl p-8 border border-[#2F2F2F]/50 max-w-md w-full mx-4 text-center transform hover:scale-[1.02] transition-all duration-300">
-                <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center">
-                  <Lock className="text-[#0FF1CE]" size={32} />
-                </div>
-                <h2 className="text-2xl font-bold text-white mb-3">Withdrawals Locked</h2>
-                <p className="text-gray-400">
-                  You will be able to request a withdrawal after your first withdrawal date. Complete your challenge and maintain profitable trading to unlock withdrawals.
+        {withdrawalRequest.status === 'approved' && (
+          <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 mb-8">
+            <div className="flex items-start gap-3">
+              <CheckCircle className="text-blue-400 mt-0.5" size={20} />
+              <div>
+                <h3 className="text-blue-400 font-semibold mb-1">Withdrawal Approved</h3>
+                <p className="text-gray-300 text-sm">
+                  Your withdrawal has been approved and will be processed soon.
                 </p>
               </div>
             </div>
           </div>
         )}
+
+        {withdrawalRequest.status === 'completed' && (
+          <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 mb-8">
+            <div className="flex items-start gap-3">
+              <CheckCircle className="text-green-400 mt-0.5" size={20} />
+              <div>
+                <h3 className="text-green-400 font-semibold mb-1">Withdrawal Completed</h3>
+                <p className="text-gray-300 text-sm">
+                  Your withdrawal has been processed successfully.
+                </p>
+                {withdrawalRequest.transactionHash && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-gray-400 text-sm">Transaction:</span>
+                    <span className="text-white font-mono text-sm">
+                      {withdrawalRequest.transactionHash.slice(0, 10)}...{withdrawalRequest.transactionHash.slice(-8)}
+                    </span>
+                    <button
+                      onClick={() => copyToClipboard(withdrawalRequest.transactionHash)}
+                      className="text-[#0FF1CE] hover:text-[#0FF1CE]/80"
+                    >
+                      <Copy size={14} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Withdrawal Details */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Withdrawal Info */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Amount Information */}
+            <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6">
+              <h2 className="text-xl font-semibold text-white mb-4">Withdrawal Details</h2>
+              
+              <div className="space-y-4">
+                <div className="flex justify-between items-center py-3 border-b border-[#2F2F2F]/50">
+                  <span className="text-gray-400">Total Profit Made</span>
+                  <span className="text-white font-medium">${withdrawalRequest.amountOwed.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center py-3 border-b border-[#2F2F2F]/50">
+                  <span className="text-gray-400">Profit Split</span>
+                  <span className="text-white font-medium">{withdrawalRequest.profitSplit}%</span>
+                </div>
+                <div className="flex justify-between items-center py-3">
+                  <span className="text-gray-400 font-medium">Payout Amount</span>
+                  <span className="text-[#0FF1CE] text-2xl font-bold">${withdrawalRequest.payoutAmount.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Method Selection */}
+            {withdrawalRequest.status === 'pending' && (
+              <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6">
+                <h2 className="text-xl font-semibold text-white mb-4">Payment Method</h2>
+                
+                <div className="space-y-3 mb-6">
+                  <label className="relative flex items-center p-4 bg-[#151515] rounded-lg border border-[#2F2F2F] cursor-pointer hover:border-[#0FF1CE]/30 transition-all">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="usdc_solana"
+                      checked={paymentMethod === 'usdc_solana'}
+                      onChange={(e) => setPaymentMethod(e.target.value as any)}
+                      className="sr-only"
+                      disabled={!!withdrawalRequest.submittedAt}
+                    />
+                    <div className={`w-5 h-5 rounded-full border-2 mr-3 flex items-center justify-center ${
+                      paymentMethod === 'usdc_solana' ? 'border-[#0FF1CE]' : 'border-[#2F2F2F]'
+                    }`}>
+                      {paymentMethod === 'usdc_solana' && (
+                        <div className="w-2.5 h-2.5 bg-[#0FF1CE] rounded-full" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-white font-medium">USDC (Solana)</p>
+                      <p className="text-gray-400 text-sm">Fast and low-cost transfers on Solana network</p>
+                    </div>
+                  </label>
+
+                  <label className="relative flex items-center p-4 bg-[#151515] rounded-lg border border-[#2F2F2F] cursor-pointer hover:border-[#0FF1CE]/30 transition-all">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="usdt_trc20"
+                      checked={paymentMethod === 'usdt_trc20'}
+                      onChange={(e) => setPaymentMethod(e.target.value as any)}
+                      className="sr-only"
+                      disabled={!!withdrawalRequest.submittedAt}
+                    />
+                    <div className={`w-5 h-5 rounded-full border-2 mr-3 flex items-center justify-center ${
+                      paymentMethod === 'usdt_trc20' ? 'border-[#0FF1CE]' : 'border-[#2F2F2F]'
+                    }`}>
+                      {paymentMethod === 'usdt_trc20' && (
+                        <div className="w-2.5 h-2.5 bg-[#0FF1CE] rounded-full" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-white font-medium">USDT (TRC20)</p>
+                      <p className="text-gray-400 text-sm">Tether on TRON network</p>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Wallet Address Input */}
+                {paymentMethod && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">
+                      {paymentMethod === 'usdc_solana' ? 'Solana Wallet Address' : 'TRC20 Wallet Address'}
+                    </label>
+                    <input
+                      type="text"
+                      value={walletAddress}
+                      onChange={(e) => setWalletAddress(e.target.value)}
+                      placeholder={paymentMethod === 'usdc_solana' ? 'Enter your Solana address' : 'Enter your TRC20 address'}
+                      className="w-full bg-[#151515] text-white px-4 py-3 rounded-lg border border-[#2F2F2F] focus:border-[#0FF1CE]/50 focus:outline-none"
+                      disabled={!!withdrawalRequest.submittedAt}
+                    />
+                    <p className="text-gray-400 text-xs mt-2">
+                      <Info className="inline-block mr-1" size={12} />
+                      Please double-check your wallet address. Incorrect addresses may result in permanent loss of funds.
+                    </p>
+                    
+                    {/* Important Notice Card */}
+                    <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mt-4">
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle className="text-red-400 flex-shrink-0 mt-0.5" size={20} />
+                        <div>
+                          <h4 className="text-red-400 font-semibold text-sm mb-2">Critical Notice - Wallet Address Verification</h4>
+                          <p className="text-gray-300 text-sm leading-relaxed">
+                            You are solely responsible for ensuring the accuracy of your wallet address. Any funds sent to an incorrect address will result in permanent and irreversible loss. Once a withdrawal is processed and marked as successful, no additional withdrawals will be issued regardless of address errors. Please verify your address multiple times before submission.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Submit Button */}
+                {!withdrawalRequest.submittedAt && (
+                  <button
+                    type="button"
+                    onClick={handleSubmitDetails}
+                    disabled={!paymentMethod || !walletAddress.trim() || submitting}
+                    className="w-full bg-[#0FF1CE] text-black font-semibold py-3 rounded-lg hover:bg-[#0FF1CE]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-6 flex items-center justify-center"
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 className="animate-spin mr-2" size={16} />
+                        <span>Submitting...</span>
+                      </>
+                    ) : (
+                      'Submit Withdrawal Details'
+                    )}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Submitted Details (Read-only) */}
+            {withdrawalRequest.submittedAt && (
+              <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6">
+                <h2 className="text-xl font-semibold text-white mb-4">Submitted Details</h2>
+                
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-gray-400 text-sm mb-1">Payment Method</p>
+                    <p className="text-white font-medium">
+                      {withdrawalRequest.paymentMethod === 'usdc_solana' ? 'USDC (Solana)' : 'USDT (TRC20)'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400 text-sm mb-1">Wallet Address</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-white font-mono text-sm break-all">{withdrawalRequest.walletAddress}</p>
+                      <button
+                        onClick={() => copyToClipboard(withdrawalRequest.walletAddress)}
+                        className="text-[#0FF1CE] hover:text-[#0FF1CE]/80 flex-shrink-0"
+                      >
+                        <Copy size={16} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column - Status & Info */}
+          <div className="space-y-6">
+            {/* Status Card */}
+            <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6">
+              <h3 className="text-lg font-semibold text-white mb-4">Status</h3>
+              
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Current Status</span>
+                  <span className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(withdrawalRequest.status)}`}>
+                    {withdrawalRequest.status.toUpperCase()}
+                  </span>
+                </div>
+                {withdrawalRequest.submittedAt && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400 text-sm">Submitted</span>
+                    <span className="text-white text-sm">
+                      {new Date(withdrawalRequest.submittedAt.toDate()).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+                {withdrawalRequest.reviewedAt && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400 text-sm">Reviewed</span>
+                    <span className="text-white text-sm">
+                      {new Date(withdrawalRequest.reviewedAt.toDate()).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Important Notes */}
+            <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6">
+              <h3 className="text-lg font-semibold text-white mb-4">Important Notes</h3>
+              
+              <ul className="space-y-2 text-sm text-gray-400">
+                <li className="flex items-start gap-2">
+                  <span className="text-[#0FF1CE] mt-0.5">•</span>
+                  <span>Withdrawals are processed within 1-3 business days</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#0FF1CE] mt-0.5">•</span>
+                  <span>Minimum withdrawal amount may apply</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#0FF1CE] mt-0.5">•</span>
+                  <span>Network fees are covered by Shockwave Capital</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#0FF1CE] mt-0.5">•</span>
+                  <span>Ensure your wallet supports the selected token</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Support */}
+            <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6">
+              <h3 className="text-lg font-semibold text-white mb-4">Need Help?</h3>
+              <p className="text-gray-400 text-sm mb-4">
+                If you have any questions about your withdrawal, please contact our support team.
+              </p>
+              <a
+                href="mailto:support@shockwavecapital.com"
+                className="flex items-center gap-2 text-[#0FF1CE] hover:text-[#0FF1CE]/80 transition-colors"
+              >
+                <span>support@shockwavecapital.com</span>
+                <ExternalLink size={16} />
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
 
       <style jsx global>{`
