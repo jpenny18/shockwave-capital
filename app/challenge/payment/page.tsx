@@ -30,6 +30,7 @@ interface ChallengeData {
     discordUsername?: string;
   };
   price: number;
+  addOns?: string[];
   discount?: {
     id: string;
     code: string;
@@ -44,6 +45,14 @@ interface CryptoPrice {
   USDT: number;
   USDC: number;
 }
+
+// Add-on ID to name mapping
+const addOnNames: { [key: string]: string } = {
+  'no-min-days': 'No Min Trading Days',
+  'profit-split-80': '80% Initial Profit Split',
+  'leverage-500': '1:500 Leverage',
+  'reward-150': '150% Reward'
+};
 
 const validateChallengeData = (data: ChallengeData | null): boolean => {
   if (!data) return false;
@@ -468,6 +477,19 @@ export default function PaymentPage() {
                   <span className="text-white/70">Platform:</span>
                   <span className="font-medium">{challengeData.platform}</span>
                 </div>
+                {challengeData.addOns && challengeData.addOns.length > 0 && (
+                  <>
+                    <div className="border-t border-[#2F2F2F]/30 mt-3 pt-3">
+                      <div className="text-white/70 text-sm mb-2">Add-ons:</div>
+                      {challengeData.addOns.map((addOnId) => (
+                        <div key={addOnId} className="flex justify-between mb-1">
+                          <span className="text-white/60 text-sm">• {addOnNames[addOnId] || addOnId}</span>
+                          <span className="text-[#0FF1CE] text-sm">+30%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
               
               <div className="border-t border-[#2F2F2F]/50 pt-4 mb-6">

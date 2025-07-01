@@ -6,11 +6,10 @@ import Image from 'next/image';
 import Particles from './components/Particles';
 import Header from './components/Header';
 import Link from 'next/link';
+import PricingTable from './components/PricingTable';
 
 export default function ShockwaveLandingPage() {
     const router = useRouter();
-    const [selectedBalance, setSelectedBalance] = useState(100000);
-    const [challengeType, setChallengeType] = useState('standard');
     const [loading, setLoading] = useState(true);
     
     useEffect(() => {
@@ -31,36 +30,6 @@ export default function ShockwaveLandingPage() {
         </div>
       );
     }
-    
-    const getOneTimePrice = (balance: number, type: string) => {
-      const standardPrices: Record<number, string> = {
-        5000: '79',
-        10000: '149',
-        25000: '299',
-        50000: '349',
-        100000: '599',
-        200000: '999',
-        500000: '1999'
-      };
-
-      const instantPrices: Record<number, string> = {
-        25000: '799',
-        50000: '999',
-        100000: '1999'
-      };
-
-      return type === 'standard' ? standardPrices[balance] || '600' : instantPrices[balance] || '1999';
-    };
-
-    const values = {
-      maxDailyLoss: selectedBalance * (challengeType === 'standard' ? 0.08 : 0.04),
-      maxLoss: selectedBalance * (challengeType === 'standard' ? 0.15 : 0.12),
-      profitTargetStep1: selectedBalance * (challengeType === 'standard' ? 0.10 : 0.12),
-      profitTargetStep2: selectedBalance * (challengeType === 'standard' ? 0.05 : 0)
-    };
-
-    const standardBalances = [5000, 10000, 25000, 50000, 100000, 200000, 500000];
-    const instantBalances = [25000, 50000, 100000];
 
     return (
       <div className="bg-gradient-to-b from-[#0D0D0D] via-[#121212] to-[#151515] text-white min-h-screen font-sans">
@@ -243,197 +212,8 @@ export default function ShockwaveLandingPage() {
           <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-[#111111] to-transparent"></div>
           <div className="absolute bottom-0 left-0 w-full h-20 bg-gradient-to-t from-[#131313] to-transparent"></div>
           <div className="absolute top-1/2 left-1/4 w-1/2 h-[400px] bg-[#0FF1CE]/[0.02] blur-[150px] rounded-full"></div>
-          <div className="relative z-10">
-            <h2 className="text-3xl md:text-4xl font-bold text-center text-[#0FF1CE] mb-8 md:mb-12">Challenge Details</h2>
-            
-            {/* Challenge Type Selection */}
-            <div className="max-w-6xl mx-auto mb-8 md:mb-12 px-4 md:px-0">
-              <h3 className="text-[#0FF1CE] font-bold text-base md:text-lg mb-3 md:mb-4 text-center">Challenge Type:</h3>
-              <div className="flex justify-center gap-2 md:gap-4">
-                <button
-                  onClick={() => {
-                    setChallengeType('standard');
-                    setSelectedBalance(100000);
-                  }}
-                  className={`relative px-4 md:px-8 py-3 md:py-4 rounded-xl ${
-                    challengeType === 'standard'
-                      ? 'bg-[#0FF1CE] text-black'
-                      : 'bg-[#1F1F1F] text-white'
-                  } transition-all hover:scale-105 text-sm md:text-lg font-bold shadow-md hover:shadow-lg`}
-                >
-                  Shockwave Standard
-                </button>
-                <button
-                  onClick={() => {
-                    setChallengeType('instant');
-                    setSelectedBalance(100000);
-                  }}
-                  className={`relative px-4 md:px-8 py-3 md:py-4 rounded-xl ${
-                    challengeType === 'instant'
-                      ? 'bg-[#0FF1CE] text-black'
-                      : 'bg-[#1F1F1F] text-white'
-                  } transition-all hover:scale-105 text-sm md:text-lg font-bold shadow-md hover:shadow-lg`}
-                >
-                  Shockwave Instant
-                </button>
-              </div>
-            </div>
-
-            {/* Balance Selection */}
-            <div className="max-w-6xl mx-auto mb-8 md:mb-12">
-              <h3 className="text-[#0FF1CE] font-bold text-base md:text-lg mb-3 md:mb-4 text-center">Balance:</h3>
-              <div className="flex flex-wrap justify-start md:justify-center gap-3 md:gap-4 px-4 md:px-0">
-                {(challengeType === 'standard' ? standardBalances : instantBalances).map(balance => (
-                  <button
-                    key={balance}
-                    onClick={() => setSelectedBalance(balance)}
-                    className={`relative w-[calc(50%-0.5rem)] md:w-auto px-3 md:px-6 py-2.5 md:py-3 rounded-xl ${
-                      selectedBalance === balance 
-                        ? 'bg-[#0FF1CE] text-black' 
-                        : 'bg-[#1F1F1F] text-white hover:bg-[#2F2F2F]'
-                    } transition-all hover:scale-[1.03] text-sm md:text-base font-medium flex flex-col items-center justify-center shadow-md`}
-                  >
-                    {balance === 100000 && (
-                      <span className="absolute -top-2 md:-top-3 left-1/2 -translate-x-1/2 bg-[#0FF1CE] text-black text-[10px] md:text-xs px-2 md:px-3 py-0.5 md:py-1 rounded-full font-bold shadow-lg">
-                        POPULAR
-                      </span>
-                    )}
-                    <span className="font-bold text-sm md:text-base">${balance.toLocaleString()}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Table */}
-            <div className={`${challengeType === 'standard' ? 'max-w-5xl' : 'max-w-3xl'} mx-auto overflow-x-auto px-4 md:px-8 py-2 md:py-4`}>
-              <div className={`${challengeType === 'standard' ? 'min-w-[650px]' : 'min-w-[450px]'} md:min-w-0 rounded-2xl transform hover:scale-[1.01] transition-transform duration-300 overflow-hidden mx-auto`}>
-                <div 
-                  className={`grid ${challengeType === 'standard' ? 'grid-cols-4' : 'grid-cols-2'} text-xs md:text-sm bg-gradient-to-br from-[#0FF1CE]/10 to-transparent backdrop-blur-sm rounded-2xl border border-[#0FF1CE]/30`}
-                  style={{
-                    boxShadow: '0 0 30px rgba(15, 241, 206, 0.2)'
-                  }}
-                >
-                  {/* Header */}
-                  {challengeType === 'standard' ? (
-                    <div className="col-span-4 grid grid-cols-4 bg-gradient-to-r from-[#0FF1CE] to-[#0FF1CE]/80 text-black font-bold">
-                      <div className="p-3 md:p-4 border-r border-black/20"></div>
-                      <div className="p-3 md:p-4 border-r border-black/20 text-center">CHALLENGE</div>
-                      <div className="p-3 md:p-4 border-r border-black/20 text-center">VERIFICATION</div>
-                      <div className="p-3 md:p-4 text-center">FUNDED</div>
-                    </div>
-                  ) : (
-                    <div className="col-span-2 grid grid-cols-2 bg-gradient-to-r from-[#0FF1CE] to-[#0FF1CE]/80 text-black font-bold">
-                      <div className="p-3 md:p-4 border-r border-black/20"></div>
-                      <div className="p-3 md:p-4 text-center">FUNDED</div>
-                    </div>
-                  )}
-
-                  {/* Rows */}
-                  {(challengeType === 'standard' ? [
-                    ['Trading Period', 'Unlimited', 'Unlimited', 'Unlimited'],
-                    ['Minimum Trading Days', '5 Days', '5 Days', 'X'],
-                    ['Maximum Daily Loss', 
-                      <div key="daily1" className="flex flex-col items-center">
-                        <span className="text-[#0FF1CE] font-bold text-base md:text-lg">8%</span>
-                        <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${values.maxDailyLoss.toLocaleString()}</span>
-                      </div>, 
-                      <div key="daily2" className="flex flex-col items-center">
-                        <span className="text-[#0FF1CE] font-bold text-base md:text-lg">8%</span>
-                        <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${values.maxDailyLoss.toLocaleString()}</span>
-                      </div>, 
-                      <div key="daily3" className="flex flex-col items-center">
-                        <span className="text-[#0FF1CE] font-bold text-base md:text-lg">8%</span>
-                        <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${values.maxDailyLoss.toLocaleString()}</span>
-                      </div>
-                    ],
-                    ['Maximum Loss', 
-                      <div key="max1" className="flex flex-col items-center">
-                        <span className="text-[#0FF1CE] font-bold text-base md:text-lg">15%</span>
-                        <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${values.maxLoss.toLocaleString()}</span>
-                      </div>, 
-                      <div key="max2" className="flex flex-col items-center">
-                        <span className="text-[#0FF1CE] font-bold text-base md:text-lg">15%</span>
-                        <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${values.maxLoss.toLocaleString()}</span>
-                      </div>, 
-                      <div key="max3" className="flex flex-col items-center">
-                        <span className="text-[#0FF1CE] font-bold text-base md:text-lg">15%</span>
-                        <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${values.maxLoss.toLocaleString()}</span>
-                      </div>
-                    ],
-                    ['Profit Target', `$${values.profitTargetStep1.toLocaleString()} (10%)`, `$${values.profitTargetStep2.toLocaleString()} (5%)`, 'X'],
-                    ['Leverage', 
-                      <div key="lev1" className="flex items-center justify-center">
-                        <span className="text-[#0FF1CE] font-bold text-base md:text-lg animate-pulse">1:200</span>
-                      </div>,
-                      <div key="lev2" className="flex items-center justify-center">
-                        <span className="text-[#0FF1CE] font-bold text-base md:text-lg animate-pulse">1:200</span>
-                      </div>,
-                      <div key="lev3" className="flex items-center justify-center">
-                        <span className="text-[#0FF1CE] font-bold text-base md:text-lg animate-pulse">1:200</span>
-                      </div>
-                    ],
-                    ['News Trading', 'Yes', 'Yes', 'Yes'],
-                    ['Profit Split', '-', '-', 'Up to 95%(Simulated Payout)'],
-                    ['First Payout Eligibility', '-', '-', '14 Days'],
-                    ['Refundable Fee', `$${getOneTimePrice(selectedBalance, 'standard')}`, 'Free', 'Refund']
-                  ].map((row, i) => (
-                    <div 
-                      key={i} 
-                      className={`col-span-4 grid grid-cols-4 border-b border-[#2F2F2F] last:border-b-0 transition-colors duration-300 hover:bg-[#0FF1CE]/5 ${i % 2 === 0 ? 'bg-[#1A1A1A]/30' : ''}`}
-                    >
-                      <div className="p-3 md:p-4 border-r border-[#2F2F2F] font-medium flex items-center text-xs md:text-sm">{row[0]}</div>
-                      <div className="p-3 md:p-4 border-r border-[#2F2F2F] text-center flex items-center justify-center">{row[1]}</div>
-                      <div className="p-3 md:p-4 border-r border-[#2F2F2F] text-center flex items-center justify-center">{row[2]}</div>
-                      <div className="p-3 md:p-4 text-center flex items-center justify-center">{row[3]}</div>
-                    </div>
-                  )) : [
-                    ['Trading Period', '30 Days'],
-                    ['Minimum Trading Days', '5 Days'],
-                    ['Maximum Daily Loss', 
-                      <div key="dailyi" className="flex flex-col items-center">
-                        <span className="text-[#0FF1CE] font-bold text-base md:text-lg">4%</span>
-                        <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${values.maxDailyLoss.toLocaleString()}</span>
-                      </div>
-                    ],
-                    ['Maximum Loss', 
-                      <div key="maxi" className="flex flex-col items-center">
-                        <span className="text-[#0FF1CE] font-bold text-base md:text-lg">12%</span>
-                        <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${values.maxLoss.toLocaleString()}</span>
-                      </div>
-                    ],
-                    ['Profit Target', `$${values.profitTargetStep1.toLocaleString()} (12%)`],
-                    ['Leverage', 
-                      <div key="levi" className="flex items-center justify-center">
-                        <span className="text-[#0FF1CE] font-bold text-base md:text-lg animate-pulse">1:200</span>
-                      </div>
-                    ],
-                    ['News Trading', 'Yes'],
-                    ['First Withdrawal', '6 Days'],
-                    ['Profit Split', '70% (Simulated Payout)'],
-                    ['One Free Retry', 'Yes'],
-                    ['One-Time Price', `$${getOneTimePrice(selectedBalance, 'instant')}`]
-                  ].map((row, i) => (
-                    <div 
-                      key={i} 
-                      className={`col-span-2 grid grid-cols-2 border-b border-[#2F2F2F] last:border-b-0 transition-colors duration-300 hover:bg-[#0FF1CE]/5 ${i % 2 === 0 ? 'bg-[#1A1A1A]/30' : ''}`}
-                    >
-                      <div className="p-3 md:p-4 border-r border-[#2F2F2F] font-medium flex items-center text-xs md:text-sm">{row[0]}</div>
-                      <div className="p-3 md:p-4 text-center flex items-center justify-center">{row[1]}</div>
-                    </div>
-                  )))}
-                </div>
-              </div>
-            </div>
-
-            {/* CTA Button */}
-            <div className="max-w-4xl mx-auto mt-8 md:mt-12 text-center px-4 md:px-0">
-              <Link href="/challenge">
-                <button className="px-8 md:px-12 py-3 md:py-4 bg-[#0FF1CE] text-black text-lg md:text-xl font-bold rounded-full hover:scale-105 transition-transform shadow-lg hover:shadow-[#0FF1CE]/20">
-                  START CHALLENGE
-                </button>
-              </Link>
-            </div>
-          </div>
+          
+          <PricingTable />
         </section>
 
         {/* Scaling Plan Section */}

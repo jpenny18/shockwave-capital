@@ -30,6 +30,7 @@ interface CryptoOrder {
   challengeType: string;
   challengeAmount: string;
   platform: string;
+  addOns?: string[];
   customerEmail: string;
   customerName: string;
   customerPhone: string;
@@ -498,6 +499,26 @@ export default function CryptoOrdersPage() {
                                 <div className="text-gray-400">Platform</div>
                                 <div className="text-white">{order.platform}</div>
                               </div>
+                              {order.addOns && order.addOns.length > 0 && (
+                                <div>
+                                  <div className="text-gray-400">Add-ons</div>
+                                  <div className="text-white">
+                                    {order.addOns.map((addOn, index) => {
+                                      const addOnNames: { [key: string]: string } = {
+                                        'no-min-days': 'No Min Trading Days',
+                                        'profit-split-80': '80% Initial Profit Split',
+                                        'leverage-500': '1:500 Leverage',
+                                        'reward-150': '150% Reward'
+                                      };
+                                      return (
+                                        <div key={index} className="text-xs">
+                                          • {addOnNames[addOn] || addOn}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
                               {order.discountCode && (
                                 <div>
                                   <div className="text-gray-400">Discount Applied</div>

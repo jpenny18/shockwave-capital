@@ -6,11 +6,11 @@ import Particles from '../components/Particles';
 import Image from 'next/image';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Check } from 'lucide-react';
+import { Check, Zap, Shield, TrendingUp, ChevronRight, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 
 // Define the type for challenge options
-type ChallengeType = 'Standard' | 'Instant';
+type ChallengeType = 'Standard' | '1-Step' | 'Instant';
 
 const challengeTypes = [
   { 
@@ -18,14 +18,27 @@ const challengeTypes = [
     name: 'Shockwave Challenge', 
     amounts: ['$5,000', '$10,000', '$25,000', '$50,000', '$100,000', '$200,000', '$500,000'],
     image: '/shockwavechallenge.png',
-    description: 'Classic two-phase trading evaluation'
+    description: 'Classic two-phase trading evaluation',
+    badge: 'MOST POPULAR',
+    features: ['2 Phase Evaluation', 'Up to 95% Profit Split', '15% Max Drawdown']
+  },
+  { 
+    id: '1-Step' as const, 
+    name: 'Shockwave 1-Step', 
+    amounts: ['$5,000', '$10,000', '$25,000', '$50,000', '$100,000', '$200,000', '$500,000'],
+    image: '/shockwave1step.png',
+    description: 'Fast-track single phase evaluation',
+    badge: 'BEST VALUE',
+    features: ['1 Phase Only', 'Up to 95% Profit Split', '8% Max Drawdown']
   },
   { 
     id: 'Instant' as const, 
     name: 'Shockwave Instant', 
-    amounts: ['$25,000', '$50,000', '$100,000'],
+    amounts: ['$5,000', '$10,000', '$25,000', '$50,000', '$100,000', '$200,000', '$500,000'],
     image: '/shockwaveinstant.png',
-    description: 'Access a simulated funded account instantly'
+    description: 'Access a simulated funded account instantly',
+    badge: 'FASTEST',
+    features: ['Instant Funding', '70% Profit Split', '4% Max Drawdown']
   }
 ];
 
@@ -255,6 +268,40 @@ interface DiscountCode {
   usageCount: number;
 }
 
+interface AddOn {
+  id: string;
+  name: string;
+  description: string;
+  priceMultiplier: number;
+}
+
+const addOns: AddOn[] = [
+  {
+    id: 'no-min-days',
+    name: 'No Min Trading Days',
+    description: 'Trade at your own pace without minimum day requirements',
+    priceMultiplier: 0.30
+  },
+  {
+    id: 'profit-split-80',
+    name: '80% Initial Profit Split',
+    description: 'Start with 80% profit split instead of standard rates',
+    priceMultiplier: 0.30
+  },
+  {
+    id: 'leverage-500',
+    name: '1:500 Leverage',
+    description: 'Trade with higher leverage for increased potential',
+    priceMultiplier: 0.30
+  },
+  {
+    id: 'reward-150',
+    name: '150% Reward',
+    description: 'Boost your reward potential by 50% extra',
+    priceMultiplier: 0.30
+  }
+];
+
 // Function to calculate price based on challenge type and amount
 const calculatePrice = (type: ChallengeType, amount: string): number => {
   const baseAmount = parseInt(amount.replace(/\$|,/g, ''));
@@ -262,20 +309,35 @@ const calculatePrice = (type: ChallengeType, amount: string): number => {
   switch(type) {
     case 'Standard':
       switch(baseAmount) {
-        case 5000: return 79;
-        case 10000: return 149;
-        case 25000: return 299;
-        case 50000: return 349;
-        case 100000: return 599;
-        case 200000: return 999;
+        case 5000: return 59;
+        case 10000: return 109;
+        case 25000: return 189;
+        case 50000: return 289;
+        case 100000: return 499;
+        case 200000: return 949;
+        case 500000: return 1899;
+        default: return 0;
+      }
+    case '1-Step':
+      switch(baseAmount) {
+        case 5000: return 65;
+        case 10000: return 119;
+        case 25000: return 199;
+        case 50000: return 289;
+        case 100000: return 569;
+        case 200000: return 989;
         case 500000: return 1999;
         default: return 0;
       }
     case 'Instant':
       switch(baseAmount) {
-        case 25000: return 799;
-        case 50000: return 999;
-        case 100000: return 1999;
+        case 5000: return 299;
+        case 10000: return 549;
+        case 25000: return 749;
+        case 50000: return 899;
+        case 100000: return 1799;
+        case 200000: return 3499;
+        case 500000: return 6999;
         default: return 0;
       }
     default:
@@ -290,9 +352,9 @@ const calculateTableValues = (selectedType: ChallengeType | null, selectedAmount
   const baseAmount = parseInt(selectedAmount.replace(/\$|,/g, ''));
   
   return {
-    maxDailyLoss: baseAmount * (selectedType === 'Standard' ? 0.08 : 0.04),
-    maxLoss: baseAmount * (selectedType === 'Standard' ? 0.15 : 0.12),
-    profitTargetStep1: baseAmount * (selectedType === 'Standard' ? 0.10 : 0.12),
+    maxDailyLoss: baseAmount * (selectedType === 'Standard' ? 0.08 : selectedType === '1-Step' ? 0.04 : 0.04),
+    maxLoss: baseAmount * (selectedType === 'Standard' ? 0.15 : selectedType === '1-Step' ? 0.08 : 0.04),
+    profitTargetStep1: baseAmount * (selectedType === 'Standard' ? 0.10 : selectedType === '1-Step' ? 0.10 : 0.12),
     profitTargetStep2: baseAmount * (selectedType === 'Standard' ? 0.05 : 0)
   };
 };
@@ -302,6 +364,7 @@ export default function ChallengePage() {
   const [selectedType, setSelectedType] = useState<ChallengeType | null>(null);
   const [selectedAmount, setSelectedAmount] = useState<string | null>(null);
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
+  const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -315,6 +378,30 @@ export default function ChallengePage() {
   const [discountCode, setDiscountCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState<DiscountCode | null>(null);
   const [isValidatingCode, setIsValidatingCode] = useState(false);
+  
+  // Check for preselected values from pricing table
+  useEffect(() => {
+    const preselectedType = sessionStorage.getItem('preselectedChallengeType');
+    const preselectedBalance = sessionStorage.getItem('preselectedBalance');
+    
+    if (preselectedType) {
+      // Map the pricing table types to challenge types
+      let mappedType: ChallengeType = 'Standard';
+      if (preselectedType === 'Instant') {
+        mappedType = 'Instant';
+      } else if (preselectedType === '1-Step') {
+        mappedType = '1-Step';
+      }
+      setSelectedType(mappedType);
+      sessionStorage.removeItem('preselectedChallengeType');
+    }
+    
+    if (preselectedBalance) {
+      const formattedBalance = `$${parseInt(preselectedBalance).toLocaleString()}`;
+      setSelectedAmount(formattedBalance);
+      sessionStorage.removeItem('preselectedBalance');
+    }
+  }, []);
   
   // Calculate table values when selectedType or selectedAmount changes
   const tableValues = calculateTableValues(selectedType, selectedAmount);
@@ -330,6 +417,25 @@ export default function ChallengePage() {
 
   const handlePlatformSelect = (platform: string) => {
     setSelectedPlatform(platform);
+  };
+
+  const handleAddOnToggle = (addOnId: string) => {
+    setSelectedAddOns(prev => 
+      prev.includes(addOnId) 
+        ? prev.filter(id => id !== addOnId)
+        : [...prev, addOnId]
+    );
+  };
+
+  const calculateAddOnsPrice = (basePrice: number): number => {
+    let totalMultiplier = 0;
+    selectedAddOns.forEach(addOnId => {
+      const addOn = addOns.find(a => a.id === addOnId);
+      if (addOn) {
+        totalMultiplier += addOn.priceMultiplier;
+      }
+    });
+    return basePrice * totalMultiplier;
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -402,8 +508,10 @@ export default function ChallengePage() {
 
   const getCurrentPrice = () => {
     if (!selectedType || !selectedAmount) return null;
-    const originalPrice = calculatePrice(selectedType, selectedAmount);
-    return calculateDiscountedPrice(originalPrice, appliedDiscount);
+    const basePrice = calculatePrice(selectedType, selectedAmount);
+    const addOnsPrice = calculateAddOnsPrice(basePrice);
+    const priceWithAddOns = basePrice + addOnsPrice;
+    return calculateDiscountedPrice(priceWithAddOns, appliedDiscount);
   };
 
   const handleProceedToPayment = () => {
@@ -429,6 +537,7 @@ export default function ChallengePage() {
       type: selectedType,
       amount: selectedAmount,
       platform: selectedPlatform,
+      addOns: selectedAddOns,
       formData: {
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -462,6 +571,52 @@ export default function ChallengePage() {
       termsAccepted
     );
   };
+
+  const renderAddOnsSection = () => (
+    <div className={`mb-8 ${selectedPlatform ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
+      <h3 className="text-lg font-medium mb-4 text-[#0FF1CE]">Available Add-ons</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {addOns.map((addOn) => (
+          <div
+            key={addOn.id}
+            onClick={() => selectedPlatform && handleAddOnToggle(addOn.id)}
+            className={`p-4 rounded-lg border-2 transition-all duration-300 cursor-pointer ${
+              selectedAddOns.includes(addOn.id)
+                ? 'border-[#0FF1CE] bg-[#0FF1CE]/10'
+                : 'border-[#2F2F2F]/50 hover:border-[#0FF1CE]/30'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <h4 className="font-semibold text-white mb-1">{addOn.name}</h4>
+                <p className="text-sm text-gray-400">{addOn.description}</p>
+              </div>
+              <div className="ml-4 text-right">
+                <div className="text-[#0FF1CE] font-bold">+{(addOn.priceMultiplier * 100).toFixed(0)}%</div>
+                <div className="relative w-6 h-6 mt-2">
+                  <input
+                    type="checkbox"
+                    checked={selectedAddOns.includes(addOn.id)}
+                    onChange={() => {}}
+                    className="sr-only"
+                  />
+                  <div className={`w-6 h-6 rounded border-2 transition-all duration-300 ${
+                    selectedAddOns.includes(addOn.id)
+                      ? 'bg-[#0FF1CE] border-[#0FF1CE]'
+                      : 'bg-transparent border-gray-400'
+                  }`}>
+                    {selectedAddOns.includes(addOn.id) && (
+                      <Check size={16} className="text-black m-auto" />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
   const renderDiscountSection = () => (
     <div className="mb-8">
@@ -510,71 +665,287 @@ export default function ChallengePage() {
   );
 
   const renderPriceSection = () => {
-    const originalPrice = selectedType && selectedAmount ? calculatePrice(selectedType, selectedAmount) : null;
-    const finalPrice = getCurrentPrice();
+    if (!selectedType || !selectedAmount) return null;
     
-    if (!originalPrice || !finalPrice) return null;
+    const basePrice = calculatePrice(selectedType, selectedAmount);
+    const addOnsPrice = calculateAddOnsPrice(basePrice);
+    const subtotal = basePrice + addOnsPrice;
+    const finalPrice = calculateDiscountedPrice(subtotal, appliedDiscount);
     
     return (
-      <div className="text-right">
-        {appliedDiscount && (
-          <div className="text-gray-400 line-through mb-1">${originalPrice.toFixed(2)}</div>
+      <div className="space-y-2">
+        <div className="flex justify-between items-center">
+          <span className="text-gray-400">Base Price:</span>
+          <span className="text-white font-semibold">${basePrice.toFixed(2)}</span>
+        </div>
+        
+        {selectedAddOns.length > 0 && (
+          <>
+            <div className="border-t border-gray-600 pt-2">
+              {selectedAddOns.map(addOnId => {
+                const addOn = addOns.find(a => a.id === addOnId);
+                if (!addOn) return null;
+                const addOnPrice = basePrice * addOn.priceMultiplier;
+                return (
+                  <div key={addOnId} className="flex justify-between items-center text-sm">
+                    <span className="text-gray-400">{addOn.name}:</span>
+                    <span className="text-white">+${addOnPrice.toFixed(2)}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex justify-between items-center font-semibold">
+              <span className="text-gray-400">Subtotal:</span>
+              <span className="text-white">${subtotal.toFixed(2)}</span>
+            </div>
+          </>
         )}
-        <div className="text-2xl font-bold text-[#0FF1CE]">${finalPrice.toFixed(2)}</div>
+        
+        {appliedDiscount && (
+          <div className="flex justify-between items-center text-[#0FF1CE]">
+            <span>Discount:</span>
+            <span>
+              -{appliedDiscount.type === 'percentage' 
+                ? `${appliedDiscount.value}%` 
+                : `$${appliedDiscount.value}`}
+            </span>
+          </div>
+        )}
+        
+        <div className="border-t border-[#0FF1CE]/30 pt-2">
+          <div className="flex justify-between items-center">
+            <span className="text-lg font-bold text-white">Total:</span>
+            <span className="text-2xl font-bold text-[#0FF1CE]">${finalPrice.toFixed(2)}</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderChallengeTable = () => {
+    if (!selectedType) return null;
+
+  return (
+      <div className="bg-gradient-to-br from-[#1A1A1A]/80 to-[#151515]/80 backdrop-blur-sm rounded-2xl p-6 border border-[#2F2F2F]/50">
+        <h3 className="text-xl font-bold text-[#0FF1CE] mb-6 text-center">Challenge Details</h3>
+        
+        <div className={`${selectedType === 'Standard' ? 'max-w-5xl' : 'max-w-3xl'} mx-auto overflow-x-auto py-4 px-4 md:px-8`}>
+          <div className={`${selectedType === 'Standard' ? 'min-w-[650px]' : 'min-w-[450px]'} md:min-w-0 rounded-2xl transform hover:scale-[1.01] transition-transform duration-300 overflow-hidden mx-auto md:scale-[0.85] md:origin-top`}>
+            <div 
+              className={`grid ${selectedType === 'Standard' ? 'grid-cols-4' : 'grid-cols-2'} text-xs md:text-sm bg-gradient-to-br from-[#0FF1CE]/10 to-transparent backdrop-blur-sm rounded-2xl border border-[#0FF1CE]/30`}
+              style={{
+                boxShadow: '0 0 30px rgba(15, 241, 206, 0.2)'
+              }}
+            >
+              {/* Header */}
+              {selectedType === 'Standard' ? (
+                <div className="col-span-4 grid grid-cols-4 bg-gradient-to-r from-[#0FF1CE] to-[#0FF1CE]/80">
+                  <div className="p-3 md:p-4 border-r border-black/20 text-black font-bold"></div>
+                  <div className="p-3 md:p-4 border-r border-black/20 text-center text-black font-bold">CHALLENGE</div>
+                  <div className="p-3 md:p-4 border-r border-black/20 text-center text-black font-bold">VERIFICATION</div>
+                  <div className="p-3 md:p-4 text-center text-black font-bold">FUNDED</div>
+                </div>
+              ) : selectedType === '1-Step' ? (
+                <div className="col-span-2 grid grid-cols-2 bg-gradient-to-r from-[#0FF1CE] to-[#0FF1CE]/80">
+                  <div className="p-3 md:p-4 border-r border-black/20 text-black font-bold"></div>
+                  <div className="p-3 md:p-4 text-center text-black font-bold">FUNDED</div>
+                </div>
+              ) : (
+                <div className="col-span-2 grid grid-cols-2 bg-gradient-to-r from-[#0FF1CE] to-[#0FF1CE]/80">
+                  <div className="p-3 md:p-4 border-r border-black/20 text-black font-bold"></div>
+                  <div className="p-3 md:p-4 text-center text-black font-bold">FUNDED</div>
+                </div>
+              )}
+
+              {/* Rows */}
+              {selectedType === 'Standard' ? (
+                <>
+                  {[
+                    ['Trading Period', 'Unlimited', 'Unlimited', 'Unlimited'],
+                    ['Minimum Trading Days', '5 Days', '5 Days', 'X'],
+                    ['Maximum Daily Loss', 
+                      <div key="daily1" className="flex flex-col items-center">
+                        <span className="text-[#0FF1CE] font-bold text-base md:text-lg">8%</span>
+                        <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.maxDailyLoss.toLocaleString()}</span>
+                      </div>, 
+                      <div key="daily2" className="flex flex-col items-center">
+                        <span className="text-[#0FF1CE] font-bold text-base md:text-lg">8%</span>
+                        <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.maxDailyLoss.toLocaleString()}</span>
+                      </div>, 
+                      <div key="daily3" className="flex flex-col items-center">
+                        <span className="text-[#0FF1CE] font-bold text-base md:text-lg">8%</span>
+                        <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.maxDailyLoss.toLocaleString()}</span>
+                      </div>
+                    ],
+                    ['Maximum Loss', 
+                      <div key="max1" className="flex flex-col items-center">
+                        <span className="text-[#0FF1CE] font-bold text-base md:text-lg">15%</span>
+                        <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.maxLoss.toLocaleString()}</span>
+                      </div>,
+                      <div key="max2" className="flex flex-col items-center">
+                        <span className="text-[#0FF1CE] font-bold text-base md:text-lg">15%</span>
+                        <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.maxLoss.toLocaleString()}</span>
+                      </div>,
+                      <div key="max3" className="flex flex-col items-center">
+                        <span className="text-[#0FF1CE] font-bold text-base md:text-lg">15%</span>
+                        <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.maxLoss.toLocaleString()}</span>
+                      </div>
+                    ],
+                    ['Profit Target', 
+                      <div key="profit1" className="flex flex-col items-center">
+                        <span className="text-[#0FF1CE] font-bold text-base md:text-lg">10%</span>
+                        <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.profitTargetStep1.toLocaleString()}</span>
+                      </div>,
+                      <div key="profit2" className="flex flex-col items-center">
+                        <span className="text-[#0FF1CE] font-bold text-base md:text-lg">5%</span>
+                        <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.profitTargetStep2.toLocaleString()}</span>
+                      </div>,
+                      'X'
+                    ],
+                    ['Leverage', '1:200', '1:200', '1:200'],
+                    ['News Trading', 'Allowed', 'Allowed', 'Allowed'],
+                    ['Payout Eligibility', 'X', 'X', '14 Days'],
+                    ['Profit Split', 'X', 'X', 'Up to 95%']
+                  ].map((row, index) => (
+                    <div key={index} className={`contents text-white ${index % 2 === 0 ? 'bg-[#ffffff08]' : 'bg-[#0FF1CE]/[0.08]'}`}>
+                      <div className="p-3 md:p-4 border-t border-[#2F2F2F]/50 font-medium text-sm md:text-xs">{row[0]}</div>
+                      <div className="p-3 md:p-4 border-t border-l border-[#2F2F2F]/50 text-center text-sm md:text-xs">{row[1]}</div>
+                      <div className="p-3 md:p-4 border-t border-l border-[#2F2F2F]/50 text-center text-sm md:text-xs">{row[2]}</div>
+                      <div className="p-3 md:p-4 border-t border-l border-[#2F2F2F]/50 text-center text-sm md:text-xs">{row[3]}</div>
+                    </div>
+                  ))}
+                </>
+              ) : selectedType === '1-Step' ? (
+                <>
+                  {[
+                    ['Trading Period', 'Unlimited'],
+                    ['Minimum Trading Days', '5 Days'],
+                    ['Maximum Daily Loss', 
+                      <div key="daily" className="flex flex-col items-center">
+                        <span className="text-[#0FF1CE] font-bold text-base md:text-lg">4%</span>
+                        <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.maxDailyLoss.toLocaleString()}</span>
+                      </div>
+                    ],
+                    ['Maximum Loss', 
+                      <div key="max" className="flex flex-col items-center">
+                        <span className="text-[#0FF1CE] font-bold text-base md:text-lg">8%</span>
+                        <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.maxLoss.toLocaleString()}</span>
+                      </div>
+                    ],
+                    ['Profit Target', 
+                      <div key="profit" className="flex flex-col items-center">
+                        <span className="text-[#0FF1CE] font-bold text-base md:text-lg">10%</span>
+                        <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.profitTargetStep1.toLocaleString()}</span>
+                      </div>
+                    ],
+                    ['Leverage', '1:200'],
+                    ['News Trading', 'Allowed'],
+                    ['First Withdrawal', '5 Days'],
+                    ['Profit Split', 'Up to 95%']
+                  ].map((row, index) => (
+                    <div key={index} className={`contents text-white ${index % 2 === 0 ? 'bg-[#ffffff08]' : 'bg-[#0FF1CE]/[0.08]'}`}>
+                      <div className="p-3 md:p-4 border-t border-[#2F2F2F]/50 font-medium text-sm md:text-xs">{row[0]}</div>
+                      <div className="p-3 md:p-4 border-t border-l border-[#2F2F2F]/50 text-center text-sm md:text-xs">{row[1]}</div>
+                    </div>
+                  ))}
+                </>
+              ) : (
+                <>
+                  {[
+                    ['Trading Period', '30 Days'],
+                    ['Minimum Profitable Days', '5 Days'],
+                    ['Maximum Loss', 
+                      <div key="max" className="flex flex-col items-center">
+                        <span className="text-[#0FF1CE] font-bold text-base md:text-lg">4%</span>
+                        <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.maxLoss.toLocaleString()}</span>
+                      </div>
+                    ],
+                    ['Profit Target', 
+                      <div key="profit" className="flex flex-col items-center">
+                        <span className="text-[#0FF1CE] font-bold text-base md:text-lg">12%</span>
+                        <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.profitTargetStep1.toLocaleString()}</span>
+                      </div>
+                    ],
+                    ['Leverage', '1:100'],
+                    ['News Trading', 'Allowed'],
+                    ['First Withdrawal', '6 Days'],
+                    ['Profit Split', '70%']
+                  ].map((row, index) => (
+                    <div key={index} className={`contents text-white ${index % 2 === 0 ? 'bg-[#ffffff08]' : 'bg-[#0FF1CE]/[0.08]'}`}>
+                      <div className="p-3 md:p-4 border-t border-[#2F2F2F]/50 font-medium text-sm md:text-xs">{row[0]}</div>
+                      <div className="p-3 md:p-4 border-t border-l border-[#2F2F2F]/50 text-center text-sm md:text-xs">{row[1]}</div>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     );
   };
 
   return (
-    <div className="bg-gradient-to-b from-[#0D0D0D] via-[#121212] to-[#151515] text-white min-h-screen font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-[#0D0D0D] via-[#0D0D0D] to-[#151515] text-white relative overflow-hidden">
       {/* Background Effects */}
-      <div className="absolute top-0 left-0 w-full h-full bg-[#0FF1CE]/[0.02] background-noise"></div>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full md:w-3/4 h-full rounded-full bg-[#0FF1CE]/[0.03] blur-[150px] opacity-60"></div>
+      <div className="absolute inset-0">
+        <div className="absolute top-1/4 -left-1/4 w-96 h-96 bg-[#0FF1CE]/10 rounded-full blur-[150px] animate-pulse"></div>
+        <div className="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-[#0FF1CE]/10 rounded-full blur-[150px] animate-pulse delay-1000"></div>
+      </div>
       <Particles />
 
       {/* Main Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Launch Day Sale Banner */}
-        <div className="mb-8 p-6 bg-gradient-to-r from-[#0FF1CE]/10 to-[#00D4FF]/10 rounded-lg border border-[#0FF1CE]/20 shadow-lg shadow-[#0FF1CE]/5 relative overflow-hidden hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-[#0FF1CE]/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#00D4FF]/10 rounded-full blur-xl -ml-8 -mb-8"></div>
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between relative z-10">
-            <div className="flex flex-col items-center md:items-start">
-              <div className="text-sm text-white/70 mb-1">SuperCharged Offer!</div>
-              <div className="text-2xl md:text-3xl font-bold text-[#0FF1CE] mb-1">SAVE 30% OFF</div>
-              <div className="text-sm text-[#0FF1CE] font-medium">+ FREE retry included!</div>
+      <div className="relative z-10 px-4 sm:px-6 lg:px-8 py-8 lg:py-12 max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8 lg:mb-12">
+          <h1 className="text-xl lg:text-5xl font-bold bg-gradient-to-r from-[#0FF1CE] to-[#00D4FF] bg-clip-text text-transparent mb-4">
+            Start Your Trading Journey
+          </h1>
             </div>
-            <div className="flex flex-col items-center md:items-end mt-3 md:mt-0">
+
+        {/* Launch Day Sale Banner - Mobile Optimized */}
+        <div className="mb-8 lg:mb-12 relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0FF1CE]/20 to-[#00D4FF]/20 rounded-2xl blur-xl"></div>
+          <div className="relative bg-gradient-to-r from-[#0FF1CE]/10 to-[#00D4FF]/10 rounded-2xl p-6 lg:p-8 border border-[#0FF1CE]/20 backdrop-blur-sm">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              <div className="text-center lg:text-left">
+                <div className="flex items-center justify-center lg:justify-start gap-2 mb-2">
+                  <Zap className="w-5 h-5 text-[#0FF1CE]" />
+                  <span className="text-sm font-bold text-white">SuperCharged Offer!</span>
+                </div>
+                <div className="text-2xl lg:text-3xl font-bold text-[#0FF1CE] mb-1">SAVE 50% OFF</div>
+                <div className="text-sm text-[#0FF1CE]/80">+ FREE retry included!</div>
+              </div>
+              <div className="text-center lg:text-right">
               <div className="text-xs text-gray-400 mb-1">Use Code:</div>
-              <div className="text-xl font-mono font-bold bg-gradient-to-r from-[#0FF1CE] to-[#00D4FF] bg-clip-text text-transparent tracking-wider px-4 py-2 border border-[#0FF1CE]/30 rounded-md">
-                OCTANE
+                <div className="inline-block text-xl font-mono font-bold bg-gradient-to-r from-[#0FF1CE] to-[#00D4FF] bg-clip-text text-transparent px-4 py-2 border border-[#0FF1CE]/30 rounded-lg">
+                  CANADA
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <h1 className="text-3xl font-bold text-white mb-8">Get Started with Your Challenge</h1>
-
         {/* Challenge Selection Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* First Card - Challenge Selection */}
-          <div className="lg:col-span-1 bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl p-6 border border-[#2F2F2F]/50">
+          <div className="lg:col-span-7 bg-gradient-to-br from-[#1A1A1A]/80 to-[#151515]/80 backdrop-blur-sm rounded-2xl p-6 border border-[#2F2F2F]/50">
             <div className="mb-8">
-              <h3 className="text-lg font-medium mb-4 text-white">Select Challenge Type</h3>
-              <div className="grid grid-cols-2 gap-4">
+              <h3 className="text-lg font-medium mb-4 text-[#0FF1CE]">Select Challenge Type</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {challengeTypes.map((type) => (
                   <button
                     key={type.id}
                     onClick={() => handleTypeSelect(type.id)}
-                    className={`relative group w-full rounded-xl overflow-hidden border transition-all duration-300 ${
+                    className={`relative group w-full rounded-xl overflow-hidden border-2 transition-all duration-300 ${
                       selectedType === type.id
-                        ? 'border-[#0FF1CE] shadow-[0_0_40px_rgba(15,241,206,0.2)]'
-                        : 'border-[#2F2F2F]/50 hover:border-[#0FF1CE]/30'
+                        ? 'border-[#0FF1CE] shadow-[0_0_20px_rgba(15,241,206,0.3)]'
+                        : 'border-[#2F2F2F]/50 hover:border-[#0FF1CE]/50'
                     }`}
                   >
-                    {/* Image section - top 70% */}
-                    <div className="relative w-full aspect-[16/10] overflow-hidden flex items-center justify-center bg-[#151515]">
-                      <div className="relative w-[105%] h-[105%] md:w-[105%] md:h-[105%]">
+                    {/* Image section */}
+                    <div className="relative w-full aspect-[16/12] overflow-hidden flex items-center justify-center bg-gradient-to-b from-[#151515] to-[#0D0D0D]">
+                      <div className="relative w-[85%] h-[85%]">
                         <Image
                           src={type.image}
                           alt={type.name}
@@ -585,13 +956,13 @@ export default function ChallengePage() {
                       </div>
                     </div>
                     
-                    {/* Text section - bottom 30% */}
-                    <div className="p-4 bg-[#0D0D0D]">
-                      <h2 className="text-[10px] md:text-sm font-bold mb-1 text-white text-center">
+                    {/* Text section */}
+                    <div className="p-3 bg-[#0D0D0D]">
+                      <h2 className="text-xs lg:text-sm font-bold mb-1 text-white text-center">
                         {type.name}
                       </h2>
                       <div className="h-0.5 w-12 bg-[#0FF1CE] mb-2 rounded mx-auto"></div>
-                      <p className="text-[8px] md:text-xs text-gray-400 text-center">
+                      <p className="text-[10px] lg:text-xs text-gray-400 text-center">
                         {type.description}
                       </p>
                     </div>
@@ -602,15 +973,15 @@ export default function ChallengePage() {
 
             {/* Amount Selection */}
             <div className={`mb-8 ${selectedType ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
-              <h3 className="text-lg font-medium mb-4 text-white">Select Account Size</h3>
-              <div className="grid grid-cols-2 gap-4">
+              <h3 className="text-lg font-medium mb-4 text-[#0FF1CE]">Select Account Size</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {(selectedType ? challengeTypes.find(type => type.id === selectedType)?.amounts : [])?.map((amount) => (
                   <button
                     key={amount}
                     onClick={() => handleAmountSelect(amount)}
-                    className={`p-4 rounded-lg border ${
+                    className={`p-3 rounded-lg border-2 transition-all duration-300 ${
                       selectedAmount === amount
-                        ? 'border-[#0FF1CE] bg-[#0FF1CE]/10 text-white'
+                        ? 'border-[#0FF1CE] bg-[#0FF1CE]/10 text-[#0FF1CE] shadow-[0_0_15px_rgba(15,241,206,0.2)]'
                         : 'border-[#2F2F2F]/50 hover:border-[#0FF1CE]/30 text-gray-300'
                     }`}
                   >
@@ -622,15 +993,15 @@ export default function ChallengePage() {
 
             {/* Platform Selection */}
             <div className={`mb-8 ${selectedAmount ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
-              <h3 className="text-lg font-medium mb-4 text-white">Select Platform</h3>
+              <h3 className="text-lg font-medium mb-4 text-[#0FF1CE]">Select Platform</h3>
               <div className="grid grid-cols-2 gap-4">
                 {platforms.map((platform) => (
                   <button
                     key={platform}
                     onClick={() => handlePlatformSelect(platform)}
-                    className={`p-4 rounded-lg border ${
+                    className={`p-4 rounded-lg border-2 transition-all duration-300 ${
                       selectedPlatform === platform
-                        ? 'border-[#0FF1CE] bg-[#0FF1CE]/10 text-white'
+                        ? 'border-[#0FF1CE] bg-[#0FF1CE]/10 text-[#0FF1CE] shadow-[0_0_15px_rgba(15,241,206,0.2)]'
                         : 'border-[#2F2F2F]/50 hover:border-[#0FF1CE]/30 text-gray-300'
                     }`}
                   >
@@ -640,22 +1011,67 @@ export default function ChallengePage() {
               </div>
             </div>
 
+            {/* Add-ons Selection */}
+            {renderAddOnsSection()}
+
             {/* Discount Code */}
             {selectedType && selectedAmount && selectedPlatform && (
               <>
                 {renderDiscountSection()}
-                <div className="p-4 bg-[#151515] rounded-lg">
+                
+                {/* Desktop Price Display - Below Discount */}
+                <div className="hidden lg:block p-4 bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 rounded-lg border border-[#0FF1CE]/20">
+                  {renderPriceSection()}
+                </div>
+                
+                {/* Mobile Price Display - Original */}
+                <div className="p-4 bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 rounded-lg border border-[#0FF1CE]/20 lg:hidden">
                   {renderPriceSection()}
                 </div>
               </>
             )}
           </div>
 
-          {/* Second Card - Personal Information */}
-          <div className="lg:col-span-1 bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl p-6 border border-[#2F2F2F]/50">
-            <h3 className="text-lg font-medium mb-4 text-white">Your Information</h3>
-            
-            <div className="space-y-4">
+          {/* Second Card - Challenge Details */}
+          <div className="lg:col-span-5 relative">
+            {/* Sticky container for desktop */}
+            <div className="lg:sticky lg:top-8">
+              {/* Sticky Price Display - Desktop Only */}
+              {selectedType && selectedAmount && (
+                <div className="hidden lg:block mb-4 bg-gradient-to-br from-[#1A1A1A]/80 to-[#151515]/80 backdrop-blur-sm rounded-2xl p-4 border border-[#0FF1CE]/30">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm text-gray-400">Your Selection</div>
+                      <div className="text-lg font-semibold text-white">{selectedType} - {selectedAmount}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-gray-400">Total Price</div>
+                      <div className="text-2xl font-bold text-[#0FF1CE]">
+                        ${getCurrentPrice()?.toFixed(2) || '0.00'}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Show price breakdown if there are add-ons or discount */}
+                  {(selectedAddOns.length > 0 || appliedDiscount) && (
+                    <div className="mt-4 pt-4 border-t border-[#0FF1CE]/20">
+                      {renderPriceSection()}
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* Challenge Details Table */}
+              {renderChallengeTable()}
+            </div>
+          </div>
+        </div>
+
+        {/* Personal Information Section - Full Width Mobile First */}
+        <div className="mt-8 lg:mt-12 bg-gradient-to-br from-[#1A1A1A]/80 to-[#151515]/80 backdrop-blur-sm rounded-2xl p-6 lg:p-8 border border-[#2F2F2F]/50">
+          <h3 className="text-xl lg:text-2xl font-bold text-[#0FF1CE] mb-6 text-center">Your Information</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6 max-w-4xl mx-auto">
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-2">First Name</label>
                 <input
@@ -663,9 +1079,10 @@ export default function ChallengePage() {
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleInputChange}
-                  className={`w-full bg-[#151515] border ${formErrors.firstName ? 'border-red-500' : 'border-[#2F2F2F]'} rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#0FF1CE]/50`}
+                className={`w-full bg-[#151515]/50 backdrop-blur-sm border ${formErrors.firstName ? 'border-red-500' : 'border-[#2F2F2F]'} rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#0FF1CE]/50 focus:border-transparent transition-all`}
+                placeholder="Enter your first name"
                 />
-                {formErrors.firstName && <p className="mt-1 text-sm text-red-500">{formErrors.firstName}</p>}
+              {formErrors.firstName && <p className="mt-1 text-sm text-red-400 flex items-center gap-1"><AlertCircle size={14} />{formErrors.firstName}</p>}
               </div>
               
               <div>
@@ -675,9 +1092,10 @@ export default function ChallengePage() {
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleInputChange}
-                  className={`w-full bg-[#151515] border ${formErrors.lastName ? 'border-red-500' : 'border-[#2F2F2F]'} rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#0FF1CE]/50`}
+                className={`w-full bg-[#151515]/50 backdrop-blur-sm border ${formErrors.lastName ? 'border-red-500' : 'border-[#2F2F2F]'} rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#0FF1CE]/50 focus:border-transparent transition-all`}
+                placeholder="Enter your last name"
                 />
-                {formErrors.lastName && <p className="mt-1 text-sm text-red-500">{formErrors.lastName}</p>}
+              {formErrors.lastName && <p className="mt-1 text-sm text-red-400 flex items-center gap-1"><AlertCircle size={14} />{formErrors.lastName}</p>}
               </div>
               
               <div>
@@ -687,9 +1105,10 @@ export default function ChallengePage() {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className={`w-full bg-[#151515] border ${formErrors.email ? 'border-red-500' : 'border-[#2F2F2F]'} rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#0FF1CE]/50`}
+                className={`w-full bg-[#151515]/50 backdrop-blur-sm border ${formErrors.email ? 'border-red-500' : 'border-[#2F2F2F]'} rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#0FF1CE]/50 focus:border-transparent transition-all`}
+                placeholder="your@email.com"
                 />
-                {formErrors.email && <p className="mt-1 text-sm text-red-500">{formErrors.email}</p>}
+              {formErrors.email && <p className="mt-1 text-sm text-red-400 flex items-center gap-1"><AlertCircle size={14} />{formErrors.email}</p>}
               </div>
               
               <div>
@@ -699,9 +1118,10 @@ export default function ChallengePage() {
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
-                  className={`w-full bg-[#151515] border ${formErrors.phone ? 'border-red-500' : 'border-[#2F2F2F]'} rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#0FF1CE]/50`}
+                className={`w-full bg-[#151515]/50 backdrop-blur-sm border ${formErrors.phone ? 'border-red-500' : 'border-[#2F2F2F]'} rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#0FF1CE]/50 focus:border-transparent transition-all`}
+                placeholder="+1 (555) 000-0000"
                 />
-                {formErrors.phone && <p className="mt-1 text-sm text-red-500">{formErrors.phone}</p>}
+              {formErrors.phone && <p className="mt-1 text-sm text-red-400 flex items-center gap-1"><AlertCircle size={14} />{formErrors.phone}</p>}
               </div>
               
               <div>
@@ -710,7 +1130,7 @@ export default function ChallengePage() {
                   name="country"
                   value={formData.country}
                   onChange={handleInputChange}
-                  className={`w-full bg-[#151515] border ${formErrors.country ? 'border-red-500' : 'border-[#2F2F2F]'} rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#0FF1CE]/50`}
+                className={`w-full bg-[#151515]/50 backdrop-blur-sm border ${formErrors.country ? 'border-red-500' : 'border-[#2F2F2F]'} rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#0FF1CE]/50 focus:border-transparent transition-all`}
                 >
                   <option value="">Select a country</option>
                   {countries.map((country) => (
@@ -719,7 +1139,7 @@ export default function ChallengePage() {
                     </option>
                   ))}
                 </select>
-                {formErrors.country && <p className="mt-1 text-sm text-red-500">{formErrors.country}</p>}
+              {formErrors.country && <p className="mt-1 text-sm text-red-400 flex items-center gap-1"><AlertCircle size={14} />{formErrors.country}</p>}
               </div>
               
               <div>
@@ -729,18 +1149,22 @@ export default function ChallengePage() {
                   name="discordUsername"
                   value={formData.discordUsername}
                   onChange={handleInputChange}
-                  className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#0FF1CE]/50"
+                className="w-full bg-[#151515]/50 backdrop-blur-sm border border-[#2F2F2F] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#0FF1CE]/50 focus:border-transparent transition-all"
+                placeholder="username#0000"
                 />
+            </div>
               </div>
               
-              <div className="pt-4">
-                <div className="flex items-start gap-2">
+          <div className="mt-8 max-w-4xl mx-auto">
+            
+            
+            <div className="flex items-start gap-3">
                   <input
                     type="checkbox"
                     id="disclaimer"
                     checked={termsAccepted}
                     onChange={() => setTermsAccepted(!termsAccepted)}
-                    className="mt-1 w-4 h-4 rounded border-gray-600 text-[#0FF1CE] focus:ring-[#0FF1CE] focus:ring-offset-0 bg-[#1A1A1A]"
+                className="mt-1 w-4 h-4 rounded border-gray-600 text-[#0FF1CE] focus:ring-[#0FF1CE] focus:ring-offset-0 bg-[#1A1A1A]/50"
                   />
                   <label htmlFor="disclaimer" className="text-sm text-gray-400">
                     I acknowledge that Shockwave Capital provides a simulated trading environment and that all activity is for educational and evaluative purposes only. I agree to the{' '}
@@ -761,155 +1185,25 @@ export default function ChallengePage() {
                     </Link>.
                   </label>
                 </div>
-                {formErrors.terms && <p className="mt-1 text-sm text-red-500">{formErrors.terms}</p>}
-              </div>
+            {formErrors.terms && <p className="mt-1 text-sm text-red-400 flex items-center gap-1"><AlertCircle size={14} />{formErrors.terms}</p>}
               
               <button
                 onClick={handleProceedToPayment}
-                className="w-full bg-[#0FF1CE] text-black font-bold py-3 rounded-lg hover:bg-[#0FF1CE]/90 transition-colors mt-6"
-              >
-                Proceed to Payment
+              disabled={!isFormValid()}
+              className={`w-full mt-6 relative overflow-hidden rounded-xl font-bold py-4 px-6 transition-all duration-300 ${
+                isFormValid()
+                  ? 'bg-gradient-to-r from-[#0FF1CE] to-[#0AA89E] text-black hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-[#0FF1CE]/25'
+                  : 'bg-gray-700 text-gray-400 cursor-not-allowed opacity-50'
+              }`}
+            >
+              <div className="relative flex items-center justify-center gap-2">
+                <span>Proceed to Payment</span>
+                <ChevronRight size={20} className={isFormValid() ? 'group-hover:translate-x-1 transition-transform' : ''} />
+              </div>
               </button>
             </div>
           </div>
         </div>
-
-        {/* Challenge Details Table */}
-        {selectedType && selectedAmount && (
-          <div className="mt-12 bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-[#2F2F2F]/50">
-            <h3 className="text-xl font-bold text-[#0FF1CE] mb-6 text-center">Challenge Details</h3>
-            
-            <div className={`${selectedType === 'Standard' ? 'max-w-5xl' : 'max-w-3xl'} mx-auto overflow-x-auto py-4 px-4 md:px-8`}>
-              <div className={`${selectedType === 'Standard' ? 'min-w-[650px]' : 'min-w-[450px]'} md:min-w-0 rounded-2xl transform hover:scale-[1.01] transition-transform duration-300 overflow-hidden mx-auto md:scale-[0.85] md:origin-top`}>
-                <div 
-                  className={`grid ${selectedType === 'Standard' ? 'grid-cols-4' : 'grid-cols-2'} text-xs md:text-sm bg-gradient-to-br from-[#0FF1CE]/10 to-transparent backdrop-blur-sm rounded-2xl border border-[#0FF1CE]/30`}
-                  style={{
-                    boxShadow: '0 0 30px rgba(15, 241, 206, 0.2)'
-                  }}
-                >
-                  {/* Header */}
-                  {selectedType === 'Standard' ? (
-                    <div className="col-span-4 grid grid-cols-4 bg-gradient-to-r from-[#0FF1CE] to-[#0FF1CE]/80">
-                      <div className="p-3 md:p-4 border-r border-black/20 text-black font-bold"></div>
-                      <div className="p-3 md:p-4 border-r border-black/20 text-center text-black font-bold">CHALLENGE</div>
-                      <div className="p-3 md:p-4 border-r border-black/20 text-center text-black font-bold">VERIFICATION</div>
-                      <div className="p-3 md:p-4 text-center text-black font-bold">FUNDED</div>
-                    </div>
-                  ) : (
-                    <div className="col-span-2 grid grid-cols-2 bg-gradient-to-r from-[#0FF1CE] to-[#0FF1CE]/80">
-                      <div className="p-3 md:p-4 border-r border-black/20 text-black font-bold"></div>
-                      <div className="p-3 md:p-4 text-center text-black font-bold">FUNDED</div>
-                    </div>
-                  )}
-
-                  {/* Rows */}
-                  {selectedType === 'Standard' ? (
-                    <>
-                      {[
-                        ['Trading Period', 'Unlimited', 'Unlimited', 'Unlimited'],
-                        ['Minimum Trading Days', '5 Days', '5 Days', 'X'],
-                        ['Maximum Daily Loss', 
-                          <div key="daily1" className="flex flex-col items-center">
-                            <span className="text-[#0FF1CE] font-bold text-base md:text-lg">8%</span>
-                            <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.maxDailyLoss.toLocaleString()}</span>
-                          </div>, 
-                          <div key="daily2" className="flex flex-col items-center">
-                            <span className="text-[#0FF1CE] font-bold text-base md:text-lg">8%</span>
-                            <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.maxDailyLoss.toLocaleString()}</span>
-                          </div>, 
-                          <div key="daily3" className="flex flex-col items-center">
-                            <span className="text-[#0FF1CE] font-bold text-base md:text-lg">8%</span>
-                            <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.maxDailyLoss.toLocaleString()}</span>
-                          </div>
-                        ],
-                        ['Maximum Loss', 
-                          <div key="max1" className="flex flex-col items-center">
-                            <span className="text-[#0FF1CE] font-bold text-base md:text-lg">15%</span>
-                            <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.maxLoss.toLocaleString()}</span>
-                          </div>,
-                          <div key="max2" className="flex flex-col items-center">
-                            <span className="text-[#0FF1CE] font-bold text-base md:text-lg">15%</span>
-                            <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.maxLoss.toLocaleString()}</span>
-                          </div>,
-                          <div key="max3" className="flex flex-col items-center">
-                            <span className="text-[#0FF1CE] font-bold text-base md:text-lg">15%</span>
-                            <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.maxLoss.toLocaleString()}</span>
-                          </div>
-                        ],
-                        ['Profit Target', 
-                          <div key="profit1" className="flex flex-col items-center">
-                            <span className="text-[#0FF1CE] font-bold text-base md:text-lg">10%</span>
-                            <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.profitTargetStep1.toLocaleString()}</span>
-                          </div>,
-                          <div key="profit2" className="flex flex-col items-center">
-                            <span className="text-[#0FF1CE] font-bold text-base md:text-lg">5%</span>
-                            <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.profitTargetStep2.toLocaleString()}</span>
-                          </div>,
-                          'X'
-                        ],
-                        ['Leverage', '1:200', '1:200', '1:200'],
-                        ['News Trading', 'Allowed', 'Allowed', 'Allowed'],
-                        ['Payout Eligibility', 'X', 'X', '14 Days'],
-                        ['Profit Split', 'X', 'X', '80% (Simulated Payout)'],
-                        ['Refundable Fee', '$79', 'X', 'X']
-                      ].map((row, index) => (
-                        <div key={index} className="contents text-white">
-                          <div className="p-3 md:p-4 border-t border-[#2F2F2F]/50 font-medium">{row[0]}</div>
-                          <div className="p-3 md:p-4 border-t border-l border-[#2F2F2F]/50 text-center">{row[1]}</div>
-                          <div className="p-3 md:p-4 border-t border-l border-[#2F2F2F]/50 text-center">{row[2]}</div>
-                          <div className="p-3 md:p-4 border-t border-l border-[#2F2F2F]/50 text-center">{row[3]}</div>
-                        </div>
-                      ))}
-                    </>
-                  ) : (
-                    <>
-                      {[
-                        ['Trading Period', '30 Days'],
-                        ['Minimum Profitable Days', '5 Days'],
-                        ['Maximum Daily Loss', 
-                          <div key="daily" className="flex flex-col items-center">
-                            <span className="text-[#0FF1CE] font-bold text-base md:text-lg">4%</span>
-                            <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.maxDailyLoss.toLocaleString()}</span>
-                          </div>
-                        ],
-                        ['Maximum Loss', 
-                          <div key="max" className="flex flex-col items-center">
-                            <span className="text-[#0FF1CE] font-bold text-base md:text-lg">12%</span>
-                            <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.maxLoss.toLocaleString()}</span>
-                          </div>
-                        ],
-                        ['Profit Target', 
-                          <div key="profit" className="flex flex-col items-center">
-                            <span className="text-[#0FF1CE] font-bold text-base md:text-lg">12%</span>
-                            <span className="text-white text-[10px] md:text-xs mt-1 bg-[#0FF1CE]/20 px-2 py-0.5 rounded-full">${tableValues?.profitTargetStep1.toLocaleString()}</span>
-                          </div>
-                        ],
-                        ['Leverage', '1:100'],
-                        ['News Trading', 'Allowed'],
-                        ['Payout Eligibility', '14 Days'],
-                        ['Profit Split', '70% (Simulated Payout)'],
-                        ['Refundable Fee', '$799']
-                      ].map((row, index) => (
-                        <div key={index} className="contents text-white">
-                          <div className="p-3 md:p-4 border-t border-[#2F2F2F]/50 font-medium">{row[0]}</div>
-                          <div className="p-3 md:p-4 border-t border-l border-[#2F2F2F]/50 text-center">{row[1]}</div>
-                        </div>
-                      ))}
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <style jsx global>{`
-        .background-noise {
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 250 250' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
-          opacity: 0.15;
-        }
-      `}</style>
     </div>
   );
 } 

@@ -1,0 +1,1312 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shockwave Capital - Pricing Plans</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --shockwave-cyan: #0ff1ce;
+        --shockwave-dark: #0d0d0d;
+        --shockwave-darker: #121212;
+      }
+
+      body {
+        background: linear-gradient(
+          to bottom,
+          var(--shockwave-dark),
+          var(--shockwave-darker)
+        );
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+      }
+
+      .pricing-plan-btn {
+        background: linear-gradient(
+          135deg,
+          var(--shockwave-cyan),
+          rgba(15, 241, 206, 0.8)
+        );
+        color: #000;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(15, 241, 206, 0.3);
+      }
+
+      .pricing-plan-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(15, 241, 206, 0.4);
+      }
+
+      .plan-selector-active {
+        background: var(--shockwave-cyan) !important;
+        color: #000 !important;
+        box-shadow: 0 0 20px rgba(15, 241, 206, 0.5);
+      }
+
+      .plan-selector-inactive {
+        background: transparent;
+        color: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .plan-selector-inactive:hover {
+        background: rgba(15, 241, 206, 0.1);
+        color: var(--shockwave-cyan);
+      }
+
+      .account-size-btn {
+        transition: all 0.3s ease;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(10px);
+      }
+
+      .account-size-btn:hover {
+        border-color: var(--shockwave-cyan);
+        background: rgba(15, 241, 206, 0.1);
+        transform: scale(1.05);
+      }
+
+      .account-size-btn.selected {
+        background: var(--shockwave-cyan);
+        color: #000;
+        border-color: var(--shockwave-cyan);
+        box-shadow: 0 0 20px rgba(15, 241, 206, 0.4);
+      }
+
+      .table-row:hover {
+        background: rgba(15, 241, 206, 0.05);
+        transform: translateX(5px);
+        transition: all 0.3s ease;
+      }
+
+      .feature-value {
+        color: var(--shockwave-cyan);
+        font-weight: 600;
+      }
+
+      .glow-effect {
+        box-shadow: 0 0 30px rgba(15, 241, 206, 0.2);
+      }
+
+      .floating-animation {
+        animation: float 3s ease-in-out infinite;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+      }
+
+      .gradient-text {
+        background: linear-gradient(
+          135deg,
+          var(--shockwave-cyan),
+          rgba(15, 241, 206, 0.6)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .popular-badge {
+        background: linear-gradient(
+          135deg,
+          var(--shockwave-cyan),
+          rgba(15, 241, 206, 0.8)
+        );
+        color: #000;
+        font-weight: bold;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 10px;
+        position: absolute;
+        top: -8px;
+        left: 50%;
+        transform: translateX(-50%);
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.7;
+        }
+      }
+
+      /* Tooltip Styles */
+      .info-tooltip {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        cursor: help;
+      }
+
+      .info-icon {
+        width: 16px;
+        height: 16px;
+        background: rgba(15, 241, 206, 0.2);
+        border: 1px solid var(--shockwave-cyan);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 8px;
+        font-size: 10px;
+        color: var(--shockwave-cyan);
+        transition: all 0.3s ease;
+      }
+
+      .info-icon:hover {
+        background: var(--shockwave-cyan);
+        color: #000;
+        transform: scale(1.1);
+      }
+
+      .tooltip-content {
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(15, 241, 206, 0.3);
+        border-radius: 8px;
+        padding: 12px 16px;
+        font-size: 12px;
+        line-height: 1.4;
+        color: white;
+        white-space: nowrap;
+        max-width: 280px;
+        white-space: normal;
+        width: max-content;
+        min-width: 200px;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        z-index: 1000;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      }
+
+      .tooltip-content::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 6px solid transparent;
+        border-top-color: rgba(0, 0, 0, 0.95);
+      }
+
+      .info-tooltip:hover .tooltip-content {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) translateY(-8px);
+      }
+
+      /* Mobile tooltip adjustments */
+      @media (max-width: 768px) {
+        .tooltip-content {
+          position: fixed;
+          bottom: auto;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+          max-width: 90vw;
+          z-index: 9999;
+        }
+
+        .tooltip-content::after {
+          display: none;
+        }
+
+        .mobile-tooltip-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.5);
+          z-index: 9998;
+          opacity: 0;
+          visibility: hidden;
+          transition: all 0.3s ease;
+        }
+
+        .mobile-tooltip-overlay.active {
+          opacity: 1;
+          visibility: visible;
+        }
+      }
+
+      .checkmark-icon {
+        color: var(--shockwave-cyan);
+        font-size: 18px;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen text-white">
+    <!-- Mobile tooltip overlay -->
+    <div class="mobile-tooltip-overlay" id="mobile-tooltip-overlay"></div>
+
+    <div class="z-1 relative min-h-screen py-20 px-4">
+      <!-- Background Effects -->
+      <div
+        class="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-[#0D0D0D] via-[#121212] to-[#151515] -z-10"
+      ></div>
+      <div
+        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full md:w-3/4 h-full rounded-full bg-[#0FF1CE]/[0.03] blur-[150px] opacity-60 -z-10"
+      ></div>
+
+      <h2
+        class="text-center font-bold text-[2rem] md:text-[4rem] font-extrabold text-white mb-4 gradient-text floating-animation"
+      >
+        Choose the Best Plan
+      </h2>
+
+      <p
+        class="text-center text-gray-300 text-lg md:text-xl mb-12 max-w-3xl mx-auto"
+      >
+        High-octane funding for elite traders. Push your trading into Overdrive.
+      </p>
+
+      <!-- Plan Type Selection -->
+      <div class="hidden lg:block container max-w-6xl mx-auto pt-10">
+        <div class="flex justify-center text-white mb-8">
+          <div
+            class="flex items-center justify-between rounded-full border border-white/30 bg-black/60 backdrop-blur-sm px-2 sm:px-3 py-2 sm:py-3 glow-effect"
+          >
+            <div class="relative">
+              <button
+                type="button"
+                id="standard-plan-btn"
+                class="plan-selector plan-selector-active flex items-center justify-center rounded-full border text-[13px] px-4 sm:px-6 py-2 sm:py-3 sm:text-base font-bold transition-all duration-300 gap-2"
+              >
+                Shockwave Standard
+              </button>
+            </div>
+            <div class="relative">
+              <button
+                type="button"
+                id="onestep-plan-btn"
+                class="plan-selector plan-selector-inactive flex items-center justify-center rounded-full border text-[13px] px-4 sm:px-6 py-2 sm:py-3 sm:text-base font-bold transition-all duration-300 gap-2"
+              >
+                Shockwave 1-Step
+              </button>
+            </div>
+            <div class="relative">
+              <button
+                type="button"
+                id="instant-plan-btn"
+                class="plan-selector plan-selector-inactive flex items-center justify-center rounded-full border text-[13px] px-4 sm:px-6 py-2 sm:py-3 sm:text-base font-bold transition-all duration-300 gap-2"
+              >
+                Shockwave Instant
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile Plan Selection -->
+      <div class="lg:hidden mb-8">
+        <div class="flex justify-center gap-2 px-4">
+          <button
+            id="mobile-standard-btn"
+            class="plan-selector plan-selector-active px-3 py-2 rounded-lg text-sm font-bold transition-all duration-300"
+          >
+            Standard
+          </button>
+          <button
+            id="mobile-onestep-btn"
+            class="plan-selector plan-selector-inactive px-3 py-2 rounded-lg text-sm font-bold transition-all duration-300"
+          >
+            1-Step
+          </button>
+          <button
+            id="mobile-instant-btn"
+            class="plan-selector plan-selector-inactive px-3 py-2 rounded-lg text-sm font-bold transition-all duration-300"
+          >
+            Instant
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Pricing Table -->
+      <div class="container hidden lg:block max-w-7xl mx-auto">
+        <div
+          class="rounded-2xl border border-[#0FF1CE]/30 bg-black/60 backdrop-blur-sm glow-effect"
+        >
+          <div class="overflow-x-auto" style="border-radius: 15px">
+            <table class="min-w-full">
+              <thead class="text-white">
+                <tr class="relative">
+                  <th
+                    class="border-r border-[#ffffff1a] px-8 text-start text-[15px] bg-gradient-to-r from-[#0FF1CE]/20 to-transparent"
+                  >
+                    <p class="mt-8 text-[20px] font-bold text-[#0FF1CE]">
+                      Account Size
+                    </p>
+                  </th>
+                  <th
+                    class="px-4 py-5 text-center text-xl font-medium border-r border-[#ffffff1a] relative"
+                    data-account="5000"
+                  >
+                    <div class="flex flex-col items-center relative">
+                      <span
+                        class="mt-8 text-center text-[22px] text-white lg:text-[20px] font-semibold"
+                        >$5,000</span
+                      >
+                      <button
+                        type="button"
+                        data-price="79"
+                        class="buyButton mt-4"
+                        data-plan="Shockwave Standard $5,000"
+                      >
+                        <span
+                          class="pricing-plan-btn flex flex-col items-center rounded-lg px-6 py-3 cursor-pointer"
+                        >
+                          <span class="text-lg font-bold">Get Plan</span>
+                          <span class="text-sm opacity-90">Fee: $79</span>
+                        </span>
+                      </button>
+                    </div>
+                  </th>
+                  <th
+                    class="px-4 py-5 text-center text-xl font-medium border-r border-[#ffffff1a] relative"
+                    data-account="10000"
+                  >
+                    <div class="flex flex-col items-center relative">
+                      <span
+                        class="mt-8 text-center text-[22px] text-white lg:text-[20px] font-semibold"
+                        >$10,000</span
+                      >
+                      <button
+                        type="button"
+                        data-price="149"
+                        class="buyButton mt-4"
+                        data-plan="Shockwave Standard $10,000"
+                      >
+                        <span
+                          class="pricing-plan-btn flex flex-col items-center rounded-lg px-6 py-3 cursor-pointer"
+                        >
+                          <span class="text-lg font-bold">Get Plan</span>
+                          <span class="text-sm opacity-90">Fee: $149</span>
+                        </span>
+                      </button>
+                    </div>
+                  </th>
+                  <th
+                    class="px-4 py-5 text-center text-xl font-medium border-r border-[#ffffff1a] relative"
+                    data-account="25000"
+                  >
+                    <div class="flex flex-col items-center relative">
+                      <span
+                        class="mt-8 text-center text-[22px] text-white lg:text-[20px] font-semibold"
+                        >$25,000</span
+                      >
+                      <button
+                        type="button"
+                        data-price="299"
+                        class="buyButton mt-4"
+                        data-plan="Shockwave Standard $25,000"
+                      >
+                        <span
+                          class="pricing-plan-btn flex flex-col items-center rounded-lg px-6 py-3 cursor-pointer"
+                        >
+                          <span class="text-lg font-bold">Get Plan</span>
+                          <span class="text-sm opacity-90">Fee: $299</span>
+                        </span>
+                      </button>
+                    </div>
+                  </th>
+                  <th
+                    class="px-4 py-5 text-center text-xl font-medium border-r border-[#ffffff1a] relative"
+                    data-account="50000"
+                  >
+                    <div class="flex flex-col items-center relative">
+                      <span
+                        class="mt-8 text-center text-[22px] text-white lg:text-[20px] font-semibold"
+                        >$50,000</span
+                      >
+                      <button
+                        type="button"
+                        data-price="349"
+                        class="buyButton mt-4"
+                        data-plan="Shockwave Standard $50,000"
+                      >
+                        <span
+                          class="pricing-plan-btn flex flex-col items-center rounded-lg px-6 py-3 cursor-pointer"
+                        >
+                          <span class="text-lg font-bold">Get Plan</span>
+                          <span class="text-sm opacity-90">Fee: $349</span>
+                        </span>
+                      </button>
+                    </div>
+                  </th>
+                  <th
+                    class="px-4 py-5 text-center text-xl font-medium border-r border-[#ffffff1a] relative"
+                    data-account="100000"
+                  >
+                    <div class="flex flex-col items-center relative">
+                      <div class="popular-badge">POPULAR</div>
+                      <span
+                        class="mt-8 text-center text-[22px] text-white lg:text-[20px] font-semibold"
+                        >$100,000</span
+                      >
+                      <button
+                        type="button"
+                        data-price="599"
+                        class="buyButton mt-4"
+                        data-plan="Shockwave Standard $100,000"
+                      >
+                        <span
+                          class="pricing-plan-btn flex flex-col items-center rounded-lg px-6 py-3 cursor-pointer"
+                        >
+                          <span class="text-lg font-bold">Get Plan</span>
+                          <span class="text-sm opacity-90">Fee: $599</span>
+                        </span>
+                      </button>
+                    </div>
+                  </th>
+                  <th
+                    class="px-4 py-5 text-center text-xl font-medium border-r border-[#ffffff1a] relative"
+                    data-account="200000"
+                  >
+                    <div class="flex flex-col items-center relative">
+                      <span
+                        class="mt-8 text-center text-[22px] text-white lg:text-[20px] font-semibold"
+                        >$200,000</span
+                      >
+                      <button
+                        type="button"
+                        data-price="999"
+                        class="buyButton mt-4"
+                        data-plan="Shockwave Standard $200,000"
+                      >
+                        <span
+                          class="pricing-plan-btn flex flex-col items-center rounded-lg px-6 py-3 cursor-pointer"
+                        >
+                          <span class="text-lg font-bold">Get Plan</span>
+                          <span class="text-sm opacity-90">Fee: $999</span>
+                        </span>
+                      </button>
+                    </div>
+                  </th>
+                  <th
+                    class="px-4 py-5 text-center text-xl font-medium relative"
+                    data-account="500000"
+                  >
+                    <div class="flex flex-col items-center relative">
+                      <span
+                        class="mt-8 text-center text-[22px] text-white lg:text-[20px] font-semibold"
+                        >$500,000</span
+                      >
+                      <button
+                        type="button"
+                        data-price="1999"
+                        class="buyButton mt-4"
+                        data-plan="Shockwave Standard $500,000"
+                      >
+                        <span
+                          class="pricing-plan-btn flex flex-col items-center rounded-lg px-6 py-3 cursor-pointer"
+                        >
+                          <span class="text-lg font-bold">Get Plan</span>
+                          <span class="text-sm opacity-90">Fee: $1999</span>
+                        </span>
+                      </button>
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="text-white" id="table-body">
+                <!-- Table rows populated by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile Account Size Selection -->
+      <div class="overflow-x-auto lg:hidden pt-4 px-4">
+        <div
+          class="flex space-x-3 justify-start min-w-max"
+          id="mobile-account-buttons"
+        >
+          <!-- Mobile buttons populated by JavaScript -->
+        </div>
+      </div>
+
+      <!-- Mobile Cards -->
+      <div class="lg:hidden px-4 mt-8" id="mobile-cards">
+        <!-- Mobile cards populated by JavaScript -->
+      </div>
+
+      <!-- Add-ons Section -->
+      <div
+        class="mb-16 lg:mb-24 mt-12 lg:mt-16 flex flex-wrap items-center justify-center gap-2 sm:gap-10 max-w-6xl mx-auto"
+      >
+        <p
+          class="text-lg font-bold text-[#0FF1CE] mb-4 w-full text-center lg:w-auto lg:mb-0"
+        >
+          Add-ons for Shockwave
+        </p>
+        <ul
+          class="flex list-disc flex-wrap justify-center space-x-5 sm:space-x-10 text-center"
+        >
+          <li
+            class="text-sm text-white/75 hover:text-[#0FF1CE] transition-colors cursor-pointer"
+          >
+            Lifetime Payout 95%
+          </li>
+          <li
+            class="text-sm text-white/75 hover:text-[#0FF1CE] transition-colors cursor-pointer"
+          >
+            Performance Scaling
+          </li>
+          <li
+            class="text-sm text-white/75 hover:text-[#0FF1CE] transition-colors cursor-pointer"
+          >
+            1:200 Leverage
+          </li>
+          <li
+            class="text-sm text-white/75 hover:text-[#0FF1CE] transition-colors cursor-pointer"
+          >
+            Weekend Holding
+          </li>
+        </ul>
+      </div>
+
+      <!-- CTA Section -->
+      <div class="text-center mt-16">
+        <button
+          class="px-12 py-4 bg-[#0FF1CE] text-black text-xl font-bold rounded-lg hover:scale-105 transition-transform shadow-lg hover:shadow-[#0FF1CE]/20 floating-animation"
+        >
+          Start Your Challenge Today
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // Tooltip data for each feature
+      const tooltipData = {
+        "profit-share":
+          "Your percentage of profits earned during the verification phase. This is your reward for successful trading performance.",
+        "challenge-target":
+          "The profit percentage you need to achieve in Phase 1 to advance to the verification phase.",
+        "verification-target":
+          "The profit percentage required in Phase 2 to qualify for the funded account.",
+        "daily-loss":
+          "Maximum amount you can lose in a single trading day. Exceeding this limit will result in account termination.",
+        "overall-loss":
+          "Maximum total loss allowed throughout the entire challenge. This is your absolute risk limit.",
+        leverage:
+          "The maximum leverage ratio available for your trades. Higher leverage means greater potential profits and risks.",
+        "news-trading":
+          "Permission to trade during high-impact news events. Many prop firms restrict this due to increased volatility.",
+        "profit-split":
+          "Your share of profits once you become a funded trader. This percentage increases with consistent performance.",
+        "trading-days":
+          "Minimum number of days you must trade to complete each phase. Ensures consistent trading activity.",
+        "payout-eligibility":
+          "Waiting period before your first withdrawal becomes available after reaching the funded phase.",
+        "refundable-fee":
+          "One-time challenge fee that gets refunded with your first profit withdrawal upon successful completion.",
+      };
+
+      // Challenge data with updated features
+      const challengeData = {
+        standard: {
+          name: "Shockwave Standard",
+          accounts: [5000, 10000, 25000, 50000, 100000, 200000, 500000],
+          prices: {
+            5000: 79,
+            10000: 149,
+            25000: 299,
+            50000: 349,
+            100000: 599,
+            200000: 999,
+            500000: 1999,
+          },
+          features: [
+            {
+              name: "10% Profit Share",
+              subtitle: "From Challenge Phase 2",
+              tooltip: "profit-share",
+              values: {
+                5000: "$25",
+                10000: "$50",
+                25000: "$125",
+                50000: "$250",
+                100000: "$500",
+                200000: "$1,000",
+                500000: "$2,500",
+              },
+            },
+            {
+              name: "Challenge Profit Target",
+              subtitle: "Phase 1",
+              tooltip: "challenge-target",
+              values: {
+                5000: "10% ($500)",
+                10000: "10% ($1,000)",
+                25000: "10% ($2,500)",
+                50000: "10% ($5,000)",
+                100000: "10% ($10,000)",
+                200000: "10% ($20,000)",
+                500000: "10% ($50,000)",
+              },
+            },
+            {
+              name: "Verification Profit Target",
+              subtitle: "Phase 2",
+              tooltip: "verification-target",
+              values: {
+                5000: "5% ($250)",
+                10000: "5% ($500)",
+                25000: "5% ($1,250)",
+                50000: "5% ($2,500)",
+                100000: "5% ($5,000)",
+                200000: "5% ($10,000)",
+                500000: "5% ($25,000)",
+              },
+            },
+            {
+              name: "Maximum Daily Loss",
+              subtitle: "",
+              tooltip: "daily-loss",
+              values: {
+                5000: "8% ($400)",
+                10000: "8% ($800)",
+                25000: "8% ($2,000)",
+                50000: "8% ($4,000)",
+                100000: "8% ($8,000)",
+                200000: "8% ($16,000)",
+                500000: "8% ($40,000)",
+              },
+            },
+            {
+              name: "Maximum Overall Loss",
+              subtitle: "",
+              tooltip: "overall-loss",
+              values: {
+                5000: "15% ($750)",
+                10000: "15% ($1,500)",
+                25000: "15% ($3,750)",
+                50000: "15% ($7,500)",
+                100000: "15% ($15,000)",
+                200000: "15% ($30,000)",
+                500000: "15% ($75,000)",
+              },
+            },
+            {
+              name: "Leverage",
+              subtitle: "",
+              tooltip: "leverage",
+              values: {
+                5000: "1:200",
+                10000: "1:200",
+                25000: "1:200",
+                50000: "1:200",
+                100000: "1:200",
+                200000: "1:200",
+                500000: "1:200",
+              },
+            },
+            {
+              name: "News Trading",
+              subtitle: "",
+              tooltip: "news-trading",
+              values: {
+                5000: "✓",
+                10000: "✓",
+                25000: "✓",
+                50000: "✓",
+                100000: "✓",
+                200000: "✓",
+                500000: "✓",
+              },
+            },
+            {
+              name: "Profit Split",
+              subtitle: "Up to 95%",
+              tooltip: "profit-split",
+              values: {
+                5000: "95%",
+                10000: "95%",
+                25000: "95%",
+                50000: "95%",
+                100000: "95%",
+                200000: "95%",
+                500000: "95%",
+              },
+            },
+            {
+              name: "Minimum Trading Days",
+              subtitle: "",
+              tooltip: "trading-days",
+              values: {
+                5000: "5 Days",
+                10000: "5 Days",
+                25000: "5 Days",
+                50000: "5 Days",
+                100000: "5 Days",
+                200000: "5 Days",
+                500000: "5 Days",
+              },
+            },
+            {
+              name: "First Payout Eligibility",
+              subtitle: "",
+              tooltip: "payout-eligibility",
+              values: {
+                5000: "14 Days",
+                10000: "14 Days",
+                25000: "14 Days",
+                50000: "14 Days",
+                100000: "14 Days",
+                200000: "14 Days",
+                500000: "14 Days",
+              },
+            },
+            {
+              name: "Refundable Fee",
+              subtitle: "We refund the full price",
+              tooltip: "refundable-fee",
+              values: {
+                5000: "$79",
+                10000: "$149",
+                25000: "$299",
+                50000: "$349",
+                100000: "$599",
+                200000: "$999",
+                500000: "$1999",
+              },
+            },
+          ],
+        },
+        onestep: {
+          name: "Shockwave 1-Step",
+          accounts: [5000, 10000, 25000, 50000, 100000, 200000],
+          prices: {
+            5000: 99,
+            10000: 179,
+            25000: 319,
+            50000: 379,
+            100000: 629,
+            200000: 1099,
+          },
+          features: [
+            {
+              name: "10% Profit Share",
+              subtitle: "From Challenge Phase",
+              tooltip: "profit-share",
+              values: {
+                5000: "$50",
+                10000: "$100",
+                25000: "$250",
+                50000: "$500",
+                100000: "$1,000",
+                200000: "$2,000",
+              },
+            },
+            {
+              name: "Profit Target",
+              subtitle: "Single Phase",
+              tooltip: "challenge-target",
+              values: {
+                5000: "10% ($500)",
+                10000: "10% ($1,000)",
+                25000: "10% ($2,500)",
+                50000: "10% ($5,000)",
+                100000: "10% ($10,000)",
+                200000: "10% ($20,000)",
+              },
+            },
+            {
+              name: "Maximum Daily Loss",
+              subtitle: "",
+              tooltip: "daily-loss",
+              values: {
+                5000: "4% ($200)",
+                10000: "4% ($400)",
+                25000: "4% ($1,000)",
+                50000: "4% ($2,000)",
+                100000: "4% ($4,000)",
+                200000: "4% ($8,000)",
+              },
+            },
+            {
+              name: "Maximum Overall Loss",
+              subtitle: "",
+              tooltip: "overall-loss",
+              values: {
+                5000: "8% ($400)",
+                10000: "8% ($800)",
+                25000: "8% ($2,000)",
+                50000: "8% ($4,000)",
+                100000: "8% ($8,000)",
+                200000: "8% ($16,000)",
+              },
+            },
+            {
+              name: "Leverage",
+              subtitle: "",
+              tooltip: "leverage",
+              values: {
+                5000: "1:200",
+                10000: "1:200",
+                25000: "1:200",
+                50000: "1:200",
+                100000: "1:200",
+                200000: "1:200",
+              },
+            },
+            {
+              name: "News Trading",
+              subtitle: "",
+              tooltip: "news-trading",
+              values: {
+                5000: "✓",
+                10000: "✓",
+                25000: "✓",
+                50000: "✓",
+                100000: "✓",
+                200000: "✓",
+              },
+            },
+            {
+              name: "Profit Split",
+              subtitle: "Up to 95%",
+              tooltip: "profit-split",
+              values: {
+                5000: "95%",
+                10000: "95%",
+                25000: "95%",
+                50000: "95%",
+                100000: "95%",
+                200000: "95%",
+              },
+            },
+            {
+              name: "Minimum Trading Days",
+              subtitle: "",
+              tooltip: "trading-days",
+              values: {
+                5000: "5 Days",
+                10000: "5 Days",
+                25000: "5 Days",
+                50000: "5 Days",
+                100000: "5 Days",
+                200000: "5 Days",
+              },
+            },
+            {
+              name: "First Withdrawal",
+              subtitle: "",
+              tooltip: "payout-eligibility",
+              values: {
+                5000: "5 Days",
+                10000: "5 Days",
+                25000: "5 Days",
+                50000: "5 Days",
+                100000: "5 Days",
+                200000: "5 Days",
+              },
+            },
+            {
+              name: "One-Time Price",
+              subtitle: "",
+              tooltip: "refundable-fee",
+              values: {
+                5000: "$99",
+                10000: "$179",
+                25000: "$319",
+                50000: "$379",
+                100000: "$629",
+                200000: "$1,099",
+              },
+            },
+          ],
+        },
+        instant: {
+          name: "Shockwave Instant",
+          accounts: [25000, 50000, 100000],
+          prices: { 25000: 799, 50000: 999, 100000: 1999 },
+          features: [
+            {
+              name: "Up to 70% Profit Share",
+              subtitle: "Instant Access",
+              tooltip: "profit-share",
+              values: { 25000: "$1,365", 50000: "$2,730", 100000: "$5,460" },
+            },
+            {
+              name: "Profit Target",
+              subtitle: "Single Phase",
+              tooltip: "challenge-target",
+              values: {
+                25000: "12% ($3,000)",
+                50000: "12% ($6,000)",
+                100000: "12% ($12,000)",
+              },
+            },
+            {
+              name: "Maximum Daily Loss",
+              subtitle: "",
+              tooltip: "daily-loss",
+              values: {
+                25000: "4% ($1,000)",
+                50000: "4% ($2,000)",
+                100000: "4% ($4,000)",
+              },
+            },
+            {
+              name: "Maximum Overall Loss",
+              subtitle: "",
+              tooltip: "overall-loss",
+              values: {
+                25000: "12% ($3,000)",
+                50000: "12% ($6,000)",
+                100000: "12% ($12,000)",
+              },
+            },
+            {
+              name: "Leverage",
+              subtitle: "",
+              tooltip: "leverage",
+              values: { 25000: "1:200", 50000: "1:200", 100000: "1:200" },
+            },
+            {
+              name: "News Trading",
+              subtitle: "",
+              tooltip: "news-trading",
+              values: { 25000: "✓", 50000: "✓", 100000: "✓" },
+            },
+            {
+              name: "Profit Split",
+              subtitle: "Up to 70%",
+              tooltip: "profit-split",
+              values: { 25000: "70%", 50000: "70%", 100000: "70%" },
+            },
+            {
+              name: "Minimum Trading Days",
+              subtitle: "",
+              tooltip: "trading-days",
+              values: { 25000: "5 Days", 50000: "5 Days", 100000: "5 Days" },
+            },
+            {
+              name: "First Withdrawal",
+              subtitle: "",
+              tooltip: "payout-eligibility",
+              values: { 25000: "6 Days", 50000: "6 Days", 100000: "6 Days" },
+            },
+            {
+              name: "One Free Retry",
+              subtitle: "",
+              tooltip: "refundable-fee",
+              values: { 25000: "Yes", 50000: "Yes", 100000: "Yes" },
+            },
+            {
+              name: "One-Time Price",
+              subtitle: "",
+              tooltip: "refundable-fee",
+              values: { 25000: "$799", 50000: "$999", 100000: "$1999" },
+            },
+          ],
+        },
+      };
+
+      let currentPlan = "standard";
+      let selectedAccount = 100000;
+
+      function init() {
+        updatePlanDisplay();
+        updateMobileButtons();
+        setupEventListeners();
+        setupTooltips();
+      }
+
+      function setupEventListeners() {
+        document
+          .getElementById("standard-plan-btn")
+          .addEventListener("click", () => switchPlan("standard"));
+        document
+          .getElementById("onestep-plan-btn")
+          .addEventListener("click", () => switchPlan("onestep"));
+        document
+          .getElementById("instant-plan-btn")
+          .addEventListener("click", () => switchPlan("instant"));
+        document
+          .getElementById("mobile-standard-btn")
+          .addEventListener("click", () => switchPlan("standard"));
+        document
+          .getElementById("mobile-onestep-btn")
+          .addEventListener("click", () => switchPlan("onestep"));
+        document
+          .getElementById("mobile-instant-btn")
+          .addEventListener("click", () => switchPlan("instant"));
+
+        document.addEventListener("click", (e) => {
+          if (e.target.closest(".buyButton")) {
+            const button = e.target.closest(".buyButton");
+            const plan = button.dataset.plan;
+            const price = button.dataset.price;
+            handlePurchase(plan, price);
+          }
+        });
+
+        // Mobile tooltip overlay click handler
+        document
+          .getElementById("mobile-tooltip-overlay")
+          .addEventListener("click", closeMobileTooltip);
+      }
+
+      function setupTooltips() {
+        // Mobile tooltip handling
+        if (window.innerWidth <= 768) {
+          document.addEventListener("click", (e) => {
+            if (e.target.closest(".info-icon")) {
+              e.preventDefault();
+              e.stopPropagation();
+              showMobileTooltip(e.target.closest(".info-tooltip"));
+            }
+          });
+        }
+      }
+
+      function showMobileTooltip(tooltipElement) {
+        const overlay = document.getElementById("mobile-tooltip-overlay");
+        const tooltipContent = tooltipElement.querySelector(".tooltip-content");
+
+        // Close any existing tooltips
+        closeMobileTooltip();
+
+        // Show overlay and tooltip
+        overlay.classList.add("active");
+        tooltipContent.style.opacity = "1";
+        tooltipContent.style.visibility = "visible";
+      }
+
+      function closeMobileTooltip() {
+        const overlay = document.getElementById("mobile-tooltip-overlay");
+        const tooltips = document.querySelectorAll(".tooltip-content");
+
+        overlay.classList.remove("active");
+        tooltips.forEach((tooltip) => {
+          tooltip.style.opacity = "0";
+          tooltip.style.visibility = "hidden";
+        });
+      }
+
+      function switchPlan(plan) {
+        currentPlan = plan;
+
+        const standardBtns = ["standard-plan-btn", "mobile-standard-btn"];
+        const onestepBtns = ["onestep-plan-btn", "mobile-onestep-btn"];
+        const instantBtns = ["instant-plan-btn", "mobile-instant-btn"];
+
+        // Reset all buttons to inactive
+        [...standardBtns, ...onestepBtns, ...instantBtns].forEach((id) => {
+          const btn = document.getElementById(id);
+          if (btn)
+            btn.className = btn.className.replace(
+              "plan-selector-active",
+              "plan-selector-inactive"
+            );
+        });
+
+        // Activate the selected plan buttons
+        let activeBtns = [];
+        if (plan === "standard") {
+          activeBtns = standardBtns;
+          selectedAccount = 100000;
+        } else if (plan === "onestep") {
+          activeBtns = onestepBtns;
+          selectedAccount = 100000;
+        } else if (plan === "instant") {
+          activeBtns = instantBtns;
+          selectedAccount = 100000;
+        }
+
+        activeBtns.forEach((id) => {
+          const btn = document.getElementById(id);
+          if (btn)
+            btn.className = btn.className.replace(
+              "plan-selector-inactive",
+              "plan-selector-active"
+            );
+        });
+
+        updatePlanDisplay();
+        updateMobileButtons();
+      }
+
+      function updatePlanDisplay() {
+        const data = challengeData[currentPlan];
+        updateDesktopHeaders(data);
+        updateTableBody(data);
+        updateMobileCards(data);
+      }
+
+      function updateDesktopHeaders(data) {
+        const headers = document.querySelectorAll("th[data-account]");
+        headers.forEach((header) => {
+          const account = parseInt(header.dataset.account);
+          if (data.accounts.includes(account)) {
+            header.style.display = "";
+            const button = header.querySelector(".buyButton");
+            const priceSpan = header.querySelector(
+              ".pricing-plan-btn span:last-child"
+            );
+            if (button && priceSpan) {
+              button.dataset.price = data.prices[account];
+              button.dataset.plan = `${data.name} $${account.toLocaleString()}`;
+              priceSpan.textContent = `Fee: $${data.prices[account]}`;
+            }
+          } else {
+            header.style.display = "none";
+          }
+        });
+      }
+
+      function updateTableBody(data) {
+        const tbody = document.getElementById("table-body");
+        tbody.innerHTML = "";
+
+        data.features.forEach((feature, index) => {
+          const row = document.createElement("tr");
+          row.className = `table-row hover:bg-[#0FF1CE]/5 transition-all duration-300 ${index % 2 === 0 ? "bg-[#ffffff05]" : ""}`;
+
+          let rowHTML = `
+                    <td class="border-r border-[#ffffff1a] px-8 py-4">
+                        <div class="w-[250px] text-[15px] font-normal text-white">
+                            <div class="info-tooltip flex items-center">
+                                <div>
+                                    <p class="font-medium">${feature.name}${feature.subtitle ? `<br/><span class="text-xs font-light text-white/75">${feature.subtitle}</span>` : ""}</p>
+                                </div>
+                                <div class="info-icon">i</div>
+                                <div class="tooltip-content">
+                                    ${tooltipData[feature.tooltip]}
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                `;
+
+          data.accounts.forEach((account) => {
+            const value = feature.values[account];
+            const isCheckmark = value === "✓";
+            rowHTML += `
+                        <td class="px-8 py-4 text-center border-r border-dashed border-[#ffffff1a] last:border-r-0">
+                            <p class="text-[14px] font-medium feature-value ${isCheckmark ? "checkmark-icon" : ""}">${value}</p>
+                        </td>
+                    `;
+          });
+
+          row.innerHTML = rowHTML;
+          tbody.appendChild(row);
+        });
+      }
+
+      function updateMobileButtons() {
+        const container = document.getElementById("mobile-account-buttons");
+        const data = challengeData[currentPlan];
+
+        container.innerHTML = "";
+
+        data.accounts.forEach((account) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = `account-size-btn flex h-14 w-14 flex-shrink-0 cursor-pointer items-center justify-center rounded-full text-white font-semibold text-sm ${account === selectedAccount ? "selected" : ""}`;
+          button.innerHTML = `<span>$${account >= 1000 ? account / 1000 + "K" : account}</span>`;
+          button.addEventListener("click", () => selectAccount(account));
+          container.appendChild(button);
+        });
+      }
+
+      function updateMobileCards(data) {
+        const container = document.getElementById("mobile-cards");
+        container.innerHTML = "";
+
+        const selectedData = data.accounts.includes(selectedAccount)
+          ? selectedAccount
+          : data.accounts[0];
+
+        const purchaseCard = document.createElement("div");
+        purchaseCard.className =
+          "bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-6 mb-6 glow-effect";
+        purchaseCard.innerHTML = `
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold text-[#0FF1CE] mb-2">$${selectedData.toLocaleString()}</h3>
+                    <p class="text-gray-300 mb-4">${data.name}</p>
+                    <button class="buyButton w-full" data-price="${data.prices[selectedData]}" data-plan="${data.name} $${selectedData.toLocaleString()}">
+                        <span class="pricing-plan-btn w-full flex flex-col items-center rounded-lg px-6 py-4 cursor-pointer">
+                            <span class="text-lg font-bold">Get Plan</span>
+                            <span class="text-sm opacity-90">Fee: $${data.prices[selectedData]}</span>
+                        </span>
+                    </button>
+                </div>
+            `;
+        container.appendChild(purchaseCard);
+
+        data.features.forEach((feature) => {
+          const card = document.createElement("div");
+          card.className =
+            "bg-gradient-to-br from-[#0FF1CE]/5 to-transparent backdrop-blur-sm rounded-xl p-4 mb-3 border border-[#0FF1CE]/20";
+          const value = feature.values[selectedData];
+          const isCheckmark = value === "✓";
+          card.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <div class="info-tooltip flex items-center">
+                            <div>
+                                <p class="font-medium text-white text-sm">${feature.name}</p>
+                                ${feature.subtitle ? `<p class="text-xs text-white/75">${feature.subtitle}</p>` : ""}
+                            </div>
+                            <div class="info-icon ml-2">i</div>
+                            <div class="tooltip-content">
+                                ${tooltipData[feature.tooltip]}
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="feature-value text-sm font-bold ${isCheckmark ? "checkmark-icon" : ""}">${value}</p>
+                        </div>
+                    </div>
+                `;
+          container.appendChild(card);
+        });
+      }
+
+      function selectAccount(account) {
+        selectedAccount = account;
+        updateMobileButtons();
+        updateMobileCards(challengeData[currentPlan]);
+      }
+
+      function handlePurchase(plan, price) {
+        const button = event.target.closest(".buyButton");
+        button.style.opacity = "0.7";
+        button.style.transform = "scale(0.95)";
+
+        setTimeout(() => {
+          alert(`Redirecting to checkout for ${plan} - $${price}`);
+          button.style.opacity = "1";
+          button.style.transform = "scale(1)";
+        }, 500);
+      }
+
+      document.addEventListener("DOMContentLoaded", init);
+    </script>
+  </body>
+</html>

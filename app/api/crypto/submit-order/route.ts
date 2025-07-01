@@ -17,6 +17,7 @@ export async function POST(req: Request) {
       challengeType: challengeData.type,
       challengeAmount: challengeData.amount,
       platform: challengeData.platform,
+      addOns: challengeData.addOns || [],
       customerEmail: challengeData.formData.email,
       customerName: `${challengeData.formData.firstName} ${challengeData.formData.lastName}`,
       customerPhone: challengeData.formData.phone,

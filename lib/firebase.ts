@@ -95,6 +95,7 @@ export interface OrderData {
   challengeType: string;
   challengeAmount: string;
   platform: string;
+  addOns?: string[];
   totalAmount: number;
   paymentMethod: 'card' | 'crypto';
   paymentStatus: 'pending' | 'processing' | 'completed' | 'failed';

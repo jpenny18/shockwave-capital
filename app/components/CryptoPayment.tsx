@@ -125,6 +125,7 @@ export default function CryptoPayment({ challengeData, successRedirectPath, onPr
             challengeType: challengeData.type,
             challengeAmount: challengeData.amount,
             platform: challengeData.platform,
+            addOns: challengeData.addOns || [],
             customerEmail: challengeData.formData.email,
             customerName: `${challengeData.formData.firstName} ${challengeData.formData.lastName}`,
             customerPhone: challengeData.formData.phone,

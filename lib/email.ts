@@ -276,6 +276,7 @@ export async function sendCryptoOrderEmail(order: {
   challengeType: string;
   challengeAmount: string;
   platform: string;
+  addOns?: string[];
   customerEmail: string;
   customerName: string;
   customerPhone: string;
@@ -285,6 +286,14 @@ export async function sendCryptoOrderEmail(order: {
 }) {
   try {
     console.log('Sending crypto order notification emails for:', order.id);
+    
+    // Define add-on names mapping
+    const addOnNames: { [key: string]: string } = {
+      'no-min-days': 'No Min Trading Days',
+      'profit-split-80': '80% Initial Profit Split',
+      'leverage-500': '1:500 Leverage',
+      'reward-150': '150% Reward'
+    };
     
     // Send admin notification
     const adminResult = await resend.emails.send({
@@ -321,6 +330,12 @@ export async function sendCryptoOrderEmail(order: {
             <p style="margin-bottom: 5px;"><strong>Challenge Type:</strong> ${order.challengeType}</p>
             <p style="margin-bottom: 5px;"><strong>Account Size:</strong> ${order.challengeAmount}</p>
             <p style="margin-bottom: 5px;"><strong>Platform:</strong> ${order.platform}</p>
+            ${order.addOns && order.addOns.length > 0 ? `
+              <p style="margin-bottom: 5px;"><strong>Add-ons:</strong></p>
+              <ul style="margin: 0 0 5px 20px; padding: 0;">
+                ${order.addOns.map(addOn => `<li style="margin-bottom: 2px;">${addOnNames[addOn] || addOn}</li>`).join('')}
+              </ul>
+            ` : ''}
             <p style="margin-bottom: 5px;"><strong>Payment Method:</strong> Cryptocurrency (${order.cryptoType})</p>
             <p style="margin-bottom: 5px;"><strong>Crypto Amount:</strong> ${order.cryptoAmount} ${order.cryptoType}</p>
             <p style="margin-bottom: 5px;"><strong>USD Amount:</strong> $${order.usdAmount.toFixed(2)}</p>
@@ -363,6 +378,12 @@ export async function sendCryptoOrderEmail(order: {
             <p style="margin-bottom: 5px;"><strong>Challenge Type:</strong> ${order.challengeType}</p>
             <p style="margin-bottom: 5px;"><strong>Account Size:</strong> ${order.challengeAmount}</p>
             <p style="margin-bottom: 5px;"><strong>Platform:</strong> ${order.platform}</p>
+            ${order.addOns && order.addOns.length > 0 ? `
+              <p style="margin-bottom: 5px;"><strong>Add-ons:</strong></p>
+              <ul style="margin: 0 0 5px 20px; padding: 0;">
+                ${order.addOns.map(addOn => `<li style="margin-bottom: 2px;">${addOnNames[addOn] || addOn}</li>`).join('')}
+              </ul>
+            ` : ''}
             <p style="margin-bottom: 5px;"><strong>Payment Amount:</strong> ${order.cryptoAmount} ${order.cryptoType}</p>
             <p style="margin-bottom: 5px;"><strong>USD Value:</strong> $${order.usdAmount.toFixed(2)}</p>
           </div>

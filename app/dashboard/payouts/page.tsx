@@ -275,13 +275,31 @@ export default function PayoutsPage() {
           <h1 className="text-3xl font-bold text-white mb-8">Payouts</h1>
           
           <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-8 max-w-md mx-auto text-center">
-            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-yellow-400/10 flex items-center justify-center">
-              <Clock className="text-yellow-400" size={32} />
+            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-gray-400/10 flex items-center justify-center">
+              <Lock className="text-gray-400" size={32} />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-3">Pending Approval</h2>
-            <p className="text-gray-400">
-              Your payout request is being reviewed by our team. We'll notify you once it's ready for you to submit your withdrawal details.
+            <h2 className="text-2xl font-bold text-white mb-3">Payouts Locked</h2>
+            <p className="text-gray-400 mb-6">
+              To access payouts, you need to have an active funded trading account with profitable trades. Start by viewing your accounts or purchasing a new challenge.
             </p>
+            
+            <div className="space-y-3">
+              <button
+                onClick={() => router.push('/dashboard/accounts')}
+                className="w-full bg-[#0FF1CE] text-black font-semibold py-3 rounded-lg hover:bg-[#0FF1CE]/90 transition-colors flex items-center justify-center gap-2"
+              >
+                <Wallet size={18} />
+                View My Accounts
+              </button>
+              
+              <button
+                onClick={() => router.push('/challenge')}
+                className="w-full bg-transparent border border-[#2F2F2F] text-white font-semibold py-3 rounded-lg hover:border-[#0FF1CE]/30 hover:bg-[#0FF1CE]/5 transition-colors flex items-center justify-center gap-2"
+              >
+                <Plus size={18} />
+                Purchase Challenge
+              </button>
+            </div>
           </div>
         </div>
       </div>
