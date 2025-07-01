@@ -266,6 +266,39 @@ export default function HowShockwaveOperatesPage() {
               
               <div className="bg-[#1A1A1A]/50 rounded-xl p-5 md:p-6 border border-[#2F2F2F]/30">
                 <h3 className="text-lg md:text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  <Target className="w-5 h-5 text-[#0FF1CE]" />
+                  Shockwave 1-Step
+                </h3>
+                <ul className="space-y-3">
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="w-4 h-4 text-[#0FF1CE] mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-300 text-sm">Minimum trading days: 5 — ensures consistent trading, not flukes</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="w-4 h-4 text-[#0FF1CE] mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-300 text-sm">Unlimited trading period — removes pressure, focuses on skill</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="w-4 h-4 text-[#0FF1CE] mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-300 text-sm">Max drawdown: 8% — balanced risk tolerance for single-phase challenge</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="w-4 h-4 text-[#0FF1CE] mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-300 text-sm">Max daily drawdown: 4% — tighter daily control for streamlined process</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="w-4 h-4 text-[#0FF1CE] mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-300 text-sm">Leverage 1:200 — gives room for strategies without being overkill</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="w-4 h-4 text-[#0FF1CE] mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-300 text-sm">Profit target: 10% — single phase to funded account</span>
+                  </li>
+                </ul>
+              </div>
+              
+              <div className="bg-[#1A1A1A]/50 rounded-xl p-5 md:p-6 border border-[#2F2F2F]/30">
+                <h3 className="text-lg md:text-xl font-bold text-white mb-4 flex items-center gap-2">
                   <Clock className="w-5 h-5 text-[#0FF1CE]" />
                   Shockwave Instant
                 </h3>
@@ -280,11 +313,11 @@ export default function HowShockwaveOperatesPage() {
                   </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle className="w-4 h-4 text-[#0FF1CE] mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-300 text-sm">Max drawdown: 12% — slightly tighter, aligns with instant funding risk</span>
+                    <span className="text-gray-300 text-sm">Max drawdown: 4% — slightly tighter, aligns with instant funding risk</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle className="w-4 h-4 text-[#0FF1CE] mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-300 text-sm">Max daily loss: 4% — ensures better intra-day risk discipline</span>
+                    <span className="text-gray-300 text-sm">Max daily loss: N/A — no daily loss limit</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle className="w-4 h-4 text-[#0FF1CE] mt-0.5 flex-shrink-0" />
@@ -340,7 +373,7 @@ export default function HowShockwaveOperatesPage() {
                   <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0"></div>
                   <div>
                     <h3 className="text-base md:text-lg font-semibold text-white mb-2">Maximum Drawdown</h3>
-                    <p className="text-gray-300 text-sm md:text-base">Never exceed <strong>12% drawdown</strong> from your highest balance and/or equity achieved. This is calculated from your peak balance, not your starting balance.</p>
+                    <p className="text-gray-300 text-sm md:text-base">Never exceed <strong>4% drawdown</strong> from your highest balance and/or equity achieved. This is calculated from your peak balance/equity, not your starting balance.</p>
                   </div>
                 </div>
                 
@@ -348,7 +381,7 @@ export default function HowShockwaveOperatesPage() {
                   <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0"></div>
                   <div>
                     <h3 className="text-base md:text-lg font-semibold text-white mb-2">Maximum Daily Loss</h3>
-                    <p className="text-gray-300 text-sm md:text-base">Never lose more than <strong>4% in a single day</strong>. This limit resets at midnight EST and helps enforce proper risk management.</p>
+                    <p className="text-gray-300 text-sm md:text-base">There is no daily loss limit.</p>
                   </div>
                 </div>
                 
@@ -379,7 +412,7 @@ export default function HowShockwaveOperatesPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-[#0FF1CE] mt-1">•</span>
-                  <span>Stricter drawdown limits (12% vs 15%)</span>
+                  <span>Stricter drawdown limits (4% vs 15%)</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-[#0FF1CE] mt-1">•</span>

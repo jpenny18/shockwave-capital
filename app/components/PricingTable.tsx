@@ -38,7 +38,8 @@ const tooltipData: TooltipData = {
   "profit-split": "Your share of profits once you become a funded trader. This percentage increases with consistent performance.",
   "trading-days": "Minimum number of days you must trade to complete each phase. Ensures consistent trading activity.",
   "payout-eligibility": "Waiting period before your first withdrawal becomes available after reaching the funded phase.",
-  "refundable-fee": "One-time challenge fee that gets refunded with your first profit withdrawal upon successful completion."
+  "refundable-fee": "One-time challenge fee that gets refunded with your second profit withdrawal upon successful completion.",
+  "one-free-retry": "One free retry if you breach the drawdown limits or reach the time limit. This DOES NOT reset the 30 calendar day period it ONLY resets the account balance."
 };
 
 const challengeData: ChallengeData = {
@@ -480,7 +481,7 @@ const challengeData: ChallengeData = {
       {
         name: "One Free Retry",
         subtitle: "",
-        tooltip: "refundable-fee",
+        tooltip: "one-free-retry",
         values: { 
           5000: "Yes",
           10000: "Yes", 
@@ -844,7 +845,7 @@ export default function PricingTable() {
               <div className="w-2 h-2 bg-[#0FF1CE] rounded-full mt-2 flex-shrink-0"></div>
               <div>
                 <h4 className="text-white font-semibold text-sm lg:text-base mb-1">150% Reward</h4>
-                <p className="text-white/60 text-xs lg:text-sm">Boost your reward potential by 50% extra</p>
+                <p className="text-white/60 text-xs lg:text-sm">Boost your refundable fee to 50% extra</p>
               </div>
             </div>
           </div>

@@ -297,7 +297,7 @@ const addOns: AddOn[] = [
   {
     id: 'reward-150',
     name: '150% Reward',
-    description: 'Boost your reward potential by 50% extra',
+    description: 'Boost your refundable fee by 50% extra!',
     priceMultiplier: 0.30
   }
 ];
