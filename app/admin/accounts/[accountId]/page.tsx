@@ -987,7 +987,8 @@ export default function AdminAccountDetailsPage() {
             <div>
               <p className="text-gray-400 text-xs mb-1">Account Type</p>
               <p className="text-white font-medium">
-                {accountInfo.accountType === 'standard' ? 'Shockwave Standard' : 'Shockwave Instant'}
+                {accountInfo.accountType === '1-step' ? 'Shockwave 1-Step' :
+                 accountInfo.accountType === 'standard' ? 'Shockwave Standard' : 'Shockwave Instant'}
               </p>
             </div>
             <div>

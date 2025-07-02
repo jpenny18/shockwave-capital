@@ -74,7 +74,7 @@ export default function AdminAccountsPage() {
   const [accountForm, setAccountForm] = useState({
     accountId: '',
     accountToken: '',
-    accountType: 'standard' as 'standard' | 'instant',
+    accountType: 'standard' as 'standard' | 'instant' | '1-step',
     accountSize: 10000,
     platform: 'mt5' as 'mt4' | 'mt5',
     status: 'active' as 'active' | 'inactive' | 'passed' | 'failed' | 'funded',
@@ -210,26 +210,34 @@ export default function AdminAccountsPage() {
       }
       
       // Check for objective breaches
-      if (metrics.maxDrawdown > (config.accountType === 'standard' ? 15 : 12) && !processedAlerts.has(maxDDKey)) {
+      const maxDDLimit = config.accountType === '1-step' ? 8 : 
+                        config.accountType === 'instant' ? 4 : 
+                        config.accountType === 'standard' ? 15 : 15;
+      const dailyDDLimit = config.accountType === '1-step' ? 4 :
+                          config.accountType === 'instant' ? null : // No daily limit for instant
+                          config.accountType === 'standard' ? 8 : 8;
+      
+      if (metrics.maxDrawdown > maxDDLimit && !processedAlerts.has(maxDDKey)) {
         newAlerts.push({
           id: maxDDKey,
           type: 'breach',
           accountId: config.accountId,
           userEmail: account.email,
-          message: `Maximum drawdown breach: ${metrics.maxDrawdown.toFixed(2)}%`,
+          message: `Maximum drawdown breach: ${metrics.maxDrawdown.toFixed(2)}% (limit: ${maxDDLimit}%)`,
           timestamp: new Date(),
           read: false
         });
         setProcessedAlerts(prev => new Set(prev).add(maxDDKey));
       }
       
-      if ((metrics.maxDailyDrawdown || metrics.dailyDrawdown) > (config.accountType === 'standard' ? 8 : 4) && !processedAlerts.has(dailyDDKey)) {
+      // Only check daily drawdown if there's a limit
+      if (dailyDDLimit !== null && (metrics.maxDailyDrawdown || metrics.dailyDrawdown) > dailyDDLimit && !processedAlerts.has(dailyDDKey)) {
         newAlerts.push({
           id: dailyDDKey,
           type: 'breach',
           accountId: config.accountId,
           userEmail: account.email,
-          message: `Daily drawdown breach: ${(metrics.maxDailyDrawdown || metrics.dailyDrawdown).toFixed(2)}%`,
+          message: `Daily drawdown breach: ${(metrics.maxDailyDrawdown || metrics.dailyDrawdown).toFixed(2)}% (limit: ${dailyDDLimit}%)`,
           timestamp: new Date(),
           read: false
         });
@@ -304,7 +312,8 @@ export default function AdminAccountsPage() {
         }
       } else {
         // Regular challenge account checks
-        const targetProfit = config.accountType === 'standard' 
+        const targetProfit = config.accountType === '1-step' ? 10 :  // 1-step: 10%
+                           config.accountType === 'standard' 
           ? (config.step === 1 ? 10 : 5)  // Standard: Step 1 = 10%, Step 2 = 5%
           : 12;  // Instant: 12%
       
@@ -321,16 +330,20 @@ export default function AdminAccountsPage() {
         setProcessedAlerts(prev => new Set(prev).add(profitKey));
       }
       
-      // Warning for approaching limits
-      if (metrics.maxDrawdown > (config.accountType === 'standard' ? 12 : 10) && 
-          metrics.maxDrawdown < (config.accountType === 'standard' ? 15 : 12) &&
+      // Warning for approaching limits - adjusted for new challenge types
+      const warningThreshold = config.accountType === '1-step' ? 6 :    // 75% of 8%
+                              config.accountType === 'instant' ? 3 :    // 75% of 4%
+                              config.accountType === 'standard' ? 12 : 12; // 80% of 15%
+      
+      if (metrics.maxDrawdown > warningThreshold && 
+          metrics.maxDrawdown < maxDDLimit &&
           !processedAlerts.has(warningKey)) {
         newAlerts.push({
           id: warningKey,
           type: 'warning',
           accountId: config.accountId,
           userEmail: account.email,
-          message: `Approaching max drawdown limit: ${metrics.maxDrawdown.toFixed(2)}%`,
+          message: `Approaching max drawdown limit: ${metrics.maxDrawdown.toFixed(2)}% (limit: ${maxDDLimit}%)`,
           timestamp: new Date(),
           read: false
         });
@@ -805,8 +818,11 @@ export default function AdminAccountsPage() {
   // Account sizes based on type
   const standardAccountSizes = [5000, 10000, 25000, 50000, 100000, 200000, 500000];
   const instantAccountSizes = [25000, 50000, 100000];
+  const oneStepAccountSizes = [5000, 10000, 25000, 50000, 100000, 200000, 500000]; // Same sizes as standard
   
-  const getAccountSizes = (accountType: 'standard' | 'instant') => {
+  const getAccountSizes = (accountType: 'standard' | 'instant' | '1-step' | 'funded') => {
+    if (accountType === 'funded') return standardAccountSizes; // Funded uses standard sizes
+    if (accountType === '1-step') return oneStepAccountSizes;
     return accountType === 'standard' ? standardAccountSizes : instantAccountSizes;
   };
 
@@ -864,13 +880,25 @@ export default function AdminAccountsPage() {
     const { accountType, accountSize } = account.metaApiAccount;
     const metrics = account.cachedMetrics;
     
-    // Determine breach type
+    // Determine breach type based on challenge type
     let breachType = '';
-    const maxDDLimit = accountType === 'standard' ? 15 : 12;
-    const dailyDDLimit = accountType === 'standard' ? 8 : 4;
+    let maxDDLimit: number;
+    let dailyDDLimit: number | null;
+    
+    if (accountType === '1-step') {
+      maxDDLimit = 8;
+      dailyDDLimit = 4;
+    } else if (accountType === 'instant') {
+      maxDDLimit = 4;
+      dailyDDLimit = null; // No daily limit for instant
+    } else {
+      // Standard challenge
+      maxDDLimit = 15;
+      dailyDDLimit = 8;
+    }
     
     const maxDDBreached = metrics?.maxDrawdown > maxDDLimit;
-    const dailyDDBreached = (metrics?.maxDailyDrawdown || metrics?.dailyDrawdown) > dailyDDLimit;
+    const dailyDDBreached = dailyDDLimit !== null && (metrics?.maxDailyDrawdown || metrics?.dailyDrawdown) > dailyDDLimit;
     
     if (maxDDBreached && dailyDDBreached) {
       breachType = 'both';
@@ -1262,7 +1290,7 @@ export default function AdminAccountsPage() {
               setAccountForm({
                 accountId: '',
                 accountToken: '',
-                accountType: 'standard' as 'standard' | 'instant',
+                accountType: 'standard' as 'standard' | 'instant' | '1-step',
                 accountSize: 10000,
                 platform: 'mt5' as 'mt4' | 'mt5',
                 status: 'active' as 'active' | 'inactive' | 'passed' | 'failed' | 'funded',
@@ -1282,7 +1310,7 @@ export default function AdminAccountsPage() {
               setAccountForm({
                 accountId: '',
                 accountToken: '',
-                accountType: 'standard' as 'standard' | 'instant',
+                accountType: 'standard' as 'standard' | 'instant' | '1-step',
                 accountSize: 10000,
                 platform: 'mt5' as 'mt4' | 'mt5',
                 status: 'active' as 'active' | 'inactive' | 'passed' | 'failed' | 'funded',
@@ -1637,8 +1665,11 @@ export default function AdminAccountsPage() {
                         <div className="flex items-center gap-1">
                           <Shield size={14} className="text-gray-400" />
                           <span className="text-sm text-gray-300">
-                            {config?.accountType === 'standard' ? 'Standard' : 'Instant'}
-                            {config?.step && ` - ${config.step === 3 ? 'Funded' : `Step ${config.step}`}`}
+                            {config?.accountType === '1-step' ? '1-Step' : 
+                             config?.accountType === 'standard' ? 'Standard' : 'Instant'}
+                            {config?.step && ` - ${config.step === 3 ? 'Funded' : 
+                                                  config.accountType === '1-step' ? 'Challenge' : 
+                                                  `Step ${config.step}`}`}
                           </span>
                         </div>
                       </td>
@@ -1889,7 +1920,7 @@ export default function AdminAccountsPage() {
                   <select
                     value={accountForm.accountType}
                     onChange={(e) => {
-                      const newType = e.target.value as 'standard' | 'instant' | 'funded';
+                      const newType = e.target.value as 'standard' | 'instant' | '1-step' | 'funded';
                       // For funded accounts, set step to 3 automatically
                       if (newType === 'funded') {
                         setAccountForm({ 
@@ -1911,6 +1942,7 @@ export default function AdminAccountsPage() {
                   >
                     <option value="standard">Shockwave Standard</option>
                     <option value="instant">Shockwave Instant</option>
+                    <option value="1-step">Shockwave 1-Step</option>
                     <option value="funded">Funded Account</option>
                   </select>
                 </div>
@@ -2111,7 +2143,7 @@ export default function AdminAccountsPage() {
                       <select
                         value={accountForm.accountType}
                         onChange={(e) => {
-                          const newType = e.target.value as 'standard' | 'instant' | 'funded';
+                          const newType = e.target.value as 'standard' | 'instant' | '1-step' | 'funded';
                           // For funded accounts, set step to 3 automatically
                           if (newType === 'funded') {
                             setAccountForm({ 
@@ -2133,6 +2165,7 @@ export default function AdminAccountsPage() {
                       >
                         <option value="standard">Shockwave Standard</option>
                         <option value="instant">Shockwave Instant</option>
+                        <option value="1-step">Shockwave 1-Step</option>
                         <option value="funded">Funded Account</option>
                       </select>
                     </div>
@@ -2458,7 +2491,7 @@ export default function AdminAccountsPage() {
                             <select
                               value={accountForm.accountType}
                               onChange={(e) => {
-                                const newType = e.target.value as 'standard' | 'instant' | 'funded';
+                                const newType = e.target.value as 'standard' | 'instant' | '1-step' | 'funded';
                                 // For funded accounts, set step to 3 automatically
                                 if (newType === 'funded') {
                                   setAccountForm({ 
@@ -2480,6 +2513,7 @@ export default function AdminAccountsPage() {
                             >
                               <option value="standard">Shockwave Standard</option>
                               <option value="instant">Shockwave Instant</option>
+                              <option value="1-step">Shockwave 1-Step</option>
                               <option value="funded">Funded Account</option>
                             </select>
                           </div>

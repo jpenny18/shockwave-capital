@@ -106,13 +106,13 @@ export interface OrderData {
 }
 
 /**
- * Interface for MetaAPI account mapping in Firestore
+ * Interface for MetaAPI account mapping
  */
 export interface UserMetaApiAccount {
   userId: string;
   accountId: string;
   accountToken: string;
-  accountType: 'standard' | 'instant';
+  accountType: 'standard' | 'instant' | '1-step';
   accountSize: number;
   platform: 'mt4' | 'mt5';
   status: 'active' | 'inactive' | 'passed' | 'failed' | 'funded';

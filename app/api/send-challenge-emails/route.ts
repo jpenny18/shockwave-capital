@@ -15,7 +15,13 @@ export async function POST(req: Request) {
 
     switch (type) {
       case 'pass':
-        subject = `Congratulations! You've Passed Your Shockwave Capital ${challengeType === 'standard' ? 'Standard' : 'Instant'} Challenge ${step || ''}`;
+        const getChallengeTypeName = (type: string) => {
+          if (type === '1-step') return '1-Step';
+          if (type === 'standard') return 'Standard';
+          return 'Instant';
+        };
+        
+        subject = `Congratulations! You've Passed Your Shockwave Capital ${getChallengeTypeName(challengeType)} Challenge ${step || ''}`;
         customerHtml = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
             <div style="background-color: #0D0D0D; padding: 20px; margin-bottom: 20px; border-radius: 5px; text-align: center;">
@@ -24,13 +30,13 @@ export async function POST(req: Request) {
             
             <div style="margin-bottom: 30px;">
               <p>Hello ${name},</p>
-              <p>We're thrilled to inform you that you've successfully passed your ${challengeType === 'standard' ? 'Standard' : 'Instant'} Challenge ${step || ''}!</p>
+              <p>We're thrilled to inform you that you've successfully passed your ${getChallengeTypeName(challengeType)} Challenge${challengeType === '1-step' ? '' : ` ${step || ''}`}!</p>
               <p>Your trading performance has met all the required objectives, demonstrating excellent risk management and trading discipline.</p>
             </div>
             
             <div style="margin-bottom: 30px; background-color: #f9f9f9; padding: 15px; border-radius: 5px;">
               <h2 style="color: #333; font-size: 18px; margin-bottom: 15px;">Challenge Details</h2>
-              <p style="margin-bottom: 5px;"><strong>Challenge Type:</strong> ${challengeType === 'standard' ? 'Shockwave Standard' : 'Shockwave Instant'} ${step || ''}</p>
+              <p style="margin-bottom: 5px;"><strong>Challenge Type:</strong> Shockwave ${getChallengeTypeName(challengeType)}${challengeType === '1-step' ? '' : ` ${step || ''}`}</p>
               <p style="margin-bottom: 5px;"><strong>Account Size:</strong> $${accountSize?.toLocaleString() || 'N/A'}</p>
             </div>
             
@@ -63,24 +69,42 @@ export async function POST(req: Request) {
         let breachDetails = '';
         let breachSpecifics = '';
         
-        if (breachType === 'maxDrawdown' || maxDrawdown > (challengeType === 'standard' ? 15 : 12)) {
+        // Get correct limits based on challenge type
+        const getMaxDDLimit = (type: string) => {
+          if (type === '1-step') return 8;
+          if (type === 'instant') return 4;
+          return 15; // standard
+        };
+        
+        const getDailyDDLimit = (type: string) => {
+          if (type === '1-step') return 4;
+          if (type === 'instant') return null; // No daily limit for instant
+          return 8; // standard
+        };
+        
+        const maxDDLimit = getMaxDDLimit(challengeType);
+        const dailyDDLimit = getDailyDDLimit(challengeType);
+        
+        if (breachType === 'maxDrawdown' || maxDrawdown > maxDDLimit) {
           breachDetails = 'Maximum Drawdown Limit';
           breachSpecifics = `<li><strong style="color: #dc3545;">Your Maximum Drawdown:</strong> ${maxDrawdown?.toFixed(2) || 'N/A'}%</li>
-                            <li><strong>Maximum Allowed:</strong> ${challengeType === 'standard' ? '15%' : '12%'}</li>`;
-        } else if (breachType === 'dailyDrawdown' || dailyDrawdown > (challengeType === 'standard' ? 8 : 4)) {
+                            <li><strong>Maximum Allowed:</strong> ${maxDDLimit}%</li>`;
+        } else if (breachType === 'dailyDrawdown' || (dailyDDLimit !== null && dailyDrawdown > dailyDDLimit)) {
           breachDetails = 'Daily Drawdown Limit';
           breachSpecifics = `<li><strong style="color: #dc3545;">Your Daily Drawdown:</strong> ${dailyDrawdown?.toFixed(2) || 'N/A'}%</li>
-                            <li><strong>Maximum Allowed:</strong> ${challengeType === 'standard' ? '8%' : '4%'}</li>`;
+                            <li><strong>Maximum Allowed:</strong> ${dailyDDLimit}%</li>`;
         } else if (breachType === 'both') {
           breachDetails = 'Multiple Trading Limits';
-          breachSpecifics = `<li><strong style="color: #dc3545;">Your Maximum Drawdown:</strong> ${maxDrawdown?.toFixed(2) || 'N/A'}% (Limit: ${challengeType === 'standard' ? '15%' : '12%'})</li>
-                            <li><strong style="color: #dc3545;">Your Daily Drawdown:</strong> ${dailyDrawdown?.toFixed(2) || 'N/A'}% (Limit: ${challengeType === 'standard' ? '8%' : '4%'})</li>`;
+          breachSpecifics = `<li><strong style="color: #dc3545;">Your Maximum Drawdown:</strong> ${maxDrawdown?.toFixed(2) || 'N/A'}% (Limit: ${maxDDLimit}%)</li>
+                            ${dailyDDLimit !== null ? `<li><strong style="color: #dc3545;">Your Daily Drawdown:</strong> ${dailyDrawdown?.toFixed(2) || 'N/A'}% (Limit: ${dailyDDLimit}%)</li>` : ''}`;
         } else {
           breachDetails = 'Trading Objectives';
           breachSpecifics = '<li>Please review your account for specific details</li>';
         }
         
-        subject = `❌ Challenge Failed: Your Shockwave Capital ${challengeType === 'standard' ? 'Standard' : 'Instant'} Challenge`;
+        const challengeTypeName = challengeType === '1-step' ? '1-Step' : challengeType === 'standard' ? 'Standard' : 'Instant';
+        
+        subject = `❌ Challenge Failed: Your Shockwave Capital ${challengeTypeName} Challenge`;
         customerHtml = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
             <div style="background-color: #dc3545; padding: 20px; margin-bottom: 20px; border-radius: 5px; text-align: center;">
@@ -89,7 +113,7 @@ export async function POST(req: Request) {
             
             <div style="margin-bottom: 30px; padding: 20px; background-color: #f8d7da; border: 2px solid #f5c6cb; border-radius: 5px;">
               <p style="margin: 0 0 10px 0;"><strong>Hello ${name},</strong></p>
-              <p style="margin: 0; color: #721c24;">We regret to inform you that your ${challengeType === 'standard' ? 'Standard' : 'Instant'} Challenge has been terminated due to breaching the <strong>${breachDetails}</strong>.</p>
+              <p style="margin: 0; color: #721c24;">We regret to inform you that your ${challengeTypeName} Challenge has been terminated due to breaching the <strong>${breachDetails}</strong>.</p>
             </div>
             
             <div style="margin-bottom: 30px; background-color: #fff5f5; padding: 20px; border-radius: 5px; border-left: 4px solid #dc3545;">
@@ -101,7 +125,7 @@ export async function POST(req: Request) {
             
             <div style="margin-bottom: 30px; background-color: #f9f9f9; padding: 15px; border-radius: 5px;">
               <h2 style="color: #333; font-size: 18px; margin-bottom: 15px;">Challenge Information</h2>
-              <p style="margin-bottom: 5px;"><strong>Challenge Type:</strong> ${challengeType === 'standard' ? 'Shockwave Standard' : 'Shockwave Instant'}</p>
+              <p style="margin-bottom: 5px;"><strong>Challenge Type:</strong> Shockwave ${challengeTypeName}</p>
               <p style="margin-bottom: 5px;"><strong>Account Size:</strong> $${accountSize?.toLocaleString() || 'N/A'}</p>
               <p style="margin-bottom: 5px;"><strong>Status:</strong> <span style="color: #dc3545; font-weight: bold;">FAILED</span></p>
             </div>
@@ -143,6 +167,22 @@ export async function POST(req: Request) {
         break;
 
       case 'drawdown-warning':
+        const getMaxDDLimitForWarning = (type: string) => {
+          if (type === '1-step') return 8;
+          if (type === 'instant') return 4;
+          return 15; // standard
+        };
+        
+        const getDailyDDLimitForWarning = (type: string) => {
+          if (type === '1-step') return 4;
+          if (type === 'instant') return null; // No daily limit for instant
+          return 8; // standard
+        };
+        
+        const warningMaxDD = getMaxDDLimitForWarning(challengeType);
+        const warningDailyDD = getDailyDDLimitForWarning(challengeType);
+        const warningChallengeName = challengeType === '1-step' ? '1-Step' : challengeType === 'standard' ? 'Standard' : 'Instant';
+        
         subject = `⚠️ Drawdown Warning: Your Shockwave Capital Challenge`;
         customerHtml = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
@@ -152,7 +192,7 @@ export async function POST(req: Request) {
             
             <div style="margin-bottom: 30px;">
               <p>Hello ${name},</p>
-              <p>This is an important notification regarding your ${challengeType === 'standard' ? 'Standard' : 'Instant'} Challenge account.</p>
+              <p>This is an important notification regarding your ${warningChallengeName} Challenge account.</p>
               <p><strong>Your account has reached a ${currentDrawdown?.toFixed(2) || 'N/A'}% drawdown.</strong></p>
             </div>
             
@@ -160,8 +200,8 @@ export async function POST(req: Request) {
               <h2 style="color: #333; font-size: 18px; margin-bottom: 15px;">Risk Management Alert</h2>
               <p>You're approaching the maximum drawdown limits for your challenge:</p>
               <ul>
-                <li>Maximum Drawdown Limit: ${challengeType === 'standard' ? '15%' : '12%'}</li>
-                <li>Daily Drawdown Limit: ${challengeType === 'standard' ? '8%' : '4%'}</li>
+                <li>Maximum Drawdown Limit: ${warningMaxDD}%</li>
+                ${warningDailyDD !== null ? `<li>Daily Drawdown Limit: ${warningDailyDD}%</li>` : '<li>No daily drawdown limit for Instant challenges</li>'}
               </ul>
               <p><strong>Exceeding these limits will result in challenge failure.</strong></p>
             </div>

@@ -171,10 +171,13 @@ export default function MyAccountsPage() {
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h3 className="text-lg font-semibold text-white">
-                      {account.accountType === 'standard' ? 'Shockwave Standard' : 'Shockwave Instant'}
+                      {account.accountType === '1-step' ? 'Shockwave 1-Step' : 
+                       account.accountType === 'standard' ? 'Shockwave Standard' : 'Shockwave Instant'}
                     </h3>
                     <p className="text-sm text-gray-400 mt-1">
-                      ${account.accountSize.toLocaleString()} • {account.step === 3 ? 'Funded' : `Step ${account.step}`}
+                      ${account.accountSize.toLocaleString()} • {account.step === 3 ? 'Funded' : 
+                                                                account.accountType === '1-step' ? 'Challenge' : 
+                                                                `Step ${account.step}`}
                     </p>
                   </div>
                   <span className={`px-3 py-1 ${getStatusStyle(account.status)} text-xs font-medium rounded-full`}>
