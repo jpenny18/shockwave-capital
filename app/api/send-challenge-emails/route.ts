@@ -325,25 +325,16 @@ export async function POST(req: Request) {
               <h2 style="color: #0FF1CE; font-size: 20px; margin-bottom: 15px;">🚀 Keep Your Funded Status!</h2>
               <p style="color: #333; font-size: 16px; margin-bottom: 15px;">
                 <strong>Special Offer:</strong> Purchase a new funded account at the same capital level you were funded at (or above) and maintain your funded trader status!
-              </p>
-              <p style="color: #666; font-size: 14px; margin-bottom: 20px;">
-                Save <strong>10% on your new funded account</strong> if purchased within the next 24 hours using code:
-              </p>
-              <div style="background-color: #0FF1CE; color: #000; padding: 10px 20px; border-radius: 5px; font-weight: bold; font-size: 18px; margin-bottom: 20px; display: inline-block;">
-                STAYFUNDED
-              </div>
+              </p>s
               <div>
-                <a href="https://www.shockwave-capital.com/challenge" style="display: inline-block; background-color: #0FF1CE; color: #000; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; margin-top: 10px;">
-                  Get New Funded Account - Save 10%
+                <a href="https://www.shockwave-capital.com/once-funded-stay-funded" style="display: inline-block; background-color: #0FF1CE; color: #000; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; margin-top: 10px;">
+                  Get New Funded Account
                 </a>
               </div>
-              <p style="color: #999; font-size: 12px; margin-top: 15px;">
-                *Offer expires 24 hours from this email. Use code STAYFUNDED at checkout.
-              </p>
             </div>
             
             <div style="text-align: center; margin-top: 40px;">
-              <a href="https://www.shockwave-capital.com/challenge" style="display: inline-block; background-color: #0FF1CE; color: #000; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Start New Challenge</a>
+              <a href="https://www.shockwave-capital.com/once-funded-stay-funded" style="display: inline-block; background-color: #0FF1CE; color: #000; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Get New Funded Account</a>
             </div>
             
             <div style="margin-top: 40px;">
