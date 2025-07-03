@@ -14,7 +14,7 @@ export default function RefundPage() {
           
           <div className="space-y-8 text-gray-300">
             <section className="space-y-4">
-              <p>Shockwave Capital is committed to transparency and fairness in all transactions related to our evaluation services. By purchasing a challenge or subscription from Shockwave Capital, you agree to the following refund and chargeback terms. These policies ensure our ability to offer consistent service, protect against abuse, and maintain operational integrity in compliance with Stripe and applicable regulations.</p>
+              <p>Shockwave Capital is committed to transparency and fairness in all transactions related to our evaluation services. By purchasing a challenge or subscription from Shockwave Capital, you agree to the following refund and chargeback terms. These policies ensure our ability to offer consistent service, protect against abuse, and maintain operational integrity in compliance with any applicable regulations.</p>
             </section>
 
             <section className="space-y-4">

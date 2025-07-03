@@ -16,75 +16,89 @@ export default function TermsPage() {
           <div className="space-y-8 text-gray-300">
             <section className="space-y-4">
               <h2 className="text-2xl font-bold text-white">1. Acceptance of Terms</h2>
-              <p>By accessing, registering, or participating in any program offered by Shockwave Capital, you expressly agree to abide by these Terms of Service ("Terms"). If you do not agree with any part of these Terms, you must not use our services.</p>
+              <p>By accessing, registering, purchasing, or participating in any program offered by Shockwave Capital, you expressly agree to comply with these Terms of Service ("Terms"). If you do not agree with any part of these Terms, you must not use our services.</p>
             </section>
 
             <section className="space-y-4">
               <h2 className="text-2xl font-bold text-white">2. Nature of Services</h2>
-              <p>2.1. Shockwave Capital provides access to simulated trading programs designed for educational and evaluation purposes only. No real capital is allocated or traded by participants.</p>
-              <p>2.2. All references to "funded accounts," "capital," or "payouts" relate strictly to simulated environments and are not indicative of actual financial assets or investment opportunities.</p>
-              <p>2.3. Participation in any program does not establish a brokerage relationship, fiduciary responsibility, or financial advisory service.</p>
+              <p>2.1. Shockwave Capital provides access to simulated trading programs intended solely for educational and skill evaluation purposes. No actual capital is allocated or traded by participants at any time.</p>
+              <p>2.2. All references to "funded accounts," "capital," "payouts," or similar terms are used exclusively to describe simulated trading environments. These references do not indicate any transfer or allocation of real financial assets.</p>
+              <p>2.3. Participation in any program does not establish a brokerage relationship, fiduciary duty, or investment advisory arrangement.</p>
+              <p>2.4. You acknowledge that no aspect of the services constitutes a financial product or investment offering, and no purchase of services represents an opportunity to acquire or trade real assets.</p>
             </section>
 
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-white">3. Ownership of Simulated Capital</h2>
-              <p>3.1. All simulated account balances, including those referred to as "funded," remain the exclusive property of Shockwave Capital and are subject to internal risk protocols.</p>
-              <p>3.2. Users do not own or control any real capital through our programs, and no representation of actual asset transfer is made or implied.</p>
+              <h2 className="text-2xl font-bold text-white">3. Ownership and Control of Simulated Capital</h2>
+              <p>3.1. All simulated account balances, including those labeled as "funded," are entirely fictitious and remain the sole property of Shockwave Capital.</p>
+              <p>3.2. Users do not acquire any ownership interest, rights, or claims to any actual funds, securities, or assets through participation in any program.</p>
+              <p>3.3. Shockwave Capital maintains absolute discretion to adjust, modify, reset, or revoke any simulated balances, performance records, or account parameters.</p>
             </section>
 
             <section className="space-y-4">
               <h2 className="text-2xl font-bold text-white">4. Risk Disclosure</h2>
-              <p>4.1. Trading in simulated environments is for skill development and evaluation only.</p>
-              <p>4.2. Performance in simulated environments does not guarantee future results in live markets.</p>
-              <p>4.3. Shockwave Capital does not promise financial return, income generation, or investment success.</p>
-              <p>4.4. You acknowledge that participation involves simulated risk and is not a substitute for real-market trading experience.</p>
+              <p>4.1. Trading in simulated environments is for demonstration, education, and skill assessment only. No performance metrics are indicative of actual or future trading success.</p>
+              <p>4.2. Shockwave Capital does not guarantee any financial return, profit, income, or success, whether simulated or real.</p>
+              <p>4.3. All participation is at your sole discretion and risk. You are solely responsible for determining whether any program is suitable for your objectives and experience.</p>
+              <p>4.4. No aspect of our services should be construed as financial advice or relied upon to make real-world investment decisions.</p>
             </section>
 
             <section className="space-y-4">
               <h2 className="text-2xl font-bold text-white">5. Account Conduct and Rules</h2>
-              <p>5.1. Each participant may operate only one active evaluation or simulated account at a time unless explicitly authorized.</p>
-              <p>5.2. Account sharing, selling, or transferring access is strictly prohibited and will result in immediate suspension.</p>
-              <p>5.3. Exploiting platform features, abusing data feeds, or engaging in strategies designed to manipulate performance metrics will lead to account termination.</p>
-              <p>5.4. All trading must be conducted according to the program rules and parameters published by Shockwave Capital.</p>
+              <p>5.1. Each participant may maintain only one active evaluation or simulated account at any time unless explicitly authorized in writing.</p>
+              <p>5.2. Account sharing, sub-licensing, reselling, or transferring access to any program is strictly prohibited and will result in immediate suspension or termination.</p>
+              <p>5.3. Use of automated systems, software exploits, data feed manipulation, or other conduct intended to unfairly influence performance metrics is strictly prohibited.</p>
+              <p>5.4. All trading must be conducted within the published program parameters. Shockwave Capital reserves the sole right to determine whether any activity constitutes a breach of program rules or unethical conduct.</p>
             </section>
 
             <section className="space-y-4">
               <h2 className="text-2xl font-bold text-white">6. Simulated Payouts and Reward Eligibility</h2>
-              <p>6.1. Simulated profit splits and performance-based rewards are contingent on full rule compliance and internal review.</p>
-              <p>6.2. No payout represents the transfer of real funds unless expressly stated otherwise in an official communication.</p>
-              <p>6.3. Shockwave Capital reserves the right to withhold, adjust, or deny simulated payouts if users are found in breach of rules or ethical standards.</p>
-              <p>6.4. Processing timelines for rewards may vary depending on verification status, review periods, and method of delivery.</p>
+              <p>6.1. All simulated profit splits, performance-based rewards, or any representations of payout are fully discretionary and contingent upon complete compliance with these Terms, program rules, and a satisfactory internal review.</p>
+              <p>6.2. No payout or reward shall be considered earned or due unless expressly confirmed in writing by an authorized representative of Shockwave Capital.</p>
+              <p>6.3. Shockwave Capital reserves the unrestricted right, at its sole discretion, to withhold, adjust, cancel, or deny any simulated payout or performance-based reward for any reason, including but not limited to suspected violation of these Terms, program abuse, or conduct detrimental to the integrity of the program.</p>
+              <p>6.4. Processing timelines for rewards or discretionary payouts may vary based on verification requirements, compliance reviews, or administrative processes.</p>
+              <p>6.5. Under no circumstances shall any simulated payout be construed as a promise or guarantee of financial compensation or actual funds.</p>
             </section>
 
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-white">7. Termination and Suspension</h2>
-              <p>7.1. Shockwave Capital reserves the right to suspend or terminate any account for violations of these Terms or internal policies.</p>
-              <p>7.2. Accounts may be terminated for suspected abuse, manipulation, or any behavior deemed detrimental to the integrity of the evaluation process.</p>
-              <p>7.3. Upon termination, eligibility for any pending or future simulated rewards is forfeited.</p>
+              <h2 className="text-2xl font-bold text-white">7. Termination, Suspension, and Account Revocation</h2>
+              <p>7.1. Shockwave Capital reserves the right to suspend, revoke, or terminate any account or participation in any program at any time, with or without cause, at its sole discretion.</p>
+              <p>7.2. Grounds for suspension or termination may include but are not limited to: suspected breach of these Terms, program manipulation, fraud, unethical behavior, or any activity deemed harmful to Shockwave Capital's operations or reputation.</p>
+              <p>7.3. Upon suspension or termination, all eligibility for current or future simulated rewards, payouts, or benefits is automatically forfeited, without compensation.</p>
+              <p>7.4. Shockwave Capital may retain or delete any data associated with terminated accounts at its discretion.</p>
             </section>
 
             <section className="space-y-4">
               <h2 className="text-2xl font-bold text-white">8. Intellectual Property</h2>
-              <p>8.1. All site content, program structures, trading rules, branding, and proprietary tools are owned by Shockwave Capital.</p>
-              <p>8.2. Unauthorized reproduction, redistribution, or commercial use is prohibited without prior written consent.</p>
+              <p>8.1. All website content, program structures, trading simulations, data feeds, platform interfaces, branding, and proprietary tools are and remain the exclusive property of Shockwave Capital.</p>
+              <p>8.2. Unauthorized reproduction, distribution, modification, public display, or commercial exploitation is strictly prohibited without prior written consent.</p>
             </section>
 
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-white">9. Program Modifications</h2>
-              <p>9.1. Shockwave Capital may update, revise, or modify any aspect of its programs, pricing, or rules at any time with or without prior notice.</p>
-              <p>9.2. Continued participation after any modification constitutes acceptance of the updated Terms.</p>
+              <h2 className="text-2xl font-bold text-white">9. Program Modifications and Discretion</h2>
+              <p>9.1. Shockwave Capital reserves the right to modify, revise, suspend, or discontinue any aspect of its services, programs, features, pricing, or rules at any time, with or without prior notice.</p>
+              <p>9.2. Continued participation after any modification constitutes acceptance of the updated Terms and conditions.</p>
+              <p>9.3. Shockwave Capital reserves sole discretion to interpret program rules and eligibility criteria, and its determinations shall be final and binding.</p>
             </section>
 
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-white">10. Legal Disclosures</h2>
-              <p>10.1. Shockwave Capital is not a broker-dealer, financial advisor, or registered investment firm.</p>
-              <p>10.2. These services are not intended as financial advice and should not be relied upon for making real-world investment decisions.</p>
-              <p>10.3. Use of our platform is solely at your own discretion and risk.</p>
+              <h2 className="text-2xl font-bold text-white">10. Legal Disclaimers</h2>
+              <p>10.1. Shockwave Capital is not a broker-dealer, investment advisor, or regulated financial institution.</p>
+              <p>10.2. No information provided constitutes investment advice, a solicitation to invest, or a recommendation to engage in any financial transaction.</p>
+              <p>10.3. You agree that your use of the services is entirely voluntary and at your own risk.</p>
+              <p>10.4. To the fullest extent permitted by applicable law, Shockwave Capital disclaims any and all liability for any losses or damages arising out of or in connection with participation in any program.</p>
             </section>
 
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-white">11. Governing Law</h2>
-              <p>These Terms shall be governed by and construed in accordance with the laws of Canada. Any disputes shall be resolved in accordance with the dispute resolution procedures outlined in our policies or applicable local regulations.</p>
+              <h2 className="text-2xl font-bold text-white">11. Governing Law and Dispute Resolution</h2>
+              <p>11.1. These Terms shall be governed and construed in accordance with the laws of Canada, without regard to its conflict of laws principles.</p>
+              <p>11.2. Any dispute arising from or relating to these Terms shall be subject to resolution exclusively through arbitration or other dispute resolution mechanisms as determined by Shockwave Capital, unless prohibited by applicable law.</p>
+              <p>11.3. You agree to waive any class action or collective proceeding against Shockwave Capital to the maximum extent permitted by law.</p>
+            </section>
+
+            <section className="space-y-4">
+              <h2 className="text-2xl font-bold text-white">12. Entire Agreement</h2>
+              <p>These Terms constitute the entire agreement between you and Shockwave Capital regarding your use of the services and supersede any prior understandings or agreements.</p>
+              <p>By continuing to use Shockwave Capital's services, you acknowledge that you have read, understood, and agreed to these Terms of Service in full.</p>
             </section>
 
             <div className="pt-8">

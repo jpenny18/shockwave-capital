@@ -217,7 +217,7 @@ export default function HowShockwaveOperatesPage() {
                   <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2 flex-shrink-0"></div>
                   <div>
                     <h4 className="text-white font-medium mb-1 text-sm md:text-base">Minimum Trading Days</h4>
-                    <p className="text-gray-300 text-xs md:text-sm">At least <strong>2 trades must be placed on the same day</strong> for it to count as a minimum trading day.</p>
+                    <p className="text-gray-300 text-xs md:text-sm">At least <strong>1 trade must be placed on the same day</strong> for it to count as a minimum trading day.</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
