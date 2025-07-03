@@ -171,7 +171,7 @@ export default function PayoutsPage() {
   const [user] = useAuthState(auth);
   const [loading, setLoading] = useState(true);
   const [withdrawalRequest, setWithdrawalRequest] = useState<any>(null);
-  const [paymentMethod, setPaymentMethod] = useState<'usdc_solana' | 'usdt_trc20' | ''>('');
+  const [paymentMethod, setPaymentMethod] = useState<'usdc_solana' | 'usdt_trc20' | ''>('usdc_solana');
   const [walletAddress, setWalletAddress] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -452,7 +452,8 @@ export default function PayoutsPage() {
                     </div>
                   </label>
 
-                  <label className="relative flex items-center p-4 bg-[#151515] rounded-lg border border-[#2F2F2F] cursor-pointer hover:border-[#0FF1CE]/30 transition-all">
+                  {/* USDT TRC20 option - Hidden but not deleted */}
+                  {/* <label className="relative flex items-center p-4 bg-[#151515] rounded-lg border border-[#2F2F2F] cursor-pointer hover:border-[#0FF1CE]/30 transition-all">
                     <input
                       type="radio"
                       name="paymentMethod"
@@ -473,20 +474,20 @@ export default function PayoutsPage() {
                       <p className="text-white font-medium">USDT (TRC20)</p>
                       <p className="text-gray-400 text-sm">Tether on TRON network</p>
                     </div>
-                  </label>
+                  </label> */}
                 </div>
 
                 {/* Wallet Address Input */}
                 {paymentMethod && (
                   <div>
                     <label className="block text-sm font-medium text-gray-400 mb-2">
-                      {paymentMethod === 'usdc_solana' ? 'Solana Wallet Address' : 'TRC20 Wallet Address'}
+                      Solana Wallet Address
                     </label>
                     <input
                       type="text"
                       value={walletAddress}
                       onChange={(e) => setWalletAddress(e.target.value)}
-                      placeholder={paymentMethod === 'usdc_solana' ? 'Enter your Solana address' : 'Enter your TRC20 address'}
+                      placeholder="Enter your Solana address"
                       className="w-full bg-[#151515] text-white px-4 py-3 rounded-lg border border-[#2F2F2F] focus:border-[#0FF1CE]/50 focus:outline-none"
                       disabled={!!withdrawalRequest.submittedAt}
                     />

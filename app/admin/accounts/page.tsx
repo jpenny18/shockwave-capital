@@ -86,7 +86,7 @@ export default function AdminAccountsPage() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [showAlerts, setShowAlerts] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<string>('newest'); // Add sorting state
+  const [sortBy, setSortBy] = useState<string>('profit-high'); // Changed from 'newest' to 'profit-high'
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
