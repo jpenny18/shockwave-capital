@@ -904,7 +904,7 @@ export default function ChallengePage() {
             </div>
 
         {/* Launch Day Sale Banner - Mobile Optimized */}
-        <div className="mb-8 lg:mb-12 relative">
+        <div className="mb-8 lg:mb-12 relative hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-[#0FF1CE]/20 to-[#00D4FF]/20 rounded-2xl blur-xl"></div>
           <div className="relative bg-gradient-to-r from-[#0FF1CE]/10 to-[#00D4FF]/10 rounded-2xl p-6 lg:p-8 border border-[#0FF1CE]/20 backdrop-blur-sm">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
