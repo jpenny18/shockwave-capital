@@ -8,9 +8,122 @@ import Header from './components/Header';
 import Link from 'next/link';
 import PricingTable from './components/PricingTable';
 
+// Promotional Modal Component
+const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm overflow-y-auto">
+      <div className="min-h-full flex items-center justify-center p-4 py-8 md:py-12">
+        <div className="relative w-full max-w-md mx-auto">
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className="absolute -top-2 -right-2 z-10 w-8 h-8 bg-[#0FF1CE] text-black rounded-full flex items-center justify-center font-bold hover:scale-110 transition-transform shadow-lg"
+          >
+            ×
+          </button>
+
+          {/* Modal Content */}
+          <div className="relative bg-gradient-to-br from-[#0D0D0D] via-[#121212] to-[#0D0D0D] border-2 border-[#0FF1CE] rounded-3xl p-6 overflow-hidden shadow-2xl">
+            {/* Background Effects */}
+            <div className="absolute top-0 left-0 w-full h-full bg-[#0FF1CE]/5 rounded-3xl"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-[#0FF1CE]/10 blur-[60px] rounded-full"></div>
+            
+            {/* Content */}
+            <div className="relative z-10 text-center">
+              {/* Header */}
+              <div className="mb-6">
+                <div className="inline-block bg-gradient-to-r from-[#0FF1CE] to-[#0FF1CE]/70 text-black px-4 py-2 rounded-full text-sm font-bold mb-3 animate-pulse">
+                  LIMITED TIME OFFER
+                </div>
+                <h2 className="text-2xl md:text-3xl font-extrabold text-[#0FF1CE] mb-2">
+                  SHOCKWAVE SUNDAY
+                </h2>
+                <p className="text-gray-300 text-sm">
+                  Exclusive weekly deal for elite traders
+                </p>
+              </div>
+
+              {/* Features Grid */}
+              <div className="grid grid-cols-1 gap-4 mb-6">
+                {[
+                  { icon: "💰", title: "20% OFF", subtitle: "All Challenge Plans" },
+                  { icon: "🚀", title: "Double Withdrawal Cap", subtitle: "5K → 10K Initial Limit" },
+                  { icon: "📈", title: "Boosted Profit Split", subtitle: "50% → 80% Initial Split" },
+                  { icon: "🎁", title: "FREE Bonus Account", subtitle: "Same Capital Amount" }
+                ].map((feature, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center p-3 bg-gradient-to-r from-[#0FF1CE]/10 to-[#0FF1CE]/5 rounded-xl border border-[#0FF1CE]/20 hover:scale-105 transition-transform"
+                    style={{
+                      animation: `fadeInUp 0.5s ease-out ${index * 0.1}s both`
+                    }}
+                  >
+                    <div className="text-2xl mr-3">{feature.icon}</div>
+                    <div className="text-left">
+                      <div className="text-[#0FF1CE] font-bold text-sm">{feature.title}</div>
+                      <div className="text-gray-400 text-xs">{feature.subtitle}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Promo Code */}
+              <div className="bg-[#0FF1CE]/10 border border-[#0FF1CE]/30 rounded-xl p-4 mb-6">
+                <p className="text-gray-300 text-sm mb-2">Use promo code:</p>
+                <div className="flex items-center justify-center gap-2">
+                  <code className="bg-[#0FF1CE] text-black px-3 py-1 rounded font-bold text-sm">
+                    SHOCKWAVESUNDAY
+                  </code>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText('SHOCKWAVESUNDAY');
+                      // You could add a toast notification here
+                    }}
+                    className="text-[#0FF1CE] hover:text-white transition-colors"
+                    title="Copy code"
+                  >
+                    📋
+                  </button>
+                </div>
+              </div>
+
+              {/* CTA Buttons */}
+              <div className="space-y-3">
+                <Link href="/challenge" onClick={onClose}>
+                  <button className="w-full bg-gradient-to-r from-[#0FF1CE] to-[#0FF1CE]/80 text-black font-bold py-3 px-6 rounded-xl hover:scale-105 transition-transform shadow-lg">
+                    CLAIM DEAL NOW
+                  </button>
+                </Link>
+                <button
+                  onClick={onClose}
+                  className="w-full bg-transparent border border-[#0FF1CE]/50 text-[#0FF1CE] font-bold py-2 px-6 rounded-xl hover:bg-[#0FF1CE]/10 transition-colors"
+                >
+                  Maybe Later
+                </button>
+              </div>
+
+              {/* Timer (Optional - you can add countdown logic) */}
+              <div className="mt-4 text-xs text-gray-400">
+                ⏰ Offer expires at midnight Sunday
+              </div>
+            </div>
+
+            {/* Decorative Elements */}
+            <div className="absolute top-4 right-4 w-16 h-16 bg-[#0FF1CE]/5 rounded-full blur-xl"></div>
+            <div className="absolute bottom-4 left-4 w-12 h-12 bg-[#0FF1CE]/5 rounded-full blur-xl"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function ShockwaveLandingPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
+    const [showPromoModal, setShowPromoModal] = useState(false);
     
     useEffect(() => {
       const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -22,6 +135,17 @@ export default function ShockwaveLandingPage() {
   
       return () => unsubscribe();
     }, [router, loading]);
+
+    // Show promo modal after page loads
+    useEffect(() => {
+      if (!loading) {
+        const timer = setTimeout(() => {
+          setShowPromoModal(true);
+        }, 1500); // Show modal 1.5 seconds after page loads
+
+        return () => clearTimeout(timer);
+      }
+    }, [loading]);
     
     if (loading) {
       return (
@@ -34,6 +158,12 @@ export default function ShockwaveLandingPage() {
     return (
       <div className="bg-gradient-to-b from-[#0D0D0D] via-[#121212] to-[#151515] text-white min-h-screen font-sans">
         <Header />
+        
+        {/* Promotional Modal */}
+        <ShockwaveSundayModal 
+          isOpen={showPromoModal} 
+          onClose={() => setShowPromoModal(false)} 
+        />
         
         {/* Hero Section */}
         <section className="relative px-6 pt-40 pb-32 text-center overflow-hidden bg-gradient-to-b from-[#121212] to-[#131313]">
@@ -927,6 +1057,17 @@ export default function ShockwaveLandingPage() {
           @keyframes fadeIn {
             from { opacity: 0; transform: translateX(20px); }
             to { opacity: 1; transform: translateX(0); }
+          }
+
+          @keyframes fadeInUp {
+            from { 
+              opacity: 0; 
+              transform: translateY(20px); 
+            }
+            to { 
+              opacity: 1; 
+              transform: translateY(0); 
+            }
           }
           
           @keyframes bounceX {

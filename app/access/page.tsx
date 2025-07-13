@@ -357,15 +357,16 @@ export default function EarlyAccessPage() {
             </div>
 
             {/* Promo Badge - Simplified for mobile */}
-            <div className="mb-6 p-4 bg-gradient-to-r from-[#0FF1CE]/10 to-[#00D4FF]/10 rounded-xl border border-[#0FF1CE]/20 backdrop-blur-sm relative overflow-hidden hidden">
+            <div className="mb-6 p-4 bg-gradient-to-r from-[#0FF1CE]/10 to-[#00D4FF]/10 rounded-xl border border-[#0FF1CE]/20 backdrop-blur-sm relative overflow-hidden">
               <div className="absolute top-0 right-0 w-20 h-20 bg-[#0FF1CE]/20 rounded-full blur-3xl"></div>
               <div className="relative">
                 <div className="flex items-center gap-2 mb-2">
                   <Zap className="w-5 h-5 text-[#0FF1CE]" />
                   <span className="text-sm font-bold text-white">Limited Time Offer</span>
                 </div>
-                <div className="text-xl md:text-2xl font-bold text-[#0FF1CE]">SAVE 30%</div>
-                <div className="text-xs text-gray-300 mt-1">Use code: <span className="font-mono font-bold text-[#0FF1CE]">USA</span></div>
+                <div className="text-xl md:text-2xl font-bold text-[#0FF1CE]">SAVE 20%</div>
+                <div className="text-xs text-gray-300 mt-1">Use code: <span className="font-mono font-bold text-[#0FF1CE]">SHOCKWAVESUNDAY</span></div>
+                <div className="text-xs text-gray-300 mt-2">Plus exclusive add-ons and premium features included with your purchase.</div>
               </div>
             </div>
 
