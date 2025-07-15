@@ -913,13 +913,13 @@ export default function ChallengePage() {
                   <Zap className="w-5 h-5 text-[#0FF1CE]" />
                   <span className="text-sm font-bold text-white">SuperCharged Offer!</span>
                 </div>
-                <div className="text-2xl lg:text-3xl font-bold text-[#0FF1CE] mb-1">SAVE 20% OFF</div>
-                <p className="text-xs text-gray-300 mt-2">Premium features and exclusive add-ons included with every purchase.</p>
+                <div className="text-2xl lg:text-3xl font-bold text-[#0FF1CE] mb-1">SAVE 40% OFF</div>
+                <p className="text-xs text-gray-300 mt-2">Plus 1 Free Account After Passing.</p>
               </div>
               <div className="text-center lg:text-right">
               <div className="text-xs text-gray-400 mb-1">Use Code:</div>
                 <div className="inline-block text-xl font-mono font-bold bg-gradient-to-r from-[#0FF1CE] to-[#00D4FF] bg-clip-text text-transparent px-4 py-2 border border-[#0FF1CE]/30 rounded-lg">
-                  SHOCKWAVESUNDAY
+                  OCTANE
                 </div>
               </div>
             </div>
