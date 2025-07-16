@@ -677,6 +677,17 @@ export default function HowShockwaveOperatesPage() {
               Our withdrawal system is designed to reward consistent, disciplined trading while maintaining operational sustainability. All funded accounts must adhere to our trading rules and meet specific criteria before becoming eligible for withdrawals.
             </p>
 
+            {/* Discounted Challenge Notice */}
+            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 md:p-6 mb-8">
+              <div className="flex items-center gap-3 mb-3">
+                <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0" />
+                <h3 className="text-base md:text-lg font-semibold text-yellow-500">Discounted Challenge Policy</h3>
+              </div>
+              <p className="text-gray-300 text-sm md:text-base">
+                <strong>All discounted challenges are subject to a 30-day first withdrawal period</strong> regardless of the challenge type. This extended period applies to any challenge purchased at a reduced rate, promotional pricing, or with discount codes.
+              </p>
+            </div>
+
             <div className="space-y-8 md:space-y-12">
               {/* Simulated Funded Accounts */}
               <div>

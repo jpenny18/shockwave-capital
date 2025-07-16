@@ -12,7 +12,10 @@ import {
   LogOut,
   Menu,
   X,
-  Shield
+  Shield,
+  Calculator,
+  BookOpen,
+  Award
 } from 'lucide-react';
 import { auth, signOut } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
@@ -21,6 +24,8 @@ const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: BarChart2 },
   { name: 'My Accounts', href: '/dashboard/accounts', icon: Users },
   { name: 'KYC Verification', href: '/dashboard/kyc', icon: Shield },
+  { name: 'Trading Calculators', href: '/dashboard/calculators', icon: Calculator },
+  { name: 'Educational Hub', href: '/dashboard/education', icon: BookOpen },
   { name: 'Payouts', href: '/dashboard/payouts', icon: Wallet },
   { name: 'Support', href: '/dashboard/support', icon: MessageCircle },
   { name: 'FAQ', href: '/dashboard/faq', icon: HelpCircle },
