@@ -3,8 +3,27 @@ import React, { useState } from 'react';
 import Particles from '../../components/Particles';
 import { Calculator, TrendingUp, Target, DollarSign, BarChart3, Globe, Zap } from 'lucide-react';
 
+// Type definitions
+type ForexPair = {
+  pipSize: number;
+  pipPosition: number;
+  basePosition: string;
+};
+
+type Index = {
+  pipSize: number;
+  contractSize: number;
+  symbol: string;
+};
+
+type Commodity = {
+  pipSize: number;
+  contractSize: number;
+  symbol: string;
+};
+
 // Asset data for specific calculations
-const FOREX_PAIRS = {
+const FOREX_PAIRS: Record<string, ForexPair> = {
   'EUR/USD': { pipSize: 0.0001, pipPosition: 4, basePosition: 'left' },
   'GBP/USD': { pipSize: 0.0001, pipPosition: 4, basePosition: 'left' },
   'USD/JPY': { pipSize: 0.01, pipPosition: 2, basePosition: 'left' },
@@ -17,7 +36,7 @@ const FOREX_PAIRS = {
   'GBP/JPY': { pipSize: 0.01, pipPosition: 2, basePosition: 'left' }
 };
 
-const INDICES = {
+const INDICES: Record<string, Index> = {
   'US30': { pipSize: 1, contractSize: 1, symbol: 'Dow Jones' },
   'SPX500': { pipSize: 0.1, contractSize: 1, symbol: 'S&P 500' },
   'NAS100': { pipSize: 0.25, contractSize: 1, symbol: 'NASDAQ 100' },
@@ -28,7 +47,7 @@ const INDICES = {
   'AUS200': { pipSize: 1, contractSize: 1, symbol: 'ASX 200' }
 };
 
-const COMMODITIES = {
+const COMMODITIES: Record<string, Commodity> = {
   'XAUUSD': { pipSize: 0.01, contractSize: 100, symbol: 'Gold' },
   'XAGUSD': { pipSize: 0.001, contractSize: 5000, symbol: 'Silver' },
   'USOIL': { pipSize: 0.01, contractSize: 1000, symbol: 'Crude Oil' },
@@ -201,14 +220,14 @@ export default function CalculatorsPage() {
   const [compMonths, setCompMonths] = useState('');
 
   // Get current asset data
-  const getCurrentAssetData = () => {
+  const getCurrentAssetData = (): ForexPair | Index | Commodity | null => {
     switch (assetType) {
       case 'forex':
-        return FOREX_PAIRS[selectedAsset as keyof typeof FOREX_PAIRS];
+        return FOREX_PAIRS[selectedAsset as keyof typeof FOREX_PAIRS] || null;
       case 'indices':
-        return INDICES[selectedAsset as keyof typeof INDICES];
+        return INDICES[selectedAsset as keyof typeof INDICES] || null;
       case 'commodities':
-        return COMMODITIES[selectedAsset as keyof typeof COMMODITIES];
+        return COMMODITIES[selectedAsset as keyof typeof COMMODITIES] || null;
       default:
         return FOREX_PAIRS['EUR/USD'];
     }
@@ -250,7 +269,9 @@ export default function CalculatorsPage() {
     } else if (assetType === 'indices') {
       return assetData.pipSize * lotSizeNum;
     } else if (assetType === 'commodities') {
-      return (assetData.pipSize * lotSizeNum * (assetData.contractSize || 1));
+      // Type guard to ensure contractSize exists
+      const contractSize = 'contractSize' in assetData ? assetData.contractSize : 1;
+      return (assetData.pipSize * lotSizeNum * contractSize);
     }
     
     return 0;
@@ -284,7 +305,9 @@ export default function CalculatorsPage() {
     } else if (assetType === 'indices') {
       optimalLotSize = riskAmount / (pipsInDistance * assetData.pipSize);
     } else if (assetType === 'commodities') {
-      const pipValuePerLot = assetData.pipSize * (assetData.contractSize || 1);
+      // Type guard to ensure contractSize exists
+      const contractSize = 'contractSize' in assetData ? assetData.contractSize : 1;
+      const pipValuePerLot = assetData.pipSize * contractSize;
       optimalLotSize = riskAmount / (pipsInDistance * pipValuePerLot);
     }
     
@@ -323,7 +346,9 @@ export default function CalculatorsPage() {
     } else if (assetType === 'indices') {
       profit = priceMovement * lots;
     } else if (assetType === 'commodities') {
-      profit = priceMovement * lots * (assetData.contractSize || 1);
+      // Type guard to ensure contractSize exists
+      const contractSize = 'contractSize' in assetData ? assetData.contractSize : 1;
+      profit = priceMovement * lots * contractSize;
     }
     
     const balance = parseFloat(accountBalance) || 1;
@@ -499,7 +524,12 @@ export default function CalculatorsPage() {
                   <div>Asset: <span className="text-[#0FF1CE]">{selectedAsset}</span></div>
                   <div>Pip Size: <span className="text-[#0FF1CE]">{getCurrentAssetData()?.pipSize}</span></div>
                   {assetType === 'forex' && <div>Contract Size: <span className="text-[#0FF1CE]">100,000</span></div>}
-                  {assetType === 'commodities' && <div>Contract Size: <span className="text-[#0FF1CE]">{getCurrentAssetData()?.contractSize}</span></div>}
+                  {assetType === 'commodities' && <div>Contract Size: <span className="text-[#0FF1CE]">{
+                    (() => {
+                      const assetData = getCurrentAssetData();
+                      return assetData && 'contractSize' in assetData ? assetData.contractSize : 1;
+                    })()
+                  }</span></div>}
                 </div>
               </div>
             </div>
