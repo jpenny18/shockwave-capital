@@ -364,9 +364,9 @@ export default function EarlyAccessPage() {
                   <Zap className="w-5 h-5 text-[#0FF1CE]" />
                   <span className="text-sm font-bold text-white">Limited Time Offer</span>
                 </div>
-                <div className="text-xl md:text-2xl font-bold text-[#0FF1CE]">SAVE 40%</div>
-                <div className="text-xs text-gray-300 mt-1">Use code: <span className="font-mono font-bold text-[#0FF1CE]">OCTANE</span></div>
-                <div className="text-xs text-gray-300 mt-2">Plus 1 Free Account After Passing.</div>
+                <div className="text-xl md:text-2xl font-bold text-[#0FF1CE]">SAVE 50%</div>
+                <div className="text-xs text-gray-300 mt-1">Use code: <span className="font-mono font-bold text-[#0FF1CE]">SUNDAY50</span></div>
+                <div className="text-xs text-gray-300 mt-2">Plus 1 Free RETRY!!</div>
               </div>
             </div>
 

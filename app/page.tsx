@@ -8,8 +8,14 @@ import Header from './components/Header';
 import Link from 'next/link';
 import PricingTable from './components/PricingTable';
 
-// Promotional Modal Component - 40% OFF Deal
+// Disabled Promotional Modal Component - 40% OFF Deal
 const PromotionalModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  // Modal is disabled - always return null
+  return null;
+};
+
+// Shockwave Sunday Modal Component - 50% OFF Deal
+const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   if (!isOpen) return null;
 
   return (
@@ -35,21 +41,23 @@ const PromotionalModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
               {/* Header */}
               <div className="mb-6">
                 <div className="inline-block bg-gradient-to-r from-[#0FF1CE] to-[#0FF1CE]/70 text-black px-4 py-2 rounded-full text-sm font-bold mb-3 animate-pulse">
-                  EXCLUSIVE OFFER
+                  SHOCKWAVE SUNDAY
                 </div>
                 <h2 className="text-2xl md:text-3xl font-extrabold text-[#0FF1CE] mb-2">
-                  MEGA DEAL
+                  50% OFF MEGA DEAL
                 </h2>
                 <p className="text-gray-300 text-sm">
-                  Limited time promotion for serious traders
+                  Limited Sunday special for elite traders
                 </p>
               </div>
 
               {/* Features Grid */}
               <div className="grid grid-cols-1 gap-4 mb-6">
                 {[
-                  { icon: "🔥", title: "40% OFF", subtitle: "All Challenge Plans" },
-                  { icon: "🎁", title: "FREE Bonus Account", subtitle: "Same Capital After Passing" }
+                  { icon: "🔥", title: "50% OFF", subtitle: "All Challenge Plans" },
+                  { icon: "🎁", title: "1 FREE Retry", subtitle: "Second Chance Guaranteed" },
+                  { icon: "💰", title: "80% Initial Split", subtitle: "Higher Profit Share" },
+                  { icon: "⚡", title: "Double Withdrawal Cap", subtitle: "2x Payout Limits" }
                 ].map((feature, index) => (
                   <div
                     key={index}
@@ -69,11 +77,13 @@ const PromotionalModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
 
               {/* Deal Details */}
               <div className="bg-[#0FF1CE]/10 border border-[#0FF1CE]/30 rounded-xl p-4 mb-6">
-                <h3 className="text-[#0FF1CE] font-bold text-sm mb-2">How it works:</h3>
+                <h3 className="text-[#0FF1CE] font-bold text-sm mb-2">Sunday Special Benefits:</h3>
                 <div className="text-gray-300 text-xs space-y-1">
-                  <p>• Get 40% off any challenge plan</p>
-                  <p>• Pass your challenge successfully</p>
-                  <p>• Receive 1 FREE account of the same capital level</p>
+                  <p>• 50% off any challenge plan</p>
+                  <p>• Automatic 1 FREE retry if needed</p>
+                  <p>• Start with 80% profit split (vs standard 50%)</p>
+                  <p>• Double withdrawal cap (10k vs 5k)</p>
+                  <p>• Like getting 2 challenges for 50% off!</p>
                 </div>
                 
                 {/* Promo Code Section */}
@@ -81,7 +91,7 @@ const PromotionalModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                   <div className="bg-gradient-to-r from-[#0FF1CE]/20 to-[#0FF1CE]/10 border border-[#0FF1CE]/40 rounded-lg p-3">
                     <p className="text-gray-300 text-xs mb-1">Use promo code:</p>
                     <div className="bg-black/50 border border-[#0FF1CE] rounded px-3 py-2 inline-block">
-                      <span className="text-[#0FF1CE] font-bold text-lg tracking-wider">OCTANE</span>
+                      <span className="text-[#0FF1CE] font-bold text-lg tracking-wider">SUNDAY50</span>
                     </div>
                   </div>
                 </div>
@@ -91,7 +101,7 @@ const PromotionalModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
               <div className="space-y-3">
                 <Link href="/challenge" onClick={onClose}>
                   <button className="w-full bg-gradient-to-r from-[#0FF1CE] to-[#0FF1CE]/80 text-black font-bold py-3 px-6 rounded-xl hover:scale-105 transition-transform shadow-lg">
-                    CLAIM 40% OFF NOW
+                    CLAIM 50% OFF NOW
                   </button>
                 </Link>
                 <button
@@ -102,9 +112,9 @@ const PromotionalModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                 </button>
               </div>
 
-              {/* Timer (Optional - you can add countdown logic) */}
+              {/* Timer */}
               <div className="mt-4 text-xs text-gray-400">
-                ⚡ Limited time offer - Don't miss out!
+                ⚡ Sunday Special - Limited Time Only!
               </div>
             </div>
 
@@ -118,16 +128,10 @@ const PromotionalModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
   );
 };
 
-// Disabled Shockwave Sunday Modal Component
-const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
-  // Modal is disabled - always return null
-  return null;
-};
-
 export default function ShockwaveLandingPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
-    const [showPromoModal, setShowPromoModal] = useState(false);
+    const [showSundayModal, setShowSundayModal] = useState(false);
     
     useEffect(() => {
       const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -140,11 +144,11 @@ export default function ShockwaveLandingPage() {
       return () => unsubscribe();
     }, [router, loading]);
 
-    // Show promo modal after page loads
+    // Show Sunday modal after page loads
     useEffect(() => {
       if (!loading) {
         const timer = setTimeout(() => {
-          setShowPromoModal(true);
+          setShowSundayModal(true);
         }, 1500); // Show modal 1.5 seconds after page loads
 
         return () => clearTimeout(timer);
@@ -163,10 +167,10 @@ export default function ShockwaveLandingPage() {
       <div className="bg-gradient-to-b from-[#0D0D0D] via-[#121212] to-[#151515] text-white min-h-screen font-sans">
         <Header />
         
-        {/* Promotional Modal */}
-        <PromotionalModal 
-          isOpen={showPromoModal} 
-          onClose={() => setShowPromoModal(false)} 
+        {/* Shockwave Sunday Modal */}
+        <ShockwaveSundayModal 
+          isOpen={showSundayModal} 
+          onClose={() => setShowSundayModal(false)} 
         />
         
         {/* Hero Section */}
