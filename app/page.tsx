@@ -14,7 +14,7 @@ const PromotionalModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
   return null;
 };
 
-// Shockwave Sunday Modal Component - 50% OFF Deal
+// Shockwave Sunday Modal Component - 30% OFF Deal
 const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   if (!isOpen) return null;
 
@@ -41,23 +41,22 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
               {/* Header */}
               <div className="mb-6">
                 <div className="inline-block bg-gradient-to-r from-[#0FF1CE] to-[#0FF1CE]/70 text-black px-4 py-2 rounded-full text-sm font-bold mb-3 animate-pulse">
-                  SHOCKWAVE SUNDAY
+                  EXCLUSIVE OFFER
                 </div>
                 <h2 className="text-2xl md:text-3xl font-extrabold text-[#0FF1CE] mb-2">
-                  50% OFF MEGA DEAL
+                  30% OFF
                 </h2>
                 <p className="text-gray-300 text-sm">
-                  Limited Sunday special for elite traders
+                  Limited time promotion for elite traders
                 </p>
               </div>
 
               {/* Features Grid */}
               <div className="grid grid-cols-1 gap-4 mb-6">
                 {[
-                  { icon: "🔥", title: "50% OFF", subtitle: "All Challenge Plans" },
-                  { icon: "🎁", title: "1 FREE Retry", subtitle: "Second Chance Guaranteed" },
-                  { icon: "💰", title: "80% Initial Split", subtitle: "Higher Profit Share" },
-                  { icon: "⚡", title: "Double Withdrawal Cap", subtitle: "2x Payout Limits" }
+                  { icon: "🔥", title: "30% OFF", subtitle: "All Challenge Plans" },
+                  { icon: "🎯", title: "Elite Community", subtitle: "Join Successful Traders" },
+                  { icon: "🚀", title: "Scale to $5M", subtitle: "Unlimited Growth Potential" }
                 ].map((feature, index) => (
                   <div
                     key={index}
@@ -77,13 +76,12 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
 
               {/* Deal Details */}
               <div className="bg-[#0FF1CE]/10 border border-[#0FF1CE]/30 rounded-xl p-4 mb-6">
-                <h3 className="text-[#0FF1CE] font-bold text-sm mb-2">Sunday Special Benefits:</h3>
+                <h3 className="text-[#0FF1CE] font-bold text-sm mb-2">Why Choose Shockwave:</h3>
                 <div className="text-gray-300 text-xs space-y-1">
-                  <p>• 50% off any challenge plan</p>
-                  <p>• Automatic 1 FREE retry if needed</p>
-                  <p>• Start with 80% profit split (vs standard 50%)</p>
-                  <p>• Double withdrawal cap (10k vs 5k)</p>
-                  <p>• Like getting 2 challenges for 50% off!</p>
+                  <p>• Higher drawdown limits than competitors</p>
+                  <p>• 1:200 leverage for maximum opportunity</p>
+                  <p>• No BS Funded account rules</p>
+                  <p>• Fast 14-day payout eligibility</p>
                 </div>
                 
                 {/* Promo Code Section */}
@@ -91,7 +89,7 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                   <div className="bg-gradient-to-r from-[#0FF1CE]/20 to-[#0FF1CE]/10 border border-[#0FF1CE]/40 rounded-lg p-3">
                     <p className="text-gray-300 text-xs mb-1">Use promo code:</p>
                     <div className="bg-black/50 border border-[#0FF1CE] rounded px-3 py-2 inline-block">
-                      <span className="text-[#0FF1CE] font-bold text-lg tracking-wider">SUNDAY50</span>
+                      <span className="text-[#0FF1CE] font-bold text-lg tracking-wider">SHOCKWAVE</span>
                     </div>
                   </div>
                 </div>
@@ -101,7 +99,7 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
               <div className="space-y-3">
                 <Link href="/challenge" onClick={onClose}>
                   <button className="w-full bg-gradient-to-r from-[#0FF1CE] to-[#0FF1CE]/80 text-black font-bold py-3 px-6 rounded-xl hover:scale-105 transition-transform shadow-lg">
-                    CLAIM 50% OFF NOW
+                    CLAIM 30% OFF NOW
                   </button>
                 </Link>
                 <button
@@ -114,7 +112,7 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
 
               {/* Timer */}
               <div className="mt-4 text-xs text-gray-400">
-                ⚡ Sunday Special - Limited Time Only!
+                ⚡ Limited Time Offer - Don't Miss Out!
               </div>
             </div>
 
