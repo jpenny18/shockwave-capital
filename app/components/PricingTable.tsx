@@ -187,13 +187,13 @@ const challengeData: ChallengeData = {
         subtitle: "",
         tooltip: "payout-eligibility",
         values: {
-          5000: "14 Days",
-          10000: "14 Days",
-          25000: "14 Days",
-          50000: "14 Days",
-          100000: "14 Days",
-          200000: "14 Days",
-          500000: "14 Days"
+          5000: "21 Days",
+          10000: "21 Days",
+          25000: "21 Days",
+          50000: "21 Days",
+          100000: "21 Days",
+          200000: "21 Days",
+          500000: "21 Days"
         }
       },
       {
@@ -824,13 +824,13 @@ export default function PricingTable() {
             <div className="flex items-start space-x-3">
               <div className="w-2 h-2 bg-[#0FF1CE] rounded-full mt-2 flex-shrink-0"></div>
               <div>
-                <h4 className="text-white font-semibold text-sm lg:text-base mb-1">80% Profit Split</h4>
-                <p className="text-white/60 text-xs lg:text-sm">Increase your initial profit share from 50% to 80%</p>
+                <h4 className="text-white font-semibold text-sm lg:text-base mb-1">100% Profit Split</h4>
+                <p className="text-white/60 text-xs lg:text-sm">Increase your initial profit share from 80% to 100%</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl p-4 lg:p-6 border border-[#0FF1CE]/20 hover:border-[#0FF1CE]/40 transition-all duration-300 hover:scale-105">
+          <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl p-4 lg:p-6 border border-[#0FF1CE]/20 hover:border-[#0FF1CE]/40 transition-all duration-300 hover:scale-105 hidden">
             <div className="flex items-start space-x-3">
               <div className="w-2 h-2 bg-[#0FF1CE] rounded-full mt-2 flex-shrink-0"></div>
               <div>
@@ -840,7 +840,7 @@ export default function PricingTable() {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl p-4 lg:p-6 border border-[#0FF1CE]/20 hover:border-[#0FF1CE]/40 transition-all duration-300 hover:scale-105">
+          <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl p-4 lg:p-6 border border-[#0FF1CE]/20 hover:border-[#0FF1CE]/40 transition-all duration-300 hover:scale-105 hidden">
             <div className="flex items-start space-x-3">
               <div className="w-2 h-2 bg-[#0FF1CE] rounded-full mt-2 flex-shrink-0"></div>
               <div>

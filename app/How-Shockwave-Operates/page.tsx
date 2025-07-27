@@ -692,7 +692,7 @@ export default function HowShockwaveOperatesPage() {
               {/* Simulated Funded Accounts */}
               <div>
                 <h3 className="text-lg md:text-xl font-bold text-white mb-4 flex items-center">
-                  <span className="text-[#0FF1CE] mr-2">50%</span> Profit Split — Simulated Funded Accounts
+                  <span className="text-[#0FF1CE] mr-2">80%</span> Profit Split — Simulated Funded Accounts
                 </h3>
                 
                 <div className="space-y-4 md:space-y-6">
@@ -703,7 +703,7 @@ export default function HowShockwaveOperatesPage() {
                     <div>
                       <h4 className="text-white font-medium mb-2">Initial Withdrawal Period</h4>
                       <p className="text-gray-300 text-sm md:text-base">
-                        First withdrawal becomes available 14 days after your first trade. Subsequent withdrawals follow a 14-day cycle, subject to the monthly withdrawal cap.
+                        First withdrawal becomes available 21 days after your first trade. Subsequent withdrawals follow a 14-day cycle, subject to the monthly withdrawal cap.
                       </p>
                     </div>
                   </div>
@@ -727,7 +727,7 @@ export default function HowShockwaveOperatesPage() {
                     <div>
                       <h4 className="text-white font-medium mb-2">Monthly Withdrawal Cap</h4>
                       <p className="text-gray-300 text-sm md:text-base">
-                        Maximum withdrawal of $5,000 per month after profit split. This applies regardless of account size or total profits generated. Each withdrawal requires meeting the minimum profitable days criterion again.
+                        No withdrawal cap. This applies regardless of account size or total profits generated. Each withdrawal requires meeting the minimum profitable days criterion again.
                       </p>
                     </div>
                   </div>
@@ -758,19 +758,19 @@ export default function HowShockwaveOperatesPage() {
                     <ul className="mt-3 space-y-2">
                       <li className="flex items-start gap-2">
                         <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
-                        <span className="text-gray-300 text-sm">Must wait 14 days from first trade before initial withdrawal</span>
+                        <span className="text-gray-300 text-sm">Must wait 21 days from first trade before initial withdrawal</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
-                        <span className="text-gray-300 text-sm">Requires 5 minimum profitable days (0.5% daily gain) for first $5,000 withdrawal</span>
+                        <span className="text-gray-300 text-sm">Requires 5 minimum profitable days (0.5% daily gain) for first withdrawal</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
-                        <span className="text-gray-300 text-sm">After first withdrawal, needs another 5 profitable days before next month's $5,000 withdrawal</span>
+                        <span className="text-gray-300 text-sm">After first withdrawal, needs another 5 profitable days before next month's withdrawal</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE] mt-2"></div>
-                        <span className="text-gray-300 text-sm">Even if 5 profitable days are achieved early, must wait for monthly withdrawal cap to reset</span>
+                        <span className="text-gray-300 text-sm">Even if 5 profitable days are achieved early, must wait for next withdrawal date</span>
                       </li>
                     </ul>
                   </div>

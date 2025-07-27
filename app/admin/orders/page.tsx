@@ -30,6 +30,7 @@ interface Order {
   challengeType: string;
   challengeAmount: string;
   platform: string;
+  addOns?: string[];
   totalAmount: number;
   paymentMethod: 'card' | 'crypto';
   paymentStatus: 'pending' | 'processing' | 'completed' | 'failed';
@@ -501,6 +502,28 @@ export default function OrdersPage() {
                                   <span className="text-gray-400">Platform:</span>
                                   <span className="text-white">{order.platform}</span>
                                 </div>
+                                {order.addOns && order.addOns.length > 0 && (
+                                  <div className="flex justify-between items-start">
+                                    <span className="text-gray-400">Add-ons:</span>
+                                    <div className="text-right">
+                                      {order.addOns.map((addOn, index) => {
+                                        // Map addOn IDs to display names
+                                        const addOnNames: Record<string, string> = {
+                                          'no-min-days': 'No Min Trading Days',
+                                          'profit-split-80': '80% Initial Profit Split', // Legacy orders
+                                          'profit-split-100': '100% Initial Profit Split',
+                                          'leverage-500': '1:500 Leverage',
+                                          'reward-150': '150% Reward'
+                                        };
+                                        return (
+                                          <div key={index} className="text-white text-sm">
+                                            {addOnNames[addOn] || addOn}
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                )}
                                 <div className="flex justify-between">
                                   <span className="text-gray-400">Payment Method:</span>
                                   <span className="text-white capitalize">{order.paymentMethod}</span>

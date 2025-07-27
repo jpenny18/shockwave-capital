@@ -14,7 +14,10 @@ import {
   Rocket,
   Zap,
   Shield,
-  TrendingUp
+  TrendingUp,
+  X,
+  ExternalLink,
+  Sparkles
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { registerUser, signInUser, resetPassword } from '@/lib/firebase';
@@ -30,6 +33,63 @@ interface AuthData {
 interface AuthErrors {
   [key: string]: string | undefined;
 }
+
+// Launch Modal Component
+const LaunchModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      
+      {/* Modal Content */}
+      <div className="relative w-full h-full max-w-7xl max-h-[90vh] m-4 bg-[#0D0D0D] rounded-2xl border border-[#0FF1CE]/30 overflow-hidden shadow-2xl">
+        {/* Header with close button */}
+        <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-[#0D0D0D]/95 backdrop-blur-sm border-b border-[#2F2F2F]/50">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-[#0FF1CE]/20 rounded-lg flex items-center justify-center">
+              <Sparkles className="w-4 h-4 text-[#0FF1CE]" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-[#0FF1CE]">New Launch Preview</h3>
+              <p className="text-xs text-gray-400">See what's coming to Shockwave Capital</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Link 
+              href="/launch" 
+              target="_blank"
+              className="flex items-center gap-1 px-3 py-1.5 text-xs bg-[#0FF1CE]/10 text-[#0FF1CE] rounded-lg hover:bg-[#0FF1CE]/20 transition-colors"
+            >
+              <ExternalLink className="w-3 h-3" />
+              Open Full Page
+            </Link>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#2F2F2F]/50 text-gray-400 hover:text-white transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+        
+        {/* Iframe Content */}
+        <div className="w-full h-full pt-16">
+          <iframe
+            src="/launch"
+            className="w-full h-full border-0"
+            title="Shockwave Capital Launch Preview"
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const FloatingLabelInput = ({ 
   id, 
@@ -105,6 +165,7 @@ export default function EarlyAccessPage() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptDisclaimer, setAcceptDisclaimer] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showLaunchModal, setShowLaunchModal] = useState(false);
   const [formData, setFormData] = useState<AuthData>({
     email: '',
     password: '',
@@ -126,6 +187,17 @@ export default function EarlyAccessPage() {
 
     return () => unsubscribe();
   }, [router, loading]);
+
+  // Show launch modal after a delay when page loads
+  useEffect(() => {
+    if (!loading) {
+      const timer = setTimeout(() => {
+        setShowLaunchModal(true);
+      }, 2000); // Show modal after 2 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
 
   if (loading) {
     return (
@@ -247,295 +319,324 @@ export default function EarlyAccessPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0D0D0D] via-[#0D0D0D] to-[#151515] text-white relative overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute inset-0">
-        <div className="absolute top-1/4 -left-1/4 w-96 h-96 bg-[#0FF1CE]/10 rounded-full blur-[150px] animate-pulse"></div>
-        <div className="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-[#0FF1CE]/10 rounded-full blur-[150px] animate-pulse delay-1000"></div>
-      </div>
-      <Particles />
-      
-      <div className="relative z-10 flex min-h-screen">
-        {/* Left Panel - Hidden on mobile */}
-        <div className="hidden lg:flex lg:w-1/2 items-center justify-center p-12 relative">
-          <div className="max-w-lg relative">
-            {/* Animated Background Card */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#0FF1CE]/20 to-[#0FF1CE]/5 rounded-3xl blur-xl animate-pulse"></div>
-            
-            <div className="relative">
-              {/* Logo */}
-              <div className="mb-8 animate-float flex justify-center">
-                <div className="w-20 h-20 bg-[#0FF1CE]/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-[#0FF1CE]/30">
-                  <Rocket className="w-10 h-10 text-[#0FF1CE]" />
-                </div>
-              </div>
-
-              {/* Welcome Text */}
-              <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-[#0FF1CE] to-[#00D4FF] bg-clip-text text-transparent">
-                The Future of Trading
-              </h1>
-              <p className="text-xl text-gray-300 mb-12 leading-relaxed">
-                Become one of our elite traders in our high-octane trading environment.
-              </p>
-
-              {/* Feature Cards */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-4 p-4 bg-[#1A1A1A]/50 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 hover:border-[#0FF1CE]/30 transition-all">
-                  <div className="w-12 h-12 bg-[#0FF1CE]/10 rounded-xl flex items-center justify-center">
-                    <TrendingUp className="w-6 h-6 text-[#0FF1CE]" />
-                  </div>
-                  <div>
-                  <h3 className="font-semibold text-white">15% Max Drawdown</h3>
-                  <p className="text-sm text-gray-400">Trade with confidence</p>
+    <>
+      <div className="min-h-screen bg-gradient-to-br from-[#0D0D0D] via-[#0D0D0D] to-[#151515] text-white relative overflow-hidden">
+        {/* Background Effects */}
+        <div className="absolute inset-0">
+          <div className="absolute top-1/4 -left-1/4 w-96 h-96 bg-[#0FF1CE]/10 rounded-full blur-[150px] animate-pulse"></div>
+          <div className="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-[#0FF1CE]/10 rounded-full blur-[150px] animate-pulse delay-1000"></div>
+        </div>
+        <Particles />
+        
+        {/* Launch Modal */}
+        <LaunchModal isOpen={showLaunchModal} onClose={() => setShowLaunchModal(false)} />
+        
+        <div className="relative z-10 flex min-h-screen">
+          {/* Left Panel - Hidden on mobile */}
+          <div className="hidden lg:flex lg:w-1/2 items-center justify-center p-12 relative">
+            <div className="max-w-lg relative">
+              {/* Animated Background Card */}
+              <div className="absolute inset-0 bg-gradient-to-br from-[#0FF1CE]/20 to-[#0FF1CE]/5 rounded-3xl blur-xl animate-pulse"></div>
+              
+              <div className="relative">
+                {/* Logo */}
+                <div className="mb-8 animate-float flex justify-center">
+                  <div className="w-20 h-20 bg-[#0FF1CE]/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-[#0FF1CE]/30">
+                    <Rocket className="w-10 h-10 text-[#0FF1CE]" />
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 p-4 bg-[#1A1A1A]/50 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 hover:border-[#0FF1CE]/30 transition-all">
-                  <div className="w-12 h-12 bg-[#0FF1CE]/10 rounded-xl flex items-center justify-center">
-                    <Zap className="w-6 h-6 text-[#0FF1CE]" />
+                {/* Welcome Text */}
+                <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-[#0FF1CE] to-[#00D4FF] bg-clip-text text-transparent">
+                  The Future of Trading
+                </h1>
+                <p className="text-xl text-gray-300 mb-12 leading-relaxed">
+                  Become one of our elite traders in our high-octane trading environment.
+                </p>
+
+                {/* Feature Cards */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4 p-4 bg-[#1A1A1A]/50 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 hover:border-[#0FF1CE]/30 transition-all">
+                    <div className="w-12 h-12 bg-[#0FF1CE]/10 rounded-xl flex items-center justify-center">
+                      <TrendingUp className="w-6 h-6 text-[#0FF1CE]" />
+                    </div>
+                    <div>
+                    <h3 className="font-semibold text-white">15% Max Drawdown</h3>
+                    <p className="text-sm text-gray-400">Trade with confidence</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-white">1:200 Leverage</h3>
-                    <p className="text-sm text-gray-400">Maximum trading power</p>
+
+                  <div className="flex items-center gap-4 p-4 bg-[#1A1A1A]/50 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 hover:border-[#0FF1CE]/30 transition-all">
+                    <div className="w-12 h-12 bg-[#0FF1CE]/10 rounded-xl flex items-center justify-center">
+                      <Zap className="w-6 h-6 text-[#0FF1CE]" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-white">1:200 Leverage</h3>
+                      <p className="text-sm text-gray-400">Maximum trading power</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 p-4 bg-[#1A1A1A]/50 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 hover:border-[#0FF1CE]/30 transition-all">
+                    <div className="w-12 h-12 bg-[#0FF1CE]/10 rounded-xl flex items-center justify-center">
+                      <Shield className="w-6 h-6 text-[#0FF1CE]" />
+                    </div>
+                    <div>
+                    <h3 className="font-semibold text-white">Up to 100% Profit Split</h3>
+                    <p className="text-sm text-gray-400">Keep more of what you earn</p>
+                      
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 p-4 bg-[#1A1A1A]/50 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 hover:border-[#0FF1CE]/30 transition-all">
-                  <div className="w-12 h-12 bg-[#0FF1CE]/10 rounded-xl flex items-center justify-center">
-                    <Shield className="w-6 h-6 text-[#0FF1CE]" />
-                  </div>
-                  <div>
-                  <h3 className="font-semibold text-white">Up to 95% Profit Split</h3>
-                  <p className="text-sm text-gray-400">Keep more of what you earn</p>
-                    
-                  </div>
+                {/* New Launch Preview Button */}
+                <div className="mt-8">
+                  <button
+                    onClick={() => setShowLaunchModal(true)}
+                    className="w-full flex items-center justify-center gap-3 p-4 bg-gradient-to-r from-[#0FF1CE]/20 to-[#00D4FF]/20 rounded-xl border border-[#0FF1CE]/30 hover:from-[#0FF1CE]/30 hover:to-[#00D4FF]/30 transition-all group"
+                  >
+                    <Sparkles className="w-5 h-5 text-[#0FF1CE] group-hover:animate-pulse" />
+                    <div className="text-left">
+                      <h4 className="font-semibold text-[#0FF1CE]">New Launch Preview</h4>
+                      <p className="text-xs text-gray-400">See what's coming next</p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-[#0FF1CE] group-hover:translate-x-1 transition-transform" />
+                  </button>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Right Panel - Auth Form */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-12">
-          <div className="w-full max-w-md">
-            {/* Mobile Logo */}
-            <div className="lg:hidden text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#0FF1CE]/10 backdrop-blur-sm border border-[#0FF1CE]/30 mb-4">
-                <Rocket className="w-8 h-8 text-[#0FF1CE]" />
-              </div>
-              <h2 className="text-2xl font-bold text-[#0FF1CE]">Shockwave Capital</h2>
-            </div>
-
-            {/* Tab Switcher */}
-            <div className="flex bg-[#1A1A1A]/30 backdrop-blur-sm rounded-xl p-1 mb-8">
-              <button
-                onClick={() => {
-                  setIsLogin(true);
-                  setErrors({});
-                }}
-                className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-300 ${
-                  isLogin 
-                    ? 'bg-[#0FF1CE] text-black' 
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                Sign In
-              </button>
-              <button
-                onClick={() => {
-                  setIsLogin(false);
-                  setErrors({});
-                }}
-                className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-300 ${
-                  !isLogin 
-                    ? 'bg-[#0FF1CE] text-black' 
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                Sign Up
-              </button>
-            </div>
-
-            {/* Promo Badge - Simplified for mobile */}
-            <div className="mb-6 p-4 bg-gradient-to-r from-[#0FF1CE]/10 to-[#00D4FF]/10 rounded-xl border border-[#0FF1CE]/20 backdrop-blur-sm relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-20 h-20 bg-[#0FF1CE]/20 rounded-full blur-3xl"></div>
-              <div className="relative">
-                <div className="flex items-center gap-2 mb-2">
-                  <Zap className="w-5 h-5 text-[#0FF1CE]" />
-                  <span className="text-sm font-bold text-white">Limited Time Offer</span>
+          {/* Right Panel - Auth Form */}
+          <div className="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-12">
+            <div className="w-full max-w-md">
+              {/* Mobile Logo */}
+              <div className="lg:hidden text-center mb-8">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#0FF1CE]/10 backdrop-blur-sm border border-[#0FF1CE]/30 mb-4">
+                  <Rocket className="w-8 h-8 text-[#0FF1CE]" />
                 </div>
-                <div className="text-xl md:text-2xl font-bold text-[#0FF1CE]">SAVE 30%</div>
-                <div className="text-xs text-gray-300 mt-1">Use code: <span className="font-mono font-bold text-[#0FF1CE]">SHOCKWAVE</span></div>
+                <h2 className="text-2xl font-bold text-[#0FF1CE]">Shockwave Capital</h2>
+                
+                {/* Mobile Launch Preview Button */}
+                <button
+                  onClick={() => setShowLaunchModal(true)}
+                  className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-[#0FF1CE]/10 rounded-lg border border-[#0FF1CE]/30 text-sm text-[#0FF1CE] hover:bg-[#0FF1CE]/20 transition-colors"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>See New Launch</span>
+                </button>
               </div>
-            </div>
 
-            {success && (
-              <div className="mb-6 p-4 bg-green-500/10 backdrop-blur-sm border border-green-500/30 rounded-xl text-green-400 flex items-center gap-2 animate-slideIn">
-                <Check size={18} />
-                <span className="text-sm">{success}</span>
+              {/* Tab Switcher */}
+              <div className="flex bg-[#1A1A1A]/30 backdrop-blur-sm rounded-xl p-1 mb-8">
+                <button
+                  onClick={() => {
+                    setIsLogin(true);
+                    setErrors({});
+                  }}
+                  className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-300 ${
+                    isLogin 
+                      ? 'bg-[#0FF1CE] text-black' 
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => {
+                    setIsLogin(false);
+                    setErrors({});
+                  }}
+                  className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-300 ${
+                    !isLogin 
+                      ? 'bg-[#0FF1CE] text-black' 
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  Sign Up
+                </button>
               </div>
-            )}
 
-            {errors.general && (
-              <div className="mb-6 p-4 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-xl text-red-400 flex items-center gap-2 animate-shake">
-                <AlertCircle size={18} />
-                <span className="text-sm">{errors.general}</span>
+              {/* Promo Badge - Simplified for mobile */}
+              <div className="mb-6 p-4 bg-gradient-to-r from-[#0FF1CE]/10 to-[#00D4FF]/10 rounded-xl border border-[#0FF1CE]/20 backdrop-blur-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-20 h-20 bg-[#0FF1CE]/20 rounded-full blur-3xl"></div>
+                <div className="relative">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Zap className="w-5 h-5 text-[#0FF1CE]" />
+                    <span className="text-sm font-bold text-white">Limited Time Offer</span>
+                  </div>
+                  <div className="text-xl md:text-2xl font-bold text-[#0FF1CE]">SAVE 30%</div>
+                  <div className="text-xs text-gray-300 mt-1">Use code: <span className="font-mono font-bold text-[#0FF1CE]">SHOCKWAVE</span></div>
+                </div>
               </div>
-            )}
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {!isLogin && (
-                <FloatingLabelInput
-                  id="name"
-                  label="Full Name"
-                  icon={User}
-                  value={formData.name || ''}
-                  onChange={(value) => setFormData({ ...formData, name: value })}
-                  error={errors.name}
-                  required
-                />
+              {success && (
+                <div className="mb-6 p-4 bg-green-500/10 backdrop-blur-sm border border-green-500/30 rounded-xl text-green-400 flex items-center gap-2 animate-slideIn">
+                  <Check size={18} />
+                  <span className="text-sm">{success}</span>
+                </div>
               )}
 
-              <FloatingLabelInput
-                id="email"
-                label="Email Address"
-                icon={Mail}
-                type="email"
-                value={formData.email}
-                onChange={(value) => setFormData({ ...formData, email: value })}
-                error={errors.email}
-                required
-              />
+              {errors.general && (
+                <div className="mb-6 p-4 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-xl text-red-400 flex items-center gap-2 animate-shake">
+                  <AlertCircle size={18} />
+                  <span className="text-sm">{errors.general}</span>
+                </div>
+              )}
 
-              <FloatingLabelInput
-                id="password"
-                label="Password"
-                icon={Lock}
-                type="password"
-                value={formData.password}
-                onChange={(value) => setFormData({ ...formData, password: value })}
-                error={errors.password}
-                required
-              />
-
-              <div className="flex items-center justify-between">
-                <label className="flex items-center gap-2 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-600 text-[#0FF1CE] focus:ring-[#0FF1CE] focus:ring-offset-0 bg-[#1A1A1A]/50 backdrop-blur-sm"
-                  />
-                  <span className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">Remember me</span>
-                </label>
-              </div>
-
-              {/* Simplified Disclaimer for Mobile */}
-              <div className="space-y-3">
-                <label className="flex items-start gap-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    id="disclaimer"
-                    checked={acceptDisclaimer}
-                    onChange={(e) => setAcceptDisclaimer(e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-600 text-[#0FF1CE] focus:ring-[#0FF1CE] focus:ring-offset-0 bg-[#1A1A1A]/50 backdrop-blur-sm mt-0.5"
-                  />
-                  <span className="text-xs text-gray-400 group-hover:text-gray-300 transition-colors">
-                    I acknowledge the simulated environment and agree to the{' '}
-                    <Link href="/terms" className="text-[#0FF1CE] hover:underline">Terms</Link>,{' '}
-                    <Link href="/privacy" className="text-[#0FF1CE] hover:underline">Privacy</Link>, and{' '}
-                    <Link href="/disclaimer" className="text-[#0FF1CE] hover:underline">Disclaimer</Link>
-                  </span>
-                </label>
-
+              <form onSubmit={handleSubmit} className="space-y-5">
                 {!isLogin && (
+                  <FloatingLabelInput
+                    id="name"
+                    label="Full Name"
+                    icon={User}
+                    value={formData.name || ''}
+                    onChange={(value) => setFormData({ ...formData, name: value })}
+                    error={errors.name}
+                    required
+                  />
+                )}
+
+                <FloatingLabelInput
+                  id="email"
+                  label="Email Address"
+                  icon={Mail}
+                  type="email"
+                  value={formData.email}
+                  onChange={(value) => setFormData({ ...formData, email: value })}
+                  error={errors.email}
+                  required
+                />
+
+                <FloatingLabelInput
+                  id="password"
+                  label="Password"
+                  icon={Lock}
+                  type="password"
+                  value={formData.password}
+                  onChange={(value) => setFormData({ ...formData, password: value })}
+                  error={errors.password}
+                  required
+                />
+
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="w-4 h-4 rounded border-gray-600 text-[#0FF1CE] focus:ring-[#0FF1CE] focus:ring-offset-0 bg-[#1A1A1A]/50 backdrop-blur-sm"
+                    />
+                    <span className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">Remember me</span>
+                  </label>
+                </div>
+
+                {/* Simplified Disclaimer for Mobile */}
+                <div className="space-y-3">
                   <label className="flex items-start gap-3 cursor-pointer group">
                     <input
                       type="checkbox"
-                      id="terms"
-                      checked={acceptTerms}
-                      onChange={(e) => setAcceptTerms(e.target.checked)}
+                      id="disclaimer"
+                      checked={acceptDisclaimer}
+                      onChange={(e) => setAcceptDisclaimer(e.target.checked)}
                       className="w-4 h-4 rounded border-gray-600 text-[#0FF1CE] focus:ring-[#0FF1CE] focus:ring-offset-0 bg-[#1A1A1A]/50 backdrop-blur-sm mt-0.5"
                     />
                     <span className="text-xs text-gray-400 group-hover:text-gray-300 transition-colors">
-                      I accept the Terms of Service and Privacy Policy
+                      I acknowledge the simulated environment and agree to the{' '}
+                      <Link href="/terms" className="text-[#0FF1CE] hover:underline">Terms</Link>,{' '}
+                      <Link href="/privacy" className="text-[#0FF1CE] hover:underline">Privacy</Link>, and{' '}
+                      <Link href="/disclaimer" className="text-[#0FF1CE] hover:underline">Disclaimer</Link>
                     </span>
                   </label>
-                )}
 
-                {(errors.disclaimer || errors.terms) && (
-                  <p className="text-xs text-red-400 flex items-center gap-1 animate-shake">
-                    <AlertCircle size={14} />
-                    {errors.disclaimer || errors.terms}
-                  </p>
-                )}
-              </div>
+                  {!isLogin && (
+                    <label className="flex items-start gap-3 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        id="terms"
+                        checked={acceptTerms}
+                        onChange={(e) => setAcceptTerms(e.target.checked)}
+                        className="w-4 h-4 rounded border-gray-600 text-[#0FF1CE] focus:ring-[#0FF1CE] focus:ring-offset-0 bg-[#1A1A1A]/50 backdrop-blur-sm mt-0.5"
+                      />
+                      <span className="text-xs text-gray-400 group-hover:text-gray-300 transition-colors">
+                        I accept the Terms of Service and Privacy Policy
+                      </span>
+                    </label>
+                  )}
 
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="relative w-full bg-[#0FF1CE] text-black font-bold py-4 px-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden group"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-[#0FF1CE] to-[#00D4FF] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="relative flex items-center justify-center gap-2">
-                  {isSubmitting ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-                      <span>Processing...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>{isLogin ? 'Sign In' : 'Create Account'}</span>
-                      <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                    </>
+                  {(errors.disclaimer || errors.terms) && (
+                    <p className="text-xs text-red-400 flex items-center gap-1 animate-shake">
+                      <AlertCircle size={14} />
+                      {errors.disclaimer || errors.terms}
+                    </p>
                   )}
                 </div>
-              </button>
-            </form>
 
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-400">
-                {isLogin ? "Don't have an account?" : 'Already have an account?'}{' '}
                 <button
-                  onClick={() => {
-                    setIsLogin(!isLogin);
-                    setErrors({});
-                    setSuccess('');
-                  }}
-                  className="text-[#0FF1CE] hover:underline font-semibold"
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="relative w-full bg-[#0FF1CE] text-black font-bold py-4 px-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden group"
                 >
-                  {isLogin ? 'Sign Up' : 'Sign In'}
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#0FF1CE] to-[#00D4FF] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="relative flex items-center justify-center gap-2">
+                    {isSubmitting ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                        <span>Processing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>{isLogin ? 'Sign In' : 'Create Account'}</span>
+                        <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                      </>
+                    )}
+                  </div>
                 </button>
-              </p>
-            </div>
+              </form>
 
-            {/* Compact Disclaimer for Mobile */}
-            <div className="mt-8">
-              <details className="group">
-                <summary className="flex items-center gap-2 text-xs text-gray-500 cursor-pointer hover:text-gray-400 transition-colors">
-                  <Shield className="w-4 h-4 text-orange-400" />
-                  <span>Important Disclaimer</span>
-                  <span className="ml-auto group-open:rotate-180 transition-transform">▼</span>
-                </summary>
-                <div className="mt-4 p-4 bg-gradient-to-br from-orange-500/10 to-amber-500/10 rounded-xl border border-orange-500/20 text-xs text-gray-400 space-y-2 animate-slideIn">
-                  <p>⚠️ <strong>Shockwave Capital offers access to a simulated trading environment for the sole purpose of evaluating trading skill and discipline.</strong> All trading activity occurs on demo accounts using real-time market data. No actual capital is deposited, invested, or traded on behalf of users.</p>
-                  
-                  <p>References to "funding," "capital," "payouts," or "profit splits" pertain exclusively to performance-based simulations and do not imply the transfer or management of real funds.</p>
-                  
-                  <p>Participation in Shockwave Capital's programs is strictly for educational and evaluative purposes and does not constitute financial advice, investment services, or brokerage activity.</p>
-                  
-                  <p className="text-orange-400 font-semibold pt-2">By signing up or logging in, you confirm that:</p>
-                  
-                  <ul className="space-y-1 ml-4 list-disc">
-                    <li>You are not participating in real-money or live trading.</li>
-                    <li>You understand this platform is not a broker-dealer, investment advisor, or asset management firm.</li>
-                    <li>Any rewards, incentives, or performance-based milestones are tied to simulated results and subject to our internal review and compliance criteria.</li>
-                    <li>You accept these terms and agree to our full Terms of Use and Privacy Policy.</li>
-                  </ul>
-                  
-                  <p className="text-orange-400 font-semibold pt-2">If you do not agree to these conditions, please do not proceed.</p>
-                </div>
-              </details>
+              <div className="mt-6 text-center">
+                <p className="text-sm text-gray-400">
+                  {isLogin ? "Don't have an account?" : 'Already have an account?'}{' '}
+                  <button
+                    onClick={() => {
+                      setIsLogin(!isLogin);
+                      setErrors({});
+                      setSuccess('');
+                    }}
+                    className="text-[#0FF1CE] hover:underline font-semibold"
+                  >
+                    {isLogin ? 'Sign Up' : 'Sign In'}
+                  </button>
+                </p>
+              </div>
+
+              {/* Compact Disclaimer for Mobile */}
+              <div className="mt-8">
+                <details className="group">
+                  <summary className="flex items-center gap-2 text-xs text-gray-500 cursor-pointer hover:text-gray-400 transition-colors">
+                    <Shield className="w-4 h-4 text-orange-400" />
+                    <span>Important Disclaimer</span>
+                    <span className="ml-auto group-open:rotate-180 transition-transform">▼</span>
+                  </summary>
+                  <div className="mt-4 p-4 bg-gradient-to-br from-orange-500/10 to-amber-500/10 rounded-xl border border-orange-500/20 text-xs text-gray-400 space-y-2 animate-slideIn">
+                    <p>⚠️ <strong>Shockwave Capital offers access to a simulated trading environment for the sole purpose of evaluating trading skill and discipline.</strong> All trading activity occurs on demo accounts using real-time market data. No actual capital is deposited, invested, or traded on behalf of users.</p>
+                    
+                    <p>References to "funding," "capital," "payouts," or "profit splits" pertain exclusively to performance-based simulations and do not imply the transfer or management of real funds.</p>
+                    
+                    <p>Participation in Shockwave Capital's programs is strictly for educational and evaluative purposes and does not constitute financial advice, investment services, or brokerage activity.</p>
+                    
+                    <p className="text-orange-400 font-semibold pt-2">By signing up or logging in, you confirm that:</p>
+                    
+                    <ul className="space-y-1 ml-4 list-disc">
+                      <li>You are not participating in real-money or live trading.</li>
+                      <li>You understand this platform is not a broker-dealer, investment advisor, or asset management firm.</li>
+                      <li>Any rewards, incentives, or performance-based milestones are tied to simulated results and subject to our internal review and compliance criteria.</li>
+                      <li>You accept these terms and agree to our full Terms of Use and Privacy Policy.</li>
+                    </ul>
+                    
+                    <p className="text-orange-400 font-semibold pt-2">If you do not agree to these conditions, please do not proceed.</p>
+                  </div>
+                </details>
+              </div>
             </div>
           </div>
         </div>
@@ -580,6 +681,6 @@ export default function EarlyAccessPage() {
           animation-delay: 1s;
         }
       `}</style>
-    </div>
+    </>
   );
 } 

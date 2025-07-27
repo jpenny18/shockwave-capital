@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import Particles from '../components/Particles';
 import Image from 'next/image';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { Check, Zap, Shield, TrendingUp, ChevronRight, AlertCircle } from 'lucide-react';
+import { db, createOrder, Timestamp } from '@/lib/firebase';
+import { Check, Zap, Shield, TrendingUp, ChevronRight, AlertCircle, CreditCard } from 'lucide-react';
 import Link from 'next/link';
 
 // Define the type for challenge options
@@ -20,7 +20,7 @@ const challengeTypes = [
     image: '/shockwavechallenge.png',
     description: 'Classic two-phase trading evaluation',
     badge: 'MOST POPULAR',
-    features: ['2 Phase Evaluation', 'Up to 95% Profit Split', '15% Max Drawdown']
+    features: ['2 Phase Evaluation', 'Up to 100% Profit Split', '15% Max Drawdown']
   },
   { 
     id: '1-Step' as const, 
@@ -29,7 +29,7 @@ const challengeTypes = [
     image: '/shockwave1step.png',
     description: 'Fast-track single phase evaluation',
     badge: 'BEST VALUE',
-    features: ['1 Phase Only', 'Up to 95% Profit Split', '8% Max Drawdown']
+    features: ['1 Phase Only', 'Up to 100% Profit Split', '8% Max Drawdown']
   },
   { 
     id: 'Instant' as const, 
@@ -283,23 +283,24 @@ const addOns: AddOn[] = [
     priceMultiplier: 0.30
   },
   {
-    id: 'profit-split-80',
-    name: '80% Initial Profit Split',
-    description: 'Start with 80% profit split instead of standard rates',
-    priceMultiplier: 0.30
-  },
-  {
-    id: 'leverage-500',
-    name: '1:500 Leverage',
-    description: 'Trade with higher leverage for increased potential',
-    priceMultiplier: 0.30
-  },
-  {
-    id: 'reward-150',
-    name: '150% Reward',
-    description: 'Boost your refundable fee by 50% extra!',
+    id: 'profit-split-100',
+    name: '100% Initial Profit Split',
+    description: 'Start with 100% profit split instead of standard rates',
     priceMultiplier: 0.30
   }
+  // Hidden add-ons (keeping for potential future use):
+  // {
+  //   id: 'leverage-500',
+  //   name: '1:500 Leverage',
+  //   description: 'Trade with higher leverage for increased potential',
+  //   priceMultiplier: 0.30
+  // },
+  // {
+  //   id: 'reward-150',
+  //   name: '150% Reward',
+  //   description: 'Boost your refundable fee by 50% extra!',
+  //   priceMultiplier: 0.30
+  // }
 ];
 
 // Function to calculate price based on challenge type and amount
@@ -558,6 +559,98 @@ export default function ChallengePage() {
     router.push('/challenge/payment');
   };
 
+  // Credit card payment links mapping
+  const getCreditCardPaymentLink = (type: ChallengeType, amount: string): string => {
+    const baseAmount = parseInt(amount.replace(/\$|,/g, ''));
+    
+    // Map challenge types and amounts to payment links
+    const linkMap: Record<ChallengeType, Record<number, string>> = {
+      'Standard': {
+        5000: 'https://www.hub-shockwave.com/shockpb/p/5-standard-pb',
+        10000: 'https://www.hub-shockwave.com/shockpb/p/10-standard-pb',
+        25000: 'https://www.hub-shockwave.com/shockpb/p/25-standard-pb',
+        50000: 'https://www.hub-shockwave.com/shockpb/p/50-standard-pb',
+        100000: 'https://www.hub-shockwave.com/shockpb/p/100-standard-pb',
+        200000: 'https://www.hub-shockwave.com/shockpb/p/200-standard-pb',
+        500000: 'https://www.hub-shockwave.com/shockpb/p/500-standard-pb',
+      },
+      'Instant': {
+        5000: 'https://www.hub-shockwave.com/shockpb/p/5-instant-playbook',
+        10000: 'https://www.hub-shockwave.com/shockpb/p/5-instant-playbook-bg3s6',
+        25000: 'https://www.hub-shockwave.com/shockpb/p/5-instant-playbook-r2xm3',
+        50000: 'https://www.hub-shockwave.com/shockpb/p/5-instant-playbook-bg3s6-3sayc',
+        100000: 'https://www.hub-shockwave.com/shockpb/p/5-instant-playbook-hrhlp',
+        200000: 'https://www.hub-shockwave.com/shockpb/p/5-instant-playbook-hrhlp-e3exg',
+        500000: 'https://www.hub-shockwave.com/shockpb/p/5-instant-playbook-hrhlp-e3exg-4s8ya',
+      },
+      '1-Step': {
+        5000: 'https://www.hub-shockwave.com/shockpb/p/5-one-step-playbook',
+        10000: 'https://www.hub-shockwave.com/shockpb/p/5-one-step-playbook-yp7fc',
+        25000: 'https://www.hub-shockwave.com/shockpb/p/5-one-step-playbook-r7rtb',
+        50000: 'https://www.hub-shockwave.com/shockpb/p/5-one-step-playbook-87wmp',
+        100000: 'https://www.hub-shockwave.com/shockpb/p/5-one-step-playbook-tzmch',
+        200000: 'https://www.hub-shockwave.com/shockpb/p/5-one-step-playbook-bd8cz',
+        500000: 'https://www.hub-shockwave.com/shockpb/p/5-one-step-playbook-yp7fc-99ncy',
+      }
+    };
+    
+    return linkMap[type][baseAmount] || '';
+  };
+
+  const handleCreditCardPayment = async () => {
+    if (!isFormValid()) {
+      // Show validation errors
+      const errors: FormErrors = {};
+      if (!formData.firstName) errors.firstName = 'First name is required';
+      if (!formData.lastName) errors.lastName = 'Last name is required';
+      if (!formData.email) errors.email = 'Email is required';
+      if (!formData.phone) errors.phone = 'Phone number is required';
+      if (!formData.country) errors.country = 'Country is required';
+      if (!selectedType) errors.type = 'Please select a challenge type';
+      if (!selectedAmount) errors.amount = 'Please select an amount';
+      if (!selectedPlatform) errors.platform = 'Please select a platform';
+      if (!termsAccepted) errors.terms = 'Please accept the terms and conditions';
+      
+      setFormErrors(errors);
+      return;
+    }
+    
+    try {
+      // Create order in Firebase
+      const orderData = {
+        customerEmail: formData.email,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: formData.phone,
+        country: formData.country,
+        discordUsername: formData.discordUsername || '',
+        challengeType: selectedType!,
+        challengeAmount: selectedAmount!,
+        platform: selectedPlatform!,
+        addOns: selectedAddOns,
+        totalAmount: getCurrentPrice() || 0,
+        paymentMethod: 'card' as const,
+        paymentStatus: 'pending' as const,
+      };
+      
+      await createOrder(orderData);
+      
+      // Get the payment link
+      const paymentLink = getCreditCardPaymentLink(selectedType!, selectedAmount!);
+      
+      if (paymentLink) {
+        // Redirect to payment link
+        window.location.href = paymentLink;
+      } else {
+        console.error('No payment link found for this selection');
+        alert('Payment link not available for this selection. Please contact support.');
+      }
+    } catch (error) {
+      console.error('Error creating order:', error);
+      alert('Failed to process order. Please try again.');
+    }
+  };
+
   const isFormValid = () => {
     return (
       selectedType &&
@@ -615,6 +708,19 @@ export default function ChallengePage() {
           </div>
         ))}
       </div>
+      
+      {/* Promotional Text - Shows when add-ons are selected */}
+      {selectedAddOns.length > 0 && (
+        <div className="mt-4 p-4 bg-gradient-to-r from-[#FF6B6B]/10 to-[#EE5A24]/10 border border-[#FF6B6B]/30 rounded-lg">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-2 h-2 bg-[#FF6B6B] rounded-full animate-pulse"></div>
+            <span className="text-[#FF6B6B] font-semibold text-sm">🎉 SPECIAL OFFER</span>
+          </div>
+          <p className="text-white text-sm">
+            <strong>Add-Ons are free for debit/credit card purchases during our re-launch week only!</strong>
+          </p>
+        </div>
+      )}
     </div>
   );
 
@@ -1196,10 +1302,28 @@ export default function ChallengePage() {
               }`}
             >
               <div className="relative flex items-center justify-center gap-2">
-                <span>Proceed to Payment</span>
+                <span>Pay with Crypto</span>
                 <ChevronRight size={20} className={isFormValid() ? 'group-hover:translate-x-1 transition-transform' : ''} />
               </div>
               </button>
+              
+              <button
+                onClick={handleCreditCardPayment}
+                disabled={!isFormValid()}
+                className={`w-full mt-3 relative overflow-hidden rounded-xl font-bold py-4 px-6 transition-all duration-300 ${
+                  isFormValid()
+                    ? 'bg-gradient-to-r from-[#FF6B6B] to-[#EE5A24] text-white hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-[#FF6B6B]/25'
+                    : 'bg-gray-700 text-gray-400 cursor-not-allowed opacity-50'
+                }`}
+              >
+                <div className="relative flex items-center justify-center gap-2">
+                  <CreditCard size={20} />
+                  <span>Pay with Credit/Debit Card</span>
+                </div>
+              </button>
+              <p className="text-xs text-gray-400 text-center mt-2">
+                You will be redirected to complete your purchase
+              </p>
             </div>
           </div>
         </div>

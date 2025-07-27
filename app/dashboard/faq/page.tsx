@@ -186,11 +186,11 @@ You're responsible for spread, slippage, commissions, swaps, and unexpected pric
     // Payout Questions
     {
       question: "How do payouts work for simulated funded accounts?",
-      answer: `Simulated Funded Account Payouts (50% profit split):
-• First withdrawal available 14 days after first trade
+      answer: `Simulated Funded Account Payouts 80% profit split):
+• First withdrawal available 21 days after first trade
 • Subsequent withdrawals every 14 days (subject to monthly cap)
 • 5 minimum profitable days required (0.5% daily gain minimum)
-• $5,000 maximum withdrawal per month
+• No withdrawal cap
 • $150 minimum withdrawal amount
 • Trading days reset after each withdrawal
 • After 5 successful withdrawals, mandatory transition to Live Copy Trading`,

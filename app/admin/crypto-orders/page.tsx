@@ -506,7 +506,8 @@ export default function CryptoOrdersPage() {
                                     {order.addOns.map((addOn, index) => {
                                       const addOnNames: { [key: string]: string } = {
                                         'no-min-days': 'No Min Trading Days',
-                                        'profit-split-80': '80% Initial Profit Split',
+                                        'profit-split-80': '80% Initial Profit Split', // Legacy
+                                        'profit-split-100': '100% Initial Profit Split',
                                         'leverage-500': '1:500 Leverage',
                                         'reward-150': '150% Reward'
                                       };
