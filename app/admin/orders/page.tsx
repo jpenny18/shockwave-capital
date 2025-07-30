@@ -16,7 +16,7 @@ import {
   Trash2,
   X
 } from 'lucide-react';
-import { collection, query, orderBy, getDocs, Timestamp, deleteDoc, doc } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, Timestamp, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
 
 interface Order {
@@ -34,6 +34,7 @@ interface Order {
   totalAmount: number;
   paymentMethod: 'card' | 'crypto';
   paymentStatus: 'pending' | 'processing' | 'completed' | 'failed';
+  challengeStatus?: 'pending' | 'passed' | 'failed' | 'funded' | 'in progress';
   paymentIntentId?: string;
   transactionId?: string;
   createdAt: Timestamp;
@@ -47,6 +48,16 @@ const statusStyles = {
   processing: { color: 'text-blue-500', bg: 'bg-blue-500/10', icon: RefreshCw },
   failed: { color: 'text-red-500', bg: 'bg-red-500/10', icon: AlertCircle },
   unknown: { color: 'text-gray-500', bg: 'bg-gray-500/10', icon: AlertCircle }, // Fallback style
+};
+
+// Challenge status styles
+const challengeStatusStyles = {
+  passed: { color: 'text-green-500', bg: 'bg-green-500/10', icon: CheckCircle },
+  failed: { color: 'text-red-500', bg: 'bg-red-500/10', icon: X },
+  funded: { color: 'text-blue-500', bg: 'bg-blue-500/10', icon: CheckCircle },
+  'in progress': { color: 'text-orange-500', bg: 'bg-orange-500/10', icon: RefreshCw },
+  pending: { color: 'text-yellow-500', bg: 'bg-yellow-500/10', icon: Clock },
+  unknown: { color: 'text-gray-500', bg: 'bg-gray-500/10', icon: AlertCircle },
 };
 
 // Sort options
@@ -76,6 +87,9 @@ export default function OrdersPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
+  const [showPaymentDropdown, setShowPaymentDropdown] = useState<string | null>(null);
+  const [showChallengeDropdown, setShowChallengeDropdown] = useState<string | null>(null);
 
   // Fetch orders from Firebase
   useEffect(() => {
@@ -104,6 +118,74 @@ export default function OrdersPage() {
 
     fetchOrders();
   }, []);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.relative')) {
+        setShowPaymentDropdown(null);
+        setShowChallengeDropdown(null);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
+  // Update payment status
+  const handleUpdatePaymentStatus = async (orderId: string, newStatus: 'completed' | 'failed') => {
+    try {
+      setUpdatingOrderId(orderId);
+      
+      const orderRef = doc(db, 'orders', orderId);
+      await updateDoc(orderRef, {
+        paymentStatus: newStatus,
+        updatedAt: Timestamp.now()
+      });
+      
+      // Update local state
+      setOrders(prevOrders => 
+        prevOrders.map(order => 
+          order.id === orderId 
+            ? { ...order, paymentStatus: newStatus, updatedAt: Timestamp.now() }
+            : order
+        )
+      );
+    } catch (error) {
+      console.error('Error updating payment status:', error);
+      setError('Failed to update payment status. Please try again.');
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
+
+  // Update challenge status
+  const handleUpdateChallengeStatus = async (orderId: string, newStatus: 'passed' | 'failed' | 'funded' | 'in progress') => {
+    try {
+      setUpdatingOrderId(orderId);
+      
+      const orderRef = doc(db, 'orders', orderId);
+      await updateDoc(orderRef, {
+        challengeStatus: newStatus,
+        updatedAt: Timestamp.now()
+      });
+      
+      // Update local state
+      setOrders(prevOrders => 
+        prevOrders.map(order => 
+          order.id === orderId 
+            ? { ...order, challengeStatus: newStatus, updatedAt: Timestamp.now() }
+            : order
+        )
+      );
+    } catch (error) {
+      console.error('Error updating challenge status:', error);
+      setError('Failed to update challenge status. Please try again.');
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
 
   // Apply filters and search
   const filteredOrders = orders.filter(order => {
@@ -392,7 +474,8 @@ export default function OrdersPage() {
                 <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Type</th>
                 <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Account Size</th>
                 <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Amount</th>
-                <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Payment Status</th>
+                <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Challenge Status</th>
                 <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Date</th>
                 <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
               </tr>
@@ -424,9 +507,127 @@ export default function OrdersPage() {
                       <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">{order.challengeAmount}</td>
                       <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">${order.totalAmount}</td>
                       <td className="py-4 px-4 whitespace-nowrap">
-                        <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusStyles[status].bg} ${statusStyles[status].color}`}>
-                          <Status size={12} className="mr-1" />
-                          <span className="capitalize">{order.paymentStatus || 'Unknown'}</span>
+                        <div className="relative">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowPaymentDropdown(showPaymentDropdown === order.id ? null : order.id);
+                              setShowChallengeDropdown(null);
+                            }}
+                            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium hover:scale-105 transition-all cursor-pointer ${statusStyles[status].bg} ${statusStyles[status].color}`}
+                          >
+                            <Status size={12} className="mr-1" />
+                            <span className="capitalize">{order.paymentStatus || 'Unknown'}</span>
+                            <ChevronDown size={10} className="ml-1" />
+                          </button>
+                          
+                          {/* Payment Status Dropdown */}
+                          {showPaymentDropdown === order.id && (
+                            <div className="absolute top-full left-0 mt-1 bg-[#1A1A1A] border border-[#2F2F2F]/50 rounded-lg shadow-lg z-50 min-w-[120px]">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUpdatePaymentStatus(order.id, 'completed');
+                                  setShowPaymentDropdown(null);
+                                }}
+                                disabled={updatingOrderId === order.id || order.paymentStatus === 'completed'}
+                                className="w-full text-left px-3 py-2 text-xs text-green-500 hover:bg-green-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                              >
+                                <CheckCircle size={12} />
+                                <span>Completed</span>
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUpdatePaymentStatus(order.id, 'failed');
+                                  setShowPaymentDropdown(null);
+                                }}
+                                disabled={updatingOrderId === order.id || order.paymentStatus === 'failed'}
+                                className="w-full text-left px-3 py-2 text-xs text-red-500 hover:bg-red-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                              >
+                                <X size={12} />
+                                <span>Failed</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-4 px-4 whitespace-nowrap">
+                        <div className="relative">
+                          {(() => {
+                            const challengeStatus = order.challengeStatus || 'pending';
+                            const ChallengeStatusIcon = challengeStatusStyles[challengeStatus]?.icon || AlertCircle;
+                            return (
+                              <>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowChallengeDropdown(showChallengeDropdown === order.id ? null : order.id);
+                                    setShowPaymentDropdown(null);
+                                  }}
+                                  className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium hover:scale-105 transition-all cursor-pointer ${challengeStatusStyles[challengeStatus]?.bg || 'bg-gray-500/10'} ${challengeStatusStyles[challengeStatus]?.color || 'text-gray-500'}`}
+                                >
+                                  <ChallengeStatusIcon size={12} className="mr-1" />
+                                  <span className="capitalize">{order.challengeStatus || 'Pending'}</span>
+                                  <ChevronDown size={10} className="ml-1" />
+                                </button>
+                                
+                                {/* Challenge Status Dropdown */}
+                                {showChallengeDropdown === order.id && (
+                                  <div className="absolute top-full left-0 mt-1 bg-[#1A1A1A] border border-[#2F2F2F]/50 rounded-lg shadow-lg z-50 min-w-[120px]">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleUpdateChallengeStatus(order.id, 'in progress');
+                                        setShowChallengeDropdown(null);
+                                      }}
+                                      disabled={updatingOrderId === order.id || order.challengeStatus === 'in progress'}
+                                      className="w-full text-left px-3 py-2 text-xs text-orange-500 hover:bg-orange-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    >
+                                      <RefreshCw size={12} />
+                                      <span>In Progress</span>
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleUpdateChallengeStatus(order.id, 'passed');
+                                        setShowChallengeDropdown(null);
+                                      }}
+                                      disabled={updatingOrderId === order.id || order.challengeStatus === 'passed'}
+                                      className="w-full text-left px-3 py-2 text-xs text-green-500 hover:bg-green-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    >
+                                      <CheckCircle size={12} />
+                                      <span>Passed</span>
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleUpdateChallengeStatus(order.id, 'failed');
+                                        setShowChallengeDropdown(null);
+                                      }}
+                                      disabled={updatingOrderId === order.id || order.challengeStatus === 'failed'}
+                                      className="w-full text-left px-3 py-2 text-xs text-red-500 hover:bg-red-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    >
+                                      <X size={12} />
+                                      <span>Failed</span>
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleUpdateChallengeStatus(order.id, 'funded');
+                                        setShowChallengeDropdown(null);
+                                      }}
+                                      disabled={updatingOrderId === order.id || order.challengeStatus === 'funded'}
+                                      className="w-full text-left px-3 py-2 text-xs text-blue-500 hover:bg-blue-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    >
+                                      <CheckCircle size={12} />
+                                      <span>Funded</span>
+                                    </button>
+                                  </div>
+                                )}
+                              </>
+                            );
+                          })()}
                         </div>
                       </td>
                       <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">
@@ -457,7 +658,7 @@ export default function OrdersPage() {
                     {/* Expanded details row */}
                     {isExpanded && (
                       <tr className="bg-[#0FF1CE]/5">
-                        <td colSpan={8} className="py-4 px-6 text-sm">
+                        <td colSpan={9} className="py-4 px-6 text-sm">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                               <h3 className="text-white font-medium mb-3">Customer Details</h3>
@@ -554,7 +755,94 @@ export default function OrdersPage() {
                                 </div>
                               </div>
                               
-                              <div className="mt-4 pt-4 border-t border-[#2F2F2F]/50">
+                              <div className="mt-4 pt-4 border-t border-[#2F2F2F]/50 space-y-4">
+                                {/* Payment Status Update Buttons */}
+                                <div>
+                                  <h4 className="text-white font-medium mb-2">Update Payment Status</h4>
+                                  <div className="flex gap-2">
+                                    <button 
+                                      onClick={() => handleUpdatePaymentStatus(order.id, 'completed')}
+                                      disabled={updatingOrderId === order.id || order.paymentStatus === 'completed'}
+                                      className="flex items-center gap-1 bg-green-500/10 hover:bg-green-500/20 text-green-500 px-3 py-1 rounded text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                      {updatingOrderId === order.id ? (
+                                        <Loader2 size={12} className="animate-spin" />
+                                      ) : (
+                                        <CheckCircle size={12} />
+                                      )}
+                                      <span>Mark Completed</span>
+                                    </button>
+                                    <button 
+                                      onClick={() => handleUpdatePaymentStatus(order.id, 'failed')}
+                                      disabled={updatingOrderId === order.id || order.paymentStatus === 'failed'}
+                                      className="flex items-center gap-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 px-3 py-1 rounded text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                      {updatingOrderId === order.id ? (
+                                        <Loader2 size={12} className="animate-spin" />
+                                      ) : (
+                                        <X size={12} />
+                                      )}
+                                      <span>Mark Failed</span>
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {/* Challenge Status Update Buttons */}
+                                <div>
+                                  <h4 className="text-white font-medium mb-2">Update Challenge Status</h4>
+                                  <div className="flex gap-2 flex-wrap">
+                                    <button 
+                                      onClick={() => handleUpdateChallengeStatus(order.id, 'passed')}
+                                      disabled={updatingOrderId === order.id || order.challengeStatus === 'passed'}
+                                      className="flex items-center gap-1 bg-green-500/10 hover:bg-green-500/20 text-green-500 px-3 py-1 rounded text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                      {updatingOrderId === order.id ? (
+                                        <Loader2 size={12} className="animate-spin" />
+                                      ) : (
+                                        <CheckCircle size={12} />
+                                      )}
+                                      <span>Passed</span>
+                                    </button>
+                                    <button 
+                                      onClick={() => handleUpdateChallengeStatus(order.id, 'failed')}
+                                      disabled={updatingOrderId === order.id || order.challengeStatus === 'failed'}
+                                      className="flex items-center gap-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 px-3 py-1 rounded text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                      {updatingOrderId === order.id ? (
+                                        <Loader2 size={12} className="animate-spin" />
+                                      ) : (
+                                        <X size={12} />
+                                      )}
+                                      <span>Failed</span>
+                                    </button>
+                                    <button 
+                                      onClick={() => handleUpdateChallengeStatus(order.id, 'funded')}
+                                      disabled={updatingOrderId === order.id || order.challengeStatus === 'funded'}
+                                      className="flex items-center gap-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 px-3 py-1 rounded text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                      {updatingOrderId === order.id ? (
+                                        <Loader2 size={12} className="animate-spin" />
+                                      ) : (
+                                        <CheckCircle size={12} />
+                                      )}
+                                      <span>Funded</span>
+                                    </button>
+                                    <button 
+                                      onClick={() => handleUpdateChallengeStatus(order.id, 'in progress')}
+                                      disabled={updatingOrderId === order.id || order.challengeStatus === 'in progress'}
+                                      className="flex items-center gap-1 bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 px-3 py-1 rounded text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                      {updatingOrderId === order.id ? (
+                                        <Loader2 size={12} className="animate-spin" />
+                                      ) : (
+                                        <RefreshCw size={12} />
+                                      )}
+                                      <span>In Progress</span>
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {/* Resend Credentials Button */}
                                 <button 
                                   onClick={() => handleResendCredentials(order.customerEmail)}
                                   className="w-full flex items-center justify-center gap-2 bg-[#0FF1CE]/10 hover:bg-[#0FF1CE]/20 text-[#0FF1CE] py-2 rounded-lg transition-colors"
