@@ -142,15 +142,15 @@ export default function ShockwaveLandingPage() {
     }, [router, loading]);
 
     // Show Sunday modal after page loads
-    useEffect(() => {
-      if (!loading) {
-        const timer = setTimeout(() => {
-          setShowSundayModal(true);
-        }, 1500); // Show modal 1.5 seconds after page loads
+    // useEffect(() => {
+    //   if (!loading) {
+    //     const timer = setTimeout(() => {
+    //       setShowSundayModal(true);
+    //     }, 1500); // Show modal 1.5 seconds after page loads
 
-        return () => clearTimeout(timer);
-      }
-    }, [loading]);
+    //     return () => clearTimeout(timer);
+    //   }
+    // }, [loading]);
     
     if (loading) {
       return (

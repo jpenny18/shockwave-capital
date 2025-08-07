@@ -711,7 +711,7 @@ export default function ChallengePage() {
       
       {/* Promotional Text - Shows when add-ons are selected */}
       {selectedAddOns.length > 0 && (
-        <div className="mt-4 p-4 bg-gradient-to-r from-[#FF6B6B]/10 to-[#EE5A24]/10 border border-[#FF6B6B]/30 rounded-lg">
+        <div className="hidden mt-4 p-4 bg-gradient-to-r from-[#FF6B6B]/10 to-[#EE5A24]/10 border border-[#FF6B6B]/30 rounded-lg">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-2 h-2 bg-[#FF6B6B] rounded-full animate-pulse"></div>
             <span className="text-[#FF6B6B] font-semibold text-sm">🎉 SPECIAL OFFER</span>
@@ -1010,7 +1010,7 @@ export default function ChallengePage() {
             </div>
 
         {/* Launch Day Sale Banner - Mobile Optimized */}
-        <div className="mb-8 lg:mb-12 relative">
+        <div className="mb-8 lg:mb-12 relative hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-[#0FF1CE]/20 to-[#00D4FF]/20 rounded-2xl blur-xl"></div>
           <div className="relative bg-gradient-to-r from-[#0FF1CE]/10 to-[#00D4FF]/10 rounded-2xl p-6 lg:p-8 border border-[#0FF1CE]/20 backdrop-blur-sm">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -1310,7 +1310,7 @@ export default function ChallengePage() {
               <button
                 onClick={handleCreditCardPayment}
                 disabled={!isFormValid()}
-                className={`w-full mt-3 relative overflow-hidden rounded-xl font-bold py-4 px-6 transition-all duration-300 ${
+                className={`w-full mt-3 relative overflow-hidden rounded-xl font-bold py-4 px-6 transition-all duration-300 hidden ${
                   isFormValid()
                     ? 'bg-gradient-to-r from-[#FF6B6B] to-[#EE5A24] text-white hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-[#FF6B6B]/25'
                     : 'bg-gray-700 text-gray-400 cursor-not-allowed opacity-50'
