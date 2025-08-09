@@ -46,6 +46,9 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                 <h2 className="text-2xl md:text-3xl font-extrabold text-[#0FF1CE] mb-2">
                   40% OFF
                 </h2>
+                <p className="text-[#0FF1CE] text-sm font-semibold mb-1">
+                  + 1 Free Retry
+                </p>
                 <p className="text-gray-300 text-sm">
                   Limited time promotion for elite traders
                 </p>
@@ -54,7 +57,7 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
               {/* Features Grid */}
               <div className="grid grid-cols-1 gap-4 mb-6">
                 {[
-                  { icon: "🔥", title: "40% OFF", subtitle: "All Challenge Plans" },
+                  { icon: "🔥", title: "40% OFF + Free Retry", subtitle: "All Challenge Plans" },
                   { icon: "🎯", title: "Elite Community", subtitle: "Join Successful Traders" },
                   { icon: "🚀", title: "Scale to $5M", subtitle: "Unlimited Growth Potential" }
                 ].map((feature, index) => (
@@ -83,12 +86,22 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                   <p>• No BS Funded account rules</p>
                 </div>
                 
+                {/* Special Offer Highlight */}
+                <div className="mt-3 p-3 bg-gradient-to-r from-[#FF6B6B]/10 to-[#EE5A24]/10 border border-[#FF6B6B]/30 rounded-lg">
+                  <p className="text-[#FF6B6B] font-bold text-sm text-center">
+                    🎉 It's like you get 2 challenges for 40% OFF!
+                  </p>
+                  <p className="text-gray-300 text-xs text-center mt-1">
+                    Limited time only - Don't miss out!
+                  </p>
+                </div>
+                
                 {/* Promo Code Section */}
                 <div className="mt-4 pt-3 border-t border-[#0FF1CE]/20">
                   <div className="bg-gradient-to-r from-[#0FF1CE]/20 to-[#0FF1CE]/10 border border-[#0FF1CE]/40 rounded-lg p-3">
                     <p className="text-gray-300 text-xs mb-1">Use promo code:</p>
                     <div className="bg-black/50 border border-[#0FF1CE] rounded px-3 py-2 inline-block">
-                      <span className="text-[#0FF1CE] font-bold text-lg tracking-wider">SHOCKWAVE</span>
+                      <span className="text-[#0FF1CE] font-bold text-lg tracking-wider">TURBOCHARGED</span>
                     </div>
                   </div>
                 </div>
@@ -142,15 +155,15 @@ export default function ShockwaveLandingPage() {
     }, [router, loading]);
 
     // Show Sunday modal after page loads
-    // useEffect(() => {
-    //   if (!loading) {
-    //     const timer = setTimeout(() => {
-    //       setShowSundayModal(true);
-    //     }, 1500); // Show modal 1.5 seconds after page loads
+    useEffect(() => {
+      if (!loading) {
+        const timer = setTimeout(() => {
+          setShowSundayModal(true);
+        }, 1500); // Show modal 1.5 seconds after page loads
 
-    //     return () => clearTimeout(timer);
-    //   }
-    // }, [loading]);
+        return () => clearTimeout(timer);
+      }
+    }, [loading]);
     
     if (loading) {
       return (

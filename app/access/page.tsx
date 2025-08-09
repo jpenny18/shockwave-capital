@@ -2,10 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Particles from '../components/Particles';
-import { 
-  Eye, 
-  EyeOff, 
-  Mail, 
+import {
+  Eye,
+  EyeOff,
+  Mail,
   Lock,
   User,
   ArrowRight,
@@ -41,11 +41,11 @@ const LaunchModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/80 backdrop-blur-sm"
         onClick={onClose}
       />
-      
+
       {/* Modal Content */}
       <div className="relative w-full h-full max-w-7xl max-h-[90vh] m-4 bg-[#0D0D0D] rounded-2xl border border-[#0FF1CE]/30 overflow-hidden shadow-2xl">
         {/* Header with close button */}
@@ -59,10 +59,10 @@ const LaunchModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
               <p className="text-xs text-gray-400">See what's coming to Shockwave Capital</p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
-            <Link 
-              href="/launch" 
+            <Link
+              href="/launch"
               target="_blank"
               className="flex items-center gap-1 px-3 py-1.5 text-xs bg-[#0FF1CE]/10 text-[#0FF1CE] rounded-lg hover:bg-[#0FF1CE]/20 transition-colors"
             >
@@ -77,7 +77,7 @@ const LaunchModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
             </button>
           </div>
         </div>
-        
+
         {/* Iframe Content */}
         <div className="w-full h-full pt-16">
           <iframe
@@ -91,10 +91,10 @@ const LaunchModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
   );
 };
 
-const FloatingLabelInput = ({ 
-  id, 
-  label, 
-  icon: Icon, 
+const FloatingLabelInput = ({
+  id,
+  label,
+  icon: Icon,
   type = 'text',
   required = false,
   value,
@@ -221,7 +221,7 @@ export default function EarlyAccessPage() {
       if (isLogin) {
         // Validation
         if (!formData.email || !formData.password) {
-          setErrors({ 
+          setErrors({
             email: !formData.email ? 'Please enter your email address' : undefined,
             password: !formData.password ? 'Please enter your password' : undefined
           });
@@ -243,7 +243,7 @@ export default function EarlyAccessPage() {
         // For registration form
         // Validation
         if (!formData.email || !formData.password || !formData.name) {
-          setErrors({ 
+          setErrors({
             email: !formData.email ? 'Please enter your email address' : undefined,
             password: !formData.password ? 'Please enter your password' : undefined,
             name: !formData.name ? 'Please enter your name' : undefined
@@ -253,7 +253,7 @@ export default function EarlyAccessPage() {
         }
 
         if (!acceptTerms || !acceptDisclaimer) {
-          setErrors({ 
+          setErrors({
             terms: !acceptTerms ? 'You must accept the terms and conditions' : undefined,
             disclaimer: !acceptDisclaimer ? 'You must acknowledge and accept the disclaimer' : undefined
           });
@@ -287,7 +287,7 @@ export default function EarlyAccessPage() {
       // Handle different Firebase auth errors
       const errorCode = error.code;
       let errorMessage = 'An unexpected error occurred. Please try again.';
-      
+
       switch (errorCode) {
         case 'auth/email-already-in-use':
           errorMessage = 'This email address is already in use.';
@@ -327,17 +327,17 @@ export default function EarlyAccessPage() {
           <div className="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-[#0FF1CE]/10 rounded-full blur-[150px] animate-pulse delay-1000"></div>
         </div>
         <Particles />
-        
+
         {/* Launch Modal */}
         <LaunchModal isOpen={showLaunchModal} onClose={() => setShowLaunchModal(false)} />
-        
+
         <div className="relative z-10 flex min-h-screen">
           {/* Left Panel - Hidden on mobile */}
           <div className="hidden lg:flex lg:w-1/2 items-center justify-center p-12 relative">
             <div className="max-w-lg relative">
               {/* Animated Background Card */}
               <div className="absolute inset-0 bg-gradient-to-br from-[#0FF1CE]/20 to-[#0FF1CE]/5 rounded-3xl blur-xl animate-pulse"></div>
-              
+
               <div className="relative">
                 {/* Logo */}
                 <div className="mb-8 animate-float flex justify-center">
@@ -361,8 +361,8 @@ export default function EarlyAccessPage() {
                       <TrendingUp className="w-6 h-6 text-[#0FF1CE]" />
                     </div>
                     <div>
-                    <h3 className="font-semibold text-white">15% Max Drawdown</h3>
-                    <p className="text-sm text-gray-400">Trade with confidence</p>
+                      <h3 className="font-semibold text-white">15% Max Drawdown</h3>
+                      <p className="text-sm text-gray-400">Trade with confidence</p>
                     </div>
                   </div>
 
@@ -381,9 +381,9 @@ export default function EarlyAccessPage() {
                       <Shield className="w-6 h-6 text-[#0FF1CE]" />
                     </div>
                     <div>
-                    <h3 className="font-semibold text-white">Up to 100% Profit Split</h3>
-                    <p className="text-sm text-gray-400">Keep more of what you earn</p>
-                      
+                      <h3 className="font-semibold text-white">Up to 100% Profit Split</h3>
+                      <p className="text-sm text-gray-400">Keep more of what you earn</p>
+
                     </div>
                   </div>
                 </div>
@@ -415,7 +415,7 @@ export default function EarlyAccessPage() {
                   <Rocket className="w-8 h-8 text-[#0FF1CE]" />
                 </div>
                 <h2 className="text-2xl font-bold text-[#0FF1CE]">Shockwave Capital</h2>
-                
+
                 {/* Mobile Launch Preview Button */}
                 <button
                   onClick={() => setShowLaunchModal(true)}
@@ -433,11 +433,10 @@ export default function EarlyAccessPage() {
                     setIsLogin(true);
                     setErrors({});
                   }}
-                  className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-300 ${
-                    isLogin 
-                      ? 'bg-[#0FF1CE] text-black' 
+                  className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-300 ${isLogin
+                      ? 'bg-[#0FF1CE] text-black'
                       : 'text-gray-400 hover:text-white'
-                  }`}
+                    }`}
                 >
                   Sign In
                 </button>
@@ -446,18 +445,17 @@ export default function EarlyAccessPage() {
                     setIsLogin(false);
                     setErrors({});
                   }}
-                  className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-300 ${
-                    !isLogin 
-                      ? 'bg-[#0FF1CE] text-black' 
+                  className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-300 ${!isLogin
+                      ? 'bg-[#0FF1CE] text-black'
                       : 'text-gray-400 hover:text-white'
-                  }`}
+                    }`}
                 >
                   Sign Up
                 </button>
               </div>
 
               {/* Promo Badge - Simplified for mobile */}
-              <div className="mb-6 p-4 bg-gradient-to-r from-[#0FF1CE]/10 to-[#00D4FF]/10 rounded-xl border border-[#0FF1CE]/20 backdrop-blur-sm relative overflow-hidden hidden">
+              <div className="mb-6 p-4 bg-gradient-to-r from-[#0FF1CE]/10 to-[#00D4FF]/10 rounded-xl border border-[#0FF1CE]/20 backdrop-blur-sm relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-20 h-20 bg-[#0FF1CE]/20 rounded-full blur-3xl"></div>
                 <div className="relative">
                   <div className="flex items-center gap-2 mb-2">
@@ -465,7 +463,8 @@ export default function EarlyAccessPage() {
                     <span className="text-sm font-bold text-white">Limited Time Offer</span>
                   </div>
                   <div className="text-xl md:text-2xl font-bold text-[#0FF1CE]">SAVE 40%</div>
-                  <div className="text-xs text-gray-300 mt-1">Use code: <span className="font-mono font-bold text-[#0FF1CE]">SHOCKWAVE</span></div>
+                  <div className="text-xs text-gray-300 mt-1">Use code: <span className="font-mono font-bold text-[#0FF1CE]">TURBOCHARGED</span></div>
+                  <p className="text-xs text-gray-300 mt-1">+1 Free Retry</p>
                 </div>
               </div>
 
@@ -619,20 +618,20 @@ export default function EarlyAccessPage() {
                   </summary>
                   <div className="mt-4 p-4 bg-gradient-to-br from-orange-500/10 to-amber-500/10 rounded-xl border border-orange-500/20 text-xs text-gray-400 space-y-2 animate-slideIn">
                     <p>⚠️ <strong>Shockwave Capital offers access to a simulated trading environment for the sole purpose of evaluating trading skill and discipline.</strong> All trading activity occurs on demo accounts using real-time market data. No actual capital is deposited, invested, or traded on behalf of users.</p>
-                    
+
                     <p>References to "funding," "capital," "payouts," or "profit splits" pertain exclusively to performance-based simulations and do not imply the transfer or management of real funds.</p>
-                    
+
                     <p>Participation in Shockwave Capital's programs is strictly for educational and evaluative purposes and does not constitute financial advice, investment services, or brokerage activity.</p>
-                    
+
                     <p className="text-orange-400 font-semibold pt-2">By signing up or logging in, you confirm that:</p>
-                    
+
                     <ul className="space-y-1 ml-4 list-disc">
                       <li>You are not participating in real-money or live trading.</li>
                       <li>You understand this platform is not a broker-dealer, investment advisor, or asset management firm.</li>
                       <li>Any rewards, incentives, or performance-based milestones are tied to simulated results and subject to our internal review and compliance criteria.</li>
                       <li>You accept these terms and agree to our full Terms of Use and Privacy Policy.</li>
                     </ul>
-                    
+
                     <p className="text-orange-400 font-semibold pt-2">If you do not agree to these conditions, please do not proceed.</p>
                   </div>
                 </details>

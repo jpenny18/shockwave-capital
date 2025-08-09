@@ -1010,7 +1010,7 @@ export default function ChallengePage() {
             </div>
 
         {/* Launch Day Sale Banner - Mobile Optimized */}
-        <div className="mb-8 lg:mb-12 relative hidden">
+        <div className="mb-8 lg:mb-12 relative">
           <div className="absolute inset-0 bg-gradient-to-r from-[#0FF1CE]/20 to-[#00D4FF]/20 rounded-2xl blur-xl"></div>
           <div className="relative bg-gradient-to-r from-[#0FF1CE]/10 to-[#00D4FF]/10 rounded-2xl p-6 lg:p-8 border border-[#0FF1CE]/20 backdrop-blur-sm">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -1020,11 +1020,12 @@ export default function ChallengePage() {
                   <span className="text-sm font-bold text-white">SuperCharged Offer!</span>
                 </div>
                 <div className="text-2xl lg:text-3xl font-bold text-[#0FF1CE] mb-1">SAVE 40%</div>
+                <p className="text-xs text-gray-300 mt-1">+ 1 Free Retry</p>
               </div>
               <div className="text-center lg:text-right">
               <div className="text-xs text-gray-400 mb-1">Use Code:</div>
                 <div className="inline-block text-xl font-mono font-bold bg-gradient-to-r from-[#0FF1CE] to-[#00D4FF] bg-clip-text text-transparent px-4 py-2 border border-[#0FF1CE]/30 rounded-lg">
-                  SHOCKWAVE
+                  TURBOCHARGED
                 </div>
               </div>
             </div>
