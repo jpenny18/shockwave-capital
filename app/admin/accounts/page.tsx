@@ -84,15 +84,17 @@ export default function AdminAccountsPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [alerts, setAlerts] = useState<Alert[]>(() => {
-    // Load alerts from localStorage
-    const stored = localStorage.getItem('adminAlerts');
-    if (stored) {
-      const parsedAlerts = JSON.parse(stored) as Alert[];
-      // Convert timestamp strings back to Date objects
-      return parsedAlerts.map(alert => ({
-        ...alert,
-        timestamp: new Date(alert.timestamp)
-      }));
+    // Load alerts from localStorage only on client side
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('adminAlerts');
+      if (stored) {
+        const parsedAlerts = JSON.parse(stored) as Alert[];
+        // Convert timestamp strings back to Date objects
+        return parsedAlerts.map(alert => ({
+          ...alert,
+          timestamp: new Date(alert.timestamp)
+        }));
+      }
     }
     return [];
   });
@@ -117,9 +119,12 @@ export default function AdminAccountsPage() {
   const [bulkRefreshing, setBulkRefreshing] = useState(false);
   const [refreshQueue, setRefreshQueue] = useState<string[]>([]);
   const [processedAlerts, setProcessedAlerts] = useState<Set<string>>(() => {
-    // Load processed alerts from localStorage
-    const stored = localStorage.getItem('processedAlerts');
-    return stored ? new Set(JSON.parse(stored)) : new Set();
+    // Load processed alerts from localStorage only on client side
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('processedAlerts');
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    }
+    return new Set();
   });
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [connectModalStep, setConnectModalStep] = useState<1 | 2>(1);
@@ -269,25 +274,27 @@ export default function AdminAccountsPage() {
     
     // Clean up old processed alerts (older than 30 days)
     const cleanupOldAlerts = () => {
-      const stored = localStorage.getItem('processedAlerts');
-      if (stored) {
-        const alerts = JSON.parse(stored) as string[];
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        
-        const recentAlerts = alerts.filter(alertKey => {
-          // Extract timestamp from alert key if present
-          const timestampMatch = alertKey.match(/-(\d+)$/);
-          if (timestampMatch) {
-            const timestamp = parseInt(timestampMatch[1]);
-            return timestamp > thirtyDaysAgo.getTime();
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem('processedAlerts');
+        if (stored) {
+          const alerts = JSON.parse(stored) as string[];
+          const thirtyDaysAgo = new Date();
+          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+          
+          const recentAlerts = alerts.filter(alertKey => {
+            // Extract timestamp from alert key if present
+            const timestampMatch = alertKey.match(/-(\d+)$/);
+            if (timestampMatch) {
+              const timestamp = parseInt(timestampMatch[1]);
+              return timestamp > thirtyDaysAgo.getTime();
+            }
+            return true; // Keep alerts without timestamps
+          });
+          
+          if (recentAlerts.length !== alerts.length) {
+            localStorage.setItem('processedAlerts', JSON.stringify(recentAlerts));
+            setProcessedAlerts(new Set(recentAlerts));
           }
-          return true; // Keep alerts without timestamps
-        });
-        
-        if (recentAlerts.length !== alerts.length) {
-          localStorage.setItem('processedAlerts', JSON.stringify(recentAlerts));
-          setProcessedAlerts(new Set(recentAlerts));
         }
       }
     };
@@ -324,7 +331,7 @@ export default function AdminAccountsPage() {
     const twelveHours = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
     
     // Check last auto-refresh time
-    const lastAutoRefresh = localStorage.getItem('lastAutoRefreshTime');
+    const lastAutoRefresh = typeof window !== 'undefined' ? localStorage.getItem('lastAutoRefreshTime') : null;
     const now = Date.now();
     
     // Calculate time until next refresh
@@ -352,7 +359,9 @@ export default function AdminAccountsPage() {
         const accountIds = activeAccounts.map(a => a.metaApiAccount?.accountId).filter(Boolean) as string[];
         setRefreshQueue(accountIds);
         setMessage({ type: 'info', text: `Auto-refresh started for ${accountIds.length} active accounts` });
-        localStorage.setItem('lastAutoRefreshTime', Date.now().toString());
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('lastAutoRefreshTime', Date.now().toString());
+        }
       }
       
       // Set up recurring interval after the first refresh
@@ -363,7 +372,9 @@ export default function AdminAccountsPage() {
           const currentAccountIds = currentActiveAccounts.map(a => a.metaApiAccount?.accountId).filter(Boolean) as string[];
           setRefreshQueue(currentAccountIds);
           setMessage({ type: 'info', text: `Auto-refresh started for ${currentAccountIds.length} active accounts` });
-          localStorage.setItem('lastAutoRefreshTime', Date.now().toString());
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('lastAutoRefreshTime', Date.now().toString());
+          }
           
           // Update next refresh time
           setNextAutoRefreshTime(new Date(Date.now() + twelveHours));
@@ -385,7 +396,9 @@ export default function AdminAccountsPage() {
       const updated = prev.map(alert => 
         alert.id === alertId ? { ...alert, read: true } : alert
       );
-      localStorage.setItem('adminAlerts', JSON.stringify(updated));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('adminAlerts', JSON.stringify(updated));
+      }
       return updated;
     });
   };
@@ -394,7 +407,9 @@ export default function AdminAccountsPage() {
   const markAllAlertsAsRead = () => {
     setAlerts(prev => {
       const updated = prev.map(alert => ({ ...alert, read: true }));
-      localStorage.setItem('adminAlerts', JSON.stringify(updated));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('adminAlerts', JSON.stringify(updated));
+      }
       return updated;
     });
   };
@@ -431,7 +446,9 @@ export default function AdminAccountsPage() {
             });
             setProcessedAlerts(prev => {
               const newSet = new Set(prev).add(eventKey);
-              localStorage.setItem('processedAlerts', JSON.stringify(Array.from(newSet)));
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('processedAlerts', JSON.stringify(Array.from(newSet)));
+              }
               return newSet;
             });
           }
@@ -503,7 +520,9 @@ export default function AdminAccountsPage() {
           });
           setProcessedAlerts(prev => {
             const newSet = new Set(prev).add(fundedMaxDDKey);
-            localStorage.setItem('processedAlerts', JSON.stringify(Array.from(newSet)));
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('processedAlerts', JSON.stringify(Array.from(newSet)));
+            }
             return newSet;
           });
         }
@@ -582,7 +601,9 @@ export default function AdminAccountsPage() {
         });
         setProcessedAlerts(prev => {
           const newSet = new Set(prev).add(profitKey);
-          localStorage.setItem('processedAlerts', JSON.stringify(Array.from(newSet)));
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('processedAlerts', JSON.stringify(Array.from(newSet)));
+          }
           return newSet;
         });
       }
@@ -606,7 +627,9 @@ export default function AdminAccountsPage() {
         });
         setProcessedAlerts(prev => {
           const newSet = new Set(prev).add(warningKey);
-          localStorage.setItem('processedAlerts', JSON.stringify(Array.from(newSet)));
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('processedAlerts', JSON.stringify(Array.from(newSet)));
+          }
           return newSet;
         });
         }
@@ -622,7 +645,9 @@ export default function AdminAccountsPage() {
         if (uniqueNewAlerts.length === 0) return prev; // No new alerts to add
         
         const updated = [...uniqueNewAlerts, ...prev].slice(0, 50); // Keep last 50 alerts
-        localStorage.setItem('adminAlerts', JSON.stringify(updated));
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('adminAlerts', JSON.stringify(updated));
+        }
         return updated;
       });
     }
@@ -1138,27 +1163,27 @@ export default function AdminAccountsPage() {
     const isStandard = accountType === 'standard';
     const stepText = isStandard ? (step === 1 ? 'Step 1' : 'Step 2') : 'Instant Challenge';
     
-    const response = await fetch('/api/send-challenge-emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        type: 'pass',
-        email: account.email,
-        name: account.displayName || `${account.firstName} ${account.lastName}`.trim() || account.email,
-        challengeType: accountType,
-        step: stepText,
-        accountSize,
-        adminEmail: 'support@shockwave-capital.com'
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to send email');
-    }
-    
-    setMessage({ type: 'success', text: `Pass email sent to ${account.email}` });
+      const response = await fetch('/api/send-challenge-emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: 'pass',
+          email: account.email,
+          name: account.displayName || `${account.firstName} ${account.lastName}`.trim() || account.email,
+          challengeType: accountType,
+          step: stepText,
+          accountSize,
+          adminEmail: 'support@shockwave-capital.com'
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
+      
+      setMessage({ type: 'success', text: `Pass email sent to ${account.email}` });
   };
 
   // Send challenge fail email
@@ -1196,29 +1221,29 @@ export default function AdminAccountsPage() {
       breachType = 'dailyDrawdown';
     }
     
-    const response = await fetch('/api/send-challenge-emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        type: 'fail',
-        email: account.email,
-        name: account.displayName || `${account.firstName} ${account.lastName}`.trim() || account.email,
-        challengeType: accountType,
-        accountSize,
-        breachType,
-        maxDrawdown: metrics?.maxDrawdown || 0,
-        dailyDrawdown: metrics?.maxDailyDrawdown || metrics?.dailyDrawdown || 0,
-        adminEmail: 'support@shockwave-capital.com'
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to send email');
-    }
-    
-    setMessage({ type: 'success', text: `Fail email sent to ${account.email}` });
+      const response = await fetch('/api/send-challenge-emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: 'fail',
+          email: account.email,
+          name: account.displayName || `${account.firstName} ${account.lastName}`.trim() || account.email,
+          challengeType: accountType,
+          accountSize,
+          breachType,
+          maxDrawdown: metrics?.maxDrawdown || 0,
+          dailyDrawdown: metrics?.maxDailyDrawdown || metrics?.dailyDrawdown || 0,
+          adminEmail: 'support@shockwave-capital.com'
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
+      
+      setMessage({ type: 'success', text: `Fail email sent to ${account.email}` });
   };
 
   // Send drawdown warning email
@@ -1642,7 +1667,9 @@ export default function AdminAccountsPage() {
                         <button
                           onClick={() => {
                             setAlerts([]);
-                            localStorage.removeItem('adminAlerts');
+                            if (typeof window !== 'undefined') {
+                              localStorage.removeItem('adminAlerts');
+                            }
                           }}
                           className="text-xs text-red-400 hover:text-red-300 transition-colors"
                         >
@@ -1733,7 +1760,9 @@ export default function AdminAccountsPage() {
                                   e.stopPropagation();
                                   setAlerts(prev => {
                                     const updated = prev.filter(a => a.id !== alert.id);
-                                    localStorage.setItem('adminAlerts', JSON.stringify(updated));
+                                    if (typeof window !== 'undefined') {
+                                      localStorage.setItem('adminAlerts', JSON.stringify(updated));
+                                    }
                                     return updated;
                                   });
                                 }}
@@ -1742,7 +1771,7 @@ export default function AdminAccountsPage() {
                               >
                                 <X size={14} />
                               </button>
-                            </div>
+                        </div>
                       </div>
                     </div>
                   ))
@@ -1944,19 +1973,19 @@ export default function AdminAccountsPage() {
             </select>
             
             <div className="relative">
-              <button
-                onClick={handleBulkRefresh}
-                disabled={bulkRefreshing || refreshQueue.length > 0}
-                className="bg-[#0FF1CE]/10 text-[#0FF1CE] px-4 py-2 rounded-lg hover:bg-[#0FF1CE]/20 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <RefreshCw size={16} className={bulkRefreshing || refreshQueue.length > 0 ? 'animate-spin' : ''} />
-                {refreshQueue.length > 0 
-                  ? `Refreshing (${refreshQueue.length})` 
-                  : selectedAccounts.length > 0 
-                    ? `Refresh (${selectedAccounts.length})`
-                    : 'Refresh All'
-                }
-              </button>
+            <button
+              onClick={handleBulkRefresh}
+              disabled={bulkRefreshing || refreshQueue.length > 0}
+              className="bg-[#0FF1CE]/10 text-[#0FF1CE] px-4 py-2 rounded-lg hover:bg-[#0FF1CE]/20 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw size={16} className={bulkRefreshing || refreshQueue.length > 0 ? 'animate-spin' : ''} />
+              {refreshQueue.length > 0 
+                ? `Refreshing (${refreshQueue.length})` 
+                : selectedAccounts.length > 0 
+                  ? `Refresh (${selectedAccounts.length})`
+                  : 'Refresh All'
+              }
+            </button>
               {nextAutoRefreshTime && (
                 <div className="absolute -bottom-5 left-0 text-xs text-gray-500 whitespace-nowrap flex items-center gap-1">
                   <Clock size={10} />
@@ -2591,12 +2620,12 @@ export default function AdminAccountsPage() {
                     Search User by Email
                   </label>
                   <div className="relative">
-                    <div className="flex gap-3">
+                  <div className="flex gap-3">
                       <div className="flex-1 relative">
-                        <input
+                    <input
                           type="text"
-                          value={searchUserEmail}
-                          onChange={(e) => setSearchUserEmail(e.target.value)}
+                      value={searchUserEmail}
+                      onChange={(e) => setSearchUserEmail(e.target.value)}
                           onFocus={() => setShowRecentOrdersDropdown(true)}
                           placeholder="Start typing to search users..."
                           className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#0FF1CE]/50"
@@ -2677,14 +2706,14 @@ export default function AdminAccountsPage() {
                           </div>
                         )}
                       </div>
-                      <button
-                        onClick={searchUserByEmail}
-                        disabled={!searchUserEmail}
-                        className="bg-[#0FF1CE] text-black font-semibold px-6 py-3 rounded-lg hover:bg-[#0FF1CE]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                      >
-                        <Search size={20} />
+                    <button
+                      onClick={searchUserByEmail}
+                      disabled={!searchUserEmail}
+                      className="bg-[#0FF1CE] text-black font-semibold px-6 py-3 rounded-lg hover:bg-[#0FF1CE]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      <Search size={20} />
                         Select
-                      </button>
+                    </button>
                     </div>
                     
                     {/* Click outside to close dropdowns */}
@@ -3030,12 +3059,12 @@ export default function AdminAccountsPage() {
                           Search User by Email
                         </label>
                         <div className="relative">
-                          <div className="flex gap-3">
+                        <div className="flex gap-3">
                             <div className="flex-1 relative">
-                              <input
+                          <input
                                 type="text"
-                                value={searchUserEmail}
-                                onChange={(e) => setSearchUserEmail(e.target.value)}
+                            value={searchUserEmail}
+                            onChange={(e) => setSearchUserEmail(e.target.value)}
                                 onFocus={() => setShowRecentOrdersDropdown(true)}
                                 placeholder="Start typing to search users..."
                                 className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#0FF1CE]/50"
@@ -3116,14 +3145,14 @@ export default function AdminAccountsPage() {
                                 </div>
                               )}
                             </div>
-                            <button
-                              onClick={searchUserByEmail}
-                              disabled={!searchUserEmail}
-                              className="bg-[#0FF1CE] text-black font-semibold px-6 py-3 rounded-lg hover:bg-[#0FF1CE]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                            >
-                              <Search size={20} />
+                          <button
+                            onClick={searchUserByEmail}
+                            disabled={!searchUserEmail}
+                            className="bg-[#0FF1CE] text-black font-semibold px-6 py-3 rounded-lg hover:bg-[#0FF1CE]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                          >
+                            <Search size={20} />
                               Select
-                            </button>
+                          </button>
                           </div>
                           
                           {/* Click outside to close dropdowns */}
