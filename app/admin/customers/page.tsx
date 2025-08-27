@@ -340,39 +340,18 @@ export default function CustomersPage() {
   };
 
   const handleExportCustomers = () => {
-    // Define CSV headers
+    // Define CSV headers - only the 3 columns requested
     const headers = [
-      'ID',
-      'Email',
-      'Display Name',
-      'First Name',
-      'Last Name',
-      'Phone',
-      'Country',
-      'Join Date',
-      'Total Spent',
-      'Order Count',
-      'Last Order Date',
-      'Status',
-      'Notes'
+      'email',
+      'first_name',
+      'last_name'
     ].join(',');
 
-    // Convert customers to CSV rows
+    // Convert customers to CSV rows - only the 3 columns requested
     const rows = filteredCustomers.map(customer => [
-      customer.id,
       customer.email,
-      customer.displayName,
       customer.firstName || '',
-      customer.lastName || '',
-      customer.phone,
-      customer.country,
-      customer.joinDate,
-      customer.actualTotalSpent || 0,
-      customer.actualOrderCount || 0,
-      customer.lastOrderDate || '',
-      customer.status,
-      // Escape notes to handle commas and quotes
-      customer.notes ? `"${customer.notes.replace(/"/g, '""')}"` : ''
+      customer.lastName || ''
     ].join(','));
 
     // Combine headers and rows

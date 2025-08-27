@@ -83,8 +83,21 @@ export default function AdminAccountsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
-  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [alerts, setAlerts] = useState<Alert[]>(() => {
+    // Load alerts from localStorage
+    const stored = localStorage.getItem('adminAlerts');
+    if (stored) {
+      const parsedAlerts = JSON.parse(stored) as Alert[];
+      // Convert timestamp strings back to Date objects
+      return parsedAlerts.map(alert => ({
+        ...alert,
+        timestamp: new Date(alert.timestamp)
+      }));
+    }
+    return [];
+  });
   const [showAlerts, setShowAlerts] = useState(false);
+  const [alertFilter, setAlertFilter] = useState<'all' | 'breach' | 'pass' | 'warning' | 'info'>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('profit-high'); // Changed from 'newest' to 'profit-high'
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
@@ -92,10 +105,22 @@ export default function AdminAccountsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [searchUserEmail, setSearchUserEmail] = useState('');
   const [searchedUser, setSearchedUser] = useState<UserData | null>(null);
+  const [allUsers, setAllUsers] = useState<UserData[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<UserData[]>([]);
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [showRecentOrdersDropdown, setShowRecentOrdersDropdown] = useState(false);
+  const [recentOrdersType, setRecentOrdersType] = useState<'crypto' | 'credit'>('crypto');
+  const [showEmailSendingModal, setShowEmailSendingModal] = useState(false);
+  const [emailSendingStatus, setEmailSendingStatus] = useState<'sending' | 'success' | 'error'>('sending');
+  const [emailSendingMessage, setEmailSendingMessage] = useState('');
   const [refreshingAccounts, setRefreshingAccounts] = useState<Set<string>>(new Set());
   const [bulkRefreshing, setBulkRefreshing] = useState(false);
   const [refreshQueue, setRefreshQueue] = useState<string[]>([]);
-  const [processedAlerts, setProcessedAlerts] = useState<Set<string>>(new Set());
+  const [processedAlerts, setProcessedAlerts] = useState<Set<string>>(() => {
+    // Load processed alerts from localStorage
+    const stored = localStorage.getItem('processedAlerts');
+    return stored ? new Set(JSON.parse(stored)) : new Set();
+  });
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [connectModalStep, setConnectModalStep] = useState<1 | 2>(1);
   const [connectModalData, setConnectModalData] = useState<ConnectMetaModalData>({
@@ -110,6 +135,7 @@ export default function AdminAccountsPage() {
     authToken: ''
   });
   const [connectingToMetaAPI, setConnectingToMetaAPI] = useState(false);
+  const [nextAutoRefreshTime, setNextAutoRefreshTime] = useState<Date | null>(null);
 
   // Load all accounts function
   const loadAllAccounts = async () => {
@@ -156,23 +182,222 @@ export default function AdminAccountsPage() {
     }
   };
 
+  // Load all users for search functionality
+  const loadAllUsersForSearch = async () => {
+    try {
+      const users = await getAllUsers();
+      setAllUsers(users);
+    } catch (error) {
+      console.error('Error loading users:', error);
+    }
+  };
+
+  // Load recent orders
+  const loadRecentOrders = async () => {
+    try {
+      const orders: any[] = [];
+      
+      if (recentOrdersType === 'crypto') {
+        // Load recent crypto orders
+        const cryptoOrdersRef = collection(db, 'crypto-orders');
+        const cryptoQuery = query(cryptoOrdersRef, orderBy('createdAt', 'desc'), limit(10));
+        const cryptoSnapshot = await getDocs(cryptoQuery);
+        
+        cryptoSnapshot.forEach((doc) => {
+          const data = doc.data();
+          orders.push({
+            id: doc.id,
+            email: data.customerEmail,
+            challengeType: data.challengeType,
+            challengeAmount: data.challengeAmount,
+            platform: data.platform,
+            type: 'crypto',
+            createdAt: data.createdAt
+          });
+        });
+      } else {
+        // Load recent credit orders
+        const ordersRef = collection(db, 'orders');
+        const creditQuery = query(ordersRef, orderBy('createdAt', 'desc'), limit(10));
+        const creditSnapshot = await getDocs(creditQuery);
+        
+        creditSnapshot.forEach((doc) => {
+          const data = doc.data();
+          orders.push({
+            id: doc.id,
+            email: data.customerEmail,
+            challengeType: data.challengeType,
+            challengeAmount: data.challengeAmount,
+            platform: data.platform,
+            type: 'credit',
+            createdAt: data.createdAt
+          });
+        });
+      }
+      
+      setRecentOrders(orders);
+    } catch (error) {
+      console.error('Error loading recent orders:', error);
+    }
+  };
+
+  // Filter users based on search input
+  useEffect(() => {
+    if (searchUserEmail.trim() === '') {
+      setFilteredUsers([]);
+    } else {
+      const filtered = allUsers.filter(user => 
+        user.email.toLowerCase().includes(searchUserEmail.toLowerCase()) ||
+        (user.displayName && user.displayName.toLowerCase().includes(searchUserEmail.toLowerCase())) ||
+        (`${user.firstName} ${user.lastName}`.toLowerCase().includes(searchUserEmail.toLowerCase()))
+      );
+      setFilteredUsers(filtered.slice(0, 10)); // Limit to 10 results
+    }
+  }, [searchUserEmail, allUsers]);
+
+  // Load recent orders when dropdown type changes
+  useEffect(() => {
+    if (showRecentOrdersDropdown) {
+      loadRecentOrders();
+    }
+  }, [recentOrdersType, showRecentOrdersDropdown]);
+
   // Load all accounts with real-time updates
   useEffect(() => {
     loadAllAccounts();
+    loadAllUsersForSearch();
     
-    // Set up real-time listener for account updates
+    // Clean up old processed alerts (older than 30 days)
+    const cleanupOldAlerts = () => {
+      const stored = localStorage.getItem('processedAlerts');
+      if (stored) {
+        const alerts = JSON.parse(stored) as string[];
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        const recentAlerts = alerts.filter(alertKey => {
+          // Extract timestamp from alert key if present
+          const timestampMatch = alertKey.match(/-(\d+)$/);
+          if (timestampMatch) {
+            const timestamp = parseInt(timestampMatch[1]);
+            return timestamp > thirtyDaysAgo.getTime();
+          }
+          return true; // Keep alerts without timestamps
+        });
+        
+        if (recentAlerts.length !== alerts.length) {
+          localStorage.setItem('processedAlerts', JSON.stringify(recentAlerts));
+          setProcessedAlerts(new Set(recentAlerts));
+        }
+      }
+    };
+    
+    cleanupOldAlerts();
+    
+    // Set up real-time listener for account updates with debounce
+    let reloadTimeout: NodeJS.Timeout;
     const accountsRef = collection(db, 'userMetaApiAccounts');
     const unsubscribe = onSnapshot(accountsRef, (snapshot) => {
-      snapshot.docChanges().forEach((change) => {
-        if (change.type === 'modified') {
-          // Reload accounts when changes occur
+      // Clear any pending reload
+      if (reloadTimeout) clearTimeout(reloadTimeout);
+      
+      // Debounce the reload to prevent multiple rapid calls
+      reloadTimeout = setTimeout(() => {
+        const hasChanges = snapshot.docChanges().some(change => change.type === 'modified');
+        if (hasChanges) {
           loadAllAccounts();
         }
-      });
+      }, 1000); // Wait 1 second before reloading
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      if (reloadTimeout) clearTimeout(reloadTimeout);
+    };
   }, []);
+
+  // Set up automatic refresh every 12 hours
+  useEffect(() => {
+    // Only set up auto-refresh after accounts have been loaded
+    if (allAccounts.length === 0) return;
+    
+    const twelveHours = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
+    
+    // Check last auto-refresh time
+    const lastAutoRefresh = localStorage.getItem('lastAutoRefreshTime');
+    const now = Date.now();
+    
+    // Calculate time until next refresh
+    let timeUntilNextRefresh = twelveHours;
+    if (lastAutoRefresh) {
+      const timeSinceLastRefresh = now - parseInt(lastAutoRefresh);
+      if (timeSinceLastRefresh >= twelveHours) {
+        // It's been 12+ hours, refresh now
+        timeUntilNextRefresh = 5000; // Wait 5 seconds after page load
+      } else {
+        // Calculate remaining time until 12 hours
+        timeUntilNextRefresh = twelveHours - timeSinceLastRefresh;
+      }
+    }
+    
+    // Calculate and set next refresh time
+    const nextRefresh = new Date(now + timeUntilNextRefresh);
+    setNextAutoRefreshTime(nextRefresh);
+    
+    // Set up the initial timeout for the first refresh
+    const initialTimeout = setTimeout(() => {
+      console.log('Auto-refreshing all active accounts...');
+      const activeAccounts = allAccounts.filter(a => a.metaApiAccount?.status === 'active');
+      if (activeAccounts.length > 0) {
+        const accountIds = activeAccounts.map(a => a.metaApiAccount?.accountId).filter(Boolean) as string[];
+        setRefreshQueue(accountIds);
+        setMessage({ type: 'info', text: `Auto-refresh started for ${accountIds.length} active accounts` });
+        localStorage.setItem('lastAutoRefreshTime', Date.now().toString());
+      }
+      
+      // Set up recurring interval after the first refresh
+      const autoRefreshInterval = setInterval(() => {
+        console.log('Auto-refreshing all active accounts...');
+        const currentActiveAccounts = allAccounts.filter(a => a.metaApiAccount?.status === 'active');
+        if (currentActiveAccounts.length > 0) {
+          const currentAccountIds = currentActiveAccounts.map(a => a.metaApiAccount?.accountId).filter(Boolean) as string[];
+          setRefreshQueue(currentAccountIds);
+          setMessage({ type: 'info', text: `Auto-refresh started for ${currentAccountIds.length} active accounts` });
+          localStorage.setItem('lastAutoRefreshTime', Date.now().toString());
+          
+          // Update next refresh time
+          setNextAutoRefreshTime(new Date(Date.now() + twelveHours));
+        }
+      }, twelveHours);
+      
+      // Store interval ID for cleanup
+      return () => clearInterval(autoRefreshInterval);
+    }, timeUntilNextRefresh);
+    
+    return () => {
+      clearTimeout(initialTimeout);
+    };
+  }, [allAccounts]); // Depend on allAccounts to get fresh data
+
+  // Mark alert as read
+  const markAlertAsRead = (alertId: string) => {
+    setAlerts(prev => {
+      const updated = prev.map(alert => 
+        alert.id === alertId ? { ...alert, read: true } : alert
+      );
+      localStorage.setItem('adminAlerts', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  // Mark all alerts as read
+  const markAllAlertsAsRead = () => {
+    setAlerts(prev => {
+      const updated = prev.map(alert => ({ ...alert, read: true }));
+      localStorage.setItem('adminAlerts', JSON.stringify(updated));
+      return updated;
+    });
+  };
 
   // Check for alerts function - Enhanced with risk events
   const checkForAlerts = (accounts: UserWithAccount[]) => {
@@ -204,7 +429,11 @@ export default function AdminAccountsPage() {
               timestamp: new Date(event.brokerTime),
               read: false
             });
-            setProcessedAlerts(prev => new Set(prev).add(eventKey));
+            setProcessedAlerts(prev => {
+              const newSet = new Set(prev).add(eventKey);
+              localStorage.setItem('processedAlerts', JSON.stringify(Array.from(newSet)));
+              return newSet;
+            });
           }
         });
       }
@@ -227,7 +456,11 @@ export default function AdminAccountsPage() {
           timestamp: new Date(),
           read: false
         });
-        setProcessedAlerts(prev => new Set(prev).add(maxDDKey));
+                    setProcessedAlerts(prev => {
+              const newSet = new Set(prev).add(maxDDKey);
+              localStorage.setItem('processedAlerts', JSON.stringify(Array.from(newSet)));
+              return newSet;
+            });
       }
       
       // Only check daily drawdown if there's a limit
@@ -241,7 +474,11 @@ export default function AdminAccountsPage() {
           timestamp: new Date(),
           read: false
         });
-        setProcessedAlerts(prev => new Set(prev).add(dailyDDKey));
+        setProcessedAlerts(prev => {
+          const newSet = new Set(prev).add(dailyDDKey);
+          localStorage.setItem('processedAlerts', JSON.stringify(Array.from(newSet)));
+          return newSet;
+        });
       }
       
       // Check for profit target achievement
@@ -264,7 +501,11 @@ export default function AdminAccountsPage() {
             timestamp: new Date(),
             read: false
           });
-          setProcessedAlerts(prev => new Set(prev).add(fundedMaxDDKey));
+          setProcessedAlerts(prev => {
+            const newSet = new Set(prev).add(fundedMaxDDKey);
+            localStorage.setItem('processedAlerts', JSON.stringify(Array.from(newSet)));
+            return newSet;
+          });
         }
         
         // Check for funded account daily drawdown breach (8%)
@@ -278,7 +519,11 @@ export default function AdminAccountsPage() {
             timestamp: new Date(),
             read: false
           });
-          setProcessedAlerts(prev => new Set(prev).add(fundedRiskKey));
+          setProcessedAlerts(prev => {
+            const newSet = new Set(prev).add(fundedRiskKey);
+            localStorage.setItem('processedAlerts', JSON.stringify(Array.from(newSet)));
+            return newSet;
+          });
         }
         
         // Check for funded account risk violation (daily drawdown > 2% means risking more than 2%)
@@ -286,14 +531,18 @@ export default function AdminAccountsPage() {
         if ((metrics.maxDailyDrawdown || metrics.dailyDrawdown) > 2 && (metrics.maxDailyDrawdown || metrics.dailyDrawdown) < 8 && !processedAlerts.has(fundedRiskViolationKey)) {
           newAlerts.push({
             id: fundedRiskViolationKey,
-            type: 'breach',
+            type: 'warning',
             accountId: config.accountId,
             userEmail: account.email,
             message: `Funded account risk violation: Daily drawdown of ${(metrics.maxDailyDrawdown || metrics.dailyDrawdown).toFixed(2)}% indicates risking more than 2% (violation)`,
             timestamp: new Date(),
             read: false
           });
-          setProcessedAlerts(prev => new Set(prev).add(fundedRiskViolationKey));
+          setProcessedAlerts(prev => {
+            const newSet = new Set(prev).add(fundedRiskViolationKey);
+            localStorage.setItem('processedAlerts', JSON.stringify(Array.from(newSet)));
+            return newSet;
+          });
         }
         
         // Warning for approaching funded account limits
@@ -308,7 +557,11 @@ export default function AdminAccountsPage() {
             timestamp: new Date(),
             read: false
           });
-          setProcessedAlerts(prev => new Set(prev).add(fundedWarningKey));
+          setProcessedAlerts(prev => {
+            const newSet = new Set(prev).add(fundedWarningKey);
+            localStorage.setItem('processedAlerts', JSON.stringify(Array.from(newSet)));
+            return newSet;
+          });
         }
       } else {
         // Regular challenge account checks
@@ -327,7 +580,11 @@ export default function AdminAccountsPage() {
           timestamp: new Date(),
           read: false
         });
-        setProcessedAlerts(prev => new Set(prev).add(profitKey));
+        setProcessedAlerts(prev => {
+          const newSet = new Set(prev).add(profitKey);
+          localStorage.setItem('processedAlerts', JSON.stringify(Array.from(newSet)));
+          return newSet;
+        });
       }
       
       // Warning for approaching limits - adjusted for new challenge types
@@ -347,13 +604,27 @@ export default function AdminAccountsPage() {
           timestamp: new Date(),
           read: false
         });
-        setProcessedAlerts(prev => new Set(prev).add(warningKey));
+        setProcessedAlerts(prev => {
+          const newSet = new Set(prev).add(warningKey);
+          localStorage.setItem('processedAlerts', JSON.stringify(Array.from(newSet)));
+          return newSet;
+        });
         }
       }
     });
     
     if (newAlerts.length > 0) {
-      setAlerts(prev => [...newAlerts, ...prev].slice(0, 50)); // Keep last 50 alerts
+      setAlerts(prev => {
+        // Filter out any alerts that already exist (by ID)
+        const existingIds = new Set(prev.map(alert => alert.id));
+        const uniqueNewAlerts = newAlerts.filter(alert => !existingIds.has(alert.id));
+        
+        if (uniqueNewAlerts.length === 0) return prev; // No new alerts to add
+        
+        const updated = [...uniqueNewAlerts, ...prev].slice(0, 50); // Keep last 50 alerts
+        localStorage.setItem('adminAlerts', JSON.stringify(updated));
+        return updated;
+      });
     }
   };
 
@@ -837,6 +1108,28 @@ export default function AdminAccountsPage() {
     totalEquity: allAccounts.reduce((sum, a) => sum + (a.cachedMetrics?.equity || 0), 0)
   };
 
+  // Wrapper function for sending emails with loading modal
+  const sendEmailWithModal = async (emailFunction: () => Promise<void>, emailType: string) => {
+    setShowEmailSendingModal(true);
+    setEmailSendingStatus('sending');
+    setEmailSendingMessage(`Sending ${emailType}...`);
+    
+    try {
+      await emailFunction();
+      setEmailSendingStatus('success');
+      setEmailSendingMessage(`${emailType} sent successfully!`);
+      setTimeout(() => {
+        setShowEmailSendingModal(false);
+      }, 2000);
+    } catch (error) {
+      setEmailSendingStatus('error');
+      setEmailSendingMessage(`Failed to send ${emailType}. Please try again.`);
+      setTimeout(() => {
+        setShowEmailSendingModal(false);
+      }, 3000);
+    }
+  };
+
   // Send challenge pass email
   const sendPassEmail = async (account: UserWithAccount) => {
     if (!account.metaApiAccount) return;
@@ -845,32 +1138,27 @@ export default function AdminAccountsPage() {
     const isStandard = accountType === 'standard';
     const stepText = isStandard ? (step === 1 ? 'Step 1' : 'Step 2') : 'Instant Challenge';
     
-    try {
-      const response = await fetch('/api/send-challenge-emails', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          type: 'pass',
-          email: account.email,
-          name: account.displayName || `${account.firstName} ${account.lastName}`.trim() || account.email,
-          challengeType: accountType,
-          step: stepText,
-          accountSize,
-          adminEmail: 'support@shockwave-capital.com'
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to send email');
-      }
-      
-      setMessage({ type: 'success', text: `Pass email sent to ${account.email}` });
-    } catch (error) {
-      console.error('Error sending pass email:', error);
-      setMessage({ type: 'error', text: 'Failed to send pass email' });
+    const response = await fetch('/api/send-challenge-emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        type: 'pass',
+        email: account.email,
+        name: account.displayName || `${account.firstName} ${account.lastName}`.trim() || account.email,
+        challengeType: accountType,
+        step: stepText,
+        accountSize,
+        adminEmail: 'support@shockwave-capital.com'
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to send email');
     }
+    
+    setMessage({ type: 'success', text: `Pass email sent to ${account.email}` });
   };
 
   // Send challenge fail email
@@ -908,34 +1196,29 @@ export default function AdminAccountsPage() {
       breachType = 'dailyDrawdown';
     }
     
-    try {
-      const response = await fetch('/api/send-challenge-emails', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          type: 'fail',
-          email: account.email,
-          name: account.displayName || `${account.firstName} ${account.lastName}`.trim() || account.email,
-          challengeType: accountType,
-          accountSize,
-          breachType,
-          maxDrawdown: metrics?.maxDrawdown || 0,
-          dailyDrawdown: metrics?.maxDailyDrawdown || metrics?.dailyDrawdown || 0,
-          adminEmail: 'support@shockwave-capital.com'
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to send email');
-      }
-      
-      setMessage({ type: 'success', text: `Fail email sent to ${account.email}` });
-    } catch (error) {
-      console.error('Error sending fail email:', error);
-      setMessage({ type: 'error', text: 'Failed to send fail email' });
+    const response = await fetch('/api/send-challenge-emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        type: 'fail',
+        email: account.email,
+        name: account.displayName || `${account.firstName} ${account.lastName}`.trim() || account.email,
+        challengeType: accountType,
+        accountSize,
+        breachType,
+        maxDrawdown: metrics?.maxDrawdown || 0,
+        dailyDrawdown: metrics?.maxDailyDrawdown || metrics?.dailyDrawdown || 0,
+        adminEmail: 'support@shockwave-capital.com'
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to send email');
     }
+    
+    setMessage({ type: 'success', text: `Fail email sent to ${account.email}` });
   };
 
   // Send drawdown warning email
@@ -1344,17 +1627,89 @@ export default function AdminAccountsPage() {
             
             {/* Alerts Dropdown */}
             {showAlerts && (
-              <div className="absolute right-0 mt-2 w-96 bg-[#0D0D0D] border border-[#2F2F2F] rounded-xl shadow-2xl z-50 max-h-96 overflow-y-auto">
+              <div className="absolute right-0 mt-2 w-96 bg-[#0D0D0D] border border-[#2F2F2F] rounded-xl shadow-2xl z-50 max-h-[500px] overflow-hidden flex flex-col">
                 <div className="p-4 border-b border-[#2F2F2F]">
+                  <div className="flex items-center justify-between mb-3">
                   <h3 className="text-white font-semibold">Notifications</h3>
+                    {alerts.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => markAllAlertsAsRead()}
+                          className="text-xs text-gray-400 hover:text-white transition-colors"
+                        >
+                          Mark all as read
+                        </button>
+                        <button
+                          onClick={() => {
+                            setAlerts([]);
+                            localStorage.removeItem('adminAlerts');
+                          }}
+                          className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                        >
+                          Clear all
+                        </button>
                 </div>
-                {alerts.length === 0 ? (
-                  <p className="p-4 text-gray-400 text-sm">No notifications</p>
-                ) : (
-                  alerts.map((alert) => (
+                    )}
+                  </div>
+                  
+                  {/* Filter Tabs */}
+                  <div className="flex gap-1 bg-[#151515] p-1 rounded-lg">
+                    <button
+                      onClick={() => setAlertFilter('all')}
+                      className={`flex-1 px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                        alertFilter === 'all' 
+                          ? 'bg-[#0FF1CE] text-black' 
+                          : 'text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      All ({alerts.length})
+                    </button>
+                    <button
+                      onClick={() => setAlertFilter('pass')}
+                      className={`flex-1 px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                        alertFilter === 'pass' 
+                          ? 'bg-green-500 text-white' 
+                          : 'text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      Passed ({alerts.filter(a => a.type === 'pass').length})
+                    </button>
+                    <button
+                      onClick={() => setAlertFilter('breach')}
+                      className={`flex-1 px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                        alertFilter === 'breach' 
+                          ? 'bg-red-500 text-white' 
+                          : 'text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      Failed ({alerts.filter(a => a.type === 'breach').length})
+                    </button>
+                    <button
+                      onClick={() => setAlertFilter('warning')}
+                      className={`flex-1 px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                        alertFilter === 'warning' 
+                          ? 'bg-yellow-500 text-white' 
+                          : 'text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      Warnings ({alerts.filter(a => a.type === 'warning').length})
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="flex-1 overflow-y-auto">
+                  {alerts.filter(alert => alertFilter === 'all' || alert.type === alertFilter).length === 0 ? (
+                    <p className="p-4 text-gray-400 text-sm text-center">
+                      No {alertFilter === 'breach' ? 'failed ' : alertFilter === 'pass' ? 'passed ' : alertFilter === 'warning' ? 'warning ' : alertFilter === 'all' ? '' : `${alertFilter} `}notifications
+                    </p>
+                  ) : (
+                    alerts
+                      .filter(alert => alertFilter === 'all' || alert.type === alertFilter)
+                      .map((alert) => (
                     <div
                       key={alert.id}
-                      className={`p-4 border-b border-[#2F2F2F]/50 hover:bg-white/5 transition-colors ${
+                          onClick={() => markAlertAsRead(alert.id)}
+                          className={`p-4 border-b border-[#2F2F2F]/50 hover:bg-white/5 transition-colors cursor-pointer ${
                         !alert.read ? 'bg-white/5' : ''
                       }`}
                     >
@@ -1369,10 +1724,30 @@ export default function AdminAccountsPage() {
                             {alert.userEmail} • {formatDistanceToNow(alert.timestamp, { addSuffix: true })}
                           </p>
                         </div>
+                            <div className="flex items-center gap-2">
+                              {!alert.read && (
+                                <div className="w-2 h-2 bg-[#0FF1CE] rounded-full" />
+                              )}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setAlerts(prev => {
+                                    const updated = prev.filter(a => a.id !== alert.id);
+                                    localStorage.setItem('adminAlerts', JSON.stringify(updated));
+                                    return updated;
+                                  });
+                                }}
+                                className="p-1 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded transition-all"
+                                title="Delete notification"
+                              >
+                                <X size={14} />
+                              </button>
+                            </div>
                       </div>
                     </div>
                   ))
                 )}
+                </div>
               </div>
             )}
           </div>
@@ -1380,74 +1755,122 @@ export default function AdminAccountsPage() {
       </div>
 
       {/* Overview Statistics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
-        <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-4">
-          <div className="flex items-center gap-3">
-            <Users className="text-[#0FF1CE]" size={20} />
-            <div>
-              <p className="text-2xl font-bold text-white">{stats.total}</p>
-              <p className="text-xs text-gray-400">Total Accounts</p>
+      <div className="mb-6">
+        {/* Primary Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div className="bg-gradient-to-br from-[#0D0D0D] to-[#0D0D0D]/60 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6 hover:border-[#0FF1CE]/30 transition-all duration-300">
+            <div className="flex items-start justify-between mb-4">
+              <div className="p-3 bg-[#0FF1CE]/10 rounded-lg">
+                <Users className="text-[#0FF1CE]" size={24} />
+            </div>
+              <span className="text-xs text-gray-500 bg-[#151515] px-2 py-1 rounded">Overview</span>
+            </div>
+            <div className="space-y-1">
+              <p className="text-3xl font-bold text-white">{stats.total}</p>
+              <p className="text-sm text-gray-400">Total Accounts</p>
+              <div className="pt-3 mt-3 border-t border-[#2F2F2F]/50">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-500">Active Rate</span>
+                  <span className="text-[#0FF1CE]">{stats.total > 0 ? ((stats.active / stats.total) * 100).toFixed(1) : 0}%</span>
+                </div>
+              </div>
+          </div>
+        </div>
+        
+          <div className="bg-gradient-to-br from-[#0D0D0D] to-[#0D0D0D]/60 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6 hover:border-[#0FF1CE]/30 transition-all duration-300">
+            <div className="flex items-start justify-between mb-4">
+              <div className="p-3 bg-yellow-500/10 rounded-lg">
+                <DollarSign className="text-yellow-400" size={24} />
+            </div>
+              <span className="text-xs text-gray-500 bg-[#151515] px-2 py-1 rounded">Financial</span>
+            </div>
+            <div className="space-y-1">
+              <p className="text-3xl font-bold text-white">${(stats.totalBalance / 1000).toFixed(1)}k</p>
+              <p className="text-sm text-gray-400">Total Balance</p>
+              <div className="pt-3 mt-3 border-t border-[#2F2F2F]/50">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-500">Total Equity</span>
+                  <span className="text-yellow-400">${(stats.totalEquity / 1000).toFixed(1)}k</span>
+                </div>
+              </div>
+          </div>
+        </div>
+        
+          <div className="bg-gradient-to-br from-[#0D0D0D] to-[#0D0D0D]/60 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6 hover:border-[#0FF1CE]/30 transition-all duration-300">
+            <div className="flex items-start justify-between mb-4">
+              <div className="p-3 bg-purple-500/10 rounded-lg">
+                <Target className="text-purple-400" size={24} />
+            </div>
+              <span className="text-xs text-gray-500 bg-[#151515] px-2 py-1 rounded">Performance</span>
+            </div>
+            <div className="space-y-1">
+              <p className="text-3xl font-bold text-white">{stats.total > 0 ? ((stats.passed + stats.funded) / stats.total * 100).toFixed(0) : 0}%</p>
+              <p className="text-sm text-gray-400">Success Rate</p>
+              <div className="pt-3 mt-3 border-t border-[#2F2F2F]/50">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-500">Failed Rate</span>
+                  <span className="text-red-400">{stats.total > 0 ? (stats.failed / stats.total * 100).toFixed(1) : 0}%</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
         
-        <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-4">
-          <div className="flex items-center gap-3">
-            <Activity className="text-green-400" size={20} />
-            <div>
-              <p className="text-2xl font-bold text-white">{stats.active}</p>
-              <p className="text-xs text-gray-400">Active</p>
+        {/* Secondary Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div className="bg-[#0D0D0D]/60 backdrop-blur-sm rounded-lg border border-[#2F2F2F]/30 p-4 hover:bg-[#0D0D0D]/80 transition-colors">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-xs text-gray-400">Active</span>
             </div>
+              <Activity className="text-green-400" size={16} />
           </div>
+            <p className="text-xl font-bold text-white mt-2">{stats.active}</p>
         </div>
         
-        <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-4">
-          <div className="flex items-center gap-3">
-            <CheckCircle className="text-blue-400" size={20} />
-            <div>
-              <p className="text-2xl font-bold text-white">{stats.passed}</p>
-              <p className="text-xs text-gray-400">Passed</p>
+          <div className="bg-[#0D0D0D]/60 backdrop-blur-sm rounded-lg border border-[#2F2F2F]/30 p-4 hover:bg-[#0D0D0D]/80 transition-colors">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                <span className="text-xs text-gray-400">Passed</span>
             </div>
+              <CheckCircle className="text-blue-400" size={16} />
           </div>
+            <p className="text-xl font-bold text-white mt-2">{stats.passed}</p>
         </div>
         
-        <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-4">
-          <div className="flex items-center gap-3">
-            <XCircle className="text-red-400" size={20} />
-            <div>
-              <p className="text-2xl font-bold text-white">{stats.failed}</p>
-              <p className="text-xs text-gray-400">Failed</p>
+          <div className="bg-[#0D0D0D]/60 backdrop-blur-sm rounded-lg border border-[#2F2F2F]/30 p-4 hover:bg-[#0D0D0D]/80 transition-colors">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+                <span className="text-xs text-gray-400">Failed</span>
             </div>
+              <XCircle className="text-red-400" size={16} />
           </div>
+            <p className="text-xl font-bold text-white mt-2">{stats.failed}</p>
         </div>
         
-        <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-4">
-          <div className="flex items-center gap-3">
-            <Shield className="text-purple-400" size={20} />
-            <div>
-              <p className="text-2xl font-bold text-white">{stats.funded}</p>
-              <p className="text-xs text-gray-400">Funded</p>
+          <div className="bg-[#0D0D0D]/60 backdrop-blur-sm rounded-lg border border-[#2F2F2F]/30 p-4 hover:bg-[#0D0D0D]/80 transition-colors">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                <span className="text-xs text-gray-400">Funded</span>
             </div>
+              <Shield className="text-purple-400" size={16} />
           </div>
-        </div>
-        
-        <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-4">
-          <div className="flex items-center gap-3">
-            <DollarSign className="text-yellow-400" size={20} />
-            <div>
-              <p className="text-xl font-bold text-white">${(stats.totalBalance / 1000).toFixed(1)}k</p>
-              <p className="text-xs text-gray-400">Total Balance</p>
-            </div>
+            <p className="text-xl font-bold text-white mt-2">{stats.funded}</p>
           </div>
-        </div>
-        
-        <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-4">
-          <div className="flex items-center gap-3">
-            <TrendingUp className="text-purple-400" size={20} />
-            <div>
-              <p className="text-xl font-bold text-white">${(stats.totalEquity / 1000).toFixed(1)}k</p>
-              <p className="text-xs text-gray-400">Total Equity</p>
+          
+          <div className="bg-[#0D0D0D]/60 backdrop-blur-sm rounded-lg border border-[#2F2F2F]/30 p-4 hover:bg-[#0D0D0D]/80 transition-colors">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                <span className="text-xs text-gray-400">Inactive</span>
+              </div>
+              <Power className="text-gray-400" size={16} />
             </div>
+            <p className="text-xl font-bold text-white mt-2">{stats.total - stats.active - stats.passed - stats.failed - stats.funded}</p>
           </div>
         </div>
       </div>
@@ -1520,19 +1943,27 @@ export default function AdminAccountsPage() {
               </optgroup>
             </select>
             
-            <button
-              onClick={handleBulkRefresh}
-              disabled={bulkRefreshing || refreshQueue.length > 0}
-              className="bg-[#0FF1CE]/10 text-[#0FF1CE] px-4 py-2 rounded-lg hover:bg-[#0FF1CE]/20 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <RefreshCw size={16} className={bulkRefreshing || refreshQueue.length > 0 ? 'animate-spin' : ''} />
-              {refreshQueue.length > 0 
-                ? `Refreshing (${refreshQueue.length})` 
-                : selectedAccounts.length > 0 
-                  ? `Refresh (${selectedAccounts.length})`
-                  : 'Refresh All'
-              }
-            </button>
+            <div className="relative">
+              <button
+                onClick={handleBulkRefresh}
+                disabled={bulkRefreshing || refreshQueue.length > 0}
+                className="bg-[#0FF1CE]/10 text-[#0FF1CE] px-4 py-2 rounded-lg hover:bg-[#0FF1CE]/20 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <RefreshCw size={16} className={bulkRefreshing || refreshQueue.length > 0 ? 'animate-spin' : ''} />
+                {refreshQueue.length > 0 
+                  ? `Refreshing (${refreshQueue.length})` 
+                  : selectedAccounts.length > 0 
+                    ? `Refresh (${selectedAccounts.length})`
+                    : 'Refresh All'
+                }
+              </button>
+              {nextAutoRefreshTime && (
+                <div className="absolute -bottom-5 left-0 text-xs text-gray-500 whitespace-nowrap flex items-center gap-1">
+                  <Clock size={10} />
+                  <span>Auto-refresh in {formatDistanceToNow(nextAutoRefreshTime)}</span>
+                </div>
+              )}
+            </div>
             
             {selectedAccounts.length > 0 && (
               <button
@@ -1615,9 +2046,18 @@ export default function AdminAccountsPage() {
                     (metrics.maxDailyDrawdown || metrics.dailyDrawdown) > (config?.accountType === 'standard' ? 8 : 4)
                   );
                   
+                  // Check if account has passed objectives
+                  const profitPercent = config && metrics ? ((metrics.balance - config.accountSize) / config.accountSize * 100) : 0;
+                  const targetProfit = config?.accountType === '1-step' ? 10 :
+                                     config?.accountType === 'standard' 
+                                       ? (config.step === 1 ? 10 : 5)
+                                       : 12; // Instant: 12%
+                  const hasPassed = config?.status === 'passed' || 
+                                  (config?.status === 'active' && profitPercent >= targetProfit && !isBreached);
+                  
                   return (
                     <tr key={config?.accountId || account.uid} className={`hover:bg-white/5 transition-colors ${
-                      isBreached ? 'bg-red-500/5' : ''
+                      isBreached ? 'bg-red-500/5' : hasPassed ? 'bg-green-500/5' : ''
                     }`}>
                       <td className="p-4">
                         <input
@@ -1673,37 +2113,107 @@ export default function AdminAccountsPage() {
                           </span>
                         </div>
                       </td>
-                      <td className="p-4 text-right">
+                      <td className="p-4">
+                        <div className="text-right">
                         <p className="text-sm text-white font-medium">
                           ${metrics?.balance?.toLocaleString() || '-'}
                         </p>
+                          {config && metrics && config.status === 'active' && (
+                            <div className="mt-1">
+                              <div className="flex items-center justify-end gap-2">
+                                <div className="w-20">
+                                  <div className="h-1 bg-[#151515] rounded-full overflow-hidden">
+                                    <div 
+                                      className={`h-full transition-all duration-500 ${
+                                        profitPercent >= targetProfit ? 'bg-green-400' : 
+                                        profitPercent >= targetProfit * 0.8 ? 'bg-yellow-400' : 
+                                        profitPercent >= 0 ? 'bg-[#0FF1CE]' : 'bg-red-400'
+                                      }`}
+                                      style={{ width: `${Math.min(Math.max((profitPercent / targetProfit) * 100, 0), 100)}%` }}
+                                    />
+                                  </div>
+                                </div>
+                                <p className={`text-xs ${
+                                  profitPercent >= targetProfit ? 'text-green-400' : 
+                                  profitPercent < 0 ? 'text-red-400' : 
+                                  'text-gray-500'
+                                }`}>
+                                  {profitPercent.toFixed(1)}% / {targetProfit}%
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </td>
                       <td className="p-4 text-right">
+                        <div>
                         <p className="text-sm text-white">
                           ${metrics?.equity?.toLocaleString() || '-'}
                         </p>
+                          {metrics && metrics.balance && (
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              {metrics.equity < metrics.balance ? '-' : '+'}{Math.abs(((metrics.equity - metrics.balance) / metrics.balance * 100)).toFixed(1)}%
+                            </p>
+                          )}
+                        </div>
                       </td>
-                      <td className="p-4 text-right">
-                        <p className={`text-sm font-medium ${
-                          metrics && metrics.maxDrawdown > (config?.accountType === 'standard' ? 15 : 12)
+                      <td className="p-4">
+                        <div className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <div className="w-16">
+                              <div className="h-1.5 bg-[#151515] rounded-full overflow-hidden">
+                                <div 
+                                  className={`h-full transition-all duration-500 ${
+                                    metrics && metrics.maxDrawdown > (config?.accountType === 'standard' ? 15 : config?.accountType === '1-step' ? 8 : 4)
+                                      ? 'bg-red-400'
+                                      : metrics && metrics.maxDrawdown > (config?.accountType === 'standard' ? 12 : config?.accountType === '1-step' ? 6 : 3)
+                                      ? 'bg-yellow-400'
+                                      : 'bg-green-400'
+                                  }`}
+                                  style={{ width: `${Math.min((metrics?.maxDrawdown || 0) / (config?.accountType === 'standard' ? 15 : config?.accountType === '1-step' ? 8 : 4) * 100, 100)}%` }}
+                                />
+                              </div>
+                            </div>
+                            <p className={`text-sm font-medium min-w-[45px] text-right ${
+                              metrics && metrics.maxDrawdown > (config?.accountType === 'standard' ? 15 : config?.accountType === '1-step' ? 8 : 4)
                             ? 'text-red-400'
-                            : metrics && metrics.maxDrawdown > (config?.accountType === 'standard' ? 12 : 10)
+                                : metrics && metrics.maxDrawdown > (config?.accountType === 'standard' ? 12 : config?.accountType === '1-step' ? 6 : 3)
                             ? 'text-yellow-400'
                             : 'text-gray-300'
                         }`}>
                           {metrics?.maxDrawdown?.toFixed(2) || '-'}%
                         </p>
+                          </div>
+                        </div>
                       </td>
-                      <td className="p-4 text-right">
-                        <p className={`text-sm font-medium ${
-                          metrics && (metrics.maxDailyDrawdown || metrics.dailyDrawdown) > (config?.accountType === 'standard' ? 8 : 4)
+                      <td className="p-4">
+                        <div className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <div className="w-16">
+                              <div className="h-1.5 bg-[#151515] rounded-full overflow-hidden">
+                                <div 
+                                  className={`h-full transition-all duration-500 ${
+                                    metrics && (metrics.maxDailyDrawdown || metrics.dailyDrawdown) > (config?.accountType === 'standard' ? 8 : config?.accountType === '1-step' ? 4 : 999)
+                                      ? 'bg-red-400'
+                                      : metrics && (metrics.maxDailyDrawdown || metrics.dailyDrawdown) > (config?.accountType === 'standard' ? 6 : config?.accountType === '1-step' ? 3 : 999)
+                                      ? 'bg-yellow-400'
+                                      : 'bg-green-400'
+                                  }`}
+                                  style={{ width: config?.accountType === 'instant' ? '0%' : `${Math.min(((metrics?.maxDailyDrawdown || metrics?.dailyDrawdown || 0) / (config?.accountType === 'standard' ? 8 : 4)) * 100, 100)}%` }}
+                                />
+                              </div>
+                            </div>
+                            <p className={`text-sm font-medium min-w-[45px] text-right ${
+                              metrics && (metrics.maxDailyDrawdown || metrics.dailyDrawdown) > (config?.accountType === 'standard' ? 8 : config?.accountType === '1-step' ? 4 : 999)
                             ? 'text-red-400'
-                            : metrics && (metrics.maxDailyDrawdown || metrics.dailyDrawdown) > (config?.accountType === 'standard' ? 6 : 3)
+                                : metrics && (metrics.maxDailyDrawdown || metrics.dailyDrawdown) > (config?.accountType === 'standard' ? 6 : config?.accountType === '1-step' ? 3 : 999)
                             ? 'text-yellow-400'
                             : 'text-gray-300'
                         }`}>
-                          {(metrics?.maxDailyDrawdown || metrics?.dailyDrawdown)?.toFixed(2) || '-'}%
+                              {config?.accountType === 'instant' ? 'N/A' : `${(metrics?.maxDailyDrawdown || metrics?.dailyDrawdown)?.toFixed(2) || '-'}%`}
                         </p>
+                          </div>
+                        </div>
                       </td>
                       <td className="p-4">
                         <p className="text-sm text-gray-400">
@@ -1716,28 +2226,23 @@ export default function AdminAccountsPage() {
                         </p>
                       </td>
                       <td className="p-4">
-                        <div className="flex items-center justify-center gap-2">
+                        <div className="flex items-center justify-center gap-1">
+                          {/* Primary Actions */}
+                          <div className="flex items-center gap-1 bg-[#151515] rounded-lg p-1">
                           <button
                             onClick={() => window.location.href = `/admin/accounts/${config?.accountId}`}
-                            className="p-1.5 text-gray-400 hover:text-[#0FF1CE] transition-colors"
-                            title="View Account"
+                              className="p-1.5 text-gray-400 hover:text-[#0FF1CE] hover:bg-[#0FF1CE]/10 rounded transition-all"
+                              title="View Account Details"
                           >
-                            <Eye size={16} />
+                              <Eye size={15} />
                           </button>
                           <button
                             onClick={() => refreshAccount(account)}
                             disabled={refreshingAccounts.has(config?.accountId || '')}
-                            className="p-1.5 text-gray-400 hover:text-[#0FF1CE] transition-colors disabled:opacity-50"
-                            title="Refresh Account"
-                          >
-                            <RefreshCw size={16} className={refreshingAccounts.has(config?.accountId || '') ? 'animate-spin' : ''} />
-                          </button>
-                          <button
-                            onClick={() => enableAccountFeatures(account)}
-                            className="p-1.5 text-gray-400 hover:text-blue-400 transition-colors"
-                            title="Enable MetaStats & Risk Management APIs"
-                          >
-                            <Activity size={16} />
+                              className="p-1.5 text-gray-400 hover:text-[#0FF1CE] hover:bg-[#0FF1CE]/10 rounded transition-all disabled:opacity-50"
+                              title="Refresh Metrics"
+                            >
+                              <RefreshCw size={15} className={refreshingAccounts.has(config?.accountId || '') ? 'animate-spin' : ''} />
                           </button>
                           <button
                             onClick={() => {
@@ -1753,56 +2258,57 @@ export default function AdminAccountsPage() {
                               });
                               setShowEditModal(true);
                             }}
-                            className="p-1.5 text-gray-400 hover:text-[#0FF1CE] transition-colors"
-                            title="Edit Account"
+                              className="p-1.5 text-gray-400 hover:text-[#0FF1CE] hover:bg-[#0FF1CE]/10 rounded transition-all"
+                              title="Edit Configuration"
                           >
-                            <Edit2 size={16} />
+                              <Edit2 size={15} />
                           </button>
+                          </div>
                           
                           {/* Email Actions */}
                           {(config?.status === 'active' || config?.status === 'failed' || config?.status === 'passed' || config?.status === 'funded') && (
-                            <div className="flex items-center gap-1 border-l border-[#2F2F2F]/50 pl-2 ml-1">
+                            <div className="flex items-center gap-1 bg-[#151515] rounded-lg p-1">
                               {config?.status === 'passed' && (
                                 <button
-                                  onClick={() => sendPassEmail(account)}
-                                  className="p-1.5 text-gray-400 hover:text-green-400 transition-colors"
+                                  onClick={() => sendEmailWithModal(() => sendPassEmail(account), 'pass email')}
+                                  className="p-1.5 text-gray-400 hover:text-green-400 hover:bg-green-400/10 rounded transition-all"
                                   title="Send Pass Email"
                                 >
-                                  <Mail size={16} />
+                                  <Mail size={15} />
                                 </button>
                               )}
                               {config?.status === 'failed' && (
                                 <button
-                                  onClick={() => config.step === 3 ? sendFundedFailEmail(account) : sendFailEmail(account)}
-                                  className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"
+                                  onClick={() => sendEmailWithModal(() => config.step === 3 ? sendFundedFailEmail(account) : sendFailEmail(account), config.step === 3 ? 'funded fail email' : 'fail email')}
+                                  className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded transition-all"
                                   title={config.step === 3 ? "Send Funded Fail Email" : "Send Fail Email"}
                                 >
-                                  <Mail size={16} />
+                                  <Mail size={15} />
                                 </button>
                               )}
                               {config?.status === 'funded' && (
                                 <>
                                   <button
-                                    onClick={() => sendFundedPassEmail(account)}
-                                    className="p-1.5 text-gray-400 hover:text-purple-400 transition-colors"
+                                    onClick={() => sendEmailWithModal(() => sendFundedPassEmail(account), 'funded welcome email')}
+                                    className="p-1.5 text-gray-400 hover:text-purple-400 hover:bg-purple-400/10 rounded transition-all"
                                     title="Send Funded Welcome Email"
                                   >
-                                    <Mail size={16} />
+                                    <Mail size={15} />
                                   </button>
                                   <button
-                                    onClick={() => sendFundedFailEmail(account)}
-                                    className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"
+                                    onClick={() => sendEmailWithModal(() => sendFundedFailEmail(account), 'funded fail email')}
+                                    className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded transition-all"
                                     title="Send Funded Fail Email"
                                   >
-                                    <Mail size={16} />
+                                    <Mail size={15} />
                                   </button>
                                   {metrics && (metrics.maxDrawdown >= 6 || (metrics.maxDailyDrawdown || metrics.dailyDrawdown) <= 3) && (
                                     <button
-                                      onClick={() => sendFundedDrawdownWarningEmail(account)}
-                                      className="p-1.5 text-gray-400 hover:text-yellow-400 transition-colors"
+                                      onClick={() => sendEmailWithModal(() => sendFundedDrawdownWarningEmail(account), 'funded risk warning email')}
+                                      className="p-1.5 text-gray-400 hover:text-yellow-400 hover:bg-yellow-400/10 rounded transition-all"
                                       title="Send Funded Risk Warning Email"
                                     >
-                                      <Mail size={16} />
+                                      <Mail size={15} />
                                     </button>
                                   )}
                                 </>
@@ -1810,26 +2316,26 @@ export default function AdminAccountsPage() {
                               {config?.status === 'active' && (
                                 <>
                                   <button
-                                    onClick={() => sendPassEmail(account)}
-                                    className="p-1.5 text-gray-400 hover:text-green-400 transition-colors"
+                                    onClick={() => sendEmailWithModal(() => sendPassEmail(account), 'pass email')}
+                                    className="p-1.5 text-gray-400 hover:text-green-400 hover:bg-green-400/10 rounded transition-all"
                                     title="Send Pass Email"
                                   >
-                                    <Mail size={16} />
+                                    <Mail size={15} />
                                   </button>
                                   <button
-                                    onClick={() => sendFailEmail(account)}
-                                    className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"
+                                    onClick={() => sendEmailWithModal(() => sendFailEmail(account), 'fail email')}
+                                    className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded transition-all"
                                     title="Send Fail Email"
                                   >
-                                    <Mail size={16} />
+                                    <Mail size={15} />
                                   </button>
                                   {metrics && metrics.maxDrawdown >= 6 && (
                                     <button
-                                      onClick={() => sendDrawdownWarningEmail(account)}
-                                      className="p-1.5 text-gray-400 hover:text-yellow-400 transition-colors"
+                                      onClick={() => sendEmailWithModal(() => sendDrawdownWarningEmail(account), 'drawdown warning email')}
+                                      className="p-1.5 text-gray-400 hover:text-yellow-400 hover:bg-yellow-400/10 rounded transition-all"
                                       title="Send Drawdown Warning Email"
                                     >
-                                      <Mail size={16} />
+                                      <Mail size={15} />
                                     </button>
                                   )}
                                 </>
@@ -1837,31 +2343,41 @@ export default function AdminAccountsPage() {
                             </div>
                           )}
                           
+                          {/* Account Management Actions */}
+                          <div className="flex items-center gap-1 bg-[#151515] rounded-lg p-1">
+                            <button
+                              onClick={() => enableAccountFeatures(account)}
+                              className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-blue-400/10 rounded transition-all"
+                              title="Enable MetaStats & Risk APIs"
+                            >
+                              <Activity size={15} />
+                            </button>
                           {config?.status === 'active' && (
                             <>
                               <button
                                 onClick={() => handleDisconnect(account.uid, config?.accountId || '')}
-                                className="p-1.5 text-gray-400 hover:text-yellow-400 transition-colors"
+                                  className="p-1.5 text-gray-400 hover:text-yellow-400 hover:bg-yellow-400/10 rounded transition-all"
                                 title="Disconnect Account"
                               >
-                                <Power size={16} />
+                                  <Power size={15} />
                               </button>
                               <button
                                 onClick={() => handleFail(account.uid, config?.accountId || '')}
-                                className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"
+                                  className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded transition-all"
                                 title="Mark as Failed"
                               >
-                                <XCircle size={16} />
+                                  <XCircle size={15} />
                               </button>
                             </>
                           )}
                           <button
                             onClick={() => handleDelete(account.uid, config?.accountId || '')}
-                            className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
+                              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-all"
                             title="Delete Account"
                           >
-                            <Trash2 size={16} />
+                              <Trash2 size={15} />
                           </button>
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -2074,23 +2590,110 @@ export default function AdminAccountsPage() {
                   <label className="block text-sm font-medium text-gray-400 mb-2">
                     Search User by Email
                   </label>
-                  <div className="flex gap-3">
-                    <input
-                      type="email"
-                      value={searchUserEmail}
-                      onChange={(e) => setSearchUserEmail(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && searchUserByEmail()}
-                      placeholder="Enter user email address"
-                      className="flex-1 bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#0FF1CE]/50"
-                    />
-                    <button
-                      onClick={searchUserByEmail}
-                      disabled={!searchUserEmail}
-                      className="bg-[#0FF1CE] text-black font-semibold px-6 py-3 rounded-lg hover:bg-[#0FF1CE]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                    >
-                      <Search size={20} />
-                      Search
-                    </button>
+                  <div className="relative">
+                    <div className="flex gap-3">
+                      <div className="flex-1 relative">
+                        <input
+                          type="text"
+                          value={searchUserEmail}
+                          onChange={(e) => setSearchUserEmail(e.target.value)}
+                          onFocus={() => setShowRecentOrdersDropdown(true)}
+                          placeholder="Start typing to search users..."
+                          className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#0FF1CE]/50"
+                        />
+                        
+                        {/* Recent Orders Dropdown */}
+                        {showRecentOrdersDropdown && searchUserEmail === '' && (
+                          <div className="absolute top-full left-0 right-0 mt-2 bg-[#0D0D0D] border border-[#2F2F2F] rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
+                            <div className="p-3 border-b border-[#2F2F2F] flex items-center justify-between">
+                              <span className="text-sm text-gray-400">Recent Orders</span>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => setRecentOrdersType('crypto')}
+                                  className={`text-xs px-2 py-1 rounded ${recentOrdersType === 'crypto' ? 'bg-[#0FF1CE] text-black' : 'bg-[#151515] text-gray-400'}`}
+                                >
+                                  Crypto
+                                </button>
+                                <button
+                                  onClick={() => setRecentOrdersType('credit')}
+                                  className={`text-xs px-2 py-1 rounded ${recentOrdersType === 'credit' ? 'bg-[#0FF1CE] text-black' : 'bg-[#151515] text-gray-400'}`}
+                                >
+                                  Credit
+                                </button>
+                              </div>
+                            </div>
+                            {recentOrders.map((order) => (
+                              <button
+                                key={order.id}
+                                onClick={() => {
+                                  setSearchUserEmail(order.email);
+                                  setShowRecentOrdersDropdown(false);
+                                  // Auto-populate account form with order details
+                                  setAccountForm(prev => ({
+                                    ...prev,
+                                    accountType: order.challengeType.toLowerCase().includes('instant') ? 'instant' : 
+                                                order.challengeType.toLowerCase().includes('1-step') ? '1-step' : 'standard',
+                                    accountSize: parseInt(order.challengeAmount.replace(/[^0-9]/g, '')),
+                                    platform: order.platform.toLowerCase() as 'mt4' | 'mt5'
+                                  }));
+                                }}
+                                className="w-full p-3 hover:bg-white/5 text-left transition-colors flex items-center justify-between"
+                              >
+                                <div>
+                                  <p className="text-sm text-white">{order.email}</p>
+                                  <p className="text-xs text-gray-400 mt-1">
+                                    {order.challengeType} • ${order.challengeAmount} • {order.platform}
+                                  </p>
+                                </div>
+                                <span className={`text-xs px-2 py-1 rounded ${order.type === 'crypto' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-blue-500/20 text-blue-400'}`}>
+                                  {order.type}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {/* User Search Results */}
+                        {searchUserEmail && filteredUsers.length > 0 && (
+                          <div className="absolute top-full left-0 right-0 mt-2 bg-[#0D0D0D] border border-[#2F2F2F] rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
+                            {filteredUsers.map((user) => (
+                              <button
+                                key={user.uid}
+                                onClick={() => {
+                                  setSearchUserEmail(user.email);
+                                  setSearchedUser(user);
+                                  setShowRecentOrdersDropdown(false);
+                                }}
+                                className="w-full p-3 hover:bg-white/5 text-left transition-colors"
+                              >
+                                <p className="text-sm text-white">{user.email}</p>
+                                {(user.displayName || user.firstName || user.lastName) && (
+                                  <p className="text-xs text-gray-400 mt-1">
+                                    {user.displayName || `${user.firstName} ${user.lastName}`.trim()}
+                                  </p>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        onClick={searchUserByEmail}
+                        disabled={!searchUserEmail}
+                        className="bg-[#0FF1CE] text-black font-semibold px-6 py-3 rounded-lg hover:bg-[#0FF1CE]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      >
+                        <Search size={20} />
+                        Select
+                      </button>
+                    </div>
+                    
+                    {/* Click outside to close dropdowns */}
+                    {(showRecentOrdersDropdown || (searchUserEmail && filteredUsers.length > 0)) && (
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setShowRecentOrdersDropdown(false)}
+                      />
+                    )}
                   </div>
                 </div>
               )}
@@ -2275,7 +2878,7 @@ export default function AdminAccountsPage() {
       {/* ConnectMetaAccountModal */}
       {showConnectModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-[#0D0D0D] border border-[#2F2F2F] rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#0D0D0D] border border-[#2F2F2F] rounded-xl max-w-3xl w-full max-h-[90vh] overflow-visible relative">
             <div className="p-6 border-b border-[#2F2F2F]">
               <h2 className="text-xl font-semibold text-white">
                 Connect Demo Account to MetaAPI
@@ -2302,7 +2905,7 @@ export default function AdminAccountsPage() {
               </div>
             </div>
             
-            <div className="p-6">
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
               {/* Step 1: MetaTrader Account Details */}
               {connectModalStep === 1 && (
                 <>
@@ -2422,27 +3025,114 @@ export default function AdminAccountsPage() {
 
                     {/* User Search */}
                     {!searchedUser && (
-                      <div className="mb-6">
+                      <div className="mb-6 relative">
                         <label className="block text-sm font-medium text-gray-400 mb-2">
                           Search User by Email
                         </label>
-                        <div className="flex gap-3">
-                          <input
-                            type="email"
-                            value={searchUserEmail}
-                            onChange={(e) => setSearchUserEmail(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && searchUserByEmail()}
-                            placeholder="Enter user email address"
-                            className="flex-1 bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#0FF1CE]/50"
-                          />
-                          <button
-                            onClick={searchUserByEmail}
-                            disabled={!searchUserEmail}
-                            className="bg-[#0FF1CE] text-black font-semibold px-6 py-3 rounded-lg hover:bg-[#0FF1CE]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                          >
-                            <Search size={20} />
-                            Search
-                          </button>
+                        <div className="relative">
+                          <div className="flex gap-3">
+                            <div className="flex-1 relative">
+                              <input
+                                type="text"
+                                value={searchUserEmail}
+                                onChange={(e) => setSearchUserEmail(e.target.value)}
+                                onFocus={() => setShowRecentOrdersDropdown(true)}
+                                placeholder="Start typing to search users..."
+                                className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#0FF1CE]/50"
+                              />
+                              
+                              {/* Recent Orders Dropdown */}
+                              {showRecentOrdersDropdown && searchUserEmail === '' && (
+                                <div className="absolute top-full left-0 right-0 mt-2 bg-[#0D0D0D] border border-[#2F2F2F] rounded-lg shadow-xl z-[60] max-h-96 overflow-y-auto">
+                                  <div className="p-3 border-b border-[#2F2F2F] flex items-center justify-between">
+                                    <span className="text-sm text-gray-400">Recent Orders</span>
+                                    <div className="flex gap-2">
+                                      <button
+                                        onClick={() => setRecentOrdersType('crypto')}
+                                        className={`text-xs px-2 py-1 rounded ${recentOrdersType === 'crypto' ? 'bg-[#0FF1CE] text-black' : 'bg-[#151515] text-gray-400'}`}
+                                      >
+                                        Crypto
+                                      </button>
+                                      <button
+                                        onClick={() => setRecentOrdersType('credit')}
+                                        className={`text-xs px-2 py-1 rounded ${recentOrdersType === 'credit' ? 'bg-[#0FF1CE] text-black' : 'bg-[#151515] text-gray-400'}`}
+                                      >
+                                        Credit
+                                      </button>
+                                    </div>
+                                  </div>
+                                  {recentOrders.map((order) => (
+                                    <button
+                                      key={order.id}
+                                      onClick={() => {
+                                        setSearchUserEmail(order.email);
+                                        setShowRecentOrdersDropdown(false);
+                                        // Auto-populate account form with order details
+                                        setAccountForm(prev => ({
+                                          ...prev,
+                                          accountType: order.challengeType.toLowerCase().includes('instant') ? 'instant' : 
+                                                      order.challengeType.toLowerCase().includes('1-step') ? '1-step' : 'standard',
+                                          accountSize: parseInt(order.challengeAmount.replace(/[^0-9]/g, '')),
+                                          platform: order.platform.toLowerCase() as 'mt4' | 'mt5'
+                                        }));
+                                      }}
+                                      className="w-full p-3 hover:bg-white/5 text-left transition-colors flex items-center justify-between"
+                                    >
+                                      <div>
+                                        <p className="text-sm text-white">{order.email}</p>
+                                        <p className="text-xs text-gray-400 mt-1">
+                                          {order.challengeType} • ${order.challengeAmount} • {order.platform}
+                                        </p>
+                                      </div>
+                                      <span className={`text-xs px-2 py-1 rounded ${order.type === 'crypto' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-blue-500/20 text-blue-400'}`}>
+                                        {order.type}
+                                      </span>
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                              
+                              {/* User Search Results */}
+                              {searchUserEmail && filteredUsers.length > 0 && (
+                                <div className="absolute top-full left-0 right-0 mt-2 bg-[#0D0D0D] border border-[#2F2F2F] rounded-lg shadow-xl z-[60] max-h-96 overflow-y-auto">
+                                  {filteredUsers.map((user) => (
+                                    <button
+                                      key={user.uid}
+                                      onClick={() => {
+                                        setSearchUserEmail(user.email);
+                                        setSearchedUser(user);
+                                        setShowRecentOrdersDropdown(false);
+                                      }}
+                                      className="w-full p-3 hover:bg-white/5 text-left transition-colors"
+                                    >
+                                      <p className="text-sm text-white">{user.email}</p>
+                                      {(user.displayName || user.firstName || user.lastName) && (
+                                        <p className="text-xs text-gray-400 mt-1">
+                                          {user.displayName || `${user.firstName} ${user.lastName}`.trim()}
+                                        </p>
+                                      )}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <button
+                              onClick={searchUserByEmail}
+                              disabled={!searchUserEmail}
+                              className="bg-[#0FF1CE] text-black font-semibold px-6 py-3 rounded-lg hover:bg-[#0FF1CE]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            >
+                              <Search size={20} />
+                              Select
+                            </button>
+                          </div>
+                          
+                          {/* Click outside to close dropdowns */}
+                          {(showRecentOrdersDropdown || (searchUserEmail && filteredUsers.length > 0)) && (
+                            <div
+                              className="fixed inset-0 z-[55]"
+                              onClick={() => setShowRecentOrdersDropdown(false)}
+                            />
+                          )}
                         </div>
                       </div>
                     )}
@@ -2639,6 +3329,41 @@ export default function AdminAccountsPage() {
                   )}
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Email Sending Modal */}
+      {showEmailSendingModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#0D0D0D] border border-[#2F2F2F] rounded-xl p-8 max-w-sm w-full">
+            <div className="flex flex-col items-center">
+              {emailSendingStatus === 'sending' && (
+                <>
+                  <Loader2 className="w-12 h-12 text-[#0FF1CE] animate-spin mb-4" />
+                  <p className="text-white text-lg font-medium mb-2">Sending Email</p>
+                  <p className="text-gray-400 text-sm text-center">{emailSendingMessage}</p>
+                </>
+              )}
+              {emailSendingStatus === 'success' && (
+                <>
+                  <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mb-4">
+                    <CheckCircle className="w-8 h-8 text-green-400" />
+                  </div>
+                  <p className="text-white text-lg font-medium mb-2">Email Sent!</p>
+                  <p className="text-gray-400 text-sm text-center">{emailSendingMessage}</p>
+                </>
+              )}
+              {emailSendingStatus === 'error' && (
+                <>
+                  <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
+                    <XCircle className="w-8 h-8 text-red-400" />
+                  </div>
+                  <p className="text-white text-lg font-medium mb-2">Failed to Send</p>
+                  <p className="text-gray-400 text-sm text-center">{emailSendingMessage}</p>
+                </>
+              )}
             </div>
           </div>
         </div>

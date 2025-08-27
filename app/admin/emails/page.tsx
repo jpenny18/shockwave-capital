@@ -16,7 +16,8 @@ import {
   Eye,
   ChevronDown
 } from 'lucide-react';
-import { getAllUsers, UserData } from '@/lib/firebase';
+import { getAllUsers, UserData, db } from '@/lib/firebase';
+import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 
 // Enhanced email templates with improved login credentials template
 const initialTemplates = [
@@ -383,6 +384,11 @@ export default function EmailTemplatesPage() {
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   
+  // Recent orders state
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [showRecentOrdersDropdown, setShowRecentOrdersDropdown] = useState(false);
+  const [recentOrdersType, setRecentOrdersType] = useState<'crypto' | 'credit'>('crypto');
+  
   // Load customers on component mount
   useEffect(() => {
     loadCustomers();
@@ -394,6 +400,7 @@ export default function EmailTemplatesPage() {
       const target = event.target as Element;
       if (!target.closest('.user-dropdown-container')) {
         setShowUserDropdown(false);
+        setShowRecentOrdersDropdown(false);
       }
     };
 
@@ -402,6 +409,13 @@ export default function EmailTemplatesPage() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+  
+  // Load recent orders when dropdown type changes
+  useEffect(() => {
+    if (showRecentOrdersDropdown) {
+      loadRecentOrders();
+    }
+  }, [recentOrdersType, showRecentOrdersDropdown]);
   
   const loadCustomers = async () => {
     try {
@@ -425,6 +439,57 @@ export default function EmailTemplatesPage() {
       console.error('Error loading customers:', error);
     } finally {
       setLoadingUsers(false);
+    }
+  };
+  
+  // Load recent orders
+  const loadRecentOrders = async () => {
+    try {
+      const orders: any[] = [];
+      
+      if (recentOrdersType === 'crypto') {
+        // Load recent crypto orders
+        const cryptoOrdersRef = collection(db, 'crypto-orders');
+        const cryptoQuery = query(cryptoOrdersRef, orderBy('createdAt', 'desc'), limit(10));
+        const cryptoSnapshot = await getDocs(cryptoQuery);
+        
+        cryptoSnapshot.forEach((doc) => {
+          const data = doc.data();
+          orders.push({
+            id: doc.id,
+            email: data.customerEmail,
+            firstName: data.customerName?.split(' ')[0] || 'Unknown',
+            challengeType: data.challengeType,
+            challengeAmount: data.challengeAmount,
+            platform: data.platform,
+            type: 'crypto',
+            createdAt: data.createdAt
+          });
+        });
+      } else {
+        // Load recent credit orders
+        const ordersRef = collection(db, 'orders');
+        const creditQuery = query(ordersRef, orderBy('createdAt', 'desc'), limit(10));
+        const creditSnapshot = await getDocs(creditQuery);
+        
+        creditSnapshot.forEach((doc) => {
+          const data = doc.data();
+          orders.push({
+            id: doc.id,
+            email: data.customerEmail,
+            firstName: data.firstName || 'Unknown',
+            challengeType: data.challengeType,
+            challengeAmount: data.challengeAmount,
+            platform: data.platform,
+            type: 'credit',
+            createdAt: data.createdAt
+          });
+        });
+      }
+      
+      setRecentOrders(orders);
+    } catch (error) {
+      console.error('Error loading recent orders:', error);
     }
   };
   
@@ -702,6 +767,9 @@ export default function EmailTemplatesPage() {
           <div className="flex items-center gap-3 mb-4">
             <Users size={20} className="text-[#0FF1CE]" />
             <h3 className="text-white font-medium">Select User</h3>
+            {currentTemplate.name === 'Login Credentials' && (
+              <span className="text-sm text-gray-400">(Recent orders available)</span>
+            )}
           </div>
           
           <div className="flex gap-4 items-end">
@@ -718,13 +786,96 @@ export default function EmailTemplatesPage() {
                   onChange={(e) => {
                     setUserSearchTerm(e.target.value);
                     setShowUserDropdown(true);
+                    setShowRecentOrdersDropdown(false);
                     if (!e.target.value) setSelectedUser(null);
                   }}
-                  onFocus={() => setShowUserDropdown(true)}
+                  onFocus={() => {
+                    if (currentTemplate.name === 'Login Credentials' && !userSearchTerm) {
+                      setShowRecentOrdersDropdown(true);
+                      setShowUserDropdown(false);
+                    } else {
+                      setShowUserDropdown(true);
+                      setShowRecentOrdersDropdown(false);
+                    }
+                  }}
                   className="w-full pl-10 pr-12 py-2.5 bg-[#0D0D0D] border border-[#2F2F2F] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#0FF1CE]/50"
                 />
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               </div>
+              
+              {/* Recent Orders Dropdown - Only for Login Credentials template */}
+              {currentTemplate.name === 'Login Credentials' && showRecentOrdersDropdown && userSearchTerm === '' && (
+                <div className="absolute z-10 w-full mt-1 bg-[#0D0D0D] border border-[#2F2F2F] rounded-lg shadow-lg max-h-96 overflow-y-auto">
+                  <div className="p-3 border-b border-[#2F2F2F] flex items-center justify-between sticky top-0 bg-[#0D0D0D]">
+                    <span className="text-sm text-gray-400">Recent Orders</span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setRecentOrdersType('crypto');
+                        }}
+                        className={`text-xs px-2 py-1 rounded transition-colors ${
+                          recentOrdersType === 'crypto' ? 'bg-[#0FF1CE] text-black' : 'bg-[#151515] text-gray-400 hover:text-white'
+                        }`}
+                      >
+                        Crypto
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setRecentOrdersType('credit');
+                        }}
+                        className={`text-xs px-2 py-1 rounded transition-colors ${
+                          recentOrdersType === 'credit' ? 'bg-[#0FF1CE] text-black' : 'bg-[#151515] text-gray-400 hover:text-white'
+                        }`}
+                      >
+                        Credit
+                      </button>
+                    </div>
+                  </div>
+                  {recentOrders.length === 0 ? (
+                    <div className="p-4 text-center text-gray-400">No recent orders</div>
+                  ) : (
+                    recentOrders.map((order) => (
+                      <div
+                        key={order.id}
+                        onClick={() => {
+                          setUserSearchTerm(order.email);
+                          setShowRecentOrdersDropdown(false);
+                          // Auto-populate test values with order details
+                          setTestValues(prev => ({
+                            ...prev,
+                            email: order.email,
+                            firstName: order.firstName,
+                            platform: order.platform.toLowerCase() === 'mt4' ? 'MetaTrader 4' : 
+                                     order.platform.toLowerCase() === 'mt5' ? 'MetaTrader 5' : order.platform
+                          }));
+                          // Find and select the user
+                          const user = customers.find(c => c.email === order.email);
+                          if (user) {
+                            setSelectedUser(user);
+                          }
+                        }}
+                        className="p-3 hover:bg-[#2F2F2F] cursor-pointer border-b border-[#2F2F2F] last:border-b-0 transition-colors"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-white font-medium">{order.email}</p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              {order.challengeType} • ${order.challengeAmount} • {order.platform}
+                            </p>
+                          </div>
+                          <span className={`text-xs px-2 py-1 rounded ${
+                            order.type === 'crypto' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-blue-500/20 text-blue-400'
+                          }`}>
+                            {order.type}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
               
               {/* User Dropdown */}
               {showUserDropdown && userSearchTerm && (
