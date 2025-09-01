@@ -25,6 +25,7 @@ interface ChallengeData {
   standard: PlanData;
   onestep: PlanData;
   instant: PlanData;
+  gauntlet: PlanData;
 }
 
 const tooltipData: TooltipData = {
@@ -39,7 +40,9 @@ const tooltipData: TooltipData = {
   "trading-days": "Minimum number of days you must trade to complete each phase. Ensures consistent trading activity.",
   "payout-eligibility": "Waiting period before your first withdrawal becomes available after reaching the funded phase.",
   "refundable-fee": "One-time challenge fee that gets refunded with your second profit withdrawal upon successful completion.",
-  "one-free-retry": "One free retry if you breach the drawdown limits or reach the time limit. This DOES NOT reset the 30 calendar day period it ONLY resets the account balance."
+  "one-free-retry": "One free retry if you breach the drawdown limits or reach the time limit. This DOES NOT reset the 30 calendar day period it ONLY resets the account balance.",
+  "pay-when-pass": "Pay only $99 to try the challenge, then pay the activation fee only when you successfully pass.",
+  "no-restrictions": "No trading rules, no time restrictions, no news trading limits - trade however you want."
 };
 
 const challengeData: ChallengeData = {
@@ -493,12 +496,145 @@ const challengeData: ChallengeData = {
         }
       }
     ]
+  },
+  gauntlet: {
+    name: "Shockwave Gauntlet",
+    accounts: [10000, 25000, 50000, 100000, 200000],
+    prices: {
+      10000: 99,
+      25000: 99,
+      50000: 99,
+      100000: 99,
+      200000: 99
+    },
+    features: [
+      {
+        name: "Pay When You Pass",
+        subtitle: "Only $99 to try",
+        tooltip: "pay-when-pass",
+        values: {
+          10000: "$99 activation",
+          25000: "$199 activation",
+          50000: "$399 activation",
+          100000: "$499 activation",
+          200000: "$999 activation"
+        }
+      },
+      {
+        name: "Profit Target",
+        subtitle: "Single Phase",
+        tooltip: "challenge-target",
+        values: {
+          10000: "10% ($1,000)",
+          25000: "10% ($2,500)",
+          50000: "10% ($5,000)",
+          100000: "10% ($10,000)",
+          200000: "10% ($20,000)"
+        }
+      },
+      {
+        name: "Maximum Daily Loss",
+        subtitle: "",
+        tooltip: "daily-loss",
+        values: {
+          10000: "8% ($800)",
+          25000: "8% ($2,000)",
+          50000: "8% ($4,000)",
+          100000: "8% ($8,000)",
+          200000: "8% ($16,000)"
+        }
+      },
+      {
+        name: "Maximum Overall Loss",
+        subtitle: "",
+        tooltip: "overall-loss",
+        values: {
+          10000: "15% ($1,500)",
+          25000: "15% ($3,750)",
+          50000: "15% ($7,500)",
+          100000: "15% ($15,000)",
+          200000: "15% ($30,000)"
+        }
+      },
+      {
+        name: "Leverage",
+        subtitle: "",
+        tooltip: "leverage",
+        values: {
+          10000: "1:200",
+          25000: "1:200",
+          50000: "1:200",
+          100000: "1:200",
+          200000: "1:200"
+        }
+      },
+      {
+        name: "No Restrictions",
+        subtitle: "Trade freely",
+        tooltip: "no-restrictions",
+        values: {
+          10000: "✓",
+          25000: "✓",
+          50000: "✓",
+          100000: "✓",
+          200000: "✓"
+        }
+      },
+      {
+        name: "News Trading",
+        subtitle: "",
+        tooltip: "news-trading",
+        values: {
+          10000: "✓",
+          25000: "✓",
+          50000: "✓",
+          100000: "✓",
+          200000: "✓"
+        }
+      },
+      {
+        name: "Profit Split",
+        subtitle: "Up to 95%",
+        tooltip: "profit-split",
+        values: {
+          10000: "95%",
+          25000: "95%",
+          50000: "95%",
+          100000: "95%",
+          200000: "95%"
+        }
+      },
+      {
+        name: "Minimum Trading Days",
+        subtitle: "",
+        tooltip: "trading-days",
+        values: {
+          10000: "0 Days",
+          25000: "0 Days",
+          50000: "0 Days",
+          100000: "0 Days",
+          200000: "0 Days"
+        }
+      },
+      {
+        name: "First Withdrawal",
+        subtitle: "",
+        tooltip: "payout-eligibility",
+        values: {
+          10000: "14 Days",
+          25000: "14 Days",
+          50000: "14 Days",
+          100000: "14 Days",
+          200000: "14 Days"
+        }
+      }
+    ]
   }
 };
 
 export default function PricingTable() {
   const router = useRouter();
-  const [currentPlan, setCurrentPlan] = useState<'standard' | 'onestep' | 'instant'>('standard');
+  const [currentPlan, setCurrentPlan] = useState<'standard' | 'onestep' | 'instant' | 'gauntlet'>('standard');
   const [selectedAccount, setSelectedAccount] = useState(100000);
   const [showModal, setShowModal] = useState<string | null>(null);
 
@@ -509,6 +645,8 @@ export default function PricingTable() {
       challengeType = 'Instant';
     } else if (plan.includes('1-Step')) {
       challengeType = '1-Step';
+    } else if (plan.includes('Gauntlet')) {
+      challengeType = 'Gauntlet';
     }
     
     sessionStorage.setItem('preselectedChallengeType', challengeType);
@@ -582,6 +720,17 @@ export default function PricingTable() {
             >
               Shockwave Instant
             </button>
+            <button
+              type="button"
+              onClick={() => setCurrentPlan('gauntlet')}
+              className={`flex items-center justify-center rounded-full text-[13px] px-4 sm:px-6 py-2 sm:py-3 sm:text-base font-bold transition-all duration-300 gap-2 ${
+                currentPlan === 'gauntlet' 
+                  ? 'bg-[#FF6B6B] text-white border border-[#FF6B6B]' 
+                  : 'bg-transparent text-white/80 border border-white/20 hover:bg-[#FF6B6B]/10 hover:text-[#FF6B6B] hover:border-[#FF6B6B]/50'
+              }`}
+            >
+              🔥 Gauntlet
+            </button>
           </div>
         </div>
       </div>
@@ -618,6 +767,16 @@ export default function PricingTable() {
             }`}
           >
             Instant
+          </button>
+          <button
+            onClick={() => setCurrentPlan('gauntlet')}
+            className={`px-3 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
+              currentPlan === 'gauntlet' 
+                ? 'bg-[#FF6B6B] text-white' 
+                : 'bg-transparent text-white/80 border border-white/20'
+            }`}
+          >
+            🔥 Gauntlet
           </button>
         </div>
       </div>

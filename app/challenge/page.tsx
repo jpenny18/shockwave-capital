@@ -10,7 +10,7 @@ import { Check, Zap, Shield, TrendingUp, ChevronRight, AlertCircle, CreditCard }
 import Link from 'next/link';
 
 // Define the type for challenge options
-type ChallengeType = 'Standard' | '1-Step' | 'Instant';
+type ChallengeType = 'Standard' | '1-Step' | 'Instant' | 'Gauntlet';
 
 const challengeTypes = [
   { 
@@ -39,6 +39,15 @@ const challengeTypes = [
     description: 'Access a simulated funded account instantly',
     badge: 'FASTEST',
     features: ['Instant Funding', '70% Profit Split', '4% Max Drawdown']
+  },
+  { 
+    id: 'Gauntlet' as const, 
+    name: 'Shockwave Gauntlet', 
+    amounts: ['$10,000', '$25,000', '$50,000', '$100,000', '$200,000'],
+    image: '/shockwavegauntlet.png',
+    description: 'Pay when you pass - ultimate freedom',
+    badge: 'PAY WHEN YOU PASS',
+    features: ['$99 Entry Fee', 'No Restrictions', 'Activation Fee on Pass']
   }
 ];
 
@@ -341,6 +350,16 @@ const calculatePrice = (type: ChallengeType, amount: string): number => {
         case 500000: return 6999;
         default: return 0;
       }
+    case 'Gauntlet':
+      // All Gauntlet challenges cost $99 regardless of size
+      switch(baseAmount) {
+        case 10000: return 99;
+        case 25000: return 99;
+        case 50000: return 99;
+        case 100000: return 99;
+        case 200000: return 99;
+        default: return 0;
+      }
     default:
       return 0;
   }
@@ -353,9 +372,9 @@ const calculateTableValues = (selectedType: ChallengeType | null, selectedAmount
   const baseAmount = parseInt(selectedAmount.replace(/\$|,/g, ''));
   
   return {
-    maxDailyLoss: baseAmount * (selectedType === 'Standard' ? 0.08 : selectedType === '1-Step' ? 0.04 : 0.04),
-    maxLoss: baseAmount * (selectedType === 'Standard' ? 0.15 : selectedType === '1-Step' ? 0.08 : 0.04),
-    profitTargetStep1: baseAmount * (selectedType === 'Standard' ? 0.10 : selectedType === '1-Step' ? 0.10 : 0.12),
+    maxDailyLoss: baseAmount * (selectedType === 'Standard' ? 0.08 : selectedType === '1-Step' ? 0.04 : selectedType === 'Gauntlet' ? 0.08 : 0.04),
+    maxLoss: baseAmount * (selectedType === 'Standard' ? 0.15 : selectedType === '1-Step' ? 0.08 : selectedType === 'Gauntlet' ? 0.15 : 0.04),
+    profitTargetStep1: baseAmount * (selectedType === 'Standard' ? 0.10 : selectedType === '1-Step' ? 0.10 : selectedType === 'Gauntlet' ? 0.10 : 0.12),
     profitTargetStep2: baseAmount * (selectedType === 'Standard' ? 0.05 : 0)
   };
 };
@@ -392,6 +411,8 @@ export default function ChallengePage() {
         mappedType = 'Instant';
       } else if (preselectedType === '1-Step') {
         mappedType = '1-Step';
+      } else if (preselectedType === 'Gauntlet') {
+        mappedType = 'Gauntlet';
       }
       setSelectedType(mappedType);
       sessionStorage.removeItem('preselectedChallengeType');
@@ -591,6 +612,13 @@ export default function ChallengePage() {
         100000: 'https://www.hub-shockwave.com/shockpb/p/5-one-step-playbook-tzmch',
         200000: 'https://www.hub-shockwave.com/shockpb/p/5-one-step-playbook-bd8cz',
         500000: 'https://www.hub-shockwave.com/shockpb/p/5-one-step-playbook-yp7fc-99ncy',
+      },
+      'Gauntlet': {
+        10000: '', // No external payment links for Gauntlet - handled by crypto payment
+        25000: '',
+        50000: '',
+        100000: '',
+        200000: '',
       }
     };
     
@@ -831,7 +859,7 @@ export default function ChallengePage() {
   const renderChallengeTable = () => {
     if (!selectedType) return null;
 
-  return (
+    return (
       <div className="bg-gradient-to-br from-[#1A1A1A]/80 to-[#151515]/80 backdrop-blur-sm rounded-2xl p-6 border border-[#2F2F2F]/50">
         <h3 className="text-xl font-bold text-[#0FF1CE] mb-6 text-center">Challenge Details</h3>
         
@@ -855,6 +883,11 @@ export default function ChallengePage() {
                 <div className="col-span-2 grid grid-cols-2 bg-gradient-to-r from-[#0FF1CE] to-[#0FF1CE]/80">
                   <div className="p-3 md:p-4 border-r border-black/20 text-black font-bold"></div>
                   <div className="p-3 md:p-4 text-center text-black font-bold">FUNDED</div>
+                </div>
+              ) : selectedType === 'Gauntlet' ? (
+                <div className="col-span-2 grid grid-cols-2 bg-gradient-to-r from-[#FF6B6B] to-[#EE5A24]">
+                  <div className="p-3 md:p-4 border-r border-black/20 text-white font-bold"></div>
+                  <div className="p-3 md:p-4 text-center text-white font-bold">GAUNTLET</div>
                 </div>
               ) : (
                 <div className="col-span-2 grid grid-cols-2 bg-gradient-to-r from-[#0FF1CE] to-[#0FF1CE]/80">
@@ -955,7 +988,7 @@ export default function ChallengePage() {
                     </div>
                   ))}
                 </>
-              ) : (
+              ) : selectedType === 'Instant' ? (
                 <>
                   {[
                     ['Trading Period', '30 Days'],
@@ -983,7 +1016,43 @@ export default function ChallengePage() {
                     </div>
                   ))}
                 </>
-              )}
+              ) : selectedType === 'Gauntlet' ? (
+                <>
+                  {[
+                    ['Trading Period', 'Unlimited'],
+                    ['Minimum Trading Days', '0 Days'],
+                    ['Maximum Daily Loss', 
+                      <div key="daily" className="flex flex-col items-center">
+                        <span className="text-[#FF6B6B] font-bold text-base md:text-lg">8%</span>
+                        <span className="text-white text-[10px] md:text-xs mt-1 bg-[#FF6B6B]/20 px-2 py-0.5 rounded-full">${tableValues?.maxDailyLoss.toLocaleString()}</span>
+                      </div>
+                    ],
+                    ['Maximum Loss', 
+                      <div key="max" className="flex flex-col items-center">
+                        <span className="text-[#FF6B6B] font-bold text-base md:text-lg">15%</span>
+                        <span className="text-white text-[10px] md:text-xs mt-1 bg-[#FF6B6B]/20 px-2 py-0.5 rounded-full">${tableValues?.maxLoss.toLocaleString()}</span>
+                      </div>
+                    ],
+                    ['Profit Target', 
+                      <div key="profit" className="flex flex-col items-center">
+                        <span className="text-[#FF6B6B] font-bold text-base md:text-lg">10%</span>
+                        <span className="text-white text-[10px] md:text-xs mt-1 bg-[#FF6B6B]/20 px-2 py-0.5 rounded-full">${tableValues?.profitTargetStep1.toLocaleString()}</span>
+                      </div>
+                    ],
+                    ['Leverage', '1:200'],
+                    ['Trading Rules', 'No Restrictions'],
+                    ['News Trading', 'Allowed'],
+                    ['Entry Fee', '$99'],
+                    ['Activation Fee', 'Pay When You Pass'],
+                    ['Profit Split', 'Up to 95%']
+                  ].map((row, index) => (
+                    <div key={index} className={`contents text-white ${index % 2 === 0 ? 'bg-[#ffffff08]' : 'bg-[#FF6B6B]/[0.08]'}`}>
+                      <div className="p-3 md:p-4 border-t border-[#2F2F2F]/50 font-medium text-sm md:text-xs">{row[0]}</div>
+                      <div className="p-3 md:p-4 border-t border-l border-[#2F2F2F]/50 text-center text-sm md:text-xs">{row[1]}</div>
+                    </div>
+                  ))}
+                </>
+              ) : null}
             </div>
           </div>
         </div>
@@ -1303,9 +1372,9 @@ export default function ChallengePage() {
               }`}
             >
               <div className="relative flex items-center justify-center gap-2">
-                <span>Pay with Crypto</span>
-                <ChevronRight size={20} className={isFormValid() ? 'group-hover:translate-x-1 transition-transform' : ''} />
-              </div>
+                                      <span>{selectedType === 'Gauntlet' ? 'Pay $99 Entry Fee' : 'Pay with Crypto'}</span>
+                      <ChevronRight size={20} className={isFormValid() ? 'group-hover:translate-x-1 transition-transform' : ''} />
+                    </div>
               </button>
               
               <button
@@ -1322,9 +1391,21 @@ export default function ChallengePage() {
                   <span>Pay with Credit/Debit Card</span>
                 </div>
               </button>
-              <p className="text-xs text-gray-400 text-center mt-2">
-                You will be redirected to complete your purchase
-              </p>
+              {selectedType === 'Gauntlet' ? (
+                <div className="text-center mt-3 p-3 bg-[#FF6B6B]/10 border border-[#FF6B6B]/30 rounded-lg">
+                  <p className="text-[#FF6B6B] font-bold text-sm mb-1">🔥 Gauntlet Challenge</p>
+                  <p className="text-white text-xs">
+                    Pay only $99 now. If you pass, you'll pay the activation fee to get your funded account.
+                  </p>
+                  <p className="text-gray-400 text-xs mt-1">
+                    Activation fees: $10k→$99, $25k→$199, $50k→$399, $100k→$499, $200k→$999
+                  </p>
+                </div>
+              ) : (
+                <p className="text-xs text-gray-400 text-center mt-2">
+                  You will be redirected to complete your purchase
+                </p>
+              )}
             </div>
           </div>
         </div>

@@ -455,16 +455,15 @@ export default function EarlyAccessPage() {
               </div>
 
               {/* Promo Badge - Simplified for mobile */}
-              <div className="hidden mb-6 p-4 bg-gradient-to-r from-[#0FF1CE]/10 to-[#00D4FF]/10 rounded-xl border border-[#0FF1CE]/20 backdrop-blur-sm relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-20 h-20 bg-[#0FF1CE]/20 rounded-full blur-3xl"></div>
+              <div className="mb-6 p-4 bg-gradient-to-r from-[#FF6B6B]/10 to-[#EE5A24]/10 rounded-xl border border-[#FF6B6B]/20 backdrop-blur-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-20 h-20 bg-[#FF6B6B]/20 rounded-full blur-3xl"></div>
                 <div className="relative">
                   <div className="flex items-center gap-2 mb-2">
-                    <Zap className="w-5 h-5 text-[#0FF1CE]" />
-                    <span className="text-sm font-bold text-white">Limited Time Offer</span>
+                    <Zap className="w-5 h-5 text-[#FF6B6B]" />
+                    <span className="text-sm font-bold text-white">New Challenge</span>
                   </div>
-                  <div className="text-xl md:text-2xl font-bold text-[#0FF1CE]">SAVE 40%</div>
-                  <div className="text-xs text-gray-300 mt-1">Use code: <span className="font-mono font-bold text-[#0FF1CE]">TURBOCHARGED</span></div>
-                  <p className="text-xs text-gray-300 mt-1">+1 Free Retry</p>
+                  <div className="text-xl md:text-2xl font-bold text-[#FF6B6B]">GAUNTLET</div>
+                  <div className="text-xs text-gray-300 mt-1">Only pay when you <span className="font-bold text-[#FF6B6B]">PASS</span></div>
                 </div>
               </div>
 

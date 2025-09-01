@@ -7,6 +7,7 @@ import Particles from './components/Particles';
 import Header from './components/Header';
 import Link from 'next/link';
 import PricingTable from './components/PricingTable';
+import { ChevronRight } from 'lucide-react';
 
 // Disabled Promotional Modal Component - 40% OFF Deal
 const PromotionalModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
@@ -38,85 +39,51 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
             
             {/* Content */}
             <div className="relative z-10 text-center">
-              {/* Header */}
+              {/* Gauntlet Image Header */}
               <div className="mb-6">
-                <div className="inline-block bg-gradient-to-r from-[#0FF1CE] to-[#0FF1CE]/70 text-black px-4 py-2 rounded-full text-sm font-bold mb-3 animate-pulse">
-                  EXCLUSIVE OFFER
-                </div>
-                <h2 className="text-2xl md:text-3xl font-extrabold text-[#0FF1CE] mb-2">
-                  40% OFF
-                </h2>
-                <p className="text-[#0FF1CE] text-sm font-semibold mb-1">
-                  + 1 Free Retry
-                </p>
-                <p className="text-gray-300 text-sm">
-                  Limited time promotion for elite traders
-                </p>
-              </div>
-
-              {/* Features Grid */}
-              <div className="grid grid-cols-1 gap-4 mb-6">
-                {[
-                  { icon: "🔥", title: "40% OFF + Free Retry", subtitle: "All Challenge Plans" },
-                  { icon: "🎯", title: "Elite Community", subtitle: "Join Successful Traders" },
-                  { icon: "🚀", title: "Scale to $5M", subtitle: "Unlimited Growth Potential" }
-                ].map((feature, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center p-4 bg-gradient-to-r from-[#0FF1CE]/10 to-[#0FF1CE]/5 rounded-xl border border-[#0FF1CE]/20 hover:scale-105 transition-transform"
-                    style={{
-                      animation: `fadeInUp 0.5s ease-out ${index * 0.1}s both`
-                    }}
-                  >
-                    <div className="text-3xl mr-4">{feature.icon}</div>
-                    <div className="text-left">
-                      <div className="text-[#0FF1CE] font-bold text-base">{feature.title}</div>
-                      <div className="text-gray-400 text-sm">{feature.subtitle}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Deal Details */}
-              <div className="bg-[#0FF1CE]/10 border border-[#0FF1CE]/30 rounded-xl p-4 mb-6">
-                <h3 className="text-[#0FF1CE] font-bold text-sm mb-2">Why Choose Shockwave:</h3>
-                <div className="text-gray-300 text-xs space-y-1">
-                  <p>• Higher drawdown limits than competitors</p>
-                  <p>• 1:200 leverage for maximum opportunity</p>
-                  <p>• No BS Funded account rules</p>
-                </div>
-                
-                {/* Special Offer Highlight */}
-                <div className="mt-3 p-3 bg-gradient-to-r from-[#FF6B6B]/10 to-[#EE5A24]/10 border border-[#FF6B6B]/30 rounded-lg">
-                  <p className="text-[#FF6B6B] font-bold text-sm text-center">
-                    🎉 It's like you get 2 challenges for 40% OFF!
-                  </p>
-                  <p className="text-gray-300 text-xs text-center mt-1">
-                    Limited time only - Don't miss out!
-                  </p>
-                </div>
-                
-                {/* Promo Code Section */}
-                <div className="mt-4 pt-3 border-t border-[#0FF1CE]/20">
-                  <div className="bg-gradient-to-r from-[#0FF1CE]/20 to-[#0FF1CE]/10 border border-[#0FF1CE]/40 rounded-lg p-3">
-                    <p className="text-gray-300 text-xs mb-1">Use promo code:</p>
-                    <div className="bg-black/50 border border-[#0FF1CE] rounded px-3 py-2 inline-block">
-                      <span className="text-[#0FF1CE] font-bold text-lg tracking-wider">TURBOCHARGED</span>
-                    </div>
+                <div className="relative w-full max-w-sm mx-auto">
+                  <div className="aspect-[9/16] rounded-xl overflow-hidden bg-[#181818] border border-[#FF6B6B]/30">
+                    <Image
+                      src="/gauntletmodal.png"
+                      alt="Shockwave Gauntlet Challenge"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 384px) 100vw, 384px"
+                      onError={(e) => {
+                        // Fallback if image doesn't exist
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.innerHTML = `
+                            <div class="w-full h-full flex items-center justify-center">
+                              <div class="text-center">
+                                <div class="text-[#FF6B6B] text-2xl font-bold mb-2">🔥</div>
+                                <div class="text-[#FF6B6B] text-lg font-bold mb-1">Gauntlet Challenge</div>
+                                <div class="text-gray-400 text-sm">Upload gauntletmodal.png</div>
+                                <div class="text-gray-500 text-xs mt-1">to /public/</div>
+                              </div>
+                            </div>
+                          `;
+                        }
+                      }}
+                    />
                   </div>
                 </div>
               </div>
+
+
 
               {/* CTA Buttons */}
               <div className="space-y-3">
                 <Link href="/challenge" onClick={onClose}>
-                  <button className="w-full bg-gradient-to-r from-[#0FF1CE] to-[#0FF1CE]/80 text-black font-bold py-3 px-6 rounded-xl hover:scale-105 transition-transform shadow-lg">
-                    CLAIM 40% OFF NOW
+                  <button className="w-full bg-gradient-to-r from-[#FF6B6B] to-[#EE5A24] text-white font-bold py-3 px-6 rounded-xl hover:scale-105 transition-transform shadow-lg">
+                    TRY THE GAUNTLET - $99
                   </button>
                 </Link>
                 <button
                   onClick={onClose}
-                  className="w-full bg-transparent border border-[#0FF1CE]/50 text-[#0FF1CE] font-bold py-2 px-6 rounded-xl hover:bg-[#0FF1CE]/10 transition-colors"
+                  className="w-full bg-transparent border border-[#FF6B6B]/50 text-[#FF6B6B] font-bold py-2 px-6 rounded-xl hover:bg-[#FF6B6B]/10 transition-colors"
                 >
                   Maybe Later
                 </button>
@@ -124,13 +91,13 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
 
               {/* Timer */}
               <div className="mt-4 text-xs text-gray-400">
-                ⚡ Limited Time Offer - Don't Miss Out!
+                🔥 Revolutionary Challenge - Pay Only When You Pass!
               </div>
             </div>
 
             {/* Decorative Elements */}
-            <div className="absolute top-4 right-4 w-16 h-16 bg-[#0FF1CE]/5 rounded-full blur-xl"></div>
-            <div className="absolute bottom-4 left-4 w-12 h-12 bg-[#0FF1CE]/5 rounded-full blur-xl"></div>
+            <div className="absolute top-4 right-4 w-16 h-16 bg-[#FF6B6B]/5 rounded-full blur-xl"></div>
+            <div className="absolute bottom-4 left-4 w-12 h-12 bg-[#EE5A24]/5 rounded-full blur-xl"></div>
           </div>
         </div>
       </div>
@@ -141,7 +108,7 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
 export default function ShockwaveLandingPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
-    const [showSundayModal, setShowSundayModal] = useState(false); // Modal disabled - set to false
+    const [showSundayModal, setShowSundayModal] = useState(false); // Modal enabled
     
     useEffect(() => {
       const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -154,16 +121,16 @@ export default function ShockwaveLandingPage() {
       return () => unsubscribe();
     }, [router, loading]);
 
-    // Show Sunday modal after page loads - DISABLED
-    // useEffect(() => {
-    //   if (!loading) {
-    //     const timer = setTimeout(() => {
-    //       setShowSundayModal(true);
-    //     }, 1500); // Show modal 1.5 seconds after page loads
+    // Show Sunday modal after page loads
+    useEffect(() => {
+      if (!loading) {
+        const timer = setTimeout(() => {
+          setShowSundayModal(true);
+        }, 1500); // Show modal 1.5 seconds after page loads
 
-    //     return () => clearTimeout(timer);
-    //   }
-    // }, [loading]);
+        return () => clearTimeout(timer);
+      }
+    }, [loading]);
     
     if (loading) {
       return (
@@ -885,6 +852,124 @@ export default function ShockwaveLandingPage() {
           <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-[#111111] to-transparent"></div>
           <div className="absolute bottom-0 left-0 w-full h-20 bg-gradient-to-t from-[#131313] to-transparent"></div>
           <div className="absolute top-1/2 left-1/4 w-1/2 h-[400px] bg-[#0FF1CE]/[0.02] blur-[150px] rounded-full"></div>
+          
+          {/* Gauntlet Showcase Card */}
+          <div className="max-w-6xl mx-auto mb-16">
+            <div className="relative group bg-gradient-to-br from-[#FF6B6B]/20 to-[#EE5A24]/20 backdrop-blur-sm rounded-3xl p-8 border-2 border-[#FF6B6B]/30 hover:border-[#FF6B6B]/50 transition-all duration-300 overflow-hidden">
+              {/* Background Effects */}
+              <div className="absolute inset-0 bg-gradient-to-br from-[#FF6B6B]/10 to-[#EE5A24]/10 rounded-3xl opacity-50"></div>
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2/3 h-2/3 bg-[#FF6B6B]/20 blur-[60px] rounded-full"></div>
+              
+              {/* Content */}
+              <div className="relative z-10">
+                <div className="text-center md:text-left md:flex md:items-center md:justify-between">
+                  <div className="mb-6 md:mb-0 md:flex-1">
+                    {/* Badge */}
+                    <div className="inline-block bg-gradient-to-r from-[#FF6B6B] to-[#EE5A24] text-white px-4 py-2 rounded-full text-sm font-bold mb-4 animate-pulse">
+                      🔥 NEW CHALLENGE
+                    </div>
+                    
+                    {/* Title */}
+                    <h2 className="text-3xl md:text-4xl font-extrabold text-[#FF6B6B] mb-4">
+                      Shockwave Gauntlet
+                    </h2>
+                    
+                    {/* Description */}
+                    <div className="mb-6">
+                      <p className="text-white text-base md:text-lg mb-4 leading-relaxed">
+                        The ultimate trading challenge with <span className="text-[#FF6B6B] font-semibold">zero restrictions</span>. 
+                        One phase evaluation, complete trading freedom, and you only pay when you succeed.
+                      </p>
+                      
+                      {/* Key Points Grid */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
+                        <div className="group bg-gradient-to-br from-[#FF6B6B]/15 to-[#EE5A24]/10 backdrop-blur-sm rounded-xl p-4 border border-[#FF6B6B]/30 hover:border-[#FF6B6B]/50 transition-all duration-300">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-[#FF6B6B]/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                              <span className="text-[#FF6B6B] text-lg font-bold">💰</span>
+                            </div>
+                            <div>
+                              <div className="text-[#FF6B6B] font-bold text-sm">Pay When Pass</div>
+                              <div className="text-gray-300 text-xs">Only $99 upfront</div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="group bg-gradient-to-br from-[#FF6B6B]/15 to-[#EE5A24]/10 backdrop-blur-sm rounded-xl p-4 border border-[#FF6B6B]/30 hover:border-[#FF6B6B]/50 transition-all duration-300">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-[#FF6B6B]/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                              <span className="text-[#FF6B6B] text-lg font-bold">🚀</span>
+                            </div>
+                            <div>
+                              <div className="text-[#FF6B6B] font-bold text-sm">One Phase</div>
+                              <div className="text-gray-300 text-xs">No verification needed</div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="group bg-gradient-to-br from-[#FF6B6B]/15 to-[#EE5A24]/10 backdrop-blur-sm rounded-xl p-4 border border-[#FF6B6B]/30 hover:border-[#FF6B6B]/50 transition-all duration-300 sm:col-span-2 lg:col-span-1">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-[#FF6B6B]/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                              <span className="text-[#FF6B6B] text-lg font-bold">🔥</span>
+                            </div>
+                            <div>
+                              <div className="text-[#FF6B6B] font-bold text-sm">No Restrictions</div>
+                              <div className="text-gray-300 text-xs">Trade however you want</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Special Callout */}
+                      <div className="bg-gradient-to-r from-[#FF6B6B]/20 via-[#FF6B6B]/10 to-[#EE5A24]/20 backdrop-blur-sm rounded-xl p-4 border border-[#FF6B6B]/40 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-r from-[#FF6B6B]/5 to-[#EE5A24]/5 rounded-xl"></div>
+                        <div className="relative z-10 text-center">
+                          <div className="text-[#FF6B6B] font-bold text-sm mb-1">
+                            🎯 Revolutionary Model: We believe in your success
+                          </div>
+                          <div className="text-gray-300 text-xs">
+                            Pay activation fees only when you prove yourself. No upfront risk, maximum reward.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Features */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                      {[
+                        { label: "Max DD", value: "15%" },
+                        { label: "Daily DD", value: "8%" },
+                        { label: "Leverage", value: "1:200" },
+                        { label: "Target", value: "10%" }
+                      ].map((item, index) => (
+                        <div key={index} className="text-center">
+                          <div className="text-[#FF6B6B] font-bold text-xl">{item.value}</div>
+                          <div className="text-gray-300 text-sm">{item.label}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* CTA */}
+                  <div className="md:ml-8">
+                    <Link href="/challenge">
+                      <button className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-[#FF6B6B] to-[#EE5A24] text-white text-lg font-bold rounded-xl hover:scale-105 transition-transform shadow-lg hover:shadow-[#FF6B6B]/25 group">
+                        <div className="flex items-center justify-center gap-2">
+                          <span>Try the Gauntlet</span>
+                          <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                        </div>
+                      </button>
+                    </Link>
+                    <p className="text-center text-gray-400 text-sm mt-2">Pay $99 now, activation fee only when you pass</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Decorative Elements */}
+              <div className="absolute top-4 right-4 w-16 h-16 bg-[#FF6B6B]/10 rounded-full blur-xl"></div>
+              <div className="absolute bottom-4 left-4 w-12 h-12 bg-[#EE5A24]/10 rounded-full blur-xl"></div>
+            </div>
+          </div>
           
           <PricingTable />
         </section>
