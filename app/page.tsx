@@ -141,7 +141,7 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
 export default function ShockwaveLandingPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
-    const [showSundayModal, setShowSundayModal] = useState(false);
+    const [showSundayModal, setShowSundayModal] = useState(false); // Modal disabled - set to false
     
     useEffect(() => {
       const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -154,16 +154,16 @@ export default function ShockwaveLandingPage() {
       return () => unsubscribe();
     }, [router, loading]);
 
-    // Show Sunday modal after page loads
-    useEffect(() => {
-      if (!loading) {
-        const timer = setTimeout(() => {
-          setShowSundayModal(true);
-        }, 1500); // Show modal 1.5 seconds after page loads
+    // Show Sunday modal after page loads - DISABLED
+    // useEffect(() => {
+    //   if (!loading) {
+    //     const timer = setTimeout(() => {
+    //       setShowSundayModal(true);
+    //     }, 1500); // Show modal 1.5 seconds after page loads
 
-        return () => clearTimeout(timer);
-      }
-    }, [loading]);
+    //     return () => clearTimeout(timer);
+    //   }
+    // }, [loading]);
     
     if (loading) {
       return (
