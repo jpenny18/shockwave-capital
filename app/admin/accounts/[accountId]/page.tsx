@@ -655,9 +655,13 @@ export default function AdminAccountDetailsPage() {
             });
           } else {
             // Regular challenge objectives
-            const targetDrawdown = accountData.accountType === 'standard' ? 15 : 12;
-            const targetDailyDrawdown = accountData.accountType === 'standard' ? 8 : 4;
-            const targetProfit = accountData.accountType === 'standard' 
+            const targetDrawdown = accountData.accountType === 'standard' || accountData.accountType === 'gauntlet' ? 15 : 
+                                  accountData.accountType === '1-step' ? 8 : 4;
+            const targetDailyDrawdown = accountData.accountType === 'standard' || accountData.accountType === 'gauntlet' ? 8 : 
+                                       accountData.accountType === '1-step' ? 4 : 4;
+            const targetProfit = accountData.accountType === 'gauntlet' ? 10 :  // Gauntlet: 10% (single phase)
+                               accountData.accountType === '1-step' ? 10 :  // 1-Step: 10%
+                               accountData.accountType === 'standard' 
               ? (accountData.step === 1 ? 10 : 5)  // Standard: Step 1 = 10%, Step 2 = 5%
               : 12;  // Instant: 12%
             const targetTradingDays = 5;
@@ -988,6 +992,7 @@ export default function AdminAccountDetailsPage() {
               <p className="text-gray-400 text-xs mb-1">Account Type</p>
               <p className="text-white font-medium">
                 {accountInfo.accountType === '1-step' ? 'Shockwave 1-Step' :
+                 accountInfo.accountType === 'gauntlet' ? 'Shockwave Gauntlet' :
                  accountInfo.accountType === 'standard' ? 'Shockwave Standard' : 'Shockwave Instant'}
               </p>
             </div>
@@ -1002,7 +1007,8 @@ export default function AdminAccountDetailsPage() {
             <div>
               <p className="text-gray-400 text-xs mb-1">Challenge Step</p>
               <p className="text-white font-medium">
-                {accountInfo.step === 3 || accountInfo.status === 'funded' ? 'Funded' : `Step ${accountInfo.step}`}
+                {accountInfo.step === 3 || accountInfo.status === 'funded' ? 'Funded' : 
+                 accountInfo.accountType === 'gauntlet' || accountInfo.accountType === '1-step' ? 'Challenge' : `Step ${accountInfo.step}`}
               </p>
             </div>
           </div>

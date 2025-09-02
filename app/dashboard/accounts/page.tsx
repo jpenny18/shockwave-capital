@@ -172,11 +172,12 @@ export default function MyAccountsPage() {
                   <div>
                     <h3 className="text-lg font-semibold text-white">
                       {account.accountType === '1-step' ? 'Shockwave 1-Step' : 
+                       account.accountType === 'gauntlet' ? 'Shockwave Gauntlet' :
                        account.accountType === 'standard' ? 'Shockwave Standard' : 'Shockwave Instant'}
                     </h3>
                     <p className="text-sm text-gray-400 mt-1">
                       ${account.accountSize.toLocaleString()} • {account.step === 3 ? 'Funded' : 
-                                                                account.accountType === '1-step' ? 'Challenge' : 
+                                                                (account.accountType === '1-step' || account.accountType === 'gauntlet') ? 'Challenge' : 
                                                                 `Step ${account.step}`}
                     </p>
                   </div>

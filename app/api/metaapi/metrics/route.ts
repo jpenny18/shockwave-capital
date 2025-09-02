@@ -570,7 +570,7 @@ export async function POST(req: NextRequest) {
 }
 
 // Enhanced function to set up automated risk trackers
-async function setupRiskTrackers(riskApi: any, accountId: string, accountType: 'standard' | 'instant' | '1-step', accountSize: number, step: number = 1) {
+async function setupRiskTrackers(riskApi: any, accountId: string, accountType: 'standard' | 'instant' | '1-step' | 'gauntlet', accountSize: number, step: number = 1) {
   try {
     // Check if riskApi is available
     if (!riskApi) {
@@ -595,6 +595,10 @@ async function setupRiskTrackers(riskApi: any, accountId: string, accountType: '
       // New 1-step challenge: 8% max, 4% daily
       targetDrawdown = 8;
       targetDailyDrawdown = 4;
+    } else if (accountType === 'gauntlet') {
+      // Gauntlet challenge: 15% max, 8% daily (single phase)
+      targetDrawdown = 15;
+      targetDailyDrawdown = 8;
     } else if (accountType === 'instant') {
       // Updated instant: 4% max trailing loss, no daily
       targetDrawdown = 4;
@@ -852,7 +856,7 @@ async function getCachedMaxDailyDrawdown(accountId: string): Promise<number | un
 
 function calculateTradingObjectives(
   metrics: any,
-  challengeType: 'standard' | 'instant' | '1-step',
+  challengeType: 'standard' | 'instant' | '1-step' | 'gauntlet',
   accountStartBalance: number,
   step: number = 1,
   equityData?: any[],
@@ -921,6 +925,13 @@ function calculateTradingObjectives(
       maxDailyDrawdown: 4, // New: 4% daily drawdown
       profitTargetStep1: 10, // New: 10% profit target
       profitTargetStep2: 0 // No step 2 for 1-step challenge
+    },
+    gauntlet: {
+      minTradingDays: 0,
+      maxDrawdown: 15, // Gauntlet: 15% max drawdown
+      maxDailyDrawdown: 8, // Gauntlet: 8% daily drawdown
+      profitTargetStep1: 10, // Gauntlet: 10% profit target (single phase)
+      profitTargetStep2: 0 // No step 2 for gauntlet challenge
     },
     funded: {
       minTradingDays: 5, // 5 days with 0.5% gain required for payout eligibility
@@ -1238,6 +1249,9 @@ function generateMockTrackers(accountType: string, accountSize: number, step: nu
   } else if (accountType === '1-step') {
     maxDD = 8;
     dailyDD = 4;
+  } else if (accountType === 'gauntlet') {
+    maxDD = 15;
+    dailyDD = 8;
   } else if (accountType === 'instant') {
     maxDD = 4;
     dailyDD = null;
@@ -1297,6 +1311,13 @@ function calculateMockObjectives(accountType: string, accountSize: number, curre
       minTradingDays: 5,
       maxDrawdown: 8,
       maxDailyDrawdown: 4,
+      profitTarget: 10
+    };
+  } else if (accountType === 'gauntlet') {
+    targets = {
+      minTradingDays: 0,
+      maxDrawdown: 15,
+      maxDailyDrawdown: 8,
       profitTarget: 10
     };
   } else if (accountType === 'instant') {

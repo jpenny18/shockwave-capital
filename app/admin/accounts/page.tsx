@@ -74,7 +74,7 @@ export default function AdminAccountsPage() {
   const [accountForm, setAccountForm] = useState({
     accountId: '',
     accountToken: '',
-    accountType: 'standard' as 'standard' | 'instant' | '1-step',
+    accountType: 'standard' as 'standard' | 'instant' | '1-step' | 'gauntlet',
     accountSize: 10000,
     platform: 'mt5' as 'mt4' | 'mt5',
     status: 'active' as 'active' | 'inactive' | 'passed' | 'failed' | 'funded',
@@ -458,9 +458,11 @@ export default function AdminAccountsPage() {
       // Check for objective breaches
       const maxDDLimit = config.accountType === '1-step' ? 8 : 
                         config.accountType === 'instant' ? 4 : 
+                        config.accountType === 'gauntlet' ? 15 :
                         config.accountType === 'standard' ? 15 : 15;
       const dailyDDLimit = config.accountType === '1-step' ? 4 :
                           config.accountType === 'instant' ? null : // No daily limit for instant
+                          config.accountType === 'gauntlet' ? 8 :
                           config.accountType === 'standard' ? 8 : 8;
       
       if (metrics.maxDrawdown > maxDDLimit && !processedAlerts.has(maxDDKey)) {
@@ -585,6 +587,7 @@ export default function AdminAccountsPage() {
       } else {
         // Regular challenge account checks
         const targetProfit = config.accountType === '1-step' ? 10 :  // 1-step: 10%
+                           config.accountType === 'gauntlet' ? 10 :  // Gauntlet: 10%
                            config.accountType === 'standard' 
           ? (config.step === 1 ? 10 : 5)  // Standard: Step 1 = 10%, Step 2 = 5%
           : 12;  // Instant: 12%
@@ -611,6 +614,7 @@ export default function AdminAccountsPage() {
       // Warning for approaching limits - adjusted for new challenge types
       const warningThreshold = config.accountType === '1-step' ? 6 :    // 75% of 8%
                               config.accountType === 'instant' ? 3 :    // 75% of 4%
+                              config.accountType === 'gauntlet' ? 12 :   // 80% of 15%
                               config.accountType === 'standard' ? 12 : 12; // 80% of 15%
       
       if (metrics.maxDrawdown > warningThreshold && 
@@ -1115,10 +1119,12 @@ export default function AdminAccountsPage() {
   const standardAccountSizes = [5000, 10000, 25000, 50000, 100000, 200000, 500000];
   const instantAccountSizes = [25000, 50000, 100000];
   const oneStepAccountSizes = [5000, 10000, 25000, 50000, 100000, 200000, 500000]; // Same sizes as standard
+  const gauntletAccountSizes = [10000, 25000, 50000, 100000, 200000]; // Gauntlet specific sizes
   
-  const getAccountSizes = (accountType: 'standard' | 'instant' | '1-step' | 'funded') => {
+  const getAccountSizes = (accountType: 'standard' | 'instant' | '1-step' | 'gauntlet' | 'funded') => {
     if (accountType === 'funded') return standardAccountSizes; // Funded uses standard sizes
     if (accountType === '1-step') return oneStepAccountSizes;
+    if (accountType === 'gauntlet') return gauntletAccountSizes;
     return accountType === 'standard' ? standardAccountSizes : instantAccountSizes;
   };
 
@@ -1598,7 +1604,7 @@ export default function AdminAccountsPage() {
               setAccountForm({
                 accountId: '',
                 accountToken: '',
-                accountType: 'standard' as 'standard' | 'instant' | '1-step',
+                accountType: 'standard' as 'standard' | 'instant' | '1-step' | 'gauntlet',
                 accountSize: 10000,
                 platform: 'mt5' as 'mt4' | 'mt5',
                 status: 'active' as 'active' | 'inactive' | 'passed' | 'failed' | 'funded',
@@ -1618,7 +1624,7 @@ export default function AdminAccountsPage() {
               setAccountForm({
                 accountId: '',
                 accountToken: '',
-                accountType: 'standard' as 'standard' | 'instant' | '1-step',
+                accountType: 'standard' as 'standard' | 'instant' | '1-step' | 'gauntlet',
                 accountSize: 10000,
                 platform: 'mt5' as 'mt4' | 'mt5',
                 status: 'active' as 'active' | 'inactive' | 'passed' | 'failed' | 'funded',
@@ -2078,6 +2084,7 @@ export default function AdminAccountsPage() {
                   // Check if account has passed objectives
                   const profitPercent = config && metrics ? ((metrics.balance - config.accountSize) / config.accountSize * 100) : 0;
                   const targetProfit = config?.accountType === '1-step' ? 10 :
+                                     config?.accountType === 'gauntlet' ? 10 : // Gauntlet: 10%
                                      config?.accountType === 'standard' 
                                        ? (config.step === 1 ? 10 : 5)
                                        : 12; // Instant: 12%
@@ -2135,9 +2142,10 @@ export default function AdminAccountsPage() {
                           <Shield size={14} className="text-gray-400" />
                           <span className="text-sm text-gray-300">
                             {config?.accountType === '1-step' ? '1-Step' : 
+                             config?.accountType === 'gauntlet' ? 'Gauntlet' :
                              config?.accountType === 'standard' ? 'Standard' : 'Instant'}
                             {config?.step && ` - ${config.step === 3 ? 'Funded' : 
-                                                  config.accountType === '1-step' ? 'Challenge' : 
+                                                  (config.accountType === '1-step' || config.accountType === 'gauntlet') ? 'Challenge' : 
                                                   `Step ${config.step}`}`}
                           </span>
                         </div>
@@ -2193,20 +2201,20 @@ export default function AdminAccountsPage() {
                               <div className="h-1.5 bg-[#151515] rounded-full overflow-hidden">
                                 <div 
                                   className={`h-full transition-all duration-500 ${
-                                    metrics && metrics.maxDrawdown > (config?.accountType === 'standard' ? 15 : config?.accountType === '1-step' ? 8 : 4)
+                                    metrics && metrics.maxDrawdown > (config?.accountType === 'standard' || config?.accountType === 'gauntlet' ? 15 : config?.accountType === '1-step' ? 8 : 4)
                                       ? 'bg-red-400'
-                                      : metrics && metrics.maxDrawdown > (config?.accountType === 'standard' ? 12 : config?.accountType === '1-step' ? 6 : 3)
+                                      : metrics && metrics.maxDrawdown > (config?.accountType === 'standard' || config?.accountType === 'gauntlet' ? 12 : config?.accountType === '1-step' ? 6 : 3)
                                       ? 'bg-yellow-400'
                                       : 'bg-green-400'
                                   }`}
-                                  style={{ width: `${Math.min((metrics?.maxDrawdown || 0) / (config?.accountType === 'standard' ? 15 : config?.accountType === '1-step' ? 8 : 4) * 100, 100)}%` }}
+                                  style={{ width: `${Math.min((metrics?.maxDrawdown || 0) / (config?.accountType === 'standard' || config?.accountType === 'gauntlet' ? 15 : config?.accountType === '1-step' ? 8 : 4) * 100, 100)}%` }}
                                 />
                               </div>
                             </div>
                             <p className={`text-sm font-medium min-w-[45px] text-right ${
-                              metrics && metrics.maxDrawdown > (config?.accountType === 'standard' ? 15 : config?.accountType === '1-step' ? 8 : 4)
+                              metrics && metrics.maxDrawdown > (config?.accountType === 'standard' || config?.accountType === 'gauntlet' ? 15 : config?.accountType === '1-step' ? 8 : 4)
                             ? 'text-red-400'
-                                : metrics && metrics.maxDrawdown > (config?.accountType === 'standard' ? 12 : config?.accountType === '1-step' ? 6 : 3)
+                                : metrics && metrics.maxDrawdown > (config?.accountType === 'standard' || config?.accountType === 'gauntlet' ? 12 : config?.accountType === '1-step' ? 6 : 3)
                             ? 'text-yellow-400'
                             : 'text-gray-300'
                         }`}>
@@ -2222,20 +2230,20 @@ export default function AdminAccountsPage() {
                               <div className="h-1.5 bg-[#151515] rounded-full overflow-hidden">
                                 <div 
                                   className={`h-full transition-all duration-500 ${
-                                    metrics && (metrics.maxDailyDrawdown || metrics.dailyDrawdown) > (config?.accountType === 'standard' ? 8 : config?.accountType === '1-step' ? 4 : 999)
+                                    metrics && (metrics.maxDailyDrawdown || metrics.dailyDrawdown) > (config?.accountType === 'standard' || config?.accountType === 'gauntlet' ? 8 : config?.accountType === '1-step' ? 4 : 999)
                                       ? 'bg-red-400'
-                                      : metrics && (metrics.maxDailyDrawdown || metrics.dailyDrawdown) > (config?.accountType === 'standard' ? 6 : config?.accountType === '1-step' ? 3 : 999)
+                                      : metrics && (metrics.maxDailyDrawdown || metrics.dailyDrawdown) > (config?.accountType === 'standard' || config?.accountType === 'gauntlet' ? 6 : config?.accountType === '1-step' ? 3 : 999)
                                       ? 'bg-yellow-400'
                                       : 'bg-green-400'
                                   }`}
-                                  style={{ width: config?.accountType === 'instant' ? '0%' : `${Math.min(((metrics?.maxDailyDrawdown || metrics?.dailyDrawdown || 0) / (config?.accountType === 'standard' ? 8 : 4)) * 100, 100)}%` }}
+                                  style={{ width: config?.accountType === 'instant' ? '0%' : `${Math.min(((metrics?.maxDailyDrawdown || metrics?.dailyDrawdown || 0) / (config?.accountType === 'standard' || config?.accountType === 'gauntlet' ? 8 : 4)) * 100, 100)}%` }}
                                 />
                               </div>
                             </div>
                             <p className={`text-sm font-medium min-w-[45px] text-right ${
-                              metrics && (metrics.maxDailyDrawdown || metrics.dailyDrawdown) > (config?.accountType === 'standard' ? 8 : config?.accountType === '1-step' ? 4 : 999)
+                              metrics && (metrics.maxDailyDrawdown || metrics.dailyDrawdown) > (config?.accountType === 'standard' || config?.accountType === 'gauntlet' ? 8 : config?.accountType === '1-step' ? 4 : 999)
                             ? 'text-red-400'
-                                : metrics && (metrics.maxDailyDrawdown || metrics.dailyDrawdown) > (config?.accountType === 'standard' ? 6 : config?.accountType === '1-step' ? 3 : 999)
+                                : metrics && (metrics.maxDailyDrawdown || metrics.dailyDrawdown) > (config?.accountType === 'standard' || config?.accountType === 'gauntlet' ? 6 : config?.accountType === '1-step' ? 3 : 999)
                             ? 'text-yellow-400'
                             : 'text-gray-300'
                         }`}>
@@ -2465,7 +2473,7 @@ export default function AdminAccountsPage() {
                   <select
                     value={accountForm.accountType}
                     onChange={(e) => {
-                      const newType = e.target.value as 'standard' | 'instant' | '1-step' | 'funded';
+                      const newType = e.target.value as 'standard' | 'instant' | '1-step' | 'gauntlet' | 'funded';
                       // For funded accounts, set step to 3 automatically
                       if (newType === 'funded') {
                         setAccountForm({ 
@@ -2488,6 +2496,7 @@ export default function AdminAccountsPage() {
                     <option value="standard">Shockwave Standard</option>
                     <option value="instant">Shockwave Instant</option>
                     <option value="1-step">Shockwave 1-Step</option>
+                    <option value="gauntlet">Shockwave Gauntlet</option>
                     <option value="funded">Funded Account</option>
                   </select>
                 </div>
@@ -2661,7 +2670,8 @@ export default function AdminAccountsPage() {
                                   setAccountForm(prev => ({
                                     ...prev,
                                     accountType: order.challengeType.toLowerCase().includes('instant') ? 'instant' : 
-                                                order.challengeType.toLowerCase().includes('1-step') ? '1-step' : 'standard',
+                                                order.challengeType.toLowerCase().includes('1-step') ? '1-step' : 
+                                                order.challengeType.toLowerCase().includes('gauntlet') ? 'gauntlet' : 'standard',
                                     accountSize: parseInt(order.challengeAmount.replace(/[^0-9]/g, '')),
                                     platform: order.platform.toLowerCase() as 'mt4' | 'mt5'
                                   }));
@@ -2775,7 +2785,7 @@ export default function AdminAccountsPage() {
                       <select
                         value={accountForm.accountType}
                         onChange={(e) => {
-                          const newType = e.target.value as 'standard' | 'instant' | '1-step' | 'funded';
+                          const newType = e.target.value as 'standard' | 'instant' | '1-step' | 'gauntlet' | 'funded';
                           // For funded accounts, set step to 3 automatically
                           if (newType === 'funded') {
                             setAccountForm({ 
@@ -2798,6 +2808,7 @@ export default function AdminAccountsPage() {
                         <option value="standard">Shockwave Standard</option>
                         <option value="instant">Shockwave Instant</option>
                         <option value="1-step">Shockwave 1-Step</option>
+                        <option value="gauntlet">Shockwave Gauntlet</option>
                         <option value="funded">Funded Account</option>
                       </select>
                     </div>
@@ -3100,7 +3111,8 @@ export default function AdminAccountsPage() {
                                         setAccountForm(prev => ({
                                           ...prev,
                                           accountType: order.challengeType.toLowerCase().includes('instant') ? 'instant' : 
-                                                      order.challengeType.toLowerCase().includes('1-step') ? '1-step' : 'standard',
+                                                      order.challengeType.toLowerCase().includes('1-step') ? '1-step' : 
+                                                      order.challengeType.toLowerCase().includes('gauntlet') ? 'gauntlet' : 'standard',
                                           accountSize: parseInt(order.challengeAmount.replace(/[^0-9]/g, '')),
                                           platform: order.platform.toLowerCase() as 'mt4' | 'mt5'
                                         }));
@@ -3210,7 +3222,7 @@ export default function AdminAccountsPage() {
                             <select
                               value={accountForm.accountType}
                               onChange={(e) => {
-                                const newType = e.target.value as 'standard' | 'instant' | '1-step' | 'funded';
+                                const newType = e.target.value as 'standard' | 'instant' | '1-step' | 'gauntlet' | 'funded';
                                 // For funded accounts, set step to 3 automatically
                                 if (newType === 'funded') {
                                   setAccountForm({ 
@@ -3233,6 +3245,7 @@ export default function AdminAccountsPage() {
                               <option value="standard">Shockwave Standard</option>
                               <option value="instant">Shockwave Instant</option>
                               <option value="1-step">Shockwave 1-Step</option>
+                              <option value="gauntlet">Shockwave Gauntlet</option>
                               <option value="funded">Funded Account</option>
                             </select>
                           </div>

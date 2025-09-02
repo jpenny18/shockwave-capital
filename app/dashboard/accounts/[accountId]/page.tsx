@@ -730,13 +730,16 @@ export default function AccountDetailsPage() {
                 <div>
                   <p className="text-xs text-gray-400 mb-1">Challenge Step</p>
                   <p className="text-sm text-white">
-                    {userAccount?.step === 3 ? 'Step 3 (Funded)' : userAccount?.step === 2 ? 'Step 2' : userAccount?.step === 1 ? 'Step 1' : '-'}
+                    {userAccount?.step === 3 ? 'Step 3 (Funded)' : 
+                     (userAccount?.accountType === '1-step' || userAccount?.accountType === 'gauntlet') ? 'Challenge' :
+                     userAccount?.step === 2 ? 'Step 2' : userAccount?.step === 1 ? 'Step 1' : '-'}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-400 mb-1">Account Type</p>
                   <p className="text-white font-medium">
                     {userAccount?.accountType === '1-step' ? 'Shockwave 1-Step' : 
+                     userAccount?.accountType === 'gauntlet' ? 'Shockwave Gauntlet' :
                      userAccount?.accountType === 'instant' ? 'Shockwave Instant' : 'Shockwave Standard'}
                   </p>
                 </div>
