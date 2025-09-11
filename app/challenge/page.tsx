@@ -47,7 +47,7 @@ const challengeTypes = [
     image: '/shockwavegauntlet.png',
     description: 'Pay when you pass - ultimate freedom',
     badge: 'PAY WHEN YOU PASS',
-    features: ['$99 Entry Fee', 'No Restrictions', 'Activation Fee on Pass']
+    features: ['$19.99 Entry Fee', 'No Restrictions', 'Activation Fee on Pass']
   }
 ];
 
@@ -351,13 +351,13 @@ const calculatePrice = (type: ChallengeType, amount: string): number => {
         default: return 0;
       }
     case 'Gauntlet':
-      // All Gauntlet challenges cost $99 regardless of size
+      // All Gauntlet challenges cost $19.99 regardless of size
       switch(baseAmount) {
-        case 10000: return 99;
-        case 25000: return 99;
-        case 50000: return 99;
-        case 100000: return 99;
-        case 200000: return 99;
+        case 10000: return 19.99;
+        case 25000: return 19.99;
+        case 50000: return 19.99;
+        case 100000: return 19.99;
+        case 200000: return 19.99;
         default: return 0;
       }
     default:
@@ -1042,7 +1042,7 @@ export default function ChallengePage() {
                     ['Leverage', '1:200'],
                     ['Trading Rules', 'No Restrictions'],
                     ['News Trading', 'Allowed'],
-                    ['Entry Fee', '$99'],
+                    ['Entry Fee', '$19.99'],
                     ['Activation Fee', 'Pay When You Pass'],
                     ['Profit Split', 'Up to 95%']
                   ].map((row, index) => (
@@ -1372,7 +1372,7 @@ export default function ChallengePage() {
               }`}
             >
               <div className="relative flex items-center justify-center gap-2">
-                                      <span>{selectedType === 'Gauntlet' ? 'Pay $99 Entry Fee' : 'Pay with Crypto'}</span>
+                                      <span>{selectedType === 'Gauntlet' ? 'Pay $19.99 Entry Fee' : 'Pay with Crypto'}</span>
                       <ChevronRight size={20} className={isFormValid() ? 'group-hover:translate-x-1 transition-transform' : ''} />
                     </div>
               </button>
@@ -1395,7 +1395,7 @@ export default function ChallengePage() {
                 <div className="text-center mt-3 p-3 bg-[#FF6B6B]/10 border border-[#FF6B6B]/30 rounded-lg">
                   <p className="text-[#FF6B6B] font-bold text-sm mb-1">🔥 Gauntlet Challenge</p>
                   <p className="text-white text-xs">
-                    Pay only $99 now. If you pass, you'll pay the activation fee to get your funded account.
+                    Pay only $19.99 now. If you pass, you'll pay the activation fee to get your funded account.
                   </p>
                   <p className="text-gray-400 text-xs mt-1">
                     Activation fees: $10k→$99, $25k→$199, $50k→$399, $100k→$499, $200k→$999

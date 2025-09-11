@@ -501,16 +501,16 @@ const challengeData: ChallengeData = {
     name: "Shockwave Gauntlet",
     accounts: [10000, 25000, 50000, 100000, 200000],
     prices: {
-      10000: 99,
-      25000: 99,
-      50000: 99,
-      100000: 99,
-      200000: 99
+      10000: 19.99,
+      25000: 19.99,
+      50000: 19.99,
+      100000: 19.99,
+      200000: 19.99
     },
     features: [
       {
         name: "Pay When You Pass",
-        subtitle: "Only $99 to try",
+        subtitle: "Only $19.99 to try",
         tooltip: "pay-when-pass",
         values: {
           10000: "$99 activation",

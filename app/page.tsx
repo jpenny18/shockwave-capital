@@ -44,7 +44,7 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                 <div className="relative w-full max-w-sm mx-auto">
                   <div className="aspect-[9/16] rounded-xl overflow-hidden bg-[#181818] border border-[#FF6B6B]/30">
                     <Image
-                      src="/gauntletmodal.png"
+                      src="/gauntletslashed.png"
                       alt="Shockwave Gauntlet Challenge"
                       fill
                       className="object-cover"
@@ -60,7 +60,7 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                               <div class="text-center">
                                 <div class="text-[#FF6B6B] text-2xl font-bold mb-2">🔥</div>
                                 <div class="text-[#FF6B6B] text-lg font-bold mb-1">Gauntlet Challenge</div>
-                                <div class="text-gray-400 text-sm">Upload gauntletmodal.png</div>
+                                <div class="text-gray-400 text-sm">Upload gauntletslashed.png</div>
                                 <div class="text-gray-500 text-xs mt-1">to /public/</div>
                               </div>
                             </div>
@@ -78,7 +78,7 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
               <div className="space-y-3">
                 <Link href="/challenge" onClick={onClose}>
                   <button className="w-full bg-gradient-to-r from-[#FF6B6B] to-[#EE5A24] text-white font-bold py-3 px-6 rounded-xl hover:scale-105 transition-transform shadow-lg">
-                    TRY THE GAUNTLET - $99
+                    TRY THE GAUNTLET - $19.99
                   </button>
                 </Link>
                 <button
@@ -890,7 +890,7 @@ export default function ShockwaveLandingPage() {
                             </div>
                             <div>
                               <div className="text-[#FF6B6B] font-bold text-sm">Pay When Pass</div>
-                              <div className="text-gray-300 text-xs">Only $99 upfront</div>
+                              <div className="text-gray-300 text-xs">Only $19.99 upfront</div>
                             </div>
                           </div>
                         </div>
@@ -960,7 +960,7 @@ export default function ShockwaveLandingPage() {
                         </div>
                       </button>
                     </Link>
-                    <p className="text-center text-gray-400 text-sm mt-2">Pay $99 now, activation fee only when you pass</p>
+                    <p className="text-center text-gray-400 text-sm mt-2">Pay $19.99 now, activation fee only when you pass</p>
                   </div>
                 </div>
               </div>

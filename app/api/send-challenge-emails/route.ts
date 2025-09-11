@@ -18,6 +18,7 @@ export async function POST(req: Request) {
         const getChallengeTypeName = (type: string) => {
           if (type === '1-step') return '1-Step';
           if (type === 'standard') return 'Standard';
+          if (type === 'gauntlet') return 'Gauntlet';
           return 'Instant';
         };
         
@@ -73,12 +74,14 @@ export async function POST(req: Request) {
         const getMaxDDLimit = (type: string) => {
           if (type === '1-step') return 8;
           if (type === 'instant') return 4;
+          if (type === 'gauntlet') return 15;
           return 15; // standard
         };
         
         const getDailyDDLimit = (type: string) => {
           if (type === '1-step') return 4;
           if (type === 'instant') return null; // No daily limit for instant
+          if (type === 'gauntlet') return 8;
           return 8; // standard
         };
         
@@ -102,7 +105,7 @@ export async function POST(req: Request) {
           breachSpecifics = '<li>Please review your account for specific details</li>';
         }
         
-        const challengeTypeName = challengeType === '1-step' ? '1-Step' : challengeType === 'standard' ? 'Standard' : 'Instant';
+        const challengeTypeName = challengeType === '1-step' ? '1-Step' : challengeType === 'standard' ? 'Standard' : challengeType === 'gauntlet' ? 'Gauntlet' : 'Instant';
         
         subject = `❌ Challenge Failed: Your Shockwave Capital ${challengeTypeName} Challenge`;
         customerHtml = `
@@ -170,18 +173,20 @@ export async function POST(req: Request) {
         const getMaxDDLimitForWarning = (type: string) => {
           if (type === '1-step') return 8;
           if (type === 'instant') return 4;
+          if (type === 'gauntlet') return 15;
           return 15; // standard
         };
         
         const getDailyDDLimitForWarning = (type: string) => {
           if (type === '1-step') return 4;
           if (type === 'instant') return null; // No daily limit for instant
+          if (type === 'gauntlet') return 8;
           return 8; // standard
         };
         
         const warningMaxDD = getMaxDDLimitForWarning(challengeType);
         const warningDailyDD = getDailyDDLimitForWarning(challengeType);
-        const warningChallengeName = challengeType === '1-step' ? '1-Step' : challengeType === 'standard' ? 'Standard' : 'Instant';
+        const warningChallengeName = challengeType === '1-step' ? '1-Step' : challengeType === 'standard' ? 'Standard' : challengeType === 'gauntlet' ? 'Gauntlet' : 'Instant';
         
         subject = `⚠️ Drawdown Warning: Your Shockwave Capital Challenge`;
         customerHtml = `
@@ -392,6 +397,44 @@ export async function POST(req: Request) {
         adminHtml = `<p>Funded account terminated for ${email}. Breach type: ${breachType}, Max DD: ${maxDrawdown?.toFixed(2)}%, Daily DD: ${dailyDrawdown?.toFixed(2)}%</p>`;
         break;
 
+      case 'admin-pass-notification':
+        subject = '';
+        customerHtml = '';
+        adminSubject = `🎉 Account Passed: ${email} - ${challengeType?.toUpperCase() || 'Unknown'}`;
+        adminHtml = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+            <h2 style="color: #28a745;">Account Pass Notification</h2>
+            <p><strong>User Email:</strong> ${email}</p>
+            <p><strong>Name:</strong> ${name}</p>
+            <p><strong>Challenge Type:</strong> ${challengeType}</p>
+            <p><strong>Account Size:</strong> $${accountSize?.toLocaleString() || 'N/A'}</p>
+            <p style="margin-top: 20px; padding: 15px; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 5px;">
+              This account has achieved the profit target and may be eligible to pass the challenge. Please review the account metrics and trading days requirement.
+            </p>
+          </div>
+        `;
+        break;
+
+      case 'admin-fail-notification':
+        subject = '';
+        customerHtml = '';
+        adminSubject = `❌ Account Breached: ${email} - ${challengeType?.toUpperCase() || 'Unknown'}`;
+        adminHtml = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+            <h2 style="color: #dc3545;">Account Breach Notification</h2>
+            <p><strong>User Email:</strong> ${email}</p>
+            <p><strong>Name:</strong> ${name}</p>
+            <p><strong>Challenge Type:</strong> ${challengeType}</p>
+            <p><strong>Account Size:</strong> $${accountSize?.toLocaleString() || 'N/A'}</p>
+            <p><strong>Max Drawdown:</strong> ${maxDrawdown?.toFixed(2) || 'N/A'}%</p>
+            <p><strong>Daily Drawdown:</strong> ${dailyDrawdown?.toFixed(2) || 'N/A'}%</p>
+            <p style="margin-top: 20px; padding: 15px; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px;">
+              This account has breached the drawdown limits and should be reviewed immediately.
+            </p>
+          </div>
+        `;
+        break;
+
       case 'funded-drawdown-warning':
         const fundedWarningSubject = warningType === 'approaching-max' 
           ? 'Warning: Approaching Maximum Drawdown Limit'
@@ -458,13 +501,16 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Invalid email type' }, { status: 400 });
     }
 
-    // Send customer email
-    const customerResult = await resend.emails.send({
-      from: 'support@shockwave-capital.com',
-      to: email,
-      subject,
-      html: customerHtml
-    });
+    // Send customer email (skip for admin-only notifications)
+    let customerResult = null;
+    if (type !== 'admin-pass-notification' && type !== 'admin-fail-notification') {
+      customerResult = await resend.emails.send({
+        from: 'support@shockwave-capital.com',
+        to: email,
+        subject,
+        html: customerHtml
+      });
+    }
 
     // Send admin notification
     const adminResult = await resend.emails.send({
@@ -476,7 +522,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ 
       success: true, 
-      customerEmailId: customerResult.data?.id,
+      customerEmailId: customerResult?.data?.id || null,
       adminEmailId: adminResult.data?.id
     });
   } catch (error) {

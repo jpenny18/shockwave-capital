@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, orderBy, limit, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, limit, onSnapshot, doc, updateDoc, deleteDoc, setDoc, getDoc } from 'firebase/firestore';
 import { db, getAllUsers, setUserMetaApiAccount, getUserMetaApiAccount, UserData, UserMetaApiAccount, Timestamp, getCachedMetrics } from '../../../lib/firebase';
 import { 
   Search, 
@@ -141,6 +141,35 @@ export default function AdminAccountsPage() {
   });
   const [connectingToMetaAPI, setConnectingToMetaAPI] = useState(false);
   const [nextAutoRefreshTime, setNextAutoRefreshTime] = useState<Date | null>(null);
+
+  // Helper functions for Firebase auto-refresh timing
+  const getAutoRefreshTime = async (): Promise<number | null> => {
+    try {
+      const configRef = doc(db, 'systemConfig', 'autoRefresh');
+      const configDoc = await getDoc(configRef);
+      
+      if (configDoc.exists()) {
+        const data = configDoc.data();
+        return data.lastAutoRefreshTime || null;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error getting auto refresh time:', error);
+      return null;
+    }
+  };
+
+  const setAutoRefreshTime = async (timestamp: number) => {
+    try {
+      const configRef = doc(db, 'systemConfig', 'autoRefresh');
+      await setDoc(configRef, {
+        lastAutoRefreshTime: timestamp,
+        updatedAt: Timestamp.now()
+      }, { merge: true });
+    } catch (error) {
+      console.error('Error setting auto refresh time:', error);
+    }
+  };
 
   // Load all accounts function
   const loadAllAccounts = async () => {
@@ -328,67 +357,97 @@ export default function AdminAccountsPage() {
     // Only set up auto-refresh after accounts have been loaded
     if (allAccounts.length === 0) return;
     
-    const twelveHours = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
-    
-    // Check last auto-refresh time
-    const lastAutoRefresh = typeof window !== 'undefined' ? localStorage.getItem('lastAutoRefreshTime') : null;
-    const now = Date.now();
-    
-    // Calculate time until next refresh
-    let timeUntilNextRefresh = twelveHours;
-    if (lastAutoRefresh) {
-      const timeSinceLastRefresh = now - parseInt(lastAutoRefresh);
-      if (timeSinceLastRefresh >= twelveHours) {
-        // It's been 12+ hours, refresh now
-        timeUntilNextRefresh = 5000; // Wait 5 seconds after page load
-      } else {
-        // Calculate remaining time until 12 hours
-        timeUntilNextRefresh = twelveHours - timeSinceLastRefresh;
-      }
-    }
-    
-    // Calculate and set next refresh time
-    const nextRefresh = new Date(now + timeUntilNextRefresh);
-    setNextAutoRefreshTime(nextRefresh);
-    
-    // Set up the initial timeout for the first refresh
-    const initialTimeout = setTimeout(() => {
-      console.log('Auto-refreshing all active accounts...');
-      const activeAccounts = allAccounts.filter(a => a.metaApiAccount?.status === 'active');
-      if (activeAccounts.length > 0) {
-        const accountIds = activeAccounts.map(a => a.metaApiAccount?.accountId).filter(Boolean) as string[];
-        setRefreshQueue(accountIds);
-        setMessage({ type: 'info', text: `Auto-refresh started for ${accountIds.length} active accounts` });
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('lastAutoRefreshTime', Date.now().toString());
+    const setupAutoRefresh = async () => {
+      const twelveHours = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
+      
+      // Check last auto-refresh time from Firebase
+      const lastAutoRefresh = await getAutoRefreshTime();
+      const now = Date.now();
+      
+      // Calculate time until next refresh
+      let timeUntilNextRefresh = twelveHours;
+      if (lastAutoRefresh) {
+        const timeSinceLastRefresh = now - lastAutoRefresh;
+        if (timeSinceLastRefresh >= twelveHours) {
+          // It's been 12+ hours, refresh now
+          timeUntilNextRefresh = 5000; // Wait 5 seconds after page load
+        } else {
+          // Calculate remaining time until 12 hours
+          timeUntilNextRefresh = twelveHours - timeSinceLastRefresh;
         }
       }
       
-      // Set up recurring interval after the first refresh
-      const autoRefreshInterval = setInterval(() => {
+      // Calculate and set next refresh time
+      const nextRefresh = new Date(now + timeUntilNextRefresh);
+      setNextAutoRefreshTime(nextRefresh);
+      
+      // Set up the initial timeout for the first refresh
+      const initialTimeout = setTimeout(async () => {
         console.log('Auto-refreshing all active accounts...');
-        const currentActiveAccounts = allAccounts.filter(a => a.metaApiAccount?.status === 'active');
-        if (currentActiveAccounts.length > 0) {
-          const currentAccountIds = currentActiveAccounts.map(a => a.metaApiAccount?.accountId).filter(Boolean) as string[];
-          setRefreshQueue(currentAccountIds);
-          setMessage({ type: 'info', text: `Auto-refresh started for ${currentAccountIds.length} active accounts` });
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('lastAutoRefreshTime', Date.now().toString());
-          }
-          
-          // Update next refresh time
-          setNextAutoRefreshTime(new Date(Date.now() + twelveHours));
+        const activeAccounts = allAccounts.filter(a => a.metaApiAccount?.status === 'active');
+        if (activeAccounts.length > 0) {
+          const accountIds = activeAccounts.map(a => a.metaApiAccount?.accountId).filter(Boolean) as string[];
+          setRefreshQueue(accountIds);
+          setMessage({ type: 'info', text: `Auto-refresh started for ${accountIds.length} active accounts` });
+          await setAutoRefreshTime(Date.now());
         }
-      }, twelveHours);
+        
+        // Set up recurring interval after the first refresh
+        const autoRefreshInterval = setInterval(async () => {
+          console.log('Auto-refreshing all active accounts...');
+          const currentActiveAccounts = allAccounts.filter(a => a.metaApiAccount?.status === 'active');
+          if (currentActiveAccounts.length > 0) {
+            const currentAccountIds = currentActiveAccounts.map(a => a.metaApiAccount?.accountId).filter(Boolean) as string[];
+            setRefreshQueue(currentAccountIds);
+            setMessage({ type: 'info', text: `Auto-refresh started for ${currentAccountIds.length} active accounts` });
+            await setAutoRefreshTime(Date.now());
+            
+            // Update next refresh time
+            setNextAutoRefreshTime(new Date(Date.now() + twelveHours));
+          }
+        }, twelveHours);
+        
+        // Store interval ID for cleanup
+        return () => clearInterval(autoRefreshInterval);
+      }, timeUntilNextRefresh);
       
-      // Store interval ID for cleanup
-      return () => clearInterval(autoRefreshInterval);
-    }, timeUntilNextRefresh);
-    
-    return () => {
-      clearTimeout(initialTimeout);
+      return () => {
+        clearTimeout(initialTimeout);
+      };
     };
+    
+    setupAutoRefresh();
   }, [allAccounts]); // Depend on allAccounts to get fresh data
+
+  // Send admin notification email
+  const sendAdminNotification = async (type: 'pass' | 'fail', account: UserWithAccount) => {
+    if (!account.metaApiAccount) return;
+    
+    try {
+      const response = await fetch('/api/send-challenge-emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: type === 'pass' ? 'admin-pass-notification' : 'admin-fail-notification',
+          email: account.email,
+          name: account.displayName || `${account.firstName} ${account.lastName}`.trim() || account.email,
+          challengeType: account.metaApiAccount.accountType,
+          accountSize: account.metaApiAccount.accountSize,
+          adminEmail: 'support@shockwave-capital.com',
+          maxDrawdown: account.cachedMetrics?.maxDrawdown || 0,
+          dailyDrawdown: account.cachedMetrics?.maxDailyDrawdown || account.cachedMetrics?.dailyDrawdown || 0
+        })
+      });
+      
+      if (!response.ok) {
+        console.error('Failed to send admin notification');
+      }
+    } catch (error) {
+      console.error('Error sending admin notification:', error);
+    }
+  };
 
   // Mark alert as read
   const markAlertAsRead = (alertId: string) => {
@@ -475,11 +534,16 @@ export default function AdminAccountsPage() {
           timestamp: new Date(),
           read: false
         });
-                    setProcessedAlerts(prev => {
-              const newSet = new Set(prev).add(maxDDKey);
-              localStorage.setItem('processedAlerts', JSON.stringify(Array.from(newSet)));
-              return newSet;
-            });
+        setProcessedAlerts(prev => {
+          const newSet = new Set(prev).add(maxDDKey);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('processedAlerts', JSON.stringify(Array.from(newSet)));
+          }
+          return newSet;
+        });
+        
+        // Send automatic admin notification for breach
+        sendAdminNotification('fail', account);
       }
       
       // Only check daily drawdown if there's a limit
@@ -495,9 +559,14 @@ export default function AdminAccountsPage() {
         });
         setProcessedAlerts(prev => {
           const newSet = new Set(prev).add(dailyDDKey);
-          localStorage.setItem('processedAlerts', JSON.stringify(Array.from(newSet)));
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('processedAlerts', JSON.stringify(Array.from(newSet)));
+          }
           return newSet;
         });
+        
+        // Send automatic admin notification for breach
+        sendAdminNotification('fail', account);
       }
       
       // Check for profit target achievement
@@ -592,13 +661,17 @@ export default function AdminAccountsPage() {
           ? (config.step === 1 ? 10 : 5)  // Standard: Step 1 = 10%, Step 2 = 5%
           : 12;  // Instant: 12%
       
-      if (profitPercent >= targetProfit && config.status === 'active' && !processedAlerts.has(profitKey)) {
+      const minTradingDays = config.accountType === 'gauntlet' ? 0 : 5;
+      const currentTradingDays = metrics.tradingDays || 0;
+      const hasMetTradingDays = currentTradingDays >= minTradingDays;
+      
+      if (profitPercent >= targetProfit && config.status === 'active' && hasMetTradingDays && !processedAlerts.has(profitKey)) {
         newAlerts.push({
           id: profitKey,
           type: 'pass',
           accountId: config.accountId,
           userEmail: account.email,
-          message: `Profit target achieved: ${profitPercent.toFixed(2)}%! Challenge may be complete.`,
+          message: `Profit target achieved: ${profitPercent.toFixed(2)}%! Challenge complete - all objectives met.`,
           timestamp: new Date(),
           read: false
         });
@@ -609,6 +682,9 @@ export default function AdminAccountsPage() {
           }
           return newSet;
         });
+        
+        // Send automatic admin notification for pass
+        sendAdminNotification('pass', account);
       }
       
       // Warning for approaching limits - adjusted for new challenge types
@@ -1329,12 +1405,17 @@ export default function AdminAccountsPage() {
     // Determine breach type for funded accounts
     let breachType: 'maxDrawdown' | 'riskViolation' | 'both' = 'maxDrawdown';
     const maxDDBreached = metrics?.maxDrawdown > 15;
-    const riskViolation = (metrics?.maxDailyDrawdown || metrics?.dailyDrawdown) > 2 && (metrics?.maxDailyDrawdown || metrics?.dailyDrawdown) < 8;
+    const dailyDD = metrics?.maxDailyDrawdown || metrics?.dailyDrawdown || 0;
+    const dailyDDBreached = dailyDD > 8; // Daily drawdown breach
+    const riskViolation = dailyDD > 2 && dailyDD <= 8; // Risk violation (2-8%)
     
-    if (maxDDBreached && riskViolation) {
+    // Determine the primary breach reason
+    if (maxDDBreached && (dailyDDBreached || riskViolation)) {
       breachType = 'both';
-    } else if (riskViolation) {
+    } else if (dailyDDBreached || riskViolation) {
       breachType = 'riskViolation';
+    } else if (maxDDBreached) {
+      breachType = 'maxDrawdown';
     }
     
     try {
@@ -2068,6 +2149,7 @@ export default function AdminAccountsPage() {
                   <th className="text-right p-4 text-sm font-medium text-gray-400">Equity</th>
                   <th className="text-right p-4 text-sm font-medium text-gray-400">Max DD</th>
                   <th className="text-right p-4 text-sm font-medium text-gray-400" title="Highest daily drawdown achieved during the challenge">Daily DD (Peak)</th>
+                  <th className="text-right p-4 text-sm font-medium text-gray-400" title="Trading days with at least 1 trade">Trading Days</th>
                   <th className="text-left p-4 text-sm font-medium text-gray-400">Last Updated</th>
                   <th className="text-center p-4 text-sm font-medium text-gray-400">Actions</th>
                 </tr>
@@ -2077,8 +2159,8 @@ export default function AdminAccountsPage() {
                   const metrics = account.cachedMetrics;
                   const config = account.metaApiAccount;
                   const isBreached = metrics && (
-                    metrics.maxDrawdown > (config?.accountType === 'standard' ? 15 : 12) ||
-                    (metrics.maxDailyDrawdown || metrics.dailyDrawdown) > (config?.accountType === 'standard' ? 8 : 4)
+                    metrics.maxDrawdown > (config?.accountType === 'standard' ? 15 : config?.accountType === 'gauntlet' ? 15 : config?.accountType === '1-step' ? 8 : 4) ||
+                    (metrics.maxDailyDrawdown || metrics.dailyDrawdown) > (config?.accountType === 'standard' ? 8 : config?.accountType === 'gauntlet' ? 8 : config?.accountType === '1-step' ? 4 : 999)
                   );
                   
                   // Check if account has passed objectives
@@ -2088,8 +2170,10 @@ export default function AdminAccountsPage() {
                                      config?.accountType === 'standard' 
                                        ? (config.step === 1 ? 10 : 5)
                                        : 12; // Instant: 12%
+                  const minTradingDays = config?.accountType === 'gauntlet' ? 0 : 5; // Gauntlet has 0 min trading days
+                  const currentTradingDays = metrics?.tradingDays || 0;
                   const hasPassed = config?.status === 'passed' || 
-                                  (config?.status === 'active' && profitPercent >= targetProfit && !isBreached);
+                                  (config?.status === 'active' && profitPercent >= targetProfit && !isBreached && currentTradingDays >= minTradingDays);
                   
                   return (
                     <tr key={config?.accountId || account.uid} className={`hover:bg-white/5 transition-colors ${
@@ -2249,6 +2333,33 @@ export default function AdminAccountsPage() {
                         }`}>
                               {config?.accountType === 'instant' ? 'N/A' : `${(metrics?.maxDailyDrawdown || metrics?.dailyDrawdown)?.toFixed(2) || '-'}%`}
                         </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <div className="w-16">
+                              <div className="h-1.5 bg-[#151515] rounded-full overflow-hidden">
+                                <div 
+                                  className={`h-full transition-all duration-500 ${
+                                    currentTradingDays >= minTradingDays
+                                      ? 'bg-green-400'
+                                      : currentTradingDays >= minTradingDays * 0.8
+                                      ? 'bg-yellow-400'
+                                      : 'bg-gray-400'
+                                  }`}
+                                  style={{ width: minTradingDays > 0 ? `${Math.min((currentTradingDays / minTradingDays) * 100, 100)}%` : '0%' }}
+                                />
+                              </div>
+                            </div>
+                            <p className={`text-sm font-medium min-w-[45px] text-right ${
+                              currentTradingDays >= minTradingDays
+                                ? 'text-green-400'
+                                : 'text-gray-300'
+                            }`}>
+                              {currentTradingDays}/{minTradingDays}
+                            </p>
                           </div>
                         </div>
                       </td>
