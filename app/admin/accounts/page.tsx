@@ -3115,6 +3115,7 @@ export default function AdminAccountsPage() {
                           <option value="AXI-US03-DEMO">AXI-US03-DEMO</option>
                           <option value="ADMIRALSGROUP-DEMO">ADMIRALSGROUP-DEMO</option>
                           <option value="FUSIONMARKETS-DEMO">FUSIONMARKETS-DEMO</option>
+                          <option value="DominionMarkets-Live">DominionMarkets-Live</option>
                         </select>
                       </div>
 
