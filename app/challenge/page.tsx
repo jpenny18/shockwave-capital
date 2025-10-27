@@ -1089,6 +1089,7 @@ export default function ChallengePage() {
                   <span className="text-sm font-bold text-white">SuperCharged Offer!</span>
                 </div>
                 <div className="text-2xl lg:text-3xl font-bold text-[#FF6B35] mb-1">SAVE 50%</div>
+                <div className="text-sm text-white font-medium">+ One Free Retry</div>
               </div>
               <div className="text-center lg:text-right">
               <div className="text-xs text-gray-400 mb-1">Use Code:</div>

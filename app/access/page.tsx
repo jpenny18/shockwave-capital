@@ -455,15 +455,15 @@ export default function EarlyAccessPage() {
               </div>
 
               {/* Promo Badge - Simplified for mobile */}
-              <div className="mb-6 p-4 bg-gradient-to-r from-[#FF6B6B]/10 to-[#EE5A24]/10 rounded-xl border border-[#FF6B6B]/20 backdrop-blur-sm relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-20 h-20 bg-[#FF6B6B]/20 rounded-full blur-3xl"></div>
+              <div className="mb-6 p-4 bg-gradient-to-r from-[#FF6B35]/10 to-[#FF8C42]/10 rounded-xl border border-[#FF6B35]/20 backdrop-blur-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-20 h-20 bg-[#FF6B35]/20 rounded-full blur-3xl"></div>
                 <div className="relative">
                   <div className="flex items-center gap-2 mb-2">
-                    <Zap className="w-5 h-5 text-[#FF6B6B]" />
-                    <span className="text-sm font-bold text-white">New Challenge</span>
+                    <Zap className="w-5 h-5 text-[#FF6B35]" />
+                    <span className="text-sm font-bold text-white">SuperCharged Offer!</span>
                   </div>
-                  <div className="text-xl md:text-2xl font-bold text-[#FF6B6B]">GAUNTLET</div>
-                  <div className="text-xs text-gray-300 mt-1">Only pay when you <span className="font-bold text-[#FF6B6B]">PASS</span></div>
+                  <div className="text-xl md:text-2xl font-bold text-[#FF6B35]">SAVE 50%</div>
+                  <div className="text-xs text-gray-300 mt-1">+ One Free Retry - Use Code: <span className="font-bold text-[#FF6B35]">SCARY</span></div>
                 </div>
               </div>
 

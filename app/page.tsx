@@ -39,13 +39,13 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
             
             {/* Content */}
             <div className="relative z-10 text-center">
-              {/* Gauntlet Image Header */}
+              {/* Halloween Image Header */}
               <div className="mb-6">
                 <div className="relative w-full max-w-sm mx-auto">
                   <div className="aspect-[9/16] rounded-xl overflow-hidden bg-[#181818] border border-[#FF6B6B]/30">
                     <Image
-                      src="/gauntletslashed.png"
-                      alt="Shockwave Gauntlet Challenge"
+                      src="/halloween.png"
+                      alt="Halloween Promo - 50% Off All Challenges"
                       fill
                       className="object-cover"
                       sizes="(max-width: 384px) 100vw, 384px"
@@ -58,10 +58,10 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                           parent.innerHTML = `
                             <div class="w-full h-full flex items-center justify-center">
                               <div class="text-center">
-                                <div class="text-[#FF6B6B] text-2xl font-bold mb-2">🔥</div>
-                                <div class="text-[#FF6B6B] text-lg font-bold mb-1">Gauntlet Challenge</div>
-                                <div class="text-gray-400 text-sm">Upload gauntletslashed.png</div>
-                                <div class="text-gray-500 text-xs mt-1">to /public/</div>
+                                <div class="text-[#FF6B6B] text-2xl font-bold mb-2">🎃</div>
+                                <div class="text-[#FF6B6B] text-lg font-bold mb-1">50% OFF ALL CHALLENGES</div>
+                                <div class="text-gray-400 text-sm">+ ONE FREE RETRY</div>
+                                <div class="text-gray-500 text-xs mt-1">USE CODE: SCARY</div>
                               </div>
                             </div>
                           `;
@@ -78,7 +78,7 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
               <div className="space-y-3">
                 <Link href="/challenge" onClick={onClose}>
                   <button className="w-full bg-gradient-to-r from-[#FF6B6B] to-[#EE5A24] text-white font-bold py-3 px-6 rounded-xl hover:scale-105 transition-transform shadow-lg">
-                    TRY THE GAUNTLET - $19.99
+                    CLAIM 50% OFF - USE CODE: SCARY
                   </button>
                 </Link>
                 <button
@@ -91,7 +91,7 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
 
               {/* Timer */}
               <div className="mt-4 text-xs text-gray-400">
-                🔥 Revolutionary Challenge - Pay Only When You Pass!
+                🎃 Offer Ends Halloween + One Free Retry Included!
               </div>
             </div>
 
