@@ -421,19 +421,19 @@ export default function EmailTemplatesPage() {
     try {
       setLoadingUsers(true);
       const usersData = await getAllUsers();
-      const transformedCustomers: Customer[] = usersData.map(user => ({
-        id: user.uid,
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName || 'Unknown User',
-        firstName: user.firstName,
-        lastName: user.lastName,
-        phone: user.phone,
-        country: user.country,
-        status: user.status,
-        totalSpent: user.totalSpent,
-        orderCount: user.orderCount
-      }));
+  const transformedCustomers: Customer[] = usersData.map(user => ({
+    id: user.uid || '',
+    uid: user.uid || '',
+    email: user.email || '',
+    displayName: user.displayName || user.email || 'Unknown User',
+    firstName: user.firstName || '',
+    lastName: user.lastName || '',
+    phone: user.phone || '',
+    country: user.country || '',
+    status: user.status || '',
+    totalSpent: user.totalSpent || 0,
+    orderCount: user.orderCount || 0
+  }));
       setCustomers(transformedCustomers);
     } catch (error) {
       console.error('Error loading customers:', error);
@@ -457,13 +457,13 @@ export default function EmailTemplatesPage() {
           const data = doc.data();
           orders.push({
             id: doc.id,
-            email: data.customerEmail,
+            email: data.customerEmail || '',
             firstName: data.customerName?.split(' ')[0] || 'Unknown',
-            challengeType: data.challengeType,
-            challengeAmount: data.challengeAmount,
-            platform: data.platform,
+            challengeType: data.challengeType || '',
+            challengeAmount: data.challengeAmount || '',
+            platform: data.platform || '',
             type: 'crypto',
-            createdAt: data.createdAt
+            createdAt: data.createdAt || null
           });
         });
       } else {
@@ -476,13 +476,13 @@ export default function EmailTemplatesPage() {
           const data = doc.data();
           orders.push({
             id: doc.id,
-            email: data.customerEmail,
+            email: data.customerEmail || '',
             firstName: data.firstName || 'Unknown',
-            challengeType: data.challengeType,
-            challengeAmount: data.challengeAmount,
-            platform: data.platform,
+            challengeType: data.challengeType || '',
+            challengeAmount: data.challengeAmount || '',
+            platform: data.platform || '',
             type: 'credit',
-            createdAt: data.createdAt
+            createdAt: data.createdAt || null
           });
         });
       }
@@ -498,12 +498,21 @@ export default function EmailTemplatesPage() {
     template.subject.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredCustomers = customers.filter(customer =>
-    (customer.displayName?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-     customer.email.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-     customer.firstName?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-     customer.lastName?.toLowerCase().includes(userSearchTerm.toLowerCase()))
-  ).slice(0, 10); // Limit to 10 results
+  const filteredCustomers = customers.filter(customer => {
+    if (!customer) return false; // Skip invalid customer objects
+    
+    const searchLower = userSearchTerm.toLowerCase();
+    const displayNameMatch = customer.displayName ? 
+      customer.displayName.toLowerCase().includes(searchLower) : false;
+    const emailMatch = customer.email ? 
+      customer.email.toLowerCase().includes(searchLower) : false;
+    const firstNameMatch = customer.firstName ? 
+      customer.firstName.toLowerCase().includes(searchLower) : false;
+    const lastNameMatch = customer.lastName ? 
+      customer.lastName.toLowerCase().includes(searchLower) : false;
+    
+    return displayNameMatch || emailMatch || firstNameMatch || lastNameMatch;
+  }).slice(0, 10); // Limit to 10 results
 
   const handleCreateNew = () => {
     const newTemplate = {
@@ -742,7 +751,7 @@ export default function EmailTemplatesPage() {
   const handleUserSelect = (user: Customer) => {
     setSelectedUser(user);
     setShowUserDropdown(false);
-    setUserSearchTerm(user.displayName || user.email);
+    setUserSearchTerm(user.displayName || user.email || 'Unknown User');
   };
 
   return (
@@ -840,29 +849,31 @@ export default function EmailTemplatesPage() {
                       <div
                         key={order.id}
                         onClick={() => {
-                          setUserSearchTerm(order.email);
+                          setUserSearchTerm(order.email || '');
                           setShowRecentOrdersDropdown(false);
                           // Auto-populate test values with order details
                           setTestValues(prev => ({
                             ...prev,
-                            email: order.email,
-                            firstName: order.firstName,
-                            platform: order.platform.toLowerCase() === 'mt4' ? 'MetaTrader 4' : 
-                                     order.platform.toLowerCase() === 'mt5' ? 'MetaTrader 5' : order.platform
+                            email: order.email || '',
+                            firstName: order.firstName || 'Unknown',
+                            platform: order.platform?.toLowerCase() === 'mt4' ? 'MetaTrader 4' : 
+                                     order.platform?.toLowerCase() === 'mt5' ? 'MetaTrader 5' : (order.platform || 'MetaTrader 4')
                           }));
                           // Find and select the user
-                          const user = customers.find(c => c.email === order.email);
-                          if (user) {
-                            setSelectedUser(user);
+                          if (order.email) {
+                            const user = customers.find(c => c.email === order.email);
+                            if (user) {
+                              setSelectedUser(user);
+                            }
                           }
                         }}
                         className="p-3 hover:bg-[#2F2F2F] cursor-pointer border-b border-[#2F2F2F] last:border-b-0 transition-colors"
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm text-white font-medium">{order.email}</p>
+                            <p className="text-sm text-white font-medium">{order.email || 'No email'}</p>
                             <p className="text-xs text-gray-400 mt-1">
-                              {order.challengeType} • ${order.challengeAmount} • {order.platform}
+                              {order.challengeType || 'Unknown'} • ${order.challengeAmount || '0'} • {order.platform || 'Unknown'}
                             </p>
                           </div>
                           <span className={`text-xs px-2 py-1 rounded ${
@@ -897,8 +908,8 @@ export default function EmailTemplatesPage() {
                             <User size={16} className="text-[#0FF1CE]" />
                           </div>
                           <div>
-                            <div className="text-white font-medium">{customer.displayName}</div>
-                            <div className="text-gray-400 text-sm">{customer.email}</div>
+                            <div className="text-white font-medium">{customer.displayName || 'Unknown User'}</div>
+                            <div className="text-gray-400 text-sm">{customer.email || 'No email'}</div>
                           </div>
                         </div>
                       </div>
@@ -913,7 +924,7 @@ export default function EmailTemplatesPage() {
             {selectedUser && (
               <div className="flex items-center gap-2 px-3 py-2 bg-[#0FF1CE]/20 text-[#0FF1CE] rounded-lg">
                 <Check size={16} />
-                <span className="text-sm font-medium">Selected: {selectedUser.displayName}</span>
+                <span className="text-sm font-medium">Selected: {selectedUser.displayName || selectedUser.email || 'Unknown User'}</span>
               </div>
             )}
           </div>
@@ -1050,7 +1061,7 @@ export default function EmailTemplatesPage() {
                       Email Preview
                       {selectedUser && (
                         <span className="text-sm text-gray-400">
-                          → {selectedUser.displayName} ({selectedUser.email})
+                          → {selectedUser.displayName || 'Unknown User'} ({selectedUser.email || 'No email'})
                         </span>
                       )}
                     </h3>

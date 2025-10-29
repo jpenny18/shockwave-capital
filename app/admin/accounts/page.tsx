@@ -280,11 +280,17 @@ export default function AdminAccountsPage() {
     if (searchUserEmail.trim() === '') {
       setFilteredUsers([]);
     } else {
-      const filtered = allUsers.filter(user => 
-        user.email.toLowerCase().includes(searchUserEmail.toLowerCase()) ||
-        (user.displayName && user.displayName.toLowerCase().includes(searchUserEmail.toLowerCase())) ||
-        (`${user.firstName} ${user.lastName}`.toLowerCase().includes(searchUserEmail.toLowerCase()))
-      );
+      const filtered = allUsers.filter(user => {
+        if (!user || !user.email) return false; // Skip users without email
+        
+        const emailMatch = user.email.toLowerCase().includes(searchUserEmail.toLowerCase());
+        const displayNameMatch = user.displayName ? 
+          user.displayName.toLowerCase().includes(searchUserEmail.toLowerCase()) : false;
+        const fullNameMatch = (user.firstName || user.lastName) ? 
+          `${user.firstName || ''} ${user.lastName || ''}`.toLowerCase().includes(searchUserEmail.toLowerCase()) : false;
+        
+        return emailMatch || displayNameMatch || fullNameMatch;
+      });
       setFilteredUsers(filtered.slice(0, 10)); // Limit to 10 results
     }
   }, [searchUserEmail, allUsers]);
@@ -1104,7 +1110,7 @@ export default function AdminAccountsPage() {
 
   // Search for user by email
   const searchUserByEmail = async () => {
-    if (!searchUserEmail) {
+    if (!searchUserEmail || searchUserEmail.trim() === '') {
       setMessage({ type: 'error', text: 'Please enter an email address' });
       return;
     }
@@ -1114,11 +1120,17 @@ export default function AdminAccountsPage() {
     
     try {
       const usersRef = collection(db, 'users');
-      const q = query(usersRef, where('email', '==', searchUserEmail.toLowerCase()));
+      const q = query(usersRef, where('email', '==', searchUserEmail.toLowerCase().trim()));
       const snapshot = await getDocs(q);
       
       if (!snapshot.empty) {
         const userData = snapshot.docs[0].data() as UserData;
+        
+        // Validate user data has required fields
+        if (!userData.uid) {
+          setMessage({ type: 'error', text: 'Invalid user data: missing user ID' });
+          return;
+        }
         
         // Check how many active accounts this user has
         const accountsRef = collection(db, 'userMetaApiAccounts');
@@ -2775,24 +2787,24 @@ export default function AdminAccountsPage() {
                               <button
                                 key={order.id}
                                 onClick={() => {
-                                  setSearchUserEmail(order.email);
+                                  setSearchUserEmail(order.email || '');
                                   setShowRecentOrdersDropdown(false);
                                   // Auto-populate account form with order details
                                   setAccountForm(prev => ({
                                     ...prev,
-                                    accountType: order.challengeType.toLowerCase().includes('instant') ? 'instant' : 
-                                                order.challengeType.toLowerCase().includes('1-step') ? '1-step' : 
-                                                order.challengeType.toLowerCase().includes('gauntlet') ? 'gauntlet' : 'standard',
-                                    accountSize: parseInt(order.challengeAmount.replace(/[^0-9]/g, '')),
-                                    platform: order.platform.toLowerCase() as 'mt4' | 'mt5'
+                                    accountType: order.challengeType?.toLowerCase().includes('instant') ? 'instant' : 
+                                                order.challengeType?.toLowerCase().includes('1-step') ? '1-step' : 
+                                                order.challengeType?.toLowerCase().includes('gauntlet') ? 'gauntlet' : 'standard',
+                                    accountSize: parseInt(order.challengeAmount?.replace(/[^0-9]/g, '') || '10000'),
+                                    platform: (order.platform?.toLowerCase() || 'mt5') as 'mt4' | 'mt5'
                                   }));
                                 }}
                                 className="w-full p-3 hover:bg-white/5 text-left transition-colors flex items-center justify-between"
                               >
                                 <div>
-                                  <p className="text-sm text-white">{order.email}</p>
+                                  <p className="text-sm text-white">{order.email || 'No email'}</p>
                                   <p className="text-xs text-gray-400 mt-1">
-                                    {order.challengeType} • ${order.challengeAmount} • {order.platform}
+                                    {order.challengeType || 'Unknown'} • ${order.challengeAmount || '0'} • {order.platform || 'Unknown'}
                                   </p>
                                 </div>
                                 <span className={`text-xs px-2 py-1 rounded ${order.type === 'crypto' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-blue-500/20 text-blue-400'}`}>
@@ -2810,16 +2822,16 @@ export default function AdminAccountsPage() {
                               <button
                                 key={user.uid}
                                 onClick={() => {
-                                  setSearchUserEmail(user.email);
+                                  setSearchUserEmail(user.email || '');
                                   setSearchedUser(user);
                                   setShowRecentOrdersDropdown(false);
                                 }}
                                 className="w-full p-3 hover:bg-white/5 text-left transition-colors"
                               >
-                                <p className="text-sm text-white">{user.email}</p>
+                                <p className="text-sm text-white">{user.email || 'No email'}</p>
                                 {(user.displayName || user.firstName || user.lastName) && (
                                   <p className="text-xs text-gray-400 mt-1">
-                                    {user.displayName || `${user.firstName} ${user.lastName}`.trim()}
+                                    {user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'No name'}
                                   </p>
                                 )}
                               </button>
@@ -2853,9 +2865,9 @@ export default function AdminAccountsPage() {
                 <>
                   <div className="bg-[#151515] border border-[#2F2F2F] rounded-lg p-4 mb-6">
                     <p className="text-sm text-gray-400 mb-1">Configuring account for:</p>
-                    <p className="text-white font-medium">{searchedUser.email}</p>
+                    <p className="text-white font-medium">{searchedUser.email || 'No email'}</p>
                     <p className="text-sm text-gray-400">
-                      {searchedUser.displayName || `${searchedUser.firstName} ${searchedUser.lastName}`.trim() || 'No name'}
+                      {searchedUser.displayName || `${searchedUser.firstName || ''} ${searchedUser.lastName || ''}`.trim() || 'No name'}
                     </p>
                   </div>
 
@@ -3252,16 +3264,16 @@ export default function AdminAccountsPage() {
                                     <button
                                       key={user.uid}
                                       onClick={() => {
-                                        setSearchUserEmail(user.email);
+                                        setSearchUserEmail(user.email || '');
                                         setSearchedUser(user);
                                         setShowRecentOrdersDropdown(false);
                                       }}
                                       className="w-full p-3 hover:bg-white/5 text-left transition-colors"
                                     >
-                                      <p className="text-sm text-white">{user.email}</p>
+                                      <p className="text-sm text-white">{user.email || 'No email'}</p>
                                       {(user.displayName || user.firstName || user.lastName) && (
                                         <p className="text-xs text-gray-400 mt-1">
-                                          {user.displayName || `${user.firstName} ${user.lastName}`.trim()}
+                                          {user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'No name'}
                                         </p>
                                       )}
                                     </button>
