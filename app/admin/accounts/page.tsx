@@ -64,6 +64,8 @@ interface ConnectMetaModalData {
   step1: ConnectMetaModalStep1Data;
   accountId: string;
   authToken: string;
+  sendEmail?: boolean;
+  emailSent?: boolean;
 }
 
 export default function AdminAccountsPage() {
@@ -127,7 +129,7 @@ export default function AdminAccountsPage() {
     return new Set();
   });
   const [showConnectModal, setShowConnectModal] = useState(false);
-  const [connectModalStep, setConnectModalStep] = useState<1 | 2>(1);
+  const [connectModalStep, setConnectModalStep] = useState<1 | 2 | 3>(1);
   const [connectModalData, setConnectModalData] = useState<ConnectMetaModalData>({
     step1: {
       login: '',
@@ -137,9 +139,12 @@ export default function AdminAccountsPage() {
       nickname: ''
     },
     accountId: '',
-    authToken: ''
+    authToken: '',
+    sendEmail: false,
+    emailSent: false
   });
   const [connectingToMetaAPI, setConnectingToMetaAPI] = useState(false);
+  const [sendingCredentialsEmail, setSendingCredentialsEmail] = useState(false);
   const [nextAutoRefreshTime, setNextAutoRefreshTime] = useState<Date | null>(null);
 
   // Helper functions for Firebase auto-refresh timing
@@ -548,8 +553,8 @@ export default function AdminAccountsPage() {
           return newSet;
         });
         
-        // Send automatic admin notification for breach
-        sendAdminNotification('fail', account);
+        // DISABLED: Automatic admin notification for breach
+        // sendAdminNotification('fail', account);
       }
       
       // Only check daily drawdown if there's a limit
@@ -571,8 +576,8 @@ export default function AdminAccountsPage() {
           return newSet;
         });
         
-        // Send automatic admin notification for breach
-        sendAdminNotification('fail', account);
+        // DISABLED: Automatic admin notification for breach
+        // sendAdminNotification('fail', account);
       }
       
       // Check for profit target achievement
@@ -671,7 +676,11 @@ export default function AdminAccountsPage() {
       const currentTradingDays = metrics.tradingDays || 0;
       const hasMetTradingDays = currentTradingDays >= minTradingDays;
       
-      if (profitPercent >= targetProfit && config.status === 'active' && hasMetTradingDays && !processedAlerts.has(profitKey)) {
+      // Check if account is at least 1 hour old to prevent false positives on new accounts
+      const accountAge = config.startDate ? Date.now() - config.startDate.toDate().getTime() : 0;
+      const isAccountMature = accountAge > (60 * 60 * 1000); // 1 hour in milliseconds
+      
+      if (profitPercent >= targetProfit && config.status === 'active' && hasMetTradingDays && isAccountMature && !processedAlerts.has(profitKey)) {
         newAlerts.push({
           id: profitKey,
           type: 'pass',
@@ -689,8 +698,8 @@ export default function AdminAccountsPage() {
           return newSet;
         });
         
-        // Send automatic admin notification for pass
-        sendAdminNotification('pass', account);
+        // DISABLED: Automatic admin notification for pass
+        // sendAdminNotification('pass', account);
       }
       
       // Warning for approaching limits - adjusted for new challenge types
@@ -1611,31 +1620,224 @@ export default function AdminAccountsPage() {
       });
 
       setMessage({ type: 'success', text: 'Challenge account created successfully!' });
-      setShowConnectModal(false);
       
-      // Reset modal state
-      setConnectModalStep(1);
-      setConnectModalData({
-        step1: {
-          login: '',
-          password: '',
-          server: '',
-          platform: 'mt5',
-          nickname: ''
-        },
-        accountId: '',
-        authToken: ''
-      });
-      setSearchedUser(null);
-      setSearchUserEmail('');
-      
-      // Reload accounts
-      await loadAllAccounts();
+      // Proceed to email step
+      setConnectModalStep(3);
+      setConnectModalData(prev => ({
+        ...prev,
+        sendEmail: true
+      }));
     } catch (error) {
       console.error('Error creating challenge account:', error);
       setMessage({ type: 'error', text: 'Failed to create challenge account.' });
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Send login credentials email
+  const sendLoginCredentialsEmail = async () => {
+    if (!searchedUser) return;
+    
+    setSendingCredentialsEmail(true);
+    
+    try {
+      // Create the email template with the login credentials
+      const loginTemplate = {
+        id: Date.now(),
+        name: 'Login Credentials',
+        subject: 'Challenge Login Details - Shockwave Capital',
+        body: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Challenge Login Details - Shockwave Capital</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4;">
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 0;">
+    <tr>
+      <td bgcolor="#0FF1CE" align="center" style="padding: 30px 20px;">
+        <h1 style="color: #0D0D0D; margin: 0; font-size: 28px;">Shockwave Capital</h1>
+      </td>
+    </tr>
+    <tr>
+      <td bgcolor="#f4f4f4" align="center" style="padding: 20px;">
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px;">
+          <tr>
+            <td bgcolor="#ffffff" style="padding: 40px; border-radius: 8px;">
+              <h1 style="font-size: 28px; font-weight: 700; color: #1a1a1a; margin: 0 0 20px 0;">Your Trading Challenge Details</h1>
+              <p style="margin: 0 0 20px 0; color: #444;">Hello {{firstName}},</p>
+              <p style="margin: 0 0 25px 0; color: #444;">Welcome to Shockwave Capital! Your trading challenge account has been successfully set up. Below are your login credentials and setup instructions.</p>
+              
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 30px;">
+                <tr>
+                  <td colspan="2" style="background: #0FF1CE; color: #1a1a1a; font-size: 18px; font-weight: 700; text-align: center; padding: 20px; border-radius: 8px 8px 0 0;">
+                    Your Trading Account Credentials
+                  </td>
+                </tr>
+                <tr style="border-bottom: 1px solid #E5E5E5;">
+                  <td bgcolor="#fafafa" style="width: 35%; color: #1a1a1a; font-weight: 600; font-size: 14px; padding: 15px; border: 1px solid #E5E5E5;">
+                    Platform:
+                  </td>
+                  <td style="color: #1a1a1a; font-weight: 600; font-family: monospace; font-size: 14px; background: rgba(15, 241, 206, 0.1); padding: 15px; border: 1px solid #E5E5E5;">
+                    {{platform}}
+                  </td>
+                </tr>
+                <tr style="border-bottom: 1px solid #E5E5E5;">
+                  <td bgcolor="#fafafa" style="width: 35%; color: #1a1a1a; font-weight: 600; font-size: 14px; padding: 15px; border: 1px solid #E5E5E5;">
+                    Login ID:
+                  </td>
+                  <td style="color: #1a1a1a; font-weight: 600; font-family: monospace; font-size: 14px; background: rgba(15, 241, 206, 0.1); padding: 15px; border: 1px solid #E5E5E5;">
+                    {{loginId}}
+                  </td>
+                </tr>
+                <tr style="border-bottom: 1px solid #E5E5E5;">
+                  <td bgcolor="#fafafa" style="width: 35%; color: #1a1a1a; font-weight: 600; font-size: 14px; padding: 15px; border: 1px solid #E5E5E5;">
+                    Password:
+                  </td>
+                  <td style="color: #1a1a1a; font-weight: 600; font-family: monospace; font-size: 14px; background: rgba(15, 241, 206, 0.1); padding: 15px; border: 1px solid #E5E5E5;">
+                    {{password}}
+                  </td>
+                </tr>
+                <tr>
+                  <td bgcolor="#fafafa" style="width: 35%; color: #1a1a1a; font-weight: 600; font-size: 14px; border-radius: 0 0 0 8px; padding: 15px; border: 1px solid #E5E5E5;">
+                    Server:
+                  </td>
+                  <td style="color: #1a1a1a; font-weight: 600; font-family: monospace; font-size: 14px; background: rgba(15, 241, 206, 0.1); border-radius: 0 0 8px 0; padding: 15px; border: 1px solid #E5E5E5;">
+                    {{server}}
+                  </td>
+                </tr>
+              </table>
+              
+              <div style="text-align: center; margin: 40px 0;">
+                <a href="https://shockwave-capital.com" style="display: inline-block; background-color: #1a1a1a; color: #0FF1CE; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">START TRADING</a>
+              </div>
+              
+              <h3 style="color: #444; font-size: 20px; font-weight: 600; margin: 0 0 20px 0;">Getting Started</h3>
+              <ol style="margin: 0; padding-left: 20px; color: #444;">
+                <li style="margin-bottom: 12px;">Download and install the {{platform}} trading platform</li>
+                <li style="margin-bottom: 12px;">Use the credentials above to log in</li>
+                <li style="margin-bottom: 12px;">Review the challenge rules thoroughly</li>
+                <li style="margin-bottom: 12px;">Start trading with your defined strategy</li>
+              </ol>
+              
+              <p style="margin-top: 40px; margin-bottom: 0;">Best regards,</p>
+              <p style="margin-top: 5px;"><strong>The Shockwave Capital Team</strong></p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`,
+        variables: ['firstName', 'platform', 'loginId', 'password', 'server']
+      };
+      
+      // Prepare test values with the actual login credentials
+      const testValues = {
+        firstName: searchedUser.firstName || searchedUser.displayName?.split(' ')[0] || searchedUser.email.split('@')[0],
+        platform: connectModalData.step1.platform === 'mt5' ? 'MetaTrader 5' : 'MetaTrader 4',
+        loginId: connectModalData.step1.login,
+        password: connectModalData.step1.password,
+        server: connectModalData.step1.server
+      };
+      
+      const response = await fetch('/api/send-template-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          template: loginTemplate,
+          user: searchedUser,
+          testValues
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
+
+      setConnectModalData(prev => ({
+        ...prev,
+        emailSent: true
+      }));
+      
+      setMessage({ type: 'success', text: `Login credentials email sent to ${searchedUser.email}` });
+      
+      // Send admin notification with custom email
+      try {
+        const adminNotificationBody = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+            <h2 style="color: #0FF1CE;">Login Credentials Sent</h2>
+            <p><strong>User Email:</strong> ${searchedUser.email}</p>
+            <p><strong>Name:</strong> ${searchedUser.firstName || searchedUser.displayName || 'N/A'}</p>
+            <p><strong>Challenge Type:</strong> ${accountForm.accountType}</p>
+            <p><strong>Account Size:</strong> $${accountForm.accountSize.toLocaleString()}</p>
+            <p><strong>Platform:</strong> ${connectModalData.step1.platform.toUpperCase()}</p>
+            <p><strong>Server:</strong> ${connectModalData.step1.server}</p>
+            <p style="margin-top: 20px; padding: 15px; background-color: #e7f5ff; border: 1px solid #bee3f8; border-radius: 5px;">
+              Login credentials have been successfully sent to the user. The account is now ready for trading.
+            </p>
+          </div>
+        `;
+        
+        // Use the general template email API instead of challenge email API
+        const adminResponse = await fetch('/api/send-template-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            template: {
+              id: Date.now(),
+              name: 'Admin Notification',
+              subject: `Login Credentials Sent: ${searchedUser.email}`,
+              body: adminNotificationBody,
+              variables: []
+            },
+            user: { email: 'support@shockwave-capital.com' },
+            testValues: {}
+          }),
+        });
+        
+        if (!adminResponse.ok) {
+          console.error('Failed to send admin notification');
+        }
+      } catch (error) {
+        console.error('Error sending admin notification:', error);
+      }
+      
+      // Close modal and reset after 2 seconds
+      setTimeout(() => {
+        setShowConnectModal(false);
+        setConnectModalStep(1);
+        setConnectModalData({
+          step1: {
+            login: '',
+            password: '',
+            server: '',
+            platform: 'mt5',
+            nickname: ''
+          },
+          accountId: '',
+          authToken: '',
+          sendEmail: false,
+          emailSent: false
+        });
+        setSearchedUser(null);
+        setSearchUserEmail('');
+        
+        // Reload accounts
+        loadAllAccounts();
+      }, 2000);
+    } catch (error) {
+      console.error('Error sending login credentials email:', error);
+      setMessage({ type: 'error', text: 'Failed to send login credentials email' });
+    } finally {
+      setSendingCredentialsEmail(false);
     }
   };
 
@@ -3047,7 +3249,7 @@ export default function AdminAccountsPage() {
                 Connect Demo Account to MetaAPI
               </h2>
               <p className="text-sm text-gray-400 mt-1">
-                Step {connectModalStep} of 2: {connectModalStep === 1 ? 'Connect MT4/MT5 Demo Account' : 'Configure Challenge Settings'}
+                Step {connectModalStep} of 3: {connectModalStep === 1 ? 'Connect MT4/MT5 Demo Account' : connectModalStep === 2 ? 'Configure Challenge Settings' : 'Send Login Credentials'}
               </p>
               
               {/* Progress Indicator */}
@@ -3061,9 +3263,16 @@ export default function AdminAccountsPage() {
                 <div className={`h-0.5 flex-1 ${connectModalStep > 1 ? 'bg-[#0FF1CE]' : 'bg-gray-600'}`}></div>
                 <div className={`flex items-center space-x-2 ${connectModalStep >= 2 ? 'text-[#0FF1CE]' : 'text-gray-400'}`}>
                   <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${connectModalStep >= 2 ? 'border-[#0FF1CE] bg-[#0FF1CE]/10' : 'border-gray-400'}`}>
-                    2
+                    {connectModalStep > 2 ? <CheckCircle size={16} /> : '2'}
                   </div>
                   <span className="text-sm font-medium">Configure Challenge</span>
+                </div>
+                <div className={`h-0.5 flex-1 ${connectModalStep > 2 ? 'bg-[#0FF1CE]' : 'bg-gray-600'}`}></div>
+                <div className={`flex items-center space-x-2 ${connectModalStep >= 3 ? 'text-[#0FF1CE]' : 'text-gray-400'}`}>
+                  <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${connectModalStep >= 3 ? 'border-[#0FF1CE] bg-[#0FF1CE]/10' : 'border-gray-400'}`}>
+                    <Mail size={16} />
+                  </div>
+                  <span className="text-sm font-medium">Send Credentials</span>
                 </div>
               </div>
             </div>
@@ -3413,6 +3622,90 @@ export default function AdminAccountsPage() {
                 </>
               )}
 
+              {/* Step 3: Send Login Credentials */}
+              {connectModalStep === 3 && (
+                <>
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-white mb-4">Send Login Credentials</h3>
+                    
+                    {/* Success Message */}
+                    <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 mb-6">
+                      <div className="flex items-center gap-3">
+                        <CheckCircle className="text-green-400" size={20} />
+                        <div>
+                          <p className="text-green-400 font-medium">Challenge Account Created Successfully!</p>
+                          <p className="text-sm text-gray-400">
+                            The account has been connected to {searchedUser?.email || 'the user'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Email Preview */}
+                    <div className="bg-[#151515] border border-[#2F2F2F] rounded-lg p-6">
+                      <h4 className="text-white font-medium mb-4">Email Preview</h4>
+                      
+                      <div className="space-y-3 mb-6">
+                        <div>
+                          <p className="text-sm text-gray-400">To:</p>
+                          <p className="text-white">{searchedUser?.email}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-400">Subject:</p>
+                          <p className="text-white">Challenge Login Details - Shockwave Capital</p>
+                        </div>
+                      </div>
+                      
+                      <div className="border border-[#2F2F2F] rounded-lg overflow-hidden">
+                        <div className="bg-[#0FF1CE] p-4 text-center">
+                          <h2 className="text-[#0D0D0D] text-xl font-bold">Shockwave Capital</h2>
+                        </div>
+                        <div className="p-6 bg-[#0D0D0D]">
+                          <h3 className="text-white text-lg font-semibold mb-4">Your Trading Challenge Details</h3>
+                          
+                          <div className="bg-[#151515] border border-[#2F2F2F] rounded-lg overflow-hidden mb-4">
+                            <div className="bg-[#0FF1CE] p-3 text-center">
+                              <p className="text-[#0D0D0D] font-semibold">Your Trading Account Credentials</p>
+                            </div>
+                            <div className="p-4 space-y-2">
+                              <div className="flex justify-between">
+                                <span className="text-gray-400">Platform:</span>
+                                <span className="text-white font-mono">{connectModalData.step1.platform === 'mt5' ? 'MetaTrader 5' : 'MetaTrader 4'}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-400">Login ID:</span>
+                                <span className="text-white font-mono">{connectModalData.step1.login}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-400">Password:</span>
+                                <span className="text-white font-mono">{'•'.repeat(connectModalData.step1.password.length)}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-400">Server:</span>
+                                <span className="text-white font-mono">{connectModalData.step1.server}</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <p className="text-gray-400 text-sm">
+                            The user will receive detailed instructions on how to connect to their trading account.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {connectModalData.emailSent && (
+                      <div className="mt-4 bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="text-green-400" size={20} />
+                          <p className="text-green-400">Login credentials email has been sent successfully!</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+
               {/* Messages */}
               {message.text && (
                 <div className={`p-4 rounded-lg mb-4 flex items-center gap-3 ${
@@ -3436,11 +3729,14 @@ export default function AdminAccountsPage() {
               {/* Actions */}
               <div className="flex justify-between">
                 <div>
-                  {connectModalStep === 2 && (
+                  {(connectModalStep === 2 || connectModalStep === 3) && (
                     <button
                       onClick={() => {
-                        setConnectModalStep(1);
+                        setConnectModalStep(connectModalStep === 3 ? 2 : 1);
                         setMessage({ type: '', text: '' });
+                        if (connectModalStep === 3) {
+                          setConnectModalData(prev => ({ ...prev, emailSent: false }));
+                        }
                       }}
                       className="px-6 py-3 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
                     >
@@ -3463,7 +3759,9 @@ export default function AdminAccountsPage() {
                           nickname: ''
                         },
                         accountId: '',
-                        authToken: ''
+                        authToken: '',
+                        sendEmail: false,
+                        emailSent: false
                       });
                       setSearchedUser(null);
                       setSearchUserEmail('');
@@ -3473,6 +3771,34 @@ export default function AdminAccountsPage() {
                   >
                     Cancel
                   </button>
+                  {connectModalStep === 3 && !connectModalData.emailSent && (
+                    <button
+                      onClick={() => {
+                        setShowConnectModal(false);
+                        setConnectModalStep(1);
+                        setConnectModalData({
+                          step1: {
+                            login: '',
+                            password: '',
+                            server: '',
+                            platform: 'mt5',
+                            nickname: ''
+                          },
+                          accountId: '',
+                          authToken: '',
+                          sendEmail: false,
+                          emailSent: false
+                        });
+                        setSearchedUser(null);
+                        setSearchUserEmail('');
+                        setMessage({ type: '', text: '' });
+                        loadAllAccounts();
+                      }}
+                      className="px-6 py-3 text-gray-400 hover:text-white transition-colors"
+                    >
+                      Skip Email
+                    </button>
+                  )}
                   
                   {connectModalStep === 1 ? (
                     <button
@@ -3483,7 +3809,7 @@ export default function AdminAccountsPage() {
                       {connectingToMetaAPI ? <Loader2 className="animate-spin" size={20} /> : <Server size={20} />}
                       Connect to MetaAPI
                     </button>
-                  ) : (
+                  ) : connectModalStep === 2 ? (
                     <button
                       onClick={handleConnectStep2Submit}
                       disabled={saving || !searchedUser}
@@ -3492,6 +3818,47 @@ export default function AdminAccountsPage() {
                       {saving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
                       Create Challenge Account
                     </button>
+                  ) : (
+                    <>
+                      {!connectModalData.emailSent ? (
+                        <button
+                          onClick={sendLoginCredentialsEmail}
+                          disabled={sendingCredentialsEmail}
+                          className="bg-[#0FF1CE] text-black font-semibold px-6 py-3 rounded-lg hover:bg-[#0FF1CE]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        >
+                          {sendingCredentialsEmail ? <Loader2 className="animate-spin" size={20} /> : <Mail size={20} />}
+                          Send Login Email
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setShowConnectModal(false);
+                            setConnectModalStep(1);
+                            setConnectModalData({
+                              step1: {
+                                login: '',
+                                password: '',
+                                server: '',
+                                platform: 'mt5',
+                                nickname: ''
+                              },
+                              accountId: '',
+                              authToken: '',
+                              sendEmail: false,
+                              emailSent: false
+                            });
+                            setSearchedUser(null);
+                            setSearchUserEmail('');
+                            setMessage({ type: '', text: '' });
+                            loadAllAccounts();
+                          }}
+                          className="bg-green-500 text-white font-semibold px-6 py-3 rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
+                        >
+                          <CheckCircle size={20} />
+                          Complete
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               </div>

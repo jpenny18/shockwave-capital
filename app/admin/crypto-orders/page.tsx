@@ -52,7 +52,7 @@ export default function CryptoOrdersPage() {
   const [cryptoFilter, setCryptoFilter] = useState<'ALL' | 'BTC' | 'ETH' | 'USDT'>('ALL');
   const [challengeStatusFilter, setChallengeStatusFilter] = useState<'ALL' | 'IN_PROGRESS' | 'FAILED' | 'PASSED'>('ALL');
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-  const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
+  const [copiedText, setCopiedText] = useState<string | null>(null);
 
   useEffect(() => {
     // Subscribe to crypto orders collection
@@ -127,10 +127,10 @@ export default function CryptoOrdersPage() {
     setExpandedRows(newExpandedRows);
   };
 
-  const handleCopyAddress = (address: string) => {
-    navigator.clipboard.writeText(address);
-    setCopiedAddress(address);
-    setTimeout(() => setCopiedAddress(null), 2000);
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedText(text);
+    setTimeout(() => setCopiedText(null), 2000);
   };
 
   const getStats = () => {
@@ -341,12 +341,47 @@ export default function CryptoOrdersPage() {
                       <div className="text-gray-400 text-xs">{new Date(order.createdAt).toLocaleTimeString()}</div>
                     </td>
                     <td className="px-4 py-4">
-                      <div className="text-sm font-medium text-white">{order.customerName}</div>
-                      <div className="text-sm text-gray-400">{order.customerEmail}</div>
+                      <div className="flex items-center gap-2">
+                        <div>
+                          <div className="text-sm font-medium text-white">{order.customerName}</div>
+                          <div className="text-sm text-gray-400">{order.customerEmail}</div>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCopy(order.customerName);
+                            }}
+                            className="p-1 hover:bg-[#2F2F2F]/20 rounded transition-colors"
+                            title="Copy name"
+                          >
+                            {copiedText === order.customerName ? (
+                              <Check size={14} className="text-green-400" />
+                            ) : (
+                              <Copy size={14} className="text-gray-400" />
+                            )}
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCopy(order.customerEmail);
+                            }}
+                            className="p-1 hover:bg-[#2F2F2F]/20 rounded transition-colors"
+                            title="Copy email"
+                          >
+                            {copiedText === order.customerEmail ? (
+                              <Check size={14} className="text-green-400" />
+                            ) : (
+                              <Copy size={14} className="text-gray-400" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-4 py-4">
                       <div className="text-sm font-medium text-white">{order.challengeType}</div>
                       <div className="text-sm text-gray-400">{order.challengeAmount}</div>
+                      <div className="text-xs text-[#0FF1CE] mt-1">{order.platform}</div>
                     </td>
                     <td className="px-4 py-4">
                       <div className="text-sm font-medium text-white">${order.usdAmount.toFixed(2)}</div>
@@ -460,11 +495,37 @@ export default function CryptoOrdersPage() {
                             <div className="space-y-2 text-sm">
                               <div>
                                 <div className="text-gray-400">Full Name</div>
-                                <div className="text-white">{order.customerName}</div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-white">{order.customerName}</span>
+                                  <button
+                                    onClick={() => handleCopy(order.customerName)}
+                                    className="p-1 hover:bg-[#2F2F2F]/20 rounded"
+                                    title="Copy name"
+                                  >
+                                    {copiedText === order.customerName ? (
+                                      <Check size={12} className="text-green-400" />
+                                    ) : (
+                                      <Copy size={12} className="text-gray-400" />
+                                    )}
+                                  </button>
+                                </div>
                               </div>
                               <div>
                                 <div className="text-gray-400">Email</div>
-                                <div className="text-white">{order.customerEmail}</div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-white">{order.customerEmail}</span>
+                                  <button
+                                    onClick={() => handleCopy(order.customerEmail)}
+                                    className="p-1 hover:bg-[#2F2F2F]/20 rounded"
+                                    title="Copy email"
+                                  >
+                                    {copiedText === order.customerEmail ? (
+                                      <Check size={12} className="text-green-400" />
+                                    ) : (
+                                      <Copy size={12} className="text-gray-400" />
+                                    )}
+                                  </button>
+                                </div>
                               </div>
                               <div>
                                 <div className="text-gray-400">Phone</div>
@@ -556,10 +617,10 @@ export default function CryptoOrdersPage() {
                                 <div className="flex items-center gap-2">
                                   <span className="font-mono text-xs truncate text-white">{order.cryptoAddress}</span>
                                   <button
-                                    onClick={() => handleCopyAddress(order.cryptoAddress)}
+                                    onClick={() => handleCopy(order.cryptoAddress)}
                                     className="p-1 hover:bg-[#2F2F2F]/20 rounded"
                                   >
-                                    {copiedAddress === order.cryptoAddress ? (
+                                    {copiedText === order.cryptoAddress ? (
                                       <Check size={14} className="text-green-400" />
                                     ) : (
                                       <Copy size={14} className="text-gray-400" />

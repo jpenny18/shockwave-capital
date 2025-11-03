@@ -17,7 +17,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { getAllUsers, UserData, db } from '@/lib/firebase';
-import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
 
 // Enhanced email templates with improved login credentials template
 const initialTemplates = [
@@ -339,6 +339,188 @@ const initialTemplates = [
 </html>`,
     variables: ['firstName', 'platform', 'loginId', 'password', 'server'],
     lastUpdated: new Date().toISOString().split('T')[0]
+  },
+  {
+    id: 4,
+    name: 'Passed Gauntlet Challenge',
+    subject: 'Passed Gauntlet Challenge & Next Steps',
+    body: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Passed Gauntlet Challenge - Shockwave Capital</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <style>
+    body {
+      font-family: 'Lato', Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    @media all and (max-width:621px) {
+      .mobile-header {
+        padding: 20px 15px !important;
+      }
+      .mobile-content {
+        padding: 20px 15px !important;
+      }
+    }
+  </style>
+</head>
+<body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4;">
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 0;">
+    <tr>
+      <td bgcolor="#0FF1CE" align="center" style="padding: 30px 20px;">
+        <h1 style="color: #0D0D0D; margin: 0; font-size: 28px;">Shockwave Capital</h1>
+      </td>
+    </tr>
+    <tr>
+      <td bgcolor="#f4f4f4" align="center" style="padding: 20px;">
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px;">
+          <tr>
+            <td bgcolor="#ffffff" style="padding: 40px; border-radius: 8px;">
+              <h1 style="font-size: 28px; font-weight: 700; color: #1a1a1a; margin: 0 0 20px 0;">Congratulations on Passing Your Gauntlet Challenge! 🎉</h1>
+              
+              <p style="margin: 0 0 20px 0; color: #444;">Dear {{firstName}},</p>
+              
+              <p style="margin: 0 0 20px 0; color: #444;">
+                Congratulations on successfully passing your <strong style="color: #0FF1CE;">{{accountSize}}</strong> Gauntlet Challenge! 
+                We're thrilled to see your progress and excited to welcome you into the Shockwave funded trader program.
+              </p>
+              
+              <div style="background: #f8f8f8; padding: 25px; border-radius: 8px; margin: 25px 0;">
+                <h2 style="color: #1a1a1a; font-size: 22px; margin: 0 0 20px 0;">Here are your next steps:</h2>
+                
+                <div style="margin-bottom: 25px;">
+                  <h3 style="color: #0FF1CE; font-size: 18px; margin: 0 0 10px 0;">1. Complete KYC</h3>
+                  <p style="margin: 0; color: #555; line-height: 1.6;">
+                    We have unlocked your KYC on your dashboard. Please upload the required documents for approval and e-sign the Funded Trader Agreement.
+                  </p>
+                </div>
+                
+                <div>
+                  <h3 style="color: #0FF1CE; font-size: 18px; margin: 0 0 10px 0;">2. Funded Account Activation</h3>
+                  <p style="margin: 0 0 15px 0; color: #555; line-height: 1.6;">
+                    To gain access to your {{accountSize}} funded account, you'll need to pay the activation fee within 48 hours. 
+                    <strong>Please note that if the activation is not completed within this timeframe, your Gauntlet Challenge will expire and you would need to repurchase and pass a new challenge.</strong>
+                  </p>
+                  <p style="margin: 0; color: #555;">You can complete the activation here:</p>
+                </div>
+              </div>
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="https://shockwave-capital.com/gauntlet-activation" style="display: inline-block; background-color: #1a1a1a; color: #0FF1CE; padding: 16px 32px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 16px;">
+                  👉 Activate Your Funded Account
+                </a>
+              </div>
+              
+              <p style="margin: 20px 0; color: #444;">
+                We're excited to have you and can't wait to see your continued success as a Shockwave-funded trader.
+              </p>
+              
+              <p style="margin: 0 0 5px 0; color: #444;">Thank you for choosing Shockwave Capital.</p>
+              
+              <p style="margin: 25px 0 0 0; color: #444;">
+                Best regards,<br>
+                <strong>Emily Carter</strong><br>
+                Shockwave Capital
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`,
+    variables: ['firstName', 'accountSize'],
+    lastUpdated: new Date().toISOString().split('T')[0]
+  },
+  {
+    id: 5,
+    name: 'Gauntlet Final Reminder',
+    subject: 'URGENT: Final Reminder!',
+    body: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Final Reminder - Shockwave Capital</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <style>
+    body {
+      font-family: 'Lato', Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    @media all and (max-width:621px) {
+      .mobile-header {
+        padding: 20px 15px !important;
+      }
+      .mobile-content {
+        padding: 20px 15px !important;
+      }
+    }
+  </style>
+</head>
+<body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4;">
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 0;">
+    <tr>
+      <td bgcolor="#FF4444" align="center" style="padding: 30px 20px;">
+        <h1 style="color: #FFFFFF; margin: 0; font-size: 28px;">⚠️ URGENT: Final Reminder!</h1>
+      </td>
+    </tr>
+    <tr>
+      <td bgcolor="#f4f4f4" align="center" style="padding: 20px;">
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px;">
+          <tr>
+            <td bgcolor="#ffffff" style="padding: 40px; border-radius: 8px;">
+              <p style="margin: 0 0 20px 0; color: #444;">Dear {{firstName}},</p>
+              
+              <div style="background: #fff3cd; border: 2px solid #ffc107; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <p style="margin: 0; color: #856404; font-weight: bold; font-size: 16px;">
+                  This is a final reminder regarding your <strong style="color: #FF4444;">{{accountSize}}</strong> Gauntlet Challenge.
+                </p>
+              </div>
+              
+              <p style="margin: 0 0 20px 0; color: #444;">
+                You have successfully passed the challenge, and your KYC has been approved. We are still waiting for the activation fee for your accounts.
+              </p>
+              
+              <div style="background: #f8d7da; border: 2px solid #f5c6cb; padding: 20px; border-radius: 8px; margin: 25px 0;">
+                <p style="margin: 0; color: #721c24; font-weight: bold;">
+                  <strong>⏰ Please note:</strong> If your activation fee is not completed within the next 24 hours, your Gauntlet Challenge will expire and your funded account will be forfeited. 
+                  To continue as a Shockwave-funded trader, you would need to repurchase and pass a new challenge.
+                </p>
+              </div>
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="https://shockwave-capital.com/gauntlet-activation" style="display: inline-block; background-color: #FF4444; color: #FFFFFF; padding: 16px 32px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 18px;">
+                  👉 Complete Your Activation Here
+                </a>
+              </div>
+              
+              <p style="margin: 20px 0; color: #444; font-weight: bold;">
+                We would hate to see you lose the opportunity you've worked hard for. Please take immediate action today to secure your funded account.
+              </p>
+              
+              <p style="margin: 25px 0 0 0; color: #444;">
+                Best regards,<br>
+                <strong>Emily Carter</strong><br>
+                Shockwave Capital
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`,
+    variables: ['firstName', 'accountSize'],
+    lastUpdated: new Date().toISOString().split('T')[0]
   }
 ];
 
@@ -387,7 +569,8 @@ export default function EmailTemplatesPage() {
   // Recent orders state
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [showRecentOrdersDropdown, setShowRecentOrdersDropdown] = useState(false);
-  const [recentOrdersType, setRecentOrdersType] = useState<'crypto' | 'credit'>('crypto');
+  const [recentOrdersType, setRecentOrdersType] = useState<'crypto' | 'credit' | 'accounts'>('crypto');
+  const [activeAccounts, setActiveAccounts] = useState<any[]>([]);
   
   // Load customers on component mount
   useEffect(() => {
@@ -442,9 +625,80 @@ export default function EmailTemplatesPage() {
     }
   };
   
+  // Load active accounts
+  const loadActiveAccounts = async () => {
+    try {
+      const accounts: any[] = [];
+      
+      // Load user MetaAPI accounts with active status
+      const accountsRef = collection(db, 'userMetaApiAccounts');
+      const accountsQuery = query(accountsRef, where('status', '==', 'active'));
+      const accountsSnapshot = await getDocs(accountsQuery);
+      
+      const userIds = new Set<string>();
+      const accountsByUser: { [key: string]: any[] } = {};
+      
+      accountsSnapshot.forEach((doc) => {
+        const data = doc.data();
+        const userId = data.userId;
+        userIds.add(userId);
+        if (!accountsByUser[userId]) {
+          accountsByUser[userId] = [];
+        }
+        accountsByUser[userId].push({
+          accountType: data.accountType,
+          accountSize: data.accountSize,
+          platform: data.platform,
+          status: data.status,
+          step: data.step
+        });
+      });
+      
+      // Get user details for each account
+      for (const userId of userIds) {
+        try {
+          const userDoc = await getDocs(query(collection(db, 'users'), where('uid', '==', userId), limit(1)));
+          if (!userDoc.empty) {
+            const userData = userDoc.docs[0].data();
+            const userAccounts = accountsByUser[userId] || [];
+            
+            userAccounts.forEach((account) => {
+              accounts.push({
+                id: `${userId}-${account.accountType}-${account.accountSize}`,
+                email: userData.email || '',
+                firstName: userData.firstName || userData.displayName?.split(' ')[0] || userData.email?.split('@')[0] || 'Unknown',
+                challengeType: account.accountType === '1-step' ? '1-Step' : 
+                               account.accountType === 'standard' ? 'Standard' :
+                               account.accountType === 'gauntlet' ? 'Gauntlet' : 'Instant',
+                challengeAmount: `$${account.accountSize.toLocaleString()}`,
+                accountSize: `$${account.accountSize.toLocaleString()}`,
+                platform: account.platform || 'mt5',
+                type: 'account',
+                status: account.status,
+                step: account.step
+              });
+            });
+          }
+        } catch (error) {
+          console.error(`Error loading user ${userId}:`, error);
+        }
+      }
+      
+      setActiveAccounts(accounts);
+      setRecentOrders(accounts);
+    } catch (error) {
+      console.error('Error loading active accounts:', error);
+    }
+  };
+  
   // Load recent orders
   const loadRecentOrders = async () => {
     try {
+      if (recentOrdersType === 'accounts') {
+        await loadActiveAccounts();
+        return;
+      }
+      
       const orders: any[] = [];
       
       if (recentOrdersType === 'crypto') {
@@ -533,6 +787,13 @@ export default function EmailTemplatesPage() {
     setIsEditing(true);
     setShowPreview(false);
     setEmailSent(false);
+    
+    // Set recentOrdersType based on template
+    if (template.name === 'Passed Gauntlet Challenge' || template.name === 'Gauntlet Final Reminder') {
+      setRecentOrdersType('accounts');
+    } else if (template.name === 'Login Credentials') {
+      setRecentOrdersType('crypto');
+    }
     
     // Initialize test values with more comprehensive defaults
     const values: Record<string, string> = {};
@@ -776,8 +1037,10 @@ export default function EmailTemplatesPage() {
           <div className="flex items-center gap-3 mb-4">
             <Users size={20} className="text-[#0FF1CE]" />
             <h3 className="text-white font-medium">Select User</h3>
-            {currentTemplate.name === 'Login Credentials' && (
-              <span className="text-sm text-gray-400">(Recent orders available)</span>
+            {(currentTemplate.name === 'Login Credentials' || currentTemplate.name === 'Passed Gauntlet Challenge' || currentTemplate.name === 'Gauntlet Final Reminder') && (
+              <span className="text-sm text-gray-400">
+                {currentTemplate.name === 'Login Credentials' ? '(Recent orders available)' : '(Active accounts available)'}
+              </span>
             )}
           </div>
           
@@ -799,7 +1062,7 @@ export default function EmailTemplatesPage() {
                     if (!e.target.value) setSelectedUser(null);
                   }}
                   onFocus={() => {
-                    if (currentTemplate.name === 'Login Credentials' && !userSearchTerm) {
+                    if ((currentTemplate.name === 'Login Credentials' || currentTemplate.name === 'Passed Gauntlet Challenge' || currentTemplate.name === 'Gauntlet Final Reminder') && !userSearchTerm) {
                       setShowRecentOrdersDropdown(true);
                       setShowUserDropdown(false);
                     } else {
@@ -812,38 +1075,52 @@ export default function EmailTemplatesPage() {
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               </div>
               
-              {/* Recent Orders Dropdown - Only for Login Credentials template */}
-              {currentTemplate.name === 'Login Credentials' && showRecentOrdersDropdown && userSearchTerm === '' && (
+              {/* Recent Orders/Active Accounts Dropdown */}
+              {(currentTemplate.name === 'Login Credentials' || currentTemplate.name === 'Passed Gauntlet Challenge' || currentTemplate.name === 'Gauntlet Final Reminder') && showRecentOrdersDropdown && userSearchTerm === '' && (
                 <div className="absolute z-10 w-full mt-1 bg-[#0D0D0D] border border-[#2F2F2F] rounded-lg shadow-lg max-h-96 overflow-y-auto">
                   <div className="p-3 border-b border-[#2F2F2F] flex items-center justify-between sticky top-0 bg-[#0D0D0D]">
-                    <span className="text-sm text-gray-400">Recent Orders</span>
+                    <span className="text-sm text-gray-400">
+                      {(currentTemplate.name === 'Passed Gauntlet Challenge' || currentTemplate.name === 'Gauntlet Final Reminder') ? 'Active Accounts' : 'Recent Orders'}
+                    </span>
                     <div className="flex gap-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setRecentOrdersType('crypto');
-                        }}
-                        className={`text-xs px-2 py-1 rounded transition-colors ${
-                          recentOrdersType === 'crypto' ? 'bg-[#0FF1CE] text-black' : 'bg-[#151515] text-gray-400 hover:text-white'
-                        }`}
-                      >
-                        Crypto
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setRecentOrdersType('credit');
-                        }}
-                        className={`text-xs px-2 py-1 rounded transition-colors ${
-                          recentOrdersType === 'credit' ? 'bg-[#0FF1CE] text-black' : 'bg-[#151515] text-gray-400 hover:text-white'
-                        }`}
-                      >
-                        Credit
-                      </button>
+                      {(currentTemplate.name === 'Passed Gauntlet Challenge' || currentTemplate.name === 'Gauntlet Final Reminder') ? (
+                        <button
+                          className="text-xs px-2 py-1 rounded bg-[#0FF1CE] text-black"
+                        >
+                          Active Accounts
+                        </button>
+                      ) : (
+                        <>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setRecentOrdersType('crypto');
+                            }}
+                            className={`text-xs px-2 py-1 rounded transition-colors ${
+                              recentOrdersType === 'crypto' ? 'bg-[#0FF1CE] text-black' : 'bg-[#151515] text-gray-400 hover:text-white'
+                            }`}
+                          >
+                            Crypto
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setRecentOrdersType('credit');
+                            }}
+                            className={`text-xs px-2 py-1 rounded transition-colors ${
+                              recentOrdersType === 'credit' ? 'bg-[#0FF1CE] text-black' : 'bg-[#151515] text-gray-400 hover:text-white'
+                            }`}
+                          >
+                            Credit
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                   {recentOrders.length === 0 ? (
-                    <div className="p-4 text-center text-gray-400">No recent orders</div>
+                    <div className="p-4 text-center text-gray-400">
+                      {(currentTemplate.name === 'Passed Gauntlet Challenge' || currentTemplate.name === 'Gauntlet Final Reminder') ? 'No active accounts found' : 'No recent orders'}
+                    </div>
                   ) : (
                     recentOrders.map((order) => (
                       <div
@@ -852,13 +1129,21 @@ export default function EmailTemplatesPage() {
                           setUserSearchTerm(order.email || '');
                           setShowRecentOrdersDropdown(false);
                           // Auto-populate test values with order details
-                          setTestValues(prev => ({
-                            ...prev,
+                          const newTestValues = {
+                            ...testValues,
                             email: order.email || '',
                             firstName: order.firstName || 'Unknown',
                             platform: order.platform?.toLowerCase() === 'mt4' ? 'MetaTrader 4' : 
                                      order.platform?.toLowerCase() === 'mt5' ? 'MetaTrader 5' : (order.platform || 'MetaTrader 4')
-                          }));
+                          };
+                          
+                          // Add accountSize for Gauntlet templates
+                          if (currentTemplate.name === 'Passed Gauntlet Challenge' || currentTemplate.name === 'Gauntlet Final Reminder') {
+                            newTestValues.accountSize = order.accountSize || order.challengeAmount || '$10,000';
+                          }
+                          
+                          setTestValues(newTestValues);
+                          
                           // Find and select the user
                           if (order.email) {
                             const user = customers.find(c => c.email === order.email);
@@ -873,13 +1158,15 @@ export default function EmailTemplatesPage() {
                           <div>
                             <p className="text-sm text-white font-medium">{order.email || 'No email'}</p>
                             <p className="text-xs text-gray-400 mt-1">
-                              {order.challengeType || 'Unknown'} • ${order.challengeAmount || '0'} • {order.platform || 'Unknown'}
+                              {order.challengeType || 'Unknown'} • {order.accountSize || order.challengeAmount || '$0'} • {order.type === 'account' ? `Step ${order.step || 1}` : order.platform || 'Unknown'}
                             </p>
                           </div>
                           <span className={`text-xs px-2 py-1 rounded ${
-                            order.type === 'crypto' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-blue-500/20 text-blue-400'
+                            order.type === 'crypto' ? 'bg-yellow-500/20 text-yellow-400' : 
+                            order.type === 'credit' ? 'bg-blue-500/20 text-blue-400' :
+                            order.type === 'account' ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'
                           }`}>
-                            {order.type}
+                            {order.type === 'account' ? 'Active' : order.type}
                           </span>
                         </div>
                       </div>
