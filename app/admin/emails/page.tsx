@@ -1129,7 +1129,7 @@ export default function EmailTemplatesPage() {
                           setUserSearchTerm(order.email || '');
                           setShowRecentOrdersDropdown(false);
                           // Auto-populate test values with order details
-                          const newTestValues = {
+                          const newTestValues: TestValues = {
                             ...testValues,
                             email: order.email || '',
                             firstName: order.firstName || 'Unknown',
