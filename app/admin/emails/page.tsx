@@ -655,7 +655,7 @@ export default function EmailTemplatesPage() {
       });
       
       // Get user details for each account
-      for (const userId of userIds) {
+      for (const userId of Array.from(userIds)) {
         try {
           const userDoc = await getDocs(query(collection(db, 'users'), where('uid', '==', userId), limit(1)));
           if (!userDoc.empty) {
