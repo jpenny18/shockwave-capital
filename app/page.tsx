@@ -39,16 +39,16 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
             
             {/* Content */}
             <div className="relative z-10 text-center">
-              {/* Halloween Image Header */}
+              {/* Gauntlet Challenge Logo */}
               <div className="mb-6">
-                <div className="relative w-full max-w-sm mx-auto">
-                  <div className="aspect-[9/16] rounded-xl overflow-hidden bg-[#181818] border border-[#FF6B6B]/30">
+                <div className="relative w-full max-w-[280px] mx-auto">
+                  <div className="relative aspect-square rounded-2xl overflow-hidden bg-[#181818] border-2 border-[#0FF1CE]/30 shadow-[0_0_20px_rgba(15,241,206,0.2)]">
                     <Image
-                      src="/halloween.png"
-                      alt="Halloween Promo - 50% Off All Challenges"
+                      src="/shockwavegauntlet.png"
+                      alt="Gauntlet Challenge - Pay After You Pass"
                       fill
-                      className="object-cover"
-                      sizes="(max-width: 384px) 100vw, 384px"
+                      className="object-contain p-4"
+                      sizes="(max-width: 280px) 100vw, 280px"
                       onError={(e) => {
                         // Fallback if image doesn't exist
                         const target = e.target as HTMLImageElement;
@@ -56,12 +56,11 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                         const parent = target.parentElement;
                         if (parent) {
                           parent.innerHTML = `
-                            <div class="w-full h-full flex items-center justify-center">
-                              <div class="text-center">
-                                <div class="text-[#FF6B6B] text-2xl font-bold mb-2">🎃</div>
-                                <div class="text-[#FF6B6B] text-lg font-bold mb-1">50% OFF ALL CHALLENGES</div>
-                                <div class="text-gray-400 text-sm">+ ONE FREE RETRY</div>
-                                <div class="text-gray-500 text-xs mt-1">USE CODE: SCARY</div>
+                            <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#0D0D0D] to-[#1A1A1A]">
+                              <div class="text-center p-6">
+                                <div class="text-[#0FF1CE] text-6xl font-bold mb-2">⚡</div>
+                                <div class="text-[#0FF1CE] text-xl font-bold">GAUNTLET</div>
+                                <div class="text-gray-400 text-sm mt-1">CHALLENGE</div>
                               </div>
                             </div>
                           `;
@@ -71,33 +70,95 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                   </div>
                 </div>
               </div>
+              
+              {/* Pay After You Pass Badge */}
+              <div className="mb-4 -mt-3">
+                <span className="inline-block bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black font-bold px-4 py-2 rounded-full text-sm shadow-lg animate-pulse">
+                  💪 PAY ONLY AFTER YOU PASS! 💪
+                </span>
+              </div>
+
+              {/* Challenge Details */}
+              <div className="space-y-4 mb-6">
+                <h3 className="text-2xl font-bold text-white">
+                  One-Step Gauntlet Challenge
+                </h3>
+                
+                <div className="bg-[#0FF1CE]/10 border border-[#0FF1CE]/30 rounded-xl p-4 backdrop-blur-sm">
+                  <div className="grid grid-cols-2 gap-3 text-left">
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-[#0FF1CE] rounded-full"></div>
+                        <div>
+                          <div className="text-xs text-gray-400">Profit Target</div>
+                          <div className="text-white font-bold">10%</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-[#0FF1CE] rounded-full"></div>
+                        <div>
+                          <div className="text-xs text-gray-400">Max Drawdown</div>
+                          <div className="text-white font-bold">15%</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-[#0FF1CE] rounded-full"></div>
+                        <div>
+                          <div className="text-xs text-gray-400">Daily DD</div>
+                          <div className="text-white font-bold">8%</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-[#0FF1CE] rounded-full"></div>
+                        <div>
+                          <div className="text-xs text-gray-400">Leverage</div>
+                          <div className="text-white font-bold">1:200</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <p className="text-gray-300 text-sm px-4">
+                  Complete <span className="text-[#0FF1CE] font-bold">ONE SIMPLE STEP</span> to get funded. 
+                  Only pay the activation fee <span className="text-[#0FF1CE] font-bold">AFTER</span> you pass!
+                </p>
+              </div>
 
 
 
               {/* CTA Buttons */}
               <div className="space-y-3">
                 <Link href="/challenge" onClick={onClose}>
-                  <button className="w-full bg-gradient-to-r from-[#FF6B6B] to-[#EE5A24] text-white font-bold py-3 px-6 rounded-xl hover:scale-105 transition-transform shadow-lg">
-                    CLAIM 50% OFF - USE CODE: SCARY
+                  <button className="w-full bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black font-bold py-3 px-6 rounded-xl hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(15,241,206,0.4)] hover:shadow-[0_0_30px_rgba(15,241,206,0.6)]">
+                    START GAUNTLET CHALLENGE →
                   </button>
                 </Link>
                 <button
                   onClick={onClose}
-                  className="w-full bg-transparent border border-[#FF6B6B]/50 text-[#FF6B6B] font-bold py-2 px-6 rounded-xl hover:bg-[#FF6B6B]/10 transition-colors"
+                  className="w-full bg-transparent border border-[#0FF1CE]/50 text-[#0FF1CE] font-bold py-2 px-6 rounded-xl hover:bg-[#0FF1CE]/10 transition-all duration-300"
                 >
-                  Maybe Later
+                  Learn More
                 </button>
               </div>
 
-              {/* Timer */}
-              <div className="mt-4 text-xs text-gray-400">
-                🎃 Offer Ends Halloween + One Free Retry Included!
+              {/* Trust Badges */}
+              <div className="mt-4 flex items-center justify-center space-x-3 text-xs text-gray-400">
+                <span className="flex items-center">
+                  <span className="text-[#0FF1CE] mr-1">✓</span> Cheapest way to get funded
+                </span>
+                <span className="text-gray-600">•</span>
+                <span className="flex items-center">
+                  <span className="text-[#0FF1CE] mr-1">✓</span> Quickest way to get funded
+                </span>
               </div>
             </div>
 
             {/* Decorative Elements */}
-            <div className="absolute top-4 right-4 w-16 h-16 bg-[#FF6B6B]/5 rounded-full blur-xl"></div>
-            <div className="absolute bottom-4 left-4 w-12 h-12 bg-[#EE5A24]/5 rounded-full blur-xl"></div>
+            <div className="absolute top-4 right-4 w-16 h-16 bg-[#0FF1CE]/10 rounded-full blur-xl"></div>
+            <div className="absolute bottom-4 left-4 w-12 h-12 bg-[#00D9FF]/10 rounded-full blur-xl"></div>
           </div>
         </div>
       </div>

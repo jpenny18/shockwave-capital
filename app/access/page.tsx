@@ -455,7 +455,7 @@ export default function EarlyAccessPage() {
               </div>
 
               {/* Promo Badge - Simplified for mobile */}
-              <div className="mb-6 p-4 bg-gradient-to-r from-[#FF6B35]/10 to-[#FF8C42]/10 rounded-xl border border-[#FF6B35]/20 backdrop-blur-sm relative overflow-hidden">
+              <div className="mb-6 p-4 bg-gradient-to-r from-[#FF6B35]/10 to-[#FF8C42]/10 rounded-xl border border-[#FF6B35]/20 backdrop-blur-sm relative overflow-hidden hidden">
                 <div className="absolute top-0 right-0 w-20 h-20 bg-[#FF6B35]/20 rounded-full blur-3xl"></div>
                 <div className="relative">
                   <div className="flex items-center gap-2 mb-2">
