@@ -455,16 +455,16 @@ export default function EarlyAccessPage() {
               </div>
 
               {/* Promo Badge - Simplified for mobile */}
-              <div className="hidden mb-6 p-4 bg-gradient-to-r from-[#0FF1CE]/10 to-[#5059FC]/10 rounded-xl border border-[#0FF1CE]/20 backdrop-blur-sm relative overflow-hidden">
+              <div className="mb-6 p-4 bg-gradient-to-r from-[#0FF1CE]/10 to-[#5059FC]/10 rounded-xl border border-[#0FF1CE]/20 backdrop-blur-sm relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-20 h-20 bg-[#0FF1CE]/20 rounded-full blur-3xl"></div>
                 <div className="relative">
                   <div className="flex items-center gap-2 mb-2">
                     <Zap className="w-5 h-5 text-[#0FF1CE]" />
-                    <span className="text-sm font-bold text-white">Black Friday Deal!</span>
+                    <span className="text-sm font-bold text-white">Christmas Savings!</span>
                   </div>
                   <div className="text-xl md:text-2xl font-bold text-[#0FF1CE]">SAVE 50%</div>
                   <div className="text-xs text-gray-300 mt-1">
-                    + One Free Retry &mdash; Use Code: <span className="font-bold text-[#0FF1CE]">BLACKFRIDAY</span>
+                    + One Free Retry &mdash; Use Code: <span className="font-bold text-[#0FF1CE]">XMAS</span>
                   </div>
                 </div>
               </div>

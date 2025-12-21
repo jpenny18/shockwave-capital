@@ -15,15 +15,19 @@ const PromotionalModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
   return null;
 };
 
-// Shockwave Sunday Modal Component - 30% OFF Deal
+// Shockwave Sunday Modal Component - 30% OFF Deal (DISABLED - keeping code for future use)
 const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  // Modal is disabled - always return null
+  return null;
+  
+  // Original modal code preserved below (not rendered)
+  /*
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm overflow-y-auto">
       <div className="min-h-full flex items-center justify-center p-4 py-8 md:py-12">
         <div className="relative w-full max-w-md mx-auto">
-          {/* Close Button */}
           <button
             onClick={onClose}
             className="absolute -top-2 -right-2 z-10 w-8 h-8 bg-[#0FF1CE] text-black rounded-full flex items-center justify-center font-bold hover:scale-110 transition-transform shadow-lg"
@@ -31,15 +35,11 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
             ×
           </button>
 
-          {/* Modal Content */}
           <div className="relative bg-gradient-to-br from-[#0D0D0D] via-[#121212] to-[#0D0D0D] border-2 border-[#0FF1CE] rounded-3xl p-6 overflow-hidden shadow-2xl">
-            {/* Background Effects */}
             <div className="absolute top-0 left-0 w-full h-full bg-[#0FF1CE]/5 rounded-3xl"></div>
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-[#0FF1CE]/10 blur-[60px] rounded-full"></div>
             
-            {/* Content */}
             <div className="relative z-10 text-center">
-              {/* Gauntlet Challenge Logo */}
               <div className="mb-6">
                 <div className="relative w-full max-w-[280px] mx-auto">
                   <div className="relative aspect-square rounded-2xl overflow-hidden bg-[#181818] border-2 border-[#0FF1CE]/30 shadow-[0_0_20px_rgba(15,241,206,0.2)]">
@@ -49,36 +49,17 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                       fill
                       className="object-contain p-4"
                       sizes="(max-width: 280px) 100vw, 280px"
-                      onError={(e) => {
-                        // Fallback if image doesn't exist
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        const parent = target.parentElement;
-                        if (parent) {
-                          parent.innerHTML = `
-                            <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#0D0D0D] to-[#1A1A1A]">
-                              <div class="text-center p-6">
-                                <div class="text-[#0FF1CE] text-6xl font-bold mb-2">⚡</div>
-                                <div class="text-[#0FF1CE] text-xl font-bold">GAUNTLET</div>
-                                <div class="text-gray-400 text-sm mt-1">CHALLENGE</div>
-                              </div>
-                            </div>
-                          `;
-                        }
-                      }}
                     />
                   </div>
                 </div>
               </div>
               
-              {/* Pay After You Pass Badge */}
               <div className="mb-4 -mt-3">
                 <span className="inline-block bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black font-bold px-4 py-2 rounded-full text-sm shadow-lg animate-pulse">
                   💪 PAY ONLY AFTER YOU PASS! 💪
                 </span>
               </div>
 
-              {/* Challenge Details */}
               <div className="space-y-4 mb-6">
                 <h3 className="text-2xl font-bold text-white">
                   One-Step Gauntlet Challenge
@@ -127,9 +108,6 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                 </p>
               </div>
 
-
-
-              {/* CTA Buttons */}
               <div className="space-y-3">
                 <Link href="/challenge" onClick={onClose}>
                   <button className="w-full bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black font-bold py-3 px-6 rounded-xl hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(15,241,206,0.4)] hover:shadow-[0_0_30px_rgba(15,241,206,0.6)]">
@@ -144,7 +122,6 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                 </button>
               </div>
 
-              {/* Trust Badges */}
               <div className="mt-4 flex items-center justify-center space-x-3 text-xs text-gray-400">
                 <span className="flex items-center">
                   <span className="text-[#0FF1CE] mr-1">✓</span> Cheapest way to get funded
@@ -156,9 +133,71 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
               </div>
             </div>
 
-            {/* Decorative Elements */}
             <div className="absolute top-4 right-4 w-16 h-16 bg-[#0FF1CE]/10 rounded-full blur-xl"></div>
             <div className="absolute bottom-4 left-4 w-12 h-12 bg-[#00D9FF]/10 rounded-full blur-xl"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+  */
+};
+
+// Christmas Modal Component - 50% OFF + 1 FREE RETRY
+const ChristmasModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm overflow-y-auto">
+      <div className="min-h-full flex items-center justify-center p-4 py-8 md:py-12">
+        <div className="relative w-full max-w-lg mx-auto">
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className="absolute -top-2 -right-2 z-10 w-10 h-10 bg-white text-black rounded-full flex items-center justify-center font-bold hover:scale-110 transition-transform shadow-lg text-2xl"
+          >
+            ×
+          </button>
+
+          {/* Modal Content */}
+          <div className="relative bg-gradient-to-br from-[#0D0D0D] via-[#121212] to-[#0D0D0D] border-2 border-white/20 rounded-3xl overflow-hidden shadow-2xl">
+            {/* Christmas Promo Image - 9:16 aspect ratio */}
+            <div className="relative w-full aspect-[9/16]">
+              <Image
+                src="/xmas-1.png"
+                alt="Christmas Savings - 50% OFF All Challenges + 1 Free Retry"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 512px"
+                priority
+                onError={(e) => {
+                  // Fallback if image doesn't exist
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const parent = target.parentElement;
+                  if (parent) {
+                    parent.innerHTML = `
+                      <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-900 to-green-900">
+                        <div class="text-center p-8">
+                          <div class="text-white text-6xl mb-4">🎄</div>
+                          <div class="text-white text-3xl font-bold mb-2">CHRISTMAS SAVINGS</div>
+                          <div class="text-white text-xl">50% OFF + 1 FREE RETRY</div>
+                        </div>
+                      </div>
+                    `;
+                  }
+                }}
+              />
+            </div>
+
+            {/* CTA Button */}
+            <div className="p-6">
+              <Link href="/challenge" onClick={onClose}>
+                <button className="w-full bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black font-bold py-4 px-6 rounded-xl hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(15,241,206,0.4)] hover:shadow-[0_0_30px_rgba(15,241,206,0.6)] text-lg">
+                  CLAIM YOUR OFFER →
+                </button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -169,7 +208,7 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
 export default function ShockwaveLandingPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
-    const [showSundayModal, setShowSundayModal] = useState(false); // Modal enabled
+    const [showChristmasModal, setShowChristmasModal] = useState(false); // Christmas modal enabled
     
     useEffect(() => {
       const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -182,11 +221,11 @@ export default function ShockwaveLandingPage() {
       return () => unsubscribe();
     }, [router, loading]);
 
-    // Show Sunday modal after page loads
+    // Show Christmas modal after page loads
     useEffect(() => {
       if (!loading) {
         const timer = setTimeout(() => {
-          setShowSundayModal(true);
+          setShowChristmasModal(true);
         }, 1500); // Show modal 1.5 seconds after page loads
 
         return () => clearTimeout(timer);
@@ -205,10 +244,10 @@ export default function ShockwaveLandingPage() {
       <div className="bg-gradient-to-b from-[#0D0D0D] via-[#121212] to-[#151515] text-white min-h-screen font-sans">
         <Header />
         
-        {/* Shockwave Sunday Modal */}
-        <ShockwaveSundayModal 
-          isOpen={showSundayModal} 
-          onClose={() => setShowSundayModal(false)} 
+        {/* Christmas Modal */}
+        <ChristmasModal 
+          isOpen={showChristmasModal} 
+          onClose={() => setShowChristmasModal(false)} 
         />
         
         {/* Hero Section */}
