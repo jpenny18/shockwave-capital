@@ -258,9 +258,6 @@ export default function GauntletActivationPage() {
           <p className="text-base md:text-lg lg:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
             Congratulations on passing the Gauntlet Challenge! Now pay your activation fee to unlock your funded account with zero restrictions.
           </p>
-          <p className="text-sm md:text-base lg:text-lg text-gray-400 max-w-3xl mx-auto mt-2">
-            Choose your account size and start trading with no limits.
-          </p>
         </div>
       </section>
 
@@ -268,7 +265,7 @@ export default function GauntletActivationPage() {
       <section className="py-20 px-6 bg-gradient-to-b from-[#131313] to-[#111111] relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-[#131313] to-transparent"></div>
         <div className="relative z-10">
-          <h2 className="text-4xl font-bold text-center text-[#FF6B6B] mb-16">Choose Your Activation Level</h2>
+          <h2 className="text-4xl font-bold text-center text-[#FF6B6B] mb-16">Activate your Funded Account</h2>
           
           <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
             {ACTIVATION_OPTIONS.map((option, index) => (
