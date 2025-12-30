@@ -460,11 +460,11 @@ export default function EarlyAccessPage() {
                 <div className="relative">
                   <div className="flex items-center gap-2 mb-2">
                     <Zap className="w-5 h-5 text-[#0FF1CE]" />
-                    <span className="text-sm font-bold text-white">Christmas Savings!</span>
+                    <span className="text-sm font-bold text-white">New Years Flash Sale!</span>
                   </div>
                   <div className="text-xl md:text-2xl font-bold text-[#0FF1CE]">SAVE 50%</div>
                   <div className="text-xs text-gray-300 mt-1">
-                    + One Free Retry &mdash; Use Code: <span className="font-bold text-[#0FF1CE]">XMAS</span>
+                    + One Free Retry &mdash; Use Code: <span className="font-bold text-[#0FF1CE]">NYE</span>
                   </div>
                 </div>
               </div>

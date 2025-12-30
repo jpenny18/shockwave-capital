@@ -161,11 +161,11 @@ const ChristmasModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
 
           {/* Modal Content */}
           <div className="relative bg-gradient-to-br from-[#0D0D0D] via-[#121212] to-[#0D0D0D] border-2 border-white/20 rounded-3xl overflow-hidden shadow-2xl">
-            {/* Christmas Promo Image - 9:16 aspect ratio */}
+            {/* NYE Promo Image - 9:16 aspect ratio */}
             <div className="relative w-full aspect-[9/16]">
               <Image
-                src="/xmas-1.png"
-                alt="Christmas Savings - 50% OFF All Challenges + 1 Free Retry"
+                src="/nyemarketing.png"
+                alt="New Year's Eve Savings - 50% OFF All Challenges + 1 Free Retry"
                 fill
                 className="object-cover"
                 sizes="(max-width: 768px) 100vw, 512px"
@@ -177,11 +177,11 @@ const ChristmasModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                   const parent = target.parentElement;
                   if (parent) {
                     parent.innerHTML = `
-                      <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-900 to-green-900">
+                      <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#0D0D0D] to-[#1A1A1A]">
                         <div class="text-center p-8">
-                          <div class="text-white text-6xl mb-4">🎄</div>
-                          <div class="text-white text-3xl font-bold mb-2">CHRISTMAS SAVINGS</div>
-                          <div class="text-white text-xl">50% OFF + 1 FREE RETRY</div>
+                          <div class="text-[#0FF1CE] text-6xl mb-4">🎆</div>
+                          <div class="text-white text-3xl font-bold mb-2">NEW YEAR'S EVE</div>
+                          <div class="text-[#0FF1CE] text-xl">50% OFF + 1 FREE RETRY</div>
                         </div>
                       </div>
                     `;
