@@ -7,7 +7,155 @@ import Particles from './components/Particles';
 import Header from './components/Header';
 import Link from 'next/link';
 import PricingTable from './components/PricingTable';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, ChevronDown } from 'lucide-react';
+
+// Gauntlet Card Component with Accordion
+const GauntletCard = () => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <div className="max-w-6xl mx-auto mb-16">
+      <div className="relative group bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-3xl p-8 border-2 border-[#0FF1CE]/30 hover:border-[#0FF1CE]/50 transition-all duration-300 overflow-hidden">
+        {/* Background Effects */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0FF1CE]/5 to-transparent rounded-3xl opacity-50"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2/3 h-2/3 bg-[#0FF1CE]/10 blur-[60px] rounded-full"></div>
+        
+        {/* Content */}
+        <div className="relative z-10">
+          {/* Header Section - Always Visible */}
+          <div 
+            className="cursor-pointer"
+            onClick={() => setIsExpanded(!isExpanded)}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                {/* Badge */}
+                <div className="inline-block bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black px-4 py-2 rounded-full text-sm font-bold mb-4">
+                  NEW CHALLENGE
+                </div>
+                
+                {/* Title */}
+                <h2 className="text-3xl md:text-4xl font-extrabold text-[#0FF1CE] mb-4">
+                  Shockwave Gauntlet
+                </h2>
+                
+                {/* Description */}
+                <p className="text-white text-base md:text-lg leading-relaxed">
+                  The ultimate trading challenge with <span className="text-[#0FF1CE] font-semibold">zero restrictions</span>. 
+                  One phase evaluation, complete trading freedom, and you only pay when you succeed.
+                </p>
+              </div>
+              
+              {/* Expand/Collapse Button */}
+              <button 
+                className="flex-shrink-0 w-10 h-10 rounded-full bg-[#0FF1CE]/20 border border-[#0FF1CE]/40 flex items-center justify-center hover:bg-[#0FF1CE]/30 transition-all"
+                aria-label={isExpanded ? "Collapse details" : "Expand details"}
+              >
+                <ChevronDown 
+                  size={24} 
+                  className={`text-[#0FF1CE] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+                />
+              </button>
+            </div>
+          </div>
+
+          {/* Expandable Details Section */}
+          <div 
+            className={`overflow-hidden transition-all duration-500 ease-in-out ${
+              isExpanded ? 'max-h-[2000px] opacity-100 mt-8' : 'max-h-0 opacity-0'
+            }`}
+          >
+            <div className="space-y-6">
+              {/* Key Points Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="group bg-gradient-to-br from-[#0FF1CE]/15 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl p-4 border border-[#0FF1CE]/30 hover:border-[#0FF1CE]/50 transition-all duration-300">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-[#0FF1CE]/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <div className="w-3 h-3 bg-[#0FF1CE] rounded-full"></div>
+                    </div>
+                    <div>
+                      <div className="text-[#0FF1CE] font-bold text-sm">Pay When Pass</div>
+                      <div className="text-gray-300 text-xs">Only $19.99 upfront</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="group bg-gradient-to-br from-[#0FF1CE]/15 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl p-4 border border-[#0FF1CE]/30 hover:border-[#0FF1CE]/50 transition-all duration-300">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-[#0FF1CE]/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <div className="w-3 h-3 bg-[#0FF1CE] rounded-full"></div>
+                    </div>
+                    <div>
+                      <div className="text-[#0FF1CE] font-bold text-sm">One Phase</div>
+                      <div className="text-gray-300 text-xs">No verification needed</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="group bg-gradient-to-br from-[#0FF1CE]/15 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl p-4 border border-[#0FF1CE]/30 hover:border-[#0FF1CE]/50 transition-all duration-300 sm:col-span-2 lg:col-span-1">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-[#0FF1CE]/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <div className="w-3 h-3 bg-[#0FF1CE] rounded-full"></div>
+                    </div>
+                    <div>
+                      <div className="text-[#0FF1CE] font-bold text-sm">No Restrictions</div>
+                      <div className="text-gray-300 text-xs">Trade however you want</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Special Callout */}
+              <div className="bg-gradient-to-r from-[#0FF1CE]/20 via-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl p-4 border border-[#0FF1CE]/40 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-[#0FF1CE]/5 to-transparent rounded-xl"></div>
+                <div className="relative z-10 text-center">
+                  <div className="text-[#0FF1CE] font-bold text-sm mb-1">
+                    Revolutionary Model: We believe in your success
+                  </div>
+                  <div className="text-gray-300 text-xs">
+                    Pay activation fees only when you prove yourself. No upfront risk, maximum reward.
+                  </div>
+                </div>
+              </div>
+              
+              {/* Features */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { label: "Max DD", value: "15%" },
+                  { label: "Daily DD", value: "8%" },
+                  { label: "Leverage", value: "1:200" },
+                  { label: "Target", value: "10%" }
+                ].map((item, index) => (
+                  <div key={index} className="text-center bg-[#0FF1CE]/5 rounded-lg p-3 border border-[#0FF1CE]/20">
+                    <div className="text-[#0FF1CE] font-bold text-xl">{item.value}</div>
+                    <div className="text-gray-300 text-sm">{item.label}</div>
+                  </div>
+                ))}
+              </div>
+              
+              {/* CTA */}
+              <div className="flex flex-col items-center gap-3 pt-4">
+                <Link href="/challenge">
+                  <button className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black text-lg font-bold rounded-xl hover:scale-105 transition-transform shadow-lg hover:shadow-[#0FF1CE]/25 group">
+                    <div className="flex items-center justify-center gap-2">
+                      <span>Try the Gauntlet</span>
+                      <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </button>
+                </Link>
+                <p className="text-center text-gray-400 text-sm">Pay $19.99 now, activation fee only when you pass</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Decorative Elements */}
+        <div className="absolute top-4 right-4 w-16 h-16 bg-[#0FF1CE]/10 rounded-full blur-xl"></div>
+        <div className="absolute bottom-4 left-4 w-12 h-12 bg-[#0FF1CE]/10 rounded-full blur-xl"></div>
+      </div>
+    </div>
+  );
+};
 
 // Disabled Promotional Modal Component - 40% OFF Deal
 const PromotionalModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
@@ -241,7 +389,7 @@ export default function ShockwaveLandingPage() {
     }
 
     return (
-      <div className="bg-gradient-to-b from-[#0D0D0D] via-[#121212] to-[#151515] text-white min-h-screen font-sans">
+      <div className="bg-black text-white min-h-screen font-sans">
         <Header />
         
         {/* Christmas Modal */}
@@ -251,63 +399,96 @@ export default function ShockwaveLandingPage() {
         />
         
         {/* Hero Section */}
-        <section className="relative px-6 pt-40 pb-32 text-center overflow-hidden bg-gradient-to-b from-[#121212] to-[#131313]">
-          <div className="absolute top-0 left-0 w-full h-full bg-[#0FF1CE]/[0.02] background-noise"></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full md:w-3/4 h-full rounded-full bg-[#0FF1CE]/[0.03] blur-[150px] opacity-60"></div>
+        <section className="relative z-10 px-6 pt-24 md:pt-28 pb-12 md:pb-10 text-center overflow-hidden bg-black">
           <Particles />
-          <div className="relative z-10 space-y-16">
+          <div className="max-w-5xl mx-auto">
           
-            <div className="space-y-6 md:space-y-6">
-              <h1 className="text-[2.5rem] md:text-6xl font-extrabold text-[#0FF1CE] mb-0">
-                Funded or Fried
-              </h1>
-              <h3 className="text-[0.9375rem] md:text-3xl font-extrabold bg-gradient-to-b from-[#0FF1CE] to-[#0FF1CE]/50 text-transparent bg-clip-text mb-12 -mt-4 md:mt-0">
-                Prop trading without the training wheels
-              </h3>
+            {/* Main Hero Image */}
+            <div className="relative mb-6 md:mb-4">
+              <div className="relative w-full max-w-3xl mx-auto aspect-[16/9]">
+                <Image
+                  src="/shockwavehero.png"
+                  alt="Shockwave Capital - Funded or Fried"
+                  fill
+                  className="object-contain"
+                  priority
+                />
+              </div>
             </div>
 
-            <div className="space-y-12">
-              <p className="text-base md:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-                High-octane funding for elite traders. Push your trading into Overdrive with:
-              </p>
+            {/* Title */}
+            <h1 className="text-3xl md:text-5xl font-extrabold bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-transparent bg-clip-text mb-3 md:mb-2">
+              Funded or Fried
+            </h1>
+            
+            {/* Badge */}
+            <div className="inline-block bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black font-bold px-5 py-2 rounded-full text-sm md:text-base mb-6 md:mb-5">
+              Prop trading without the training wheels
+            </div>
 
-              <div className="grid grid-cols-3 gap-2 md:flex md:flex-row md:justify-center md:items-center md:gap-8 px-2 md:px-0">
-                {[
-                  { value: "15%", label: "Max Drawdown", delay: "0s" },
-                  { value: "8%", label: "Daily Drawdown", delay: "0.1s" },
-                  { value: "1:200", label: "Leverage", delay: "0.2s" }
-                ].map(({ value, label, delay }) => (
-                  <div
-                    key={label}
-                    className="group relative w-full bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl p-3 md:p-4 md:w-44 hover:scale-105 transition-all duration-300 animate-float"
-                    style={{
-                      animation: `float 3s ease-in-out infinite`,
-                      animationDelay: delay,
-                      boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)'
-                    }}
-                  >
-                    <div className="text-xl md:text-3xl font-bold text-[#0FF1CE] mb-1">{value}</div>
-                    <div className="text-xs md:text-sm text-gray-400">{label}</div>
-                    <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#0FF1CE]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  </div>
-                ))}
+            <p className="text-gray-400 max-w-3xl mx-auto text-sm md:text-base mb-8">
+              High-octane funding for elite traders. Push your trading into Overdrive with industry-leading conditions.
+            </p>
+
+            {/* Floating Stats Cards */}
+            <div className="grid grid-cols-3 gap-2 md:flex md:flex-row md:justify-center md:items-center md:gap-8 px-2 md:px-0 mb-8">
+              {[
+                { value: "15%", label: "Max Drawdown", delay: "0s" },
+                { value: "8%", label: "Daily Drawdown", delay: "0.1s" },
+                { value: "1:200", label: "Leverage", delay: "0.2s" }
+              ].map(({ value, label, delay }) => (
+                <div
+                  key={label}
+                  className="group relative w-full bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl p-3 md:p-4 md:w-44 hover:scale-105 transition-all duration-300 animate-float"
+                  style={{
+                    animation: `float 3s ease-in-out infinite`,
+                    animationDelay: delay,
+                    boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)'
+                  }}
+                >
+                  <div className="text-xl md:text-3xl font-bold text-[#0FF1CE] mb-1">{value}</div>
+                  <div className="text-xs md:text-sm text-gray-400">{label}</div>
+                  <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#0FF1CE]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                </div>
+              ))}
+            </div>
+
+            {/* NO BS Rules Card */}
+            <div className="max-w-2xl mx-auto mb-8">
+              <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-[#0FF1CE]/20"
+                style={{ boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)' }}>
+                <h3 className="text-xl md:text-2xl font-bold text-[#0FF1CE] mb-6 text-center">NO BS Funded Account RULES</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[
+                    "No consistency rules",
+                    "News trading allowed",
+                    "Hold over weekends",
+                    "EAs & Bots allowed",
+                    "No Profit Caps",
+                    "No Position size caps"
+                  ].map((rule, index) => (
+                    <div key={index} className="flex items-center space-x-3 group">
+                      <div className="w-6 h-6 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center group-hover:scale-110 transition-transform shrink-0">
+                        <span className="text-[#0FF1CE] text-sm">✓</span>
+                      </div>
+                      <span className="text-gray-300 text-sm md:text-base group-hover:text-white transition-colors">{rule}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
+            </div>
 
-              <div className="flex flex-col md:flex-row justify-center gap-4 md:gap-6 max-w-sm md:max-w-[600px] mx-auto w-full pt-8">
-                <Link href="/challenge">
-                  <button className="px-10 py-3 md:py-4 bg-[#0FF1CE] text-black text-sm md:text-lg font-bold rounded-lg hover:scale-105 transition-transform w-full md:w-[300px]">
-                    START CHALLENGE
-                  </button>             
-                </Link>
-                <Link href="/auth">
-                  <button className="px-10 py-3 md:py-4 bg-transparent text-white text-sm md:text-lg font-bold rounded-lg hover:scale-105 transition-transform border-2 border-white w-full md:w-1/2 hidden">
-                    FREE TRIAL
-                  </button>
-                </Link>
-              </div>
+            {/* CTA Buttons */}
+            <div className="flex flex-col md:flex-row justify-center gap-4 md:gap-6 max-w-sm md:max-w-[600px] mx-auto w-full mb-12">
+              <Link href="/challenge">
+                <button className="px-10 py-3 md:py-4 bg-[#0FF1CE] text-black text-sm md:text-lg font-bold rounded-lg hover:scale-105 transition-transform w-full md:w-[300px]">
+                  START CHALLENGE
+                </button>             
+              </Link>
+            </div>
 
-              {/* Tradable Assets */}
-              <div className="flex flex-wrap justify-center gap-6 md:gap-12 max-w-4xl mx-auto pt-12">
+            {/* Tradable Assets */}
+            <div className="flex flex-wrap justify-center gap-6 md:gap-12 max-w-4xl mx-auto">
                 {[
                   {
                     name: "Forex",
@@ -362,16 +543,11 @@ export default function ShockwaveLandingPage() {
                   </div>
                 ))}
               </div>
-            </div>
-            <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-full h-[250px] bg-[#0FF1CE]/[0.01] blur-[100px] rounded-full"></div>
-            
           </div>
         </section>
   
         {/* Live Payout Interviews Section */}
-        <section className="py-16 md:py-20 px-6 bg-gradient-to-b from-[#131313] to-[#111111] relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-[#131313] to-transparent"></div>
-          <div className="absolute bottom-0 left-0 w-full h-20 bg-gradient-to-t from-[#111111] to-transparent"></div>
+        <section className="py-16 md:py-20 px-6 bg-black relative overflow-hidden">
           <div className="absolute top-1/2 left-1/4 w-1/2 h-[300px] bg-[#0FF1CE]/[0.02] blur-[120px] rounded-full"></div>
           <div className="relative z-10">
             <div className="text-center mb-12 md:mb-16">
@@ -895,189 +1071,137 @@ export default function ShockwaveLandingPage() {
         </div>
   
         {/* How It Works Section */}
-        <section className="py-20 px-6 bg-gradient-to-b from-[#131313] to-[#111111] relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-[#131313] to-transparent"></div>
+        <section className="py-12 md:py-20 px-4 md:px-6 bg-black relative overflow-hidden">
           <div className="absolute top-1/3 right-0 w-1/2 h-[300px] bg-[#0FF1CE]/[0.015] blur-[120px] rounded-full"></div>
           <div className="absolute bottom-1/3 left-0 w-1/2 h-[300px] bg-[#0FF1CE]/[0.01] blur-[120px] rounded-full"></div>
-          <div className="relative z-10">
-            <h2 className="text-4xl font-bold text-center text-[#0FF1CE] mb-16">How It Works</h2>
+          <div className="relative z-10 max-w-6xl mx-auto">
+            <div className="text-center mb-8 md:mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-[#0FF1CE] mb-3 md:mb-4">How It Works</h2>
+              <p className="text-gray-400 text-sm md:text-base max-w-2xl mx-auto">
+                Get started in three simple steps and begin your journey to becoming a funded trader
+              </p>
+            </div>
             
-            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Desktop/Tablet: Grid Layout */}
+            <div className="hidden md:grid md:grid-cols-3 gap-6 lg:gap-8">
               {[
                 {
                   icon: "1",
                   title: "Create Your Account",
-                  description: "Choose your evaluation plan and gain immediate access to a live-market simulated environment.",
-                  delay: "0s"
+                  description: "Choose your evaluation plan and gain immediate access to a live-market simulated environment."
                 },
                 {
                   icon: "2",
                   title: "Complete the Challenge",
-                  description: "Demonstrate consistency, discipline, and strategic risk management in real-time simulated conditions.",
-                  delay: "0.1s"
+                  description: "Demonstrate consistency, discipline, and strategic risk management in real-time simulated conditions."
                 },
                 {
                   icon: "3",
                   title: "Progress to Simulated Funded Status",
-                  description: "Once your performance meets the challenge criteria, you'll be transitioned into our Simulated Funded Program — designed to mirror the pressure and opportunity of trading at scale.",
-                  delay: "0.2s"
+                  description: "Once your performance meets the challenge criteria, you'll be transitioned into our Simulated Funded Program — designed to mirror the pressure and opportunity of trading at scale."
                 },
-              ].map(({ icon, title, description, delay }) => (
+              ].map(({ icon, title, description }, index) => (
                 <div
                   key={title}
-                  className="group relative bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-6 md:p-5 hover:scale-105 transition-all duration-300 animate-float md:transform md:scale-80"
-                  style={{
-                    animation: `float 3s ease-in-out infinite`,
-                    animationDelay: delay,
-                    boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)'
-                  }}
+                  className="group relative bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-6 border-2 border-[#0FF1CE]/30 hover:border-[#0FF1CE]/50 transition-all duration-300 hover:scale-105 overflow-hidden"
+                  style={{ boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)' }}
                 >
-                  {/* Content */}
+                  {/* Background glow */}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-[#0FF1CE]/10 blur-[40px] rounded-full"></div>
+                  
                   <div className="relative z-10">
-                    <div className="text-[#0FF1CE] text-4xl font-bold mb-4">{icon}</div>
+                    {/* Step Number Badge */}
+                    <div className="w-12 h-12 rounded-full bg-[#0FF1CE]/10 border-2 border-[#0FF1CE] flex items-center justify-center mb-4">
+                      <span className="text-[#0FF1CE] text-xl font-bold">{icon}</span>
+                    </div>
+
+                    {/* Content */}
                     <h3 className="text-xl font-bold text-white mb-3">{title}</h3>
                     <p className="text-gray-400 text-sm leading-relaxed">{description}</p>
                   </div>
 
-                  {/* Hover gradient overlay */}
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#0FF1CE]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  {/* Hover effect */}
+                  <div className="absolute inset-0 rounded-2xl bg-[#0FF1CE]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                 </div>
               ))}
+            </div>
+
+            {/* Mobile: Vertical Stack with Connectors */}
+            <div className="md:hidden space-y-0">
+              {[
+                {
+                  icon: "1",
+                  title: "Create Your Account",
+                  description: "Choose your evaluation plan and gain immediate access to a live-market simulated environment."
+                },
+                {
+                  icon: "2",
+                  title: "Complete the Challenge",
+                  description: "Demonstrate consistency, discipline, and strategic risk management in real-time simulated conditions."
+                },
+                {
+                  icon: "3",
+                  title: "Progress to Simulated Funded Status",
+                  description: "Once your performance meets the challenge criteria, you'll be transitioned into our Simulated Funded Program."
+                },
+              ].map(({ icon, title, description }, index) => (
+                <div key={title} className="relative">
+                  {/* Card */}
+                  <div className="relative bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl p-5 border-2 border-[#0FF1CE]/30 overflow-hidden"
+                    style={{ boxShadow: '0 0 15px rgba(15, 241, 206, 0.1)' }}>
+                    
+                    {/* Background glow */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-[#0FF1CE]/10 blur-[30px] rounded-full"></div>
+                    
+                    <div className="relative z-10">
+                      {/* Step Number Badge */}
+                      <div className="flex items-start gap-4 mb-3">
+                        <div className="w-10 h-10 rounded-full bg-[#0FF1CE]/10 border-2 border-[#0FF1CE] flex items-center justify-center flex-shrink-0">
+                          <span className="text-[#0FF1CE] text-lg font-bold">{icon}</span>
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-bold text-white">{title}</h3>
+                        </div>
+                      </div>
+
+                      {/* Description */}
+                      <p className="text-gray-400 text-sm leading-relaxed pl-14">{description}</p>
+                    </div>
+                  </div>
+
+                  {/* Connector Line */}
+                  {index < 2 && (
+                    <div className="flex justify-start pl-5 py-3">
+                      <div className="w-0.5 h-6 bg-gradient-to-b from-[#0FF1CE]/50 to-[#0FF1CE]/20"></div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* CTA Button */}
+            <div className="text-center mt-10 md:mt-12">
+              <Link href="/challenge">
+                <button className="px-8 md:px-12 py-3 md:py-4 bg-[#0FF1CE] text-black text-base md:text-lg font-bold rounded-lg hover:scale-105 transition-transform shadow-lg hover:shadow-[#0FF1CE]/20">
+                  Start Your Challenge
+                </button>
+              </Link>
             </div>
           </div>
         </section>
   
         {/* Challenge Details Table Section */}
-        <section id="pricing" className="relative py-20 px-6 bg-gradient-to-b from-[#111111] to-[#131313] overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-[#111111] to-transparent"></div>
-          <div className="absolute bottom-0 left-0 w-full h-20 bg-gradient-to-t from-[#131313] to-transparent"></div>
+        <section id="pricing" className="relative py-20 px-6 bg-black overflow-hidden">
           <div className="absolute top-1/2 left-1/4 w-1/2 h-[400px] bg-[#0FF1CE]/[0.02] blur-[150px] rounded-full"></div>
           
           {/* Gauntlet Showcase Card */}
-          <div className="max-w-6xl mx-auto mb-16">
-            <div className="relative group bg-gradient-to-br from-[#FF6B6B]/20 to-[#EE5A24]/20 backdrop-blur-sm rounded-3xl p-8 border-2 border-[#FF6B6B]/30 hover:border-[#FF6B6B]/50 transition-all duration-300 overflow-hidden">
-              {/* Background Effects */}
-              <div className="absolute inset-0 bg-gradient-to-br from-[#FF6B6B]/10 to-[#EE5A24]/10 rounded-3xl opacity-50"></div>
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2/3 h-2/3 bg-[#FF6B6B]/20 blur-[60px] rounded-full"></div>
-              
-              {/* Content */}
-              <div className="relative z-10">
-                <div className="text-center md:text-left md:flex md:items-center md:justify-between">
-                  <div className="mb-6 md:mb-0 md:flex-1">
-                    {/* Badge */}
-                    <div className="inline-block bg-gradient-to-r from-[#FF6B6B] to-[#EE5A24] text-white px-4 py-2 rounded-full text-sm font-bold mb-4 animate-pulse">
-                      🔥 NEW CHALLENGE
-                    </div>
-                    
-                    {/* Title */}
-                    <h2 className="text-3xl md:text-4xl font-extrabold text-[#FF6B6B] mb-4">
-                      Shockwave Gauntlet
-                    </h2>
-                    
-                    {/* Description */}
-                    <div className="mb-6">
-                      <p className="text-white text-base md:text-lg mb-4 leading-relaxed">
-                        The ultimate trading challenge with <span className="text-[#FF6B6B] font-semibold">zero restrictions</span>. 
-                        One phase evaluation, complete trading freedom, and you only pay when you succeed.
-                      </p>
-                      
-                      {/* Key Points Grid */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
-                        <div className="group bg-gradient-to-br from-[#FF6B6B]/15 to-[#EE5A24]/10 backdrop-blur-sm rounded-xl p-4 border border-[#FF6B6B]/30 hover:border-[#FF6B6B]/50 transition-all duration-300">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-[#FF6B6B]/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                              <span className="text-[#FF6B6B] text-lg font-bold">💰</span>
-                            </div>
-                            <div>
-                              <div className="text-[#FF6B6B] font-bold text-sm">Pay When Pass</div>
-                              <div className="text-gray-300 text-xs">Only $19.99 upfront</div>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="group bg-gradient-to-br from-[#FF6B6B]/15 to-[#EE5A24]/10 backdrop-blur-sm rounded-xl p-4 border border-[#FF6B6B]/30 hover:border-[#FF6B6B]/50 transition-all duration-300">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-[#FF6B6B]/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                              <span className="text-[#FF6B6B] text-lg font-bold">🚀</span>
-                            </div>
-                            <div>
-                              <div className="text-[#FF6B6B] font-bold text-sm">One Phase</div>
-                              <div className="text-gray-300 text-xs">No verification needed</div>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="group bg-gradient-to-br from-[#FF6B6B]/15 to-[#EE5A24]/10 backdrop-blur-sm rounded-xl p-4 border border-[#FF6B6B]/30 hover:border-[#FF6B6B]/50 transition-all duration-300 sm:col-span-2 lg:col-span-1">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-[#FF6B6B]/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                              <span className="text-[#FF6B6B] text-lg font-bold">🔥</span>
-                            </div>
-                            <div>
-                              <div className="text-[#FF6B6B] font-bold text-sm">No Restrictions</div>
-                              <div className="text-gray-300 text-xs">Trade however you want</div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Special Callout */}
-                      <div className="bg-gradient-to-r from-[#FF6B6B]/20 via-[#FF6B6B]/10 to-[#EE5A24]/20 backdrop-blur-sm rounded-xl p-4 border border-[#FF6B6B]/40 relative overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-r from-[#FF6B6B]/5 to-[#EE5A24]/5 rounded-xl"></div>
-                        <div className="relative z-10 text-center">
-                          <div className="text-[#FF6B6B] font-bold text-sm mb-1">
-                            🎯 Revolutionary Model: We believe in your success
-                          </div>
-                          <div className="text-gray-300 text-xs">
-                            Pay activation fees only when you prove yourself. No upfront risk, maximum reward.
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Features */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                      {[
-                        { label: "Max DD", value: "15%" },
-                        { label: "Daily DD", value: "8%" },
-                        { label: "Leverage", value: "1:200" },
-                        { label: "Target", value: "10%" }
-                      ].map((item, index) => (
-                        <div key={index} className="text-center">
-                          <div className="text-[#FF6B6B] font-bold text-xl">{item.value}</div>
-                          <div className="text-gray-300 text-sm">{item.label}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {/* CTA */}
-                  <div className="md:ml-8">
-                    <Link href="/challenge">
-                      <button className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-[#FF6B6B] to-[#EE5A24] text-white text-lg font-bold rounded-xl hover:scale-105 transition-transform shadow-lg hover:shadow-[#FF6B6B]/25 group">
-                        <div className="flex items-center justify-center gap-2">
-                          <span>Try the Gauntlet</span>
-                          <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                        </div>
-                      </button>
-                    </Link>
-                    <p className="text-center text-gray-400 text-sm mt-2">Pay $19.99 now, activation fee only when you pass</p>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Decorative Elements */}
-              <div className="absolute top-4 right-4 w-16 h-16 bg-[#FF6B6B]/10 rounded-full blur-xl"></div>
-              <div className="absolute bottom-4 left-4 w-12 h-12 bg-[#EE5A24]/10 rounded-full blur-xl"></div>
-            </div>
-          </div>
+          <GauntletCard />
           
           <PricingTable />
         </section>
 
         {/* Scaling Plan Section */}
-        <section className="py-12 md:py-20 px-4 md:px-6 bg-gradient-to-b from-[#131313] to-[#121212] relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-[#131313] to-transparent"></div>
-          <div className="absolute bottom-0 left-0 w-full h-20 bg-gradient-to-t from-[#121212] to-transparent"></div>
+        <section className="py-12 md:py-20 px-4 md:px-6 bg-black relative overflow-hidden">
           <div className="absolute top-1/2 right-1/4 w-1/2 h-[350px] bg-[#0FF1CE]/[0.02] blur-[130px] rounded-full"></div>
           <div className="relative z-10">
             <h2 className="text-3xl md:text-4xl font-bold text-center text-[#0FF1CE] mb-3 md:mb-6">Performance Scaling Plan</h2>
@@ -1087,9 +1211,13 @@ export default function ShockwaveLandingPage() {
 
             <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12">
               {/* Overview Card */}
-              <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl md:rounded-2xl p-5 md:p-8 hover:scale-[1.01] transition-all duration-300"
+              <div className="relative bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl md:rounded-2xl p-5 md:p-8 border-2 border-[#0FF1CE]/30 hover:border-[#0FF1CE]/50 hover:scale-[1.01] transition-all duration-300 overflow-hidden"
                 style={{ boxShadow: '0 0 15px rgba(15, 241, 206, 0.1)' }}>
-                <h3 className="text-xl md:text-2xl font-bold text-white mb-4 md:mb-8">Scaling plan <span className="text-[#0FF1CE]">overview</span></h3>
+                {/* Background glow */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2/3 h-2/3 bg-[#0FF1CE]/10 blur-[60px] rounded-full"></div>
+                
+                <div className="relative z-10">
+                  <h3 className="text-xl md:text-2xl font-bold text-white mb-4 md:mb-8">Scaling plan <span className="text-[#0FF1CE]">overview</span></h3>
                 <ul className="space-y-3 md:space-y-6 text-sm md:text-base">
                   {[
                     "Upgraded Profit Split of up to 95%",
@@ -1106,18 +1234,23 @@ export default function ShockwaveLandingPage() {
                     </li>
                   ))}
                 </ul>
-                <div className="mt-6 md:mt-8">
-                  <Link href="/challenge">
-                    <button className="w-full md:w-auto px-4 py-2 md:px-8 md:py-4 bg-[#0FF1CE] text-black text-sm md:text-lg font-bold rounded-lg hover:scale-105 transition-transform">
-                      Get Funded
-                  </button>
-                  </Link>
+                  <div className="mt-6 md:mt-8">
+                    <Link href="/challenge">
+                      <button className="w-full md:w-auto px-4 py-2 md:px-8 md:py-4 bg-[#0FF1CE] text-black text-sm md:text-lg font-bold rounded-lg hover:scale-105 transition-transform">
+                        Get Funded
+                      </button>
+                    </Link>
+                  </div>
                 </div>
               </div>
 
               {/* Table Card */}
-              <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl md:rounded-2xl p-5 md:p-8 overflow-hidden hover:scale-[1.01] transition-all duration-300"
+              <div className="relative bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl md:rounded-2xl p-5 md:p-8 border-2 border-[#0FF1CE]/30 hover:border-[#0FF1CE]/50 overflow-hidden hover:scale-[1.01] transition-all duration-300"
                 style={{ boxShadow: '0 0 15px rgba(15, 241, 206, 0.1)' }}>
+                {/* Background glow */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2/3 h-2/3 bg-[#0FF1CE]/10 blur-[60px] rounded-full"></div>
+                
+                <div className="relative z-10">
                 <div className="overflow-x-auto -mx-5 px-5 md:mx-0 md:px-0">
                   <table className="w-full text-sm md:text-base">
                     <thead>
@@ -1153,8 +1286,9 @@ export default function ShockwaveLandingPage() {
                     </tbody>
                   </table>
                 </div>
-                <div className="mt-4 md:mt-6 text-xs md:text-sm text-gray-400">
-                  Simulated capital increments on the Shockwave Funded Account can occur every 3 months. To qualify for a capital increase, the trader must generate at least 10% net profit over 3 consecutive months.
+                  <div className="mt-4 md:mt-6 text-xs md:text-sm text-gray-400">
+                    Simulated capital increments on the Shockwave Funded Account can occur every 3 months. To qualify for a capital increase, the trader must generate at least 10% net profit over 3 consecutive months.
+                  </div>
                 </div>
               </div>
             </div>
@@ -1162,9 +1296,7 @@ export default function ShockwaveLandingPage() {
         </section>
   
         {/* Comparison Section */}
-        <section className="py-12 md:py-20 px-4 md:px-6 bg-gradient-to-b from-[#121212] to-[#131313] relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-[#121212] to-transparent"></div>
-          <div className="absolute bottom-0 left-0 w-full h-20 bg-gradient-to-t from-[#131313] to-transparent"></div>
+        <section className="py-12 md:py-20 px-4 md:px-6 bg-black relative overflow-hidden">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-[400px] bg-[#0FF1CE]/[0.015] blur-[130px] rounded-full"></div>
           <div className="relative z-10">
             <h2 className="text-3xl md:text-4xl font-bold text-center text-[#0FF1CE] mb-3 md:mb-6">How we compare?</h2>
@@ -1174,24 +1306,24 @@ export default function ShockwaveLandingPage() {
 
             {/* Comparison Section Table */}
             <div className="max-w-7xl mx-auto overflow-x-auto pb-4 px-4 md:px-8 py-2 md:py-4">
-              <div className="min-w-[768px] grid grid-cols-4 gap-px bg-[#2F2F2F] rounded-2xl overflow-hidden border border-[#0FF1CE]/20 transform hover:scale-[1.01] transition-transform duration-300 mx-auto"
+              <div className="min-w-[768px] grid grid-cols-4 gap-px bg-[#0FF1CE]/20 rounded-2xl overflow-hidden border-2 border-[#0FF1CE]/30 transform hover:scale-[1.01] hover:border-[#0FF1CE]/50 transition-all duration-300 mx-auto"
                 style={{ boxShadow: '0 0 30px rgba(15, 241, 206, 0.15)' }}>
                 {/* Header Row */}
-                <div className="bg-[#121212] p-4 md:p-8 flex items-center justify-center"></div>
-                <div className="bg-[#121212] p-4 md:p-8 flex flex-col items-center justify-center">
-                  <div className="bg-gradient-to-br from-[#0FF1CE]/20 to-[#0FF1CE]/5 p-3 md:p-4 rounded-xl md:rounded-2xl mb-2 md:mb-4 w-20 h-20 md:w-40 md:h-40 flex items-center justify-center">
+                <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 p-4 md:p-8 flex items-center justify-center"></div>
+                <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 p-4 md:p-8 flex flex-col items-center justify-center">
+                  <div className="bg-gradient-to-br from-[#0FF1CE]/20 to-[#0FF1CE]/5 p-3 md:p-4 rounded-xl md:rounded-2xl mb-2 md:mb-4 w-20 h-20 md:w-40 md:h-40 flex items-center justify-center border border-[#0FF1CE]/30">
                     <Image src="/logo.png" alt="Shockwave Capital" width={120} height={120} className="w-16 h-16 md:w-32 md:h-32" />
                   </div>
                   <span className="text-[#0FF1CE] font-bold text-base md:text-xl">Shockwave</span>
                 </div>
-                <div className="bg-[#121212] p-4 md:p-8 flex flex-col items-center justify-center">
-                  <div className="bg-[#1F1F1F] p-3 md:p-4 rounded-xl md:rounded-2xl mb-2 md:mb-4 w-20 h-20 md:w-40 md:h-40 flex items-center justify-center">
+                <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 p-4 md:p-8 flex flex-col items-center justify-center">
+                  <div className="bg-gradient-to-br from-[#0FF1CE]/5 to-transparent p-3 md:p-4 rounded-xl md:rounded-2xl mb-2 md:mb-4 w-20 h-20 md:w-40 md:h-40 flex items-center justify-center border border-[#0FF1CE]/20">
                     <span className="text-lg md:text-2xl font-bold text-white">FTMO</span>
                   </div>
                   <span className="text-white font-bold text-base md:text-xl">FTMO</span>
                 </div>
-                <div className="bg-[#121212] p-4 md:p-8 flex flex-col items-center justify-center">
-                  <div className="bg-[#1F1F1F] p-3 md:p-4 rounded-xl md:rounded-2xl mb-2 md:mb-4 w-20 h-20 md:w-40 md:h-40 flex items-center justify-center">
+                <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 p-4 md:p-8 flex flex-col items-center justify-center">
+                  <div className="bg-gradient-to-br from-[#0FF1CE]/5 to-transparent p-3 md:p-4 rounded-xl md:rounded-2xl mb-2 md:mb-4 w-20 h-20 md:w-40 md:h-40 flex items-center justify-center border border-[#0FF1CE]/20">
                     <span className="text-xs md:text-2xl font-bold text-white">FundedNext</span>
                   </div>
                   <span className="text-white font-bold text-base md:text-xl">FundedNext</span>
@@ -1252,18 +1384,18 @@ export default function ShockwaveLandingPage() {
                   }
                 ].map((row, index) => (
                   <React.Fragment key={index}>
-                    <div className="bg-[#121212] p-3 md:p-6 flex items-center font-medium text-white border-t border-[#2F2F2F] text-xs md:text-base">
+                    <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 p-3 md:p-6 flex items-center font-medium text-white border-t border-[#0FF1CE]/20 text-xs md:text-base">
                       {row.feature}
                     </div>
                     {[row.shockwave, row.ftmo, row.fundedNext].map((value, i) => (
-                      <div key={i} className="bg-[#121212] p-3 md:p-6 flex items-center justify-center border-t border-[#2F2F2F] group hover:bg-[#0FF1CE]/5 transition-colors">
+                      <div key={i} className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 p-3 md:p-6 flex items-center justify-center border-t border-[#0FF1CE]/20 group hover:bg-[#0FF1CE]/15 transition-colors">
                         {typeof value === 'boolean' ? (
                           value ? (
-                            <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center group-hover:scale-110 transition-transform border border-[#0FF1CE]/30">
                               <span className="text-[#0FF1CE] text-lg md:text-2xl">✓</span>
                             </div>
                           ) : (
-                            <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-red-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-red-500/10 flex items-center justify-center group-hover:scale-110 transition-transform border border-red-500/30">
                               <span className="text-red-500 text-lg md:text-2xl">×</span>
                             </div>
                           )
@@ -1289,9 +1421,8 @@ export default function ShockwaveLandingPage() {
         </section>
   
         {/* Global Network Section */}
-        <section className="py-20 px-6 bg-gradient-to-b from-[#131313] to-[#121212] relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-[#131313] to-transparent"></div>
-          <div className="absolute top-0 left-0 w-full h-full bg-[#0FF1CE]/[0.025] blur-[100px] rounded-full"></div>
+        <section className="py-20 px-6 bg-black relative overflow-hidden">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-[#0FF1CE]/[0.05] blur-[120px] rounded-full"></div>
           <div className="relative z-10">
             <h2 className="text-3xl font-bold text-center text-[#0FF1CE] mb-6">Global Network</h2>
             <p className="text-base md:text-xl text-gray-300 text-center max-w-2xl mx-auto mb-16">
@@ -1442,12 +1573,10 @@ export default function ShockwaveLandingPage() {
             </div>
           </div>
           
-           <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-[#121212] to-transparent"></div>
-          <div className="absolute bottom-0 left-0 w-full h-20 bg-gradient-to-t from-[#111111] to-transparent"></div>
-          <div className="absolute top-1/3 right-1/4 w-1/2 h-[300px] bg-[#0FF1CE]/[0.02] blur-[120px] rounded-full"></div>
+           <div className="absolute top-1/3 right-1/4 w-1/2 h-[300px] bg-[#0FF1CE]/[0.02] blur-[120px] rounded-full"></div>
           <div className="absolute bottom-1/3 left-1/4 w-1/2 h-[300px] bg-[#0FF1CE]/[0.015] blur-[120px] rounded-full"></div>
           <div className="relative z-10">
-            <h2 id="faq" className="text-4xl font-bold text-center text-[#0FF1CE] mb-12 mt-32 md:mt-40">FAQ</h2>
+            <h2 id="faq" className="text-4xl font-bold text-center text-[#0FF1CE] mb-12 mt-16 md:mt-20">FAQ</h2>
             
             {/* Mobile Scroll Indicators */}
             <div className="relative">
@@ -1552,8 +1681,7 @@ export default function ShockwaveLandingPage() {
        
   
         {/* Community & Newsletter Section */}
-        <section className="py-20 px-6 bg-gradient-to-b from-[#111111] to-[#131313] relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-[#111111] to-transparent"></div>
+        <section className="py-20 px-6 bg-black relative overflow-hidden">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[500px] bg-[#0FF1CE]/[0.025] blur-[150px] rounded-full"></div>
           <div className="relative z-10">
             <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12">
@@ -1612,8 +1740,7 @@ export default function ShockwaveLandingPage() {
         </section>
   
         {/* Footer Section */}
-        <footer className="bg-gradient-to-b from-[#131313] to-[#121212] border-t border-[#2F2F2F]/50 pt-16 pb-8 relative">
-          <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-[#131313] to-transparent"></div>
+        <footer className="bg-black border-t border-[#2F2F2F]/50 pt-16 pb-8 relative">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[300px] bg-[#0FF1CE]/[0.01] blur-[120px] rounded-full"></div>
           <div className="max-w-7xl mx-auto px-6">
             {/* Footer Grid */}

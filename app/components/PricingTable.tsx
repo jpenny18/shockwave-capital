@@ -725,11 +725,11 @@ export default function PricingTable() {
               onClick={() => setCurrentPlan('gauntlet')}
               className={`flex items-center justify-center rounded-full text-[13px] px-4 sm:px-6 py-2 sm:py-3 sm:text-base font-bold transition-all duration-300 gap-2 ${
                 currentPlan === 'gauntlet' 
-                  ? 'bg-[#FF6B6B] text-white border border-[#FF6B6B]' 
-                  : 'bg-transparent text-white/80 border border-white/20 hover:bg-[#FF6B6B]/10 hover:text-[#FF6B6B] hover:border-[#FF6B6B]/50'
+                  ? 'bg-[#0FF1CE] text-black border border-[#0FF1CE]' 
+                  : 'bg-transparent text-white/80 border border-white/20 hover:bg-[#0FF1CE]/10 hover:text-[#0FF1CE] hover:border-[#0FF1CE]/50'
               }`}
             >
-              🔥 Gauntlet
+              Gauntlet
             </button>
           </div>
         </div>
@@ -772,110 +772,112 @@ export default function PricingTable() {
             onClick={() => setCurrentPlan('gauntlet')}
             className={`px-3 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
               currentPlan === 'gauntlet' 
-                ? 'bg-[#FF6B6B] text-white' 
+                ? 'bg-[#0FF1CE] text-black' 
                 : 'bg-transparent text-white/80 border border-white/20'
             }`}
           >
-            🔥 Gauntlet
+            Gauntlet
           </button>
         </div>
       </div>
 
       {/* Main Pricing Table - Desktop */}
-      <div className="container hidden lg:block max-w-full px-8 mx-auto">
-        <div className="rounded-2xl border border-[#0FF1CE]/30 bg-black/60 backdrop-blur-sm glow-effect">
-          <div className="w-full">
-            <table className="w-full">
-              <thead className="text-white">
-                <tr className="relative">
-                  <th className="border-r border-[#ffffff1a] px-4 text-start text-[15px] bg-gradient-to-r from-[#0FF1CE]/10 to-transparent w-48">
-                    <p className="mt-8 mb-8 text-[20px] font-bold text-[#0FF1CE]">
-                      Account Size
-                    </p>
-                  </th>
-                  {availableAccounts.map(account => (
-                    <th
-                      key={account}
-                      className="px-4 py-5 text-center text-xl font-medium border-r border-[#ffffff1a] last:border-r-0 relative bg-black/20"
-                    >
-                      <div className="flex flex-col items-center relative pt-4">
-                        <span className="mt-4 mb-2 text-center text-[24px] text-[#0FF1CE] font-bold">
-                          ${account.toLocaleString()}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            sessionStorage.setItem('preselectedBalance', account.toString());
-                            handlePurchase(`${data.name} $${account.toLocaleString()}`, data.prices[account]);
-                          }}
-                          className="mt-3 mb-2 group"
-                        >
-                          <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-[#0FF1CE] to-[#0AA89E] p-[2px] transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-[#0FF1CE]/40">
-                            <div className="flex flex-col items-center rounded-lg bg-gradient-to-br from-[#0FF1CE] to-[#0AA89E] px-4 py-2 transition-all duration-300">
-                              <span className="text-sm font-bold text-black">Get Plan</span>
-                              <span className="text-xs text-black/80">Fee: ${data.prices[account]}</span>
-                            </div>
-                          </div>
-                        </button>
+      <div className="hidden lg:block max-w-[1400px] mx-auto px-4 overflow-x-auto pt-4">
+        <div className="flex gap-0 min-w-fit">
+          {/* Left Column - Feature Labels */}
+          <div className="flex-shrink-0 w-40 pt-[80px]">
+            {data.features.map((feature, idx) => (
+              <div 
+                key={idx} 
+                className="h-[44px] flex items-center gap-2 px-2"
+              >
+                <span className="text-white text-[11px] font-medium">{feature.name}</span>
+                <div
+                  className="info-icon-small"
+                  onClick={() => setShowModal(feature.tooltip)}
+                >
+                  i
+                </div>
+              </div>
+            ))}
+            <div className="mt-2 px-2">
+              <p className="text-gray-500 text-[10px]">All prices are one-time payments</p>
+            </div>
+          </div>
+
+          {/* Account Cards */}
+          <div className="flex gap-1.5 flex-1 justify-center">
+            {availableAccounts.map((account, cardIndex) => {
+              const isBestValue = cardIndex === 2; // 100K is typically best value
+              
+              return (
+                <div 
+                  key={account} 
+                  className={`flex-shrink-0 w-[140px] relative ${isBestValue ? 'z-10' : ''}`}
+                >
+                  {/* Best Value Badge */}
+                  {isBestValue && (
+                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 z-20">
+                      <div className="bg-[#0FF1CE] text-black text-[9px] font-bold px-2.5 py-0.5 rounded-full whitespace-nowrap">
+                        Best value
                       </div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="text-white">
-                {data.features.map((feature, index) => (
-                  <tr
-                    key={index}
-                    className={`table-row transition-all duration-300 ${
-                      index % 2 === 0 ? 'bg-[#ffffff02]' : 'bg-[#0FF1CE]/[0.02]'
-                    } hover:bg-[#0FF1CE]/[0.08] border-b border-[#ffffff0a]`}
-                  >
-                    <td className="border-r border-[#ffffff1a] px-4 py-5 w-48">
-                      <div className="w-full text-[15px] font-normal text-white">
-                        <div className="flex items-start relative h-full">
-                          <div className="flex-1 pr-3 min-h-[40px] flex flex-col justify-center">
-                            <p className="font-medium text-white text-sm leading-tight">
-                              {feature.name}
-                            </p>
-                            {feature.subtitle && (
-                              <p className="text-xs font-light text-gray-400 leading-tight mt-1">
-                                {feature.subtitle}
-                              </p>
+                    </div>
+                  )}
+                  
+                  <div className={`rounded-lg overflow-hidden ${
+                    isBestValue 
+                      ? 'bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm border-2 border-[#0FF1CE]/50' 
+                      : 'bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm border-2 border-[#0FF1CE]/30'
+                  }`}>
+                    {/* Account Size Header */}
+                    <div className={`p-3 text-center ${isBestValue ? 'pt-4' : ''}`}>
+                      <div className="text-gray-400 text-[9px] font-medium mb-0.5">Account</div>
+                      <div className="text-white text-lg font-bold">
+                        ${account >= 1000 ? `${account / 1000}K` : account}
+                      </div>
+                    </div>
+
+                    {/* Feature Values */}
+                    <div className="flex flex-col">
+                      {data.features.map((feature, idx) => {
+                        const value = feature.values[account] || '-';
+                        const isCheckmark = value === '✓';
+                        
+                        return (
+                          <div 
+                            key={idx} 
+                            className="h-[44px] flex items-center justify-center px-1.5 border-t border-[#0FF1CE]/20"
+                          >
+                            {isCheckmark ? (
+                              <span className="text-[#0FF1CE] text-[11px] font-medium">{value}</span>
+                            ) : (
+                              <span className="text-white text-[11px] font-medium">{value}</span>
                             )}
                           </div>
-                          <div className="flex-shrink-0 flex items-center h-[40px]">
-                            <div
-                              className="info-icon"
-                              onClick={() => setShowModal(feature.tooltip)}
-                            >
-                              i
-                            </div>
-                          </div>
-                        </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Pricing */}
+                    <div className="p-3 pt-2 border-t border-[#0FF1CE]/20">
+                      <div className="flex items-center justify-center gap-1.5 mb-2">
+                        <span className="text-[#0FF1CE] text-lg font-bold">${data.prices[account]}</span>
                       </div>
-                    </td>
-                    {availableAccounts.map(account => {
-                      const value = feature.values[account] || '-';
-                      const isCheckmark = value === '✓';
-                      return (
-                        <td
-                          key={account}
-                          className="px-6 py-5 text-center border-r border-[#ffffff0a] last:border-r-0"
-                        >
-                          <p className={`text-[15px] font-semibold ${
-                            isCheckmark 
-                              ? 'text-[#0FF1CE] text-xl' 
-                              : 'text-white'
-                          }`}>
-                            {value}
-                          </p>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      
+                      <button
+                        onClick={() => {
+                          sessionStorage.setItem('preselectedBalance', account.toString());
+                          handlePurchase(`${data.name} $${account.toLocaleString()}`, data.prices[account]);
+                        }}
+                        className="w-full bg-[#0FF1CE] hover:bg-[#0AA89E] text-black font-bold py-1.5 px-2 rounded-md transition-all duration-300 hover:scale-105 text-xs"
+                      >
+                        Start now
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -1136,6 +1138,36 @@ export default function PricingTable() {
         }
 
         .info-icon:hover {
+          background: var(--shockwave-cyan);
+          color: #000;
+          transform: scale(1.1) translateZ(0);
+          box-shadow: 0 0 10px rgba(15, 241, 206, 0.5);
+        }
+
+        .info-icon-small {
+          width: 14px;
+          height: 14px;
+          background: rgba(15, 241, 206, 0.2);
+          border: 1px solid var(--shockwave-cyan);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-left: 4px;
+          font-size: 9px;
+          color: var(--shockwave-cyan);
+          transition: all 0.3s ease;
+          cursor: pointer;
+          font-style: italic;
+          font-weight: bold;
+          transform: translateZ(0);
+          position: relative;
+          -webkit-tap-highlight-color: transparent;
+          user-select: none;
+          flex-shrink: 0;
+        }
+
+        .info-icon-small:hover {
           background: var(--shockwave-cyan);
           color: #000;
           transform: scale(1.1) translateZ(0);
