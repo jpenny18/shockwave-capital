@@ -91,6 +91,7 @@ interface CryptoOrder {
   status: 'PENDING' | 'COMPLETED' | 'CANCELLED';
   challengeStatus?: 'IN_PROGRESS' | 'FAILED' | 'PASSED';
   cryptoType: string;
+  cryptoAmount: string;
   cryptoAddress: string;
   platform: string;
   createdAt: string;
@@ -203,7 +204,7 @@ export default function AdminDashboard() {
       // Calculate current period stats
       const currentCardCustomers = new Set(currentPeriodCardOrders.map(doc => doc.data().customerEmail));
       const currentCryptoCustomers = new Set(currentPeriodCryptoOrders.map(doc => doc.data().customerEmail));
-      const currentCustomers = new Set([...currentCardCustomers, ...currentCryptoCustomers]);
+      const currentCustomers = new Set([...Array.from(currentCardCustomers), ...Array.from(currentCryptoCustomers)]);
       
       const currentCardRevenue = currentPeriodCardOrders.reduce((sum, doc) => sum + (doc.data().totalAmount || 0), 0);
       const currentCryptoRevenue = currentPeriodCryptoOrders.reduce((sum, doc) => sum + (doc.data().usdAmount || 0), 0);
@@ -215,7 +216,7 @@ export default function AdminDashboard() {
       // Calculate previous period stats
       const previousCardCustomers = new Set(previousPeriodCardOrders.map(doc => doc.data().customerEmail));
       const previousCryptoCustomers = new Set(previousPeriodCryptoOrders.map(doc => doc.data().customerEmail));
-      const previousCustomers = new Set([...previousCardCustomers, ...previousCryptoCustomers]);
+      const previousCustomers = new Set([...Array.from(previousCardCustomers), ...Array.from(previousCryptoCustomers)]);
       
       const previousCardRevenue = previousPeriodCardOrders.reduce((sum, doc) => sum + (doc.data().totalAmount || 0), 0);
       const previousCryptoRevenue = previousPeriodCryptoOrders.reduce((sum, doc) => sum + (doc.data().usdAmount || 0), 0);
