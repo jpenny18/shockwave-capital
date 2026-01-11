@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { auth } from '@/lib/firebase';
+import { useSearchParams } from 'next/navigation';
 import Particles from '../components/Particles';
 import Header from '../components/Header';
 import { Check, ChevronDown, ChevronUp, Bitcoin, Copy } from 'lucide-react';
@@ -21,6 +20,7 @@ interface FormData {
   email: string;
   phone: string;
   country: string;
+  platform: string;
   discordUsername?: string;
 }
 
@@ -94,8 +94,7 @@ const ACTIVATION_OPTIONS: ActivationOption[] = [
 ];
 
 export default function GauntletActivationPage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  const searchParams = useSearchParams();
   const [selectedOption, setSelectedOption] = useState<ActivationOption | null>(null);
   const [showPayment, setShowPayment] = useState(false);
   const [formData, setFormData] = useState<FormData>({
@@ -104,6 +103,7 @@ export default function GauntletActivationPage() {
     email: '',
     phone: '',
     country: '',
+    platform: 'MT5',
     discordUsername: ''
   });
   const [formErrors, setFormErrors] = useState<Partial<FormData>>({});
@@ -111,16 +111,22 @@ export default function GauntletActivationPage() {
   const [cryptoPrices, setCryptoPrices] = useState<CryptoPrice>({ BTC: 0, ETH: 0, USDT: 1, USDC: 1 });
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (!user && !loading) {
-        router.push('/access');
-      }
-      setLoading(false);
-    });
+  // Filter activation options based on URL parameter
+  const levelParam = searchParams?.get('level'); // e.g., ?level=200k or ?level=$200k
+  const filteredOptions = levelParam 
+    ? ACTIVATION_OPTIONS.filter(option => {
+        const normalizedLevel = option.level.toLowerCase().replace('$', '');
+        const normalizedParam = levelParam.toLowerCase().replace('$', '');
+        return normalizedLevel === normalizedParam;
+      })
+    : ACTIVATION_OPTIONS;
 
-    return () => unsubscribe();
-  }, [router, loading]);
+  // Auto-select if only one option available
+  useEffect(() => {
+    if (filteredOptions.length === 1 && !selectedOption) {
+      setSelectedOption(filteredOptions[0]);
+    }
+  }, [filteredOptions, selectedOption]);
 
   // Fetch crypto prices
   useEffect(() => {
@@ -139,14 +145,6 @@ export default function GauntletActivationPage() {
     return () => clearInterval(interval);
   }, []);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0D0D0D]">
-        <div className="w-8 h-8 border-4 border-[#0FF1CE] border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
   const validateForm = (): boolean => {
     const errors: Partial<FormData> = {};
 
@@ -156,6 +154,7 @@ export default function GauntletActivationPage() {
     else if (!/\S+@\S+\.\S+/.test(formData.email)) errors.email = 'Invalid email format';
     if (!formData.phone.trim()) errors.phone = 'Phone number is required';
     if (!formData.country.trim()) errors.country = 'Country is required';
+    if (!formData.platform.trim()) errors.platform = 'Platform selection is required';
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -188,7 +187,7 @@ export default function GauntletActivationPage() {
     return {
       type: 'gauntlet-activation',
       amount: selectedOption.level,
-      platform: 'MT4/MT5',
+      platform: formData.platform,
       formData,
       price: selectedOption.price,
       addOns: []
@@ -206,20 +205,20 @@ export default function GauntletActivationPage() {
             {isProcessingPayment && (
               <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 rounded-2xl">
                 <div className="text-center">
-                  <div className="w-12 h-12 border-2 border-[#FF6B6B] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <div className="w-12 h-12 border-2 border-[#0FF1CE] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                   <p className="text-white">Processing payment...</p>
                 </div>
               </div>
             )}
             
-            <div className="p-6 md:p-8 border-b border-[#2F2F2F]/50">
+            <div className="p-6 md:p-8 border-b border-[#0FF1CE]/20">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-[#FF6B6B]">🔥 Activate Your Gauntlet Account</h2>
+                  <h2 className="text-2xl font-bold text-[#0FF1CE]">Activate Your Gauntlet Account</h2>
                   <p className="text-gray-400 mt-1">Gauntlet Activation - {selectedOption.level}</p>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl font-bold text-[#FF6B6B]">${selectedOption.price.toLocaleString()}</div>
+                  <div className="text-2xl font-bold text-[#0FF1CE]">${selectedOption.price.toLocaleString()}</div>
                   <div className="text-gray-400 text-sm">Activation Fee</div>
                 </div>
               </div>
@@ -243,16 +242,16 @@ export default function GauntletActivationPage() {
       
       {/* Hero Section */}
       <section className="relative px-4 md:px-6 pt-24 md:pt-40 pb-16 md:pb-32 text-center overflow-hidden bg-gradient-to-b from-[#121212] to-[#131313]">
-        <div className="absolute top-0 left-0 w-full h-full bg-[#FF6B6B]/[0.02] background-noise"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full md:w-3/4 h-full rounded-full bg-[#FF6B6B]/[0.03] blur-[150px] opacity-60"></div>
+        <div className="absolute top-0 left-0 w-full h-full bg-[#0FF1CE]/[0.02] background-noise"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full md:w-3/4 h-full rounded-full bg-[#0FF1CE]/[0.03] blur-[150px] opacity-60"></div>
         <Particles />
         
         <div className="relative z-10 max-w-5xl mx-auto">
-          <div className="inline-block bg-gradient-to-r from-[#FF6B6B] to-[#EE5A24] text-white px-4 py-2 rounded-full text-sm font-bold mb-4 animate-pulse">
-            🔥 GAUNTLET ACTIVATION
+          <div className="inline-block bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black px-4 py-2 rounded-full text-sm font-bold mb-4">
+            GAUNTLET ACTIVATION
           </div>
           
-          <h1 className="text-3xl md:text-5xl lg:text-6xl font-extrabold text-[#FF6B6B] mb-4 md:mb-6">
+          <h1 className="text-3xl md:text-5xl lg:text-6xl font-extrabold bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-transparent bg-clip-text mb-4 md:mb-6">
             Activate Your Funded Account
           </h1>
           <p className="text-base md:text-lg lg:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
@@ -265,38 +264,53 @@ export default function GauntletActivationPage() {
       <section className="py-20 px-6 bg-gradient-to-b from-[#131313] to-[#111111] relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-[#131313] to-transparent"></div>
         <div className="relative z-10">
-          <h2 className="text-4xl font-bold text-center text-[#FF6B6B] mb-16">Activate your Funded Account</h2>
+          <h2 className="text-4xl font-bold text-center text-[#0FF1CE] mb-16">
+            Activate your Funded Account
+            {levelParam && <span className="block text-xl text-gray-400 mt-2">{levelParam.toUpperCase()} Account Activation</span>}
+          </h2>
           
-          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-            {ACTIVATION_OPTIONS.map((option, index) => (
-              <div
-                key={option.level}
-                className={`group relative bg-gradient-to-br from-[#FF6B6B]/10 to-[#EE5A24]/5 backdrop-blur-sm rounded-2xl p-6 hover:scale-105 transition-all duration-300 cursor-pointer ${
-                  selectedOption?.level === option.level ? 'ring-2 ring-[#FF6B6B]' : ''
-                }`}
-                style={{
-                  boxShadow: '0 0 20px rgba(255, 107, 107, 0.1)'
-                }}
-                onClick={() => handleSelectOption(option)}
-              >
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-[#FF6B6B] mb-2">{option.level}</div>
-                  <div className="text-3xl font-bold text-white">${option.price.toLocaleString()}</div>
-                  <div className="text-sm text-gray-400 mt-1">Activation Fee</div>
-                </div>
-
-                {selectedOption?.level === option.level && (
-                  <div className="absolute top-2 right-2">
-                    <div className="w-6 h-6 bg-[#FF6B6B] rounded-full flex items-center justify-center">
-                      <Check size={14} className="text-white" />
-                    </div>
+          {filteredOptions.length > 0 ? (
+            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+              {filteredOptions.map((option, index) => (
+                <div
+                  key={option.level}
+                  className={`group relative bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-6 border border-[#0FF1CE]/20 hover:scale-105 transition-all duration-300 cursor-pointer ${
+                    selectedOption?.level === option.level ? 'ring-2 ring-[#0FF1CE]' : ''
+                  }`}
+                  style={{
+                    boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)'
+                  }}
+                  onClick={() => handleSelectOption(option)}
+                >
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-[#0FF1CE] mb-2">{option.level}</div>
+                    <div className="text-3xl font-bold text-white">${option.price.toLocaleString()}</div>
+                    <div className="text-sm text-gray-400 mt-1">Activation Fee</div>
                   </div>
-                )}
 
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#FF6B6B]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  {selectedOption?.level === option.level && (
+                    <div className="absolute top-2 right-2">
+                      <div className="w-6 h-6 bg-[#0FF1CE] rounded-full flex items-center justify-center">
+                        <Check size={14} className="text-black" />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#0FF1CE]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="max-w-2xl mx-auto text-center">
+              <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-8 border border-[#0FF1CE]/20"
+                style={{ boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)' }}>
+                <p className="text-gray-400 mb-4">No activation options found for the specified level.</p>
+                <a href="/gauntlet-activation" className="text-[#0FF1CE] hover:underline">
+                  View all activation options
+                </a>
               </div>
-            ))}
-          </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -304,10 +318,11 @@ export default function GauntletActivationPage() {
       {selectedOption && (
         <section className="py-20 px-6 bg-gradient-to-b from-[#111111] to-[#131313] relative overflow-hidden">
           <div className="relative z-10">
-            <h2 className="text-4xl font-bold text-center text-[#FF6B6B] mb-16">Complete Your Information</h2>
+            <h2 className="text-4xl font-bold text-center text-[#0FF1CE] mb-16">Complete Your Information</h2>
             
             <div className="max-w-2xl mx-auto">
-              <div className="bg-gradient-to-br from-[#FF6B6B]/10 to-[#EE5A24]/5 backdrop-blur-sm rounded-2xl p-8 border border-[#2F2F2F]/50">
+              <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-8 border border-[#0FF1CE]/20"
+                style={{ boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)' }}>
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
@@ -317,8 +332,8 @@ export default function GauntletActivationPage() {
                         name="firstName"
                         value={formData.firstName}
                         onChange={handleInputChange}
-                        className={`w-full px-4 py-3 bg-[#181818] border rounded-lg focus:outline-none focus:border-[#FF6B6B] text-white placeholder-gray-400 ${
-                          formErrors.firstName ? 'border-red-500' : 'border-[#FF6B6B]/20'
+                        className={`w-full px-4 py-3 bg-[#181818] border rounded-lg focus:outline-none focus:border-[#0FF1CE] text-white placeholder-gray-400 ${
+                          formErrors.firstName ? 'border-red-500' : 'border-[#0FF1CE]/20'
                         }`}
                         placeholder="Enter your first name"
                       />
@@ -332,8 +347,8 @@ export default function GauntletActivationPage() {
                         name="lastName"
                         value={formData.lastName}
                         onChange={handleInputChange}
-                        className={`w-full px-4 py-3 bg-[#181818] border rounded-lg focus:outline-none focus:border-[#FF6B6B] text-white placeholder-gray-400 ${
-                          formErrors.lastName ? 'border-red-500' : 'border-[#FF6B6B]/20'
+                        className={`w-full px-4 py-3 bg-[#181818] border rounded-lg focus:outline-none focus:border-[#0FF1CE] text-white placeholder-gray-400 ${
+                          formErrors.lastName ? 'border-red-500' : 'border-[#0FF1CE]/20'
                         }`}
                         placeholder="Enter your last name"
                       />
@@ -348,8 +363,8 @@ export default function GauntletActivationPage() {
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-3 bg-[#181818] border rounded-lg focus:outline-none focus:border-[#FF6B6B] text-white placeholder-gray-400 ${
-                        formErrors.email ? 'border-red-500' : 'border-[#FF6B6B]/20'
+                      className={`w-full px-4 py-3 bg-[#181818] border rounded-lg focus:outline-none focus:border-[#0FF1CE] text-white placeholder-gray-400 ${
+                        formErrors.email ? 'border-red-500' : 'border-[#0FF1CE]/20'
                       }`}
                       placeholder="Enter your email address"
                     />
@@ -364,8 +379,8 @@ export default function GauntletActivationPage() {
                         name="phone"
                         value={formData.phone}
                         onChange={handleInputChange}
-                        className={`w-full px-4 py-3 bg-[#181818] border rounded-lg focus:outline-none focus:border-[#FF6B6B] text-white placeholder-gray-400 ${
-                          formErrors.phone ? 'border-red-500' : 'border-[#FF6B6B]/20'
+                        className={`w-full px-4 py-3 bg-[#181818] border rounded-lg focus:outline-none focus:border-[#0FF1CE] text-white placeholder-gray-400 ${
+                          formErrors.phone ? 'border-red-500' : 'border-[#0FF1CE]/20'
                         }`}
                         placeholder="Enter your phone number"
                       />
@@ -378,8 +393,8 @@ export default function GauntletActivationPage() {
                         name="country"
                         value={formData.country}
                         onChange={handleInputChange}
-                        className={`w-full px-4 py-3 bg-[#181818] border rounded-lg focus:outline-none focus:border-[#FF6B6B] text-white ${
-                          formErrors.country ? 'border-red-500' : 'border-[#FF6B6B]/20'
+                        className={`w-full px-4 py-3 bg-[#181818] border rounded-lg focus:outline-none focus:border-[#0FF1CE] text-white ${
+                          formErrors.country ? 'border-red-500' : 'border-[#0FF1CE]/20'
                         }`}
                       >
                         <option value="">Select your country</option>
@@ -396,34 +411,51 @@ export default function GauntletActivationPage() {
                   </div>
 
                   <div>
+                    <label className="block text-white mb-2">Trading Platform *</label>
+                    <select
+                      name="platform"
+                      value={formData.platform}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-3 bg-[#181818] border rounded-lg focus:outline-none focus:border-[#0FF1CE] text-white ${
+                        formErrors.platform ? 'border-red-500' : 'border-[#0FF1CE]/20'
+                      }`}
+                    >
+                      <option value="MT5">MetaTrader 5 (MT5)</option>
+                      <option value="MT4">MetaTrader 4 (MT4)</option>
+                    </select>
+                    {formErrors.platform && <p className="text-red-500 text-sm mt-1">{formErrors.platform}</p>}
+                    <p className="text-gray-400 text-xs mt-1">Select your preferred trading platform</p>
+                  </div>
+
+                  <div>
                     <label className="block text-white mb-2">Discord Username (Optional)</label>
                     <input
                       type="text"
                       name="discordUsername"
                       value={formData.discordUsername}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 bg-[#181818] border border-[#FF6B6B]/20 rounded-lg focus:outline-none focus:border-[#FF6B6B] text-white placeholder-gray-400"
+                      className="w-full px-4 py-3 bg-[#181818] border border-[#0FF1CE]/20 rounded-lg focus:outline-none focus:border-[#0FF1CE] text-white placeholder-gray-400"
                       placeholder="Your Discord username"
                     />
                   </div>
 
-                  <div className="pt-6 border-t border-[#2F2F2F]/50">
+                  <div className="pt-6 border-t border-[#0FF1CE]/20">
                     <div className="flex justify-between items-center mb-6">
                       <div>
                         <div className="text-lg font-semibold text-white">Gauntlet Activation</div>
-                        <div className="text-[#FF6B6B]">{selectedOption.level} Funded Account</div>
+                        <div className="text-[#0FF1CE]">{selectedOption.level} Funded Account</div>
                       </div>
                       <div className="text-right">
-                        <div className="text-2xl font-bold text-[#FF6B6B]">${selectedOption.price.toLocaleString()}</div>
+                        <div className="text-2xl font-bold text-[#0FF1CE]">${selectedOption.price.toLocaleString()}</div>
                         <div className="text-gray-400 text-sm">Activation Fee</div>
                       </div>
                     </div>
 
                     <button
                       onClick={handleProceedToPayment}
-                      className="w-full bg-gradient-to-r from-[#FF6B6B] to-[#EE5A24] hover:opacity-90 text-white font-bold py-4 rounded-xl transition-all"
+                      className="w-full bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] hover:scale-105 text-black font-bold py-4 rounded-xl transition-all"
                     >
-                      🔥 Activate Gauntlet Account
+                      Activate Gauntlet Account
                     </button>
                   </div>
                 </div>

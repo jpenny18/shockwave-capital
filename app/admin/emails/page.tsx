@@ -14,7 +14,8 @@ import {
   Loader,
   Users,
   Eye,
-  ChevronDown
+  ChevronDown,
+  RefreshCw
 } from 'lucide-react';
 import { getAllUsers, UserData, db } from '@/lib/firebase';
 import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
@@ -521,6 +522,171 @@ const initialTemplates = [
 </html>`,
     variables: ['firstName', 'accountSize'],
     lastUpdated: new Date().toISOString().split('T')[0]
+  },
+  {
+    id: 6,
+    name: 'Gauntlet Activation Offer',
+    subject: 'Activate Your New Gauntlet Challenge',
+    body: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Activate Your Gauntlet Challenge - Shockwave Capital</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <style>
+    body {
+      font-family: 'Lato', Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    @media all and (max-width:621px) {
+      .mobile-header {
+        padding: 20px 15px !important;
+      }
+      .mobile-content {
+        padding: 20px 15px !important;
+      }
+    }
+  </style>
+</head>
+<body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4;">
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 0;">
+    <tr>
+      <td bgcolor="#0FF1CE" align="center" style="padding: 30px 20px;">
+        <h1 style="color: #000000; margin: 0; font-size: 28px; font-weight: 700;">SHOCKWAVE CAPITAL</h1>
+      </td>
+    </tr>
+    <tr>
+      <td bgcolor="#f4f4f4" align="center" style="padding: 20px;">
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px;">
+          <tr>
+            <td bgcolor="#ffffff" style="padding: 40px; border-radius: 8px;">
+              <h1 style="font-size: 28px; font-weight: 700; color: #0FF1CE; margin: 0 0 20px 0;">Activate Your New Gauntlet Challenge</h1>
+              
+              <p style="margin: 0 0 20px 0; color: #444;">Dear {{firstName}},</p>
+              
+              <p style="margin: 0 0 20px 0; color: #444;">
+                You've shown your trading prowess. Now it's time to unlock your funded account and trade with zero restrictions.
+              </p>
+              
+              <div style="background: linear-gradient(135deg, rgba(15, 241, 206, 0.15) 0%, rgba(15, 241, 206, 0.05) 100%); padding: 25px; border-radius: 12px; margin: 25px 0; border: 2px solid rgba(15, 241, 206, 0.3);">
+                <h2 style="color: #0FF1CE; font-size: 24px; margin: 0 0 15px 0; text-align: center;">Your Funded Account Awaits</h2>
+                <p style="color: #333; margin: 0; font-size: 16px; text-align: center; line-height: 1.6;">
+                  Complete your activation and start trading with complete freedom. No restrictions, maximum flexibility.
+                </p>
+              </div>
+              
+              <div style="background: linear-gradient(to bottom right, rgba(15, 241, 206, 0.1) 0%, rgba(15, 241, 206, 0.05) 100%); padding: 30px; border-radius: 12px; margin: 30px 0; border: 1px solid rgba(15, 241, 206, 0.2); box-shadow: 0 0 20px rgba(15, 241, 206, 0.1);">
+                <h3 style="color: #0FF1CE; font-size: 20px; margin: 0 0 20px 0; text-align: center; font-weight: bold;">NO BS Funded Account RULES</h3>
+                <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                  <tr>
+                    <td style="padding: 0;">
+                      <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                        <tr>
+                          <td width="50%" style="padding: 8px; vertical-align: top;">
+                            <div style="display: flex; align-items: center;">
+                              <div style="width: 24px; height: 24px; border-radius: 50%; background: rgba(15, 241, 206, 0.1); display: inline-flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0;">
+                                <span style="color: #0FF1CE; font-size: 14px;">✓</span>
+                              </div>
+                              <span style="color: #333; font-size: 15px;">No consistency rules</span>
+                            </div>
+                          </td>
+                          <td width="50%" style="padding: 8px; vertical-align: top;">
+                            <div style="display: flex; align-items: center;">
+                              <div style="width: 24px; height: 24px; border-radius: 50%; background: rgba(15, 241, 206, 0.1); display: inline-flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0;">
+                                <span style="color: #0FF1CE; font-size: 14px;">✓</span>
+                              </div>
+                              <span style="color: #333; font-size: 15px;">News trading allowed</span>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td width="50%" style="padding: 8px; vertical-align: top;">
+                            <div style="display: flex; align-items: center;">
+                              <div style="width: 24px; height: 24px; border-radius: 50%; background: rgba(15, 241, 206, 0.1); display: inline-flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0;">
+                                <span style="color: #0FF1CE; font-size: 14px;">✓</span>
+                              </div>
+                              <span style="color: #333; font-size: 15px;">Hold over weekends</span>
+                            </div>
+                          </td>
+                          <td width="50%" style="padding: 8px; vertical-align: top;">
+                            <div style="display: flex; align-items: center;">
+                              <div style="width: 24px; height: 24px; border-radius: 50%; background: rgba(15, 241, 206, 0.1); display: inline-flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0;">
+                                <span style="color: #0FF1CE; font-size: 14px;">✓</span>
+                              </div>
+                              <span style="color: #333; font-size: 15px;">EAs & Bots allowed</span>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td width="50%" style="padding: 8px; vertical-align: top;">
+                            <div style="display: flex; align-items: center;">
+                              <div style="width: 24px; height: 24px; border-radius: 50%; background: rgba(15, 241, 206, 0.1); display: inline-flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0;">
+                                <span style="color: #0FF1CE; font-size: 14px;">✓</span>
+                              </div>
+                              <span style="color: #333; font-size: 15px;">No Profit Caps</span>
+                            </div>
+                          </td>
+                          <td width="50%" style="padding: 8px; vertical-align: top;">
+                            <div style="display: flex; align-items: center;">
+                              <div style="width: 24px; height: 24px; border-radius: 50%; background: rgba(15, 241, 206, 0.1); display: inline-flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0;">
+                                <span style="color: #0FF1CE; font-size: 14px;">✓</span>
+                              </div>
+                              <span style="color: #333; font-size: 15px;">No Position size caps</span>
+                            </div>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+              
+              <div style="text-align: center; margin: 35px 0;">
+                <a href="https://shockwave-capital.com/gauntlet-activation" style="display: inline-block; background: linear-gradient(135deg, #0FF1CE 0%, #00D9FF 100%); color: #000000; padding: 18px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 18px; box-shadow: 0 4px 15px rgba(15, 241, 206, 0.3);">
+                  Activate Your Funded Account
+                </a>
+              </div>
+              
+              <div style="margin: 30px 0;">
+                <h3 style="color: #0FF1CE; font-size: 18px; margin: 0 0 15px 0;">What You Get:</h3>
+                <ul style="color: #444; line-height: 1.8; padding-left: 20px;">
+                  <li>Complete trading freedom with zero restrictions</li>
+                  <li>Weekend holding allowed - trade on your schedule</li>
+                  <li>15% Max Drawdown - generous risk management</li>
+                  <li>1:200 Leverage - maximize your potential</li>
+                  <li>Fast activation - start trading within 1 hour</li>
+                </ul>
+              </div>
+              
+              <p style="margin: 25px 0 0 0; color: #444;">
+                Don't miss this opportunity to trade with a funded account. Activate your challenge today and start trading with complete freedom.
+              </p>
+              
+              <p style="margin: 25px 0 0 0; color: #444;">
+                Best regards,<br>
+                <strong>The Shockwave Capital Team</strong>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td bgcolor="#f4f4f4" align="center" style="padding: 20px;">
+        <p style="margin: 0; color: #666; font-size: 12px;">
+          © ${new Date().getFullYear()} Shockwave Capital. All rights reserved.
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`,
+    variables: ['firstName'],
+    lastUpdated: new Date().toISOString().split('T')[0],
+    isBulkTemplate: true
   }
 ];
 
@@ -531,6 +697,7 @@ interface EmailTemplate {
   body: string;
   variables: string[];
   lastUpdated: string;
+  isBulkTemplate?: boolean;
 }
 
 interface TestValues {
@@ -571,6 +738,16 @@ export default function EmailTemplatesPage() {
   const [showRecentOrdersDropdown, setShowRecentOrdersDropdown] = useState(false);
   const [recentOrdersType, setRecentOrdersType] = useState<'crypto' | 'credit' | 'accounts'>('crypto');
   const [activeAccounts, setActiveAccounts] = useState<any[]>([]);
+  
+  // Bulk send state
+  const [bulkRecipients, setBulkRecipients] = useState<any[]>([]);
+  const [selectedRecipients, setSelectedRecipients] = useState<Set<string>>(new Set());
+  const [loadingBulkRecipients, setLoadingBulkRecipients] = useState(false);
+  const [sendingBulk, setSendingBulk] = useState(false);
+  const [bulkSendProgress, setBulkSendProgress] = useState({ sent: 0, total: 0, failed: 0 });
+  const [showBulkConfirm, setShowBulkConfirm] = useState(false);
+  const [bulkUserSearch, setBulkUserSearch] = useState('');
+  const [showBulkUserSearch, setShowBulkUserSearch] = useState(false);
   
   // Load customers on component mount
   useEffect(() => {
@@ -1015,6 +1192,217 @@ export default function EmailTemplatesPage() {
     setUserSearchTerm(user.displayName || user.email || 'Unknown User');
   };
 
+  // Load all gauntlet activation recipients
+  const loadGauntletActivationRecipients = async () => {
+    try {
+      setLoadingBulkRecipients(true);
+      const recipients: any[] = [];
+      
+      // Load all gauntlet activation orders from crypto-orders
+      // Note: Removed orderBy to avoid requiring composite index
+      const gauntletOrdersRef = collection(db, 'crypto-orders');
+      const gauntletQuery = query(
+        gauntletOrdersRef,
+        where('challengeType', '==', 'gauntlet-activation')
+      );
+      const gauntletSnapshot = await getDocs(gauntletQuery);
+      
+      // Use a Set to track unique emails
+      const seenEmails = new Set<string>();
+      
+      gauntletSnapshot.forEach((doc) => {
+        const data = doc.data();
+        const email = data.customerEmail?.toLowerCase();
+        
+        // Only add if we haven't seen this email before
+        if (email && !seenEmails.has(email)) {
+          seenEmails.add(email);
+          recipients.push({
+            id: doc.id,
+            email: data.customerEmail || '',
+            firstName: data.customerName?.split(' ')[0] || 'Valued Customer',
+            lastName: data.customerName?.split(' ').slice(1).join(' ') || '',
+            displayName: data.customerName || data.customerEmail || 'Valued Customer',
+            accountSize: data.challengeAmount || '$10,000',
+            createdAt: data.createdAt || null
+          });
+        }
+      });
+      
+      // Sort recipients by createdAt in memory (most recent first)
+      recipients.sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
+      
+      setBulkRecipients(recipients);
+      
+      // Select all recipients by default
+      const allEmails = new Set(recipients.map(r => r.email));
+      setSelectedRecipients(allEmails);
+      
+      console.log(`Loaded ${recipients.length} unique gauntlet activation recipients`);
+      return recipients;
+    } catch (error) {
+      console.error('Error loading gauntlet activation recipients:', error);
+      alert('Failed to load recipients. Please try again.');
+      return [];
+    } finally {
+      setLoadingBulkRecipients(false);
+    }
+  };
+
+  // Toggle individual recipient selection
+  const toggleRecipient = (email: string) => {
+    const newSelected = new Set(selectedRecipients);
+    if (newSelected.has(email)) {
+      newSelected.delete(email);
+    } else {
+      newSelected.add(email);
+    }
+    setSelectedRecipients(newSelected);
+  };
+
+  // Select all recipients
+  const selectAllRecipients = () => {
+    const allEmails = new Set(bulkRecipients.map(r => r.email));
+    setSelectedRecipients(allEmails);
+  };
+
+  // Deselect all recipients
+  const deselectAllRecipients = () => {
+    setSelectedRecipients(new Set());
+  };
+
+  // Add user from search to bulk recipients
+  const addUserToBulk = (user: Customer) => {
+    // Check if user already exists
+    const exists = bulkRecipients.some(r => r.email === user.email);
+    if (exists) {
+      alert('This user is already in the recipients list');
+      return;
+    }
+
+    const newRecipient = {
+      id: user.uid || user.id,
+      email: user.email,
+      firstName: user.firstName || user.displayName?.split(' ')[0] || 'Valued Customer',
+      lastName: user.lastName || user.displayName?.split(' ').slice(1).join(' ') || '',
+      displayName: user.displayName || `${user.firstName} ${user.lastName}`.trim() || user.email || 'Valued Customer',
+      accountSize: '$10,000', // Default account size
+      createdAt: new Date().toISOString(),
+      addedManually: true
+    };
+
+    setBulkRecipients([newRecipient, ...bulkRecipients]);
+    
+    // Automatically select the newly added user
+    const newSelected = new Set(selectedRecipients);
+    newSelected.add(newRecipient.email);
+    setSelectedRecipients(newSelected);
+    
+    setBulkUserSearch('');
+    setShowBulkUserSearch(false);
+  };
+
+  // Remove recipient from bulk list
+  const removeRecipient = (email: string) => {
+    setBulkRecipients(bulkRecipients.filter(r => r.email !== email));
+    const newSelected = new Set(selectedRecipients);
+    newSelected.delete(email);
+    setSelectedRecipients(newSelected);
+  };
+
+  // Handle bulk send with batch processing
+  const handleBulkSend = async () => {
+    if (!currentTemplate || selectedRecipients.size === 0) {
+      alert('No recipients selected to send to');
+      return;
+    }
+
+    // Filter to only selected recipients
+    const recipientsToSend = bulkRecipients.filter(r => selectedRecipients.has(r.email));
+
+    try {
+      setSendingBulk(true);
+      setBulkSendProgress({ sent: 0, total: recipientsToSend.length, failed: 0 });
+
+      let successCount = 0;
+      let failCount = 0;
+
+      // Send emails in batches of 10 to avoid rate limiting
+      const batchSize = 10;
+      for (let i = 0; i < recipientsToSend.length; i += batchSize) {
+        const batch = recipientsToSend.slice(i, i + batchSize);
+        
+        // Send all emails in this batch concurrently
+        const batchPromises = batch.map(async (recipient) => {
+          try {
+            const values: Record<string, string> = {
+              firstName: recipient.firstName || 'Valued Customer',
+              lastName: recipient.lastName || '',
+              email: recipient.email,
+              displayName: recipient.displayName || recipient.firstName || 'Valued Customer',
+              accountSize: recipient.accountSize || '$10,000'
+            };
+
+            // Merge with testValues if any custom variables
+            const finalValues = { ...values, ...testValues };
+
+            const response = await fetch('/api/send-template-email', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                template: currentTemplate,
+                user: recipient,
+                testValues: finalValues
+              }),
+            });
+
+            if (!response.ok) {
+              throw new Error('Failed to send email');
+            }
+
+            successCount++;
+            setBulkSendProgress({ sent: successCount, total: recipientsToSend.length, failed: failCount });
+            return { success: true, email: recipient.email };
+          } catch (error) {
+            console.error(`Failed to send to ${recipient.email}:`, error);
+            failCount++;
+            setBulkSendProgress({ sent: successCount, total: recipientsToSend.length, failed: failCount });
+            return { success: false, email: recipient.email };
+          }
+        });
+
+        // Wait for this batch to complete before moving to next
+        await Promise.all(batchPromises);
+
+        // Add a small delay between batches to be respectful of rate limits
+        if (i + batchSize < recipientsToSend.length) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+
+      alert(`Bulk send complete!\n\nSuccessful: ${successCount}\nFailed: ${failCount}\nTotal: ${recipientsToSend.length}`);
+      setShowBulkConfirm(false);
+    } catch (error) {
+      console.error('Error in bulk send:', error);
+      alert('Bulk send failed. Please check the console for errors.');
+    } finally {
+      setSendingBulk(false);
+    }
+  };
+
+  // Load bulk recipients when template with bulk flag is selected
+  useEffect(() => {
+    if (currentTemplate?.isBulkTemplate && isEditing) {
+      loadGauntletActivationRecipients();
+    }
+  }, [currentTemplate?.id, isEditing]);
+
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between mb-6">
@@ -1031,8 +1419,247 @@ export default function EmailTemplatesPage() {
         </button>
       </div>
 
+      {/* Bulk Send Section */}
+      {isEditing && currentTemplate && currentTemplate.isBulkTemplate && (
+        <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 rounded-lg p-6 mb-6 border border-[#0FF1CE]/30">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <Users size={24} className="text-[#0FF1CE]" />
+              <div>
+                <h3 className="text-white font-bold text-lg">Bulk Email Campaign</h3>
+                <p className="text-gray-400 text-sm">Send to all gauntlet activation users</p>
+              </div>
+            </div>
+            {loadingBulkRecipients && (
+              <Loader size={20} className="text-[#0FF1CE] animate-spin" />
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <div className="bg-[#0D0D0D]/50 rounded-lg p-4 border border-[#2F2F2F]">
+              <div className="text-gray-400 text-sm mb-1">Total Recipients</div>
+              <div className="text-2xl font-bold text-white">{bulkRecipients.length}</div>
+            </div>
+            <div className="bg-[#0D0D0D]/50 rounded-lg p-4 border border-[#2F2F2F]">
+              <div className="text-gray-400 text-sm mb-1">Selected</div>
+              <div className="text-2xl font-bold text-[#0FF1CE]">{selectedRecipients.size}</div>
+            </div>
+            <div className="bg-[#0D0D0D]/50 rounded-lg p-4 border border-[#2F2F2F]">
+              <div className="text-gray-400 text-sm mb-1">Unique Emails</div>
+              <div className="text-2xl font-bold text-white">{new Set(bulkRecipients.map(r => r.email)).size}</div>
+            </div>
+            <div className="bg-[#0D0D0D]/50 rounded-lg p-4 border border-[#2F2F2F]">
+              <div className="text-gray-400 text-sm mb-1">Status</div>
+              <div className="text-sm font-medium text-green-400">
+                {loadingBulkRecipients ? 'Loading...' : 'Ready to send'}
+              </div>
+            </div>
+          </div>
+
+          {sendingBulk && (
+            <div className="bg-[#0D0D0D]/80 rounded-lg p-4 mb-4 border border-[#0FF1CE]/50">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-white font-medium">Sending emails...</span>
+                <span className="text-[#0FF1CE] font-bold">
+                  {bulkSendProgress.sent}/{bulkSendProgress.total}
+                </span>
+              </div>
+              <div className="w-full bg-[#2F2F2F] rounded-full h-3 overflow-hidden">
+                <div 
+                  className="bg-gradient-to-r from-[#0FF1CE] to-[#0FF1CE]/60 h-3 transition-all duration-300"
+                  style={{ width: `${(bulkSendProgress.sent / bulkSendProgress.total) * 100}%` }}
+                />
+              </div>
+              {bulkSendProgress.failed > 0 && (
+                <div className="text-red-400 text-sm mt-2">
+                  ⚠️ {bulkSendProgress.failed} failed
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex gap-3 mb-4">
+            <button
+              onClick={() => setShowBulkConfirm(true)}
+              disabled={sendingBulk || loadingBulkRecipients || selectedRecipients.size === 0}
+              className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-[#0FF1CE] to-[#0FF1CE]/80 text-black font-bold py-3 px-6 rounded-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Send size={18} />
+              <span>Send to {selectedRecipients.size} Selected Recipient{selectedRecipients.size !== 1 ? 's' : ''}</span>
+            </button>
+            <button
+              onClick={loadGauntletActivationRecipients}
+              disabled={loadingBulkRecipients || sendingBulk}
+              className="px-4 py-3 bg-[#151515] text-white rounded-lg hover:bg-[#2F2F2F] transition-colors disabled:opacity-50"
+              title="Refresh recipients list"
+            >
+              <RefreshCw size={18} />
+            </button>
+          </div>
+
+          {/* Recipient Management Section */}
+          <div className="bg-[#0D0D0D]/50 rounded-lg p-4 border border-[#2F2F2F]">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-white font-medium">Manage Recipients</h4>
+              <div className="flex gap-2">
+                <button
+                  onClick={selectAllRecipients}
+                  disabled={bulkRecipients.length === 0}
+                  className="text-xs px-3 py-1.5 bg-[#0FF1CE]/20 text-[#0FF1CE] rounded hover:bg-[#0FF1CE]/30 transition-colors disabled:opacity-50"
+                >
+                  Select All
+                </button>
+                <button
+                  onClick={deselectAllRecipients}
+                  disabled={bulkRecipients.length === 0}
+                  className="text-xs px-3 py-1.5 bg-[#2F2F2F] text-white rounded hover:bg-[#3F3F3F] transition-colors disabled:opacity-50"
+                >
+                  Deselect All
+                </button>
+                <button
+                  onClick={() => setShowBulkUserSearch(!showBulkUserSearch)}
+                  className="text-xs px-3 py-1.5 bg-[#151515] text-[#0FF1CE] rounded hover:bg-[#2F2F2F] transition-colors flex items-center gap-1"
+                >
+                  <Plus size={14} />
+                  Add User
+                </button>
+              </div>
+            </div>
+
+            {/* User Search */}
+            {showBulkUserSearch && (
+              <div className="mb-4 relative">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                  <input
+                    type="text"
+                    placeholder="Search users by name or email..."
+                    value={bulkUserSearch}
+                    onChange={(e) => setBulkUserSearch(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 bg-[#151515] border border-[#2F2F2F] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#0FF1CE]/50"
+                  />
+                </div>
+                
+                {/* User Search Results */}
+                {bulkUserSearch && (
+                  <div className="absolute z-20 w-full mt-1 bg-[#0D0D0D] border border-[#2F2F2F] rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    {customers
+                      .filter(c => 
+                        c.email?.toLowerCase().includes(bulkUserSearch.toLowerCase()) ||
+                        c.displayName?.toLowerCase().includes(bulkUserSearch.toLowerCase()) ||
+                        c.firstName?.toLowerCase().includes(bulkUserSearch.toLowerCase()) ||
+                        c.lastName?.toLowerCase().includes(bulkUserSearch.toLowerCase())
+                      )
+                      .slice(0, 10)
+                      .map(customer => (
+                        <div
+                          key={customer.id}
+                          onClick={() => addUserToBulk(customer)}
+                          className="p-3 hover:bg-[#2F2F2F] cursor-pointer border-b border-[#2F2F2F] last:border-b-0"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="text-white font-medium text-sm">{customer.displayName || 'Unknown User'}</div>
+                              <div className="text-gray-400 text-xs">{customer.email || 'No email'}</div>
+                            </div>
+                            <Plus size={16} className="text-[#0FF1CE]" />
+                          </div>
+                        </div>
+                      ))}
+                    {customers.filter(c => 
+                      c.email?.toLowerCase().includes(bulkUserSearch.toLowerCase()) ||
+                      c.displayName?.toLowerCase().includes(bulkUserSearch.toLowerCase())
+                    ).length === 0 && (
+                      <div className="p-4 text-center text-gray-400 text-sm">No users found</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Recipients List with Checkboxes */}
+            {bulkRecipients.length > 0 ? (
+              <div className="max-h-96 overflow-y-auto space-y-2">
+                {bulkRecipients.map((recipient) => (
+                  <div
+                    key={recipient.id}
+                    className="flex items-center gap-3 p-3 bg-[#151515] rounded-lg hover:bg-[#1F1F1F] transition-colors group"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedRecipients.has(recipient.email)}
+                      onChange={() => toggleRecipient(recipient.email)}
+                      className="w-4 h-4 rounded border-[#2F2F2F] text-[#0FF1CE] focus:ring-[#0FF1CE] focus:ring-offset-0 cursor-pointer"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <div className="text-white font-medium text-sm truncate">
+                          {recipient.displayName}
+                        </div>
+                        {recipient.addedManually && (
+                          <span className="text-xs px-2 py-0.5 bg-[#0FF1CE]/20 text-[#0FF1CE] rounded-full">
+                            Manual
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-gray-400 text-xs truncate">{recipient.email}</div>
+                    </div>
+                    <button
+                      onClick={() => removeRecipient(recipient.email)}
+                      className="opacity-0 group-hover:opacity-100 p-1 text-red-400 hover:bg-red-400/10 rounded transition-all"
+                      title="Remove from list"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-400">
+                No recipients loaded yet
+              </div>
+            )}
+          </div>
+
+        </div>
+      )}
+
+      {/* Bulk Send Confirmation Modal */}
+      {showBulkConfirm && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#0D0D0D] border border-[#2F2F2F] rounded-xl p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold text-white mb-4">Confirm Bulk Send</h3>
+            <p className="text-gray-400 mb-4">
+              You are about to send "<strong className="text-white">{currentTemplate?.subject}</strong>" to <strong className="text-[#0FF1CE]">{selectedRecipients.size} selected recipient{selectedRecipients.size !== 1 ? 's' : ''}</strong>.
+            </p>
+            {bulkRecipients.length !== selectedRecipients.size && (
+              <p className="text-gray-400 text-sm mb-4">
+                Note: {bulkRecipients.length - selectedRecipients.size} recipient{bulkRecipients.length - selectedRecipients.size !== 1 ? 's are' : ' is'} not selected and will be skipped.
+              </p>
+            )}
+            <p className="text-yellow-400 text-sm mb-6">
+              ⚠️ This action cannot be undone. Please make sure your email template is correct before proceeding.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowBulkConfirm(false)}
+                className="flex-1 px-4 py-2 bg-[#151515] text-white rounded-lg hover:bg-[#2F2F2F] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBulkSend}
+                className="flex-1 px-4 py-2 bg-[#0FF1CE] text-black font-bold rounded-lg hover:opacity-90 transition-all"
+              >
+                Confirm & Send
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* User Selection Section */}
-      {isEditing && currentTemplate && (
+      {isEditing && currentTemplate && !currentTemplate.isBulkTemplate && (
         <div className="bg-[#151515] rounded-lg p-6 mb-6 border border-[#2F2F2F]/50">
           <div className="flex items-center gap-3 mb-4">
             <Users size={20} className="text-[#0FF1CE]" />
@@ -1243,7 +1870,14 @@ export default function EmailTemplatesPage() {
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="text-white font-medium mb-1 group-hover:text-[#0FF1CE] transition-colors">{template.name}</h3>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-white font-medium group-hover:text-[#0FF1CE] transition-colors">{template.name}</h3>
+                        {template.isBulkTemplate && (
+                          <span className="px-2 py-0.5 text-xs font-bold bg-[#0FF1CE]/20 text-[#0FF1CE] rounded-full border border-[#0FF1CE]/30">
+                            BULK
+                          </span>
+                        )}
+                      </div>
                       <p className="text-gray-400 text-sm truncate mb-2">{template.subject}</p>
                       <div className="flex items-center gap-4 text-xs text-gray-500">
                         <span>Updated: {template.lastUpdated}</span>
@@ -1251,6 +1885,12 @@ export default function EmailTemplatesPage() {
                           <Mail size={12} />
                           {template.variables.length} variables
                         </span>
+                        {template.isBulkTemplate && (
+                          <span className="flex items-center gap-1 text-[#0FF1CE]">
+                            <Users size={12} />
+                            Bulk Send
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
