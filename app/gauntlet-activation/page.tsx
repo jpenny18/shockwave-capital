@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Particles from '../components/Particles';
 import Header from '../components/Header';
@@ -93,7 +93,7 @@ const ACTIVATION_OPTIONS: ActivationOption[] = [
   }
 ];
 
-export default function GauntletActivationPage() {
+function GauntletActivationContent() {
   const searchParams = useSearchParams();
   const [selectedOption, setSelectedOption] = useState<ActivationOption | null>(null);
   const [showPayment, setShowPayment] = useState(false);
@@ -472,5 +472,18 @@ export default function GauntletActivationPage() {
         }
       `}</style>
     </div>
+  );
+}
+
+// Wrapper component with Suspense boundary
+export default function GauntletActivationPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-[#0D0D0D]">
+        <div className="w-8 h-8 border-4 border-[#0FF1CE] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    }>
+      <GauntletActivationContent />
+    </Suspense>
   );
 }
