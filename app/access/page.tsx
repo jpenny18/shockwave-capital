@@ -176,6 +176,31 @@ export default function EarlyAccessPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState('');
 
+  // Prevent zoom on mobile by setting viewport meta tag
+  useEffect(() => {
+    // Get existing viewport meta tag or create one
+    let viewportMeta = document.querySelector('meta[name="viewport"]');
+    const originalContent = viewportMeta?.getAttribute('content') || '';
+    
+    if (viewportMeta) {
+      viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+    } else {
+      viewportMeta = document.createElement('meta');
+      viewportMeta.setAttribute('name', 'viewport');
+      viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+      document.head.appendChild(viewportMeta);
+    }
+
+    // Restore original viewport settings when component unmounts
+    return () => {
+      if (viewportMeta) {
+        if (originalContent) {
+          viewportMeta.setAttribute('content', originalContent);
+        }
+      }
+    };
+  }, []);
+
   // Check if user is already logged in
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -320,6 +345,20 @@ export default function EarlyAccessPage() {
 
   return (
     <>
+      {/* Prevent zoom on mobile when focusing inputs */}
+      <style jsx global>{`
+        @media screen and (max-width: 768px) {
+          input[type="text"],
+          input[type="email"],
+          input[type="password"],
+          input[type="tel"],
+          select,
+          textarea {
+            font-size: 16px !important;
+          }
+        }
+      `}</style>
+      
       <div className="min-h-screen bg-gradient-to-br from-[#0D0D0D] via-[#0D0D0D] to-[#151515] text-white relative overflow-hidden">
         {/* Background Effects */}
         <div className="absolute inset-0">

@@ -297,7 +297,7 @@ const OnDemandPayoutsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm overflow-y-auto">
-      <div className="min-h-full flex items-center justify-center p-4 py-8 md:py-12">
+      <div className="min-h-full flex items-start md:items-center justify-center p-4 pt-8 md:pt-12 pb-8 md:pb-12">
         <div className="relative w-full max-w-lg mx-auto" style={{ transform: 'scale(0.75)' }}>
           {/* Close Button */}
           <button
