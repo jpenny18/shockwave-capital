@@ -188,7 +188,7 @@ export default function EarlyAccessPage() {
     return () => unsubscribe();
   }, [router, loading]);
 
-  // Show launch modal after a delay when page loads
+  // Launch modal disabled - keeping code for future use
   // useEffect(() => {
   //   if (!loading) {
   //     const timer = setTimeout(() => {
@@ -328,8 +328,8 @@ export default function EarlyAccessPage() {
         </div>
         <Particles />
 
-        {/* Launch Modal */}
-        <LaunchModal isOpen={showLaunchModal} onClose={() => setShowLaunchModal(false)} />
+        {/* Launch Modal - Hidden */}
+        {/* <LaunchModal isOpen={showLaunchModal} onClose={() => setShowLaunchModal(false)} /> */}
 
         <div className="relative z-10 flex min-h-screen">
           {/* Left Panel - Hidden on mobile */}
@@ -388,8 +388,8 @@ export default function EarlyAccessPage() {
                   </div>
                 </div>
 
-                {/* New Launch Preview Button */}
-                <div className="mt-8">
+                {/* New Launch Preview Button - Hidden */}
+                {/* <div className="mt-8">
                   <button
                     onClick={() => setShowLaunchModal(true)}
                     className="w-full flex items-center justify-center gap-3 p-4 bg-gradient-to-r from-[#0FF1CE]/20 to-[#00D4FF]/20 rounded-xl border border-[#0FF1CE]/30 hover:from-[#0FF1CE]/30 hover:to-[#00D4FF]/30 transition-all group"
@@ -401,7 +401,7 @@ export default function EarlyAccessPage() {
                     </div>
                     <ArrowRight className="w-4 h-4 text-[#0FF1CE] group-hover:translate-x-1 transition-transform" />
                   </button>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
@@ -416,14 +416,14 @@ export default function EarlyAccessPage() {
                 </div>
                 <h2 className="text-2xl font-bold text-[#0FF1CE]">Shockwave Capital</h2>
 
-                {/* Mobile Launch Preview Button */}
-                <button
+                {/* Mobile Launch Preview Button - Hidden */}
+                {/* <button
                   onClick={() => setShowLaunchModal(true)}
                   className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-[#0FF1CE]/10 rounded-lg border border-[#0FF1CE]/30 text-sm text-[#0FF1CE] hover:bg-[#0FF1CE]/20 transition-colors"
                 >
                   <Sparkles className="w-4 h-4" />
                   <span>See New Launch</span>
-                </button>
+                </button> */}
               </div>
 
               {/* Tab Switcher */}
@@ -460,11 +460,13 @@ export default function EarlyAccessPage() {
                 <div className="relative">
                   <div className="flex items-center gap-2 mb-2">
                     <Zap className="w-5 h-5 text-[#0FF1CE]" />
-                    <span className="text-sm font-bold text-white">New Years Flash Sale!</span>
+                    <span className="text-sm font-bold text-white">Now Offering On-Demand Payouts!</span>
                   </div>
-                  <div className="text-xl md:text-2xl font-bold text-[#0FF1CE]">SAVE 50%</div>
+                  <div className="text-xl md:text-2xl font-bold text-[#0FF1CE]">
+                    Up to $5,000
+                  </div>
                   <div className="text-xs text-gray-300 mt-1">
-                    + One Free Retry &mdash; Use Code: <span className="font-bold text-[#0FF1CE]">NYE</span>
+                    Instantly available on Standard, 1-Step, and Instant accounts
                   </div>
                 </div>
               </div>

@@ -1086,15 +1086,13 @@ export default function ChallengePage() {
               <div className="text-center lg:text-left">
                 <div className="flex items-center justify-center lg:justify-start gap-2 mb-2">
                   <Zap className="w-5 h-5 text-[#0FF1CE]" />
-                  <span className="text-sm font-bold text-white">New Years Flash Sale!</span>
+                  <span className="text-sm font-bold text-white">On-Demand Payouts Now Available!</span>
                 </div>
-                <div className="text-2xl lg:text-3xl font-bold text-[#0FF1CE] mb-1">SAVE 50%</div>
-                <div className="text-sm text-white font-medium">+ One Free Retry</div>
-              </div>
-              <div className="text-center lg:text-right">
-                <div className="text-xs text-gray-400 mb-1">Use Code:</div>
-                <div className="inline-block text-xl font-mono font-bold bg-gradient-to-r from-[#0FF1CE] to-[#5059FC] bg-clip-text text-transparent px-4 py-2 border border-[#0FF1CE]/30 rounded-lg">
-                  NYE
+                <div className="text-2xl lg:text-3xl font-bold text-[#0FF1CE] mb-1">
+                  Up to $5,000 Instantly
+                </div>
+                <div className="text-sm text-white font-medium">
+                  Available on <span className="font-bold text-[#0FF1CE]">Standard</span>, <span className="font-bold text-[#0FF1CE]">1-Step</span>, and <span className="font-bold text-[#0FF1CE]">Instant</span> accounts
                 </div>
               </div>
             </div>

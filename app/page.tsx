@@ -291,14 +291,14 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
   */
 };
 
-// Christmas Modal Component - 50% OFF + 1 FREE RETRY
-const ChristmasModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+// On-Demand Payouts Modal - Up to $5K Instant Payouts
+const OnDemandPayoutsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm overflow-y-auto">
       <div className="min-h-full flex items-center justify-center p-4 py-8 md:py-12">
-        <div className="relative w-full max-w-lg mx-auto">
+        <div className="relative w-full max-w-lg mx-auto" style={{ transform: 'scale(0.75)' }}>
           {/* Close Button */}
           <button
             onClick={onClose}
@@ -308,12 +308,12 @@ const ChristmasModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
           </button>
 
           {/* Modal Content */}
-          <div className="relative bg-gradient-to-br from-[#0D0D0D] via-[#121212] to-[#0D0D0D] border-2 border-white/20 rounded-3xl overflow-hidden shadow-2xl">
-            {/* NYE Promo Image - 9:16 aspect ratio */}
+          <div className="relative bg-gradient-to-br from-[#0D0D0D] via-[#121212] to-[#0D0D0D] border-2 border-[#0FF1CE]/30 rounded-3xl overflow-hidden shadow-2xl">
+            {/* On-Demand Payouts Image - 9:16 aspect ratio */}
             <div className="relative w-full aspect-[9/16]">
               <Image
-                src="/nyemarketing.png"
-                alt="New Year's Eve Savings - 50% OFF All Challenges + 1 Free Retry"
+                src="/ondemandmarketing.png"
+                alt="On-Demand Payouts - Up to $5,000 Instantly on Standard, 1-Step & Instant Accounts"
                 fill
                 className="object-cover"
                 sizes="(max-width: 768px) 100vw, 512px"
@@ -327,9 +327,10 @@ const ChristmasModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                     parent.innerHTML = `
                       <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#0D0D0D] to-[#1A1A1A]">
                         <div class="text-center p-8">
-                          <div class="text-[#0FF1CE] text-6xl mb-4">🎆</div>
-                          <div class="text-white text-3xl font-bold mb-2">NEW YEAR'S EVE</div>
-                          <div class="text-[#0FF1CE] text-xl">50% OFF + 1 FREE RETRY</div>
+                          <div class="text-[#0FF1CE] text-6xl mb-4">💰</div>
+                          <div class="text-white text-3xl font-bold mb-2">ON-DEMAND PAYOUTS</div>
+                          <div class="text-[#0FF1CE] text-xl mb-4">Up to $5,000</div>
+                          <div class="text-gray-400 text-sm">Instantly available on Standard, 1-Step & Instant accounts</div>
                         </div>
                       </div>
                     `;
@@ -342,7 +343,7 @@ const ChristmasModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
             <div className="p-6">
               <Link href="/challenge" onClick={onClose}>
                 <button className="w-full bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black font-bold py-4 px-6 rounded-xl hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(15,241,206,0.4)] hover:shadow-[0_0_30px_rgba(15,241,206,0.6)] text-lg">
-                  CLAIM YOUR OFFER →
+                  START CHALLENGE →
                 </button>
               </Link>
             </div>
@@ -356,7 +357,7 @@ const ChristmasModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
 export default function ShockwaveLandingPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
-    const [showChristmasModal, setShowChristmasModal] = useState(false); // Christmas modal enabled
+    const [showOnDemandModal, setShowOnDemandModal] = useState(false); // On-demand payouts modal enabled
     
     useEffect(() => {
       const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -369,13 +370,13 @@ export default function ShockwaveLandingPage() {
       return () => unsubscribe();
     }, [router, loading]);
 
-    // Show Christmas modal after page loads
+    // Show on-demand payouts modal after page loads
     useEffect(() => {
       if (!loading) {
         const timer = setTimeout(() => {
-          setShowChristmasModal(true);
+          setShowOnDemandModal(true);
         }, 1500); // Show modal 1.5 seconds after page loads
-
+  
         return () => clearTimeout(timer);
       }
     }, [loading]);
@@ -392,10 +393,10 @@ export default function ShockwaveLandingPage() {
       <div className="bg-black text-white min-h-screen font-sans">
         <Header />
         
-        {/* Christmas Modal */}
-        <ChristmasModal 
-          isOpen={showChristmasModal} 
-          onClose={() => setShowChristmasModal(false)} 
+        {/* On-Demand Payouts Modal */}
+        <OnDemandPayoutsModal 
+          isOpen={showOnDemandModal} 
+          onClose={() => setShowOnDemandModal(false)}
         />
         
         {/* Hero Section */}
