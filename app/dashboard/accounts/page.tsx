@@ -241,8 +241,8 @@ export default function MyAccountsPage() {
         <Particles />
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Maintenance Banner */}
-          <div className="mb-6 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 border border-amber-500/30 rounded-xl p-4 backdrop-blur-sm">
+          {/* Maintenance Banner - Hidden */}
+          {/* <div className="mb-6 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 border border-amber-500/30 rounded-xl p-4 backdrop-blur-sm">
             <div className="flex items-start gap-3">
               <div className="p-1.5 bg-amber-500/20 rounded-lg flex-shrink-0">
                 <AlertTriangle className="h-5 w-5 text-amber-400" />
@@ -254,7 +254,7 @@ export default function MyAccountsPage() {
                 </p>
               </div>
             </div>
-          </div>
+          </div> */}
 
           <div className="flex items-center justify-between mb-8">
             <div>
@@ -405,8 +405,8 @@ export default function MyAccountsPage() {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full md:w-3/4 h-full rounded-full bg-[#0FF1CE]/[0.03] blur-[150px] opacity-60"></div>
       <Particles />
 
-      {/* Maintenance Banner */}
-      <div className="relative z-10 pt-8">
+      {/* Maintenance Banner - Hidden */}
+      {/* <div className="relative z-10 pt-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-6 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 border border-amber-500/30 rounded-xl p-4 backdrop-blur-sm">
             <div className="flex items-start gap-3">
@@ -422,7 +422,7 @@ export default function MyAccountsPage() {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Blurred placeholder content */}
       <div className="relative blur-sm pointer-events-none">
@@ -437,7 +437,7 @@ export default function MyAccountsPage() {
       </div>
 
       {/* Locked content overlay */}
-      <div className="absolute inset-0 flex items-center justify-center z-20 pt-32">
+      <div className="absolute inset-0 flex items-center justify-center z-20">
         <div className="bg-[#0D0D0D]/95 backdrop-blur-sm rounded-2xl p-8 border border-[#2F2F2F]/50 max-w-md w-full mx-4 text-center transform hover:scale-[1.02] transition-all duration-300">
           <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center">
             <Lock className="text-[#0FF1CE]" size={32} />
