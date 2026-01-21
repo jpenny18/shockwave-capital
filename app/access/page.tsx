@@ -494,18 +494,38 @@ export default function EarlyAccessPage() {
               </div>
 
               {/* Promo Badge - Simplified for mobile */}
-              <div className="mb-6 p-4 bg-gradient-to-r from-[#0FF1CE]/10 to-[#5059FC]/10 rounded-xl border border-[#0FF1CE]/20 backdrop-blur-sm relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-20 h-20 bg-[#0FF1CE]/20 rounded-full blur-3xl"></div>
-                <div className="relative">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Zap className="w-5 h-5 text-[#0FF1CE]" />
-                    <span className="text-sm font-bold text-white">Now Offering On-Demand Payouts!</span>
+              <div className="mb-6 space-y-4">
+                {/* 50% Off Promo + Free Retry */}
+                <div className="p-4 bg-gradient-to-r from-[#0FF1CE]/10 to-[#5059FC]/10 rounded-xl border border-[#0FF1CE]/20 backdrop-blur-sm relative overflow-hidden flex flex-col md:flex-row md:items-center gap-3">
+                  <div className="absolute top-0 right-0 w-20 h-20 bg-[#0FF1CE]/20 rounded-full blur-3xl z-0"></div>
+                  <div className="relative z-10 flex items-center gap-3">
+                    <Sparkles className="w-6 h-6 text-[#0FF1CE]" />
+                    <div>
+                      <span className="text-sm font-bold text-[#0FF1CE] uppercase tracking-wider">SAVE 50%</span>
+                      <div className="mt-1 text-lg md:text-xl font-bold text-white">
+                        Get <span className="text-[#0FF1CE]">50% Off</span> + <span className="text-[#0FF1CE]">1 Free Retry</span>
+                      </div>
+                      <div className="mt-1 text-xs text-gray-300 flex items-center gap-2">
+                        Use code:
+                        <code className="bg-[#0FF1CE]/15 text-[#0FF1CE] px-2 py-0.5 rounded font-mono font-semibold tracking-wide text-xs">SAVE50</code>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-xl md:text-2xl font-bold text-[#0FF1CE]">
-                    Up to $5,000
-                  </div>
-                  <div className="text-xs text-gray-300 mt-1">
-                    Instantly available on Standard, 1-Step, and Instant accounts
+                </div>
+                {/* On-Demand Payouts Promo */}
+                <div className="p-4 bg-gradient-to-r from-[#0FF1CE]/10 to-[#5059FC]/10 rounded-xl border border-[#0FF1CE]/20 backdrop-blur-sm relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-20 h-20 bg-[#0FF1CE]/20 rounded-full blur-3xl"></div>
+                  <div className="relative">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Zap className="w-5 h-5 text-[#0FF1CE]" />
+                      <span className="text-sm font-bold text-white">Now Offering On-Demand Payouts!</span>
+                    </div>
+                    <div className="text-xl md:text-2xl font-bold text-[#0FF1CE]">
+                      Up to $5,000
+                    </div>
+                    <div className="text-xs text-gray-300 mt-1">
+                      Instantly available on Standard, 1-Step, and Instant accounts
+                    </div>
                   </div>
                 </div>
               </div>

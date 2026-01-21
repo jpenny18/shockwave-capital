@@ -1079,20 +1079,49 @@ export default function ChallengePage() {
             </div>
 
         {/* Launch Day Sale Banner - Mobile Optimized */}
-        <div className="mb-8 lg:mb-12 relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0FF1CE]/20 to-[#5059FC]/20 rounded-2xl blur-xl"></div>
-          <div className="relative bg-gradient-to-r from-[#0FF1CE]/10 to-[#5059FC]/10 rounded-2xl p-6 lg:p-8 border border-[#0FF1CE]/20 backdrop-blur-sm">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-              <div className="text-center lg:text-left">
-                <div className="flex items-center justify-center lg:justify-start gap-2 mb-2">
-                  <Zap className="w-5 h-5 text-[#0FF1CE]" />
-                  <span className="text-sm font-bold text-white">On-Demand Payouts Now Available!</span>
+        <div className="mb-8 lg:mb-12 relative space-y-5">
+          {/* Launch Sale Promo: 50% Off + Free Retry */}
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0FF1CE]/30 to-[#5059FC]/20 rounded-2xl blur-xl"></div>
+            <div className="relative bg-gradient-to-r from-[#0FF1CE]/15 to-[#5059FC]/15 rounded-2xl p-6 lg:p-8 border border-[#0FF1CE]/30 backdrop-blur-sm overflow-hidden">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div className="text-center lg:text-left w-full">
+                  <div className="flex items-center justify-center lg:justify-start gap-2 mb-2">
+                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-[#0FF1CE]/15 mr-1">
+                      <span className="text-[#0FF1CE] font-bold text-lg">%</span>
+                    </span>
+                    <span className="text-sm font-bold text-[#0FF1CE] uppercase tracking-wider">SAVE 50%</span>
+                  </div>
+                  <div className="text-xl lg:text-2xl font-bold text-white mb-2">
+                    <span className="text-[#0FF1CE]">50% Off</span> + <span className="text-[#0FF1CE]">1 Free Retry</span>
+                  </div>
+                  <div className="mt-1 text-sm text-gray-100 flex flex-col sm:flex-row items-center sm:gap-2 justify-center lg:justify-start">
+                    Use code: 
+                    <code className="bg-[#0FF1CE]/15 text-[#0FF1CE] px-2 py-0.5 rounded font-mono font-semibold tracking-wide text-xs ml-1 sm:ml-0">SAVE50</code>
+                  </div>
+                  <div className="mt-1 text-[11px] text-gray-400">
+                   limited time
+                  </div>
                 </div>
-                <div className="text-2xl lg:text-3xl font-bold text-[#0FF1CE] mb-1">
-                  Up to $5,000 Instantly
-                </div>
-                <div className="text-sm text-white font-medium">
-                  Available on <span className="font-bold text-[#0FF1CE]">Standard</span>, <span className="font-bold text-[#0FF1CE]">1-Step</span>, and <span className="font-bold text-[#0FF1CE]">Instant</span> accounts
+              </div>
+            </div>
+          </div>
+          {/* On-Demand Payouts Promo */}
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0FF1CE]/20 to-[#5059FC]/20 rounded-2xl blur-xl"></div>
+            <div className="relative bg-gradient-to-r from-[#0FF1CE]/10 to-[#5059FC]/10 rounded-2xl p-6 lg:p-8 border border-[#0FF1CE]/20 backdrop-blur-sm">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div className="text-center lg:text-left">
+                  <div className="flex items-center justify-center lg:justify-start gap-2 mb-2">
+                    <Zap className="w-5 h-5 text-[#0FF1CE]" />
+                    <span className="text-sm font-bold text-white">On-Demand Payouts Now Available!</span>
+                  </div>
+                  <div className="text-2xl lg:text-3xl font-bold text-[#0FF1CE] mb-1">
+                    Up to $5,000 Instantly
+                  </div>
+                  <div className="text-sm text-white font-medium">
+                    Available on <span className="font-bold text-[#0FF1CE]">Standard</span>, <span className="font-bold text-[#0FF1CE]">1-Step</span>, and <span className="font-bold text-[#0FF1CE]">Instant</span> accounts
+                  </div>
                 </div>
               </div>
             </div>
@@ -1370,7 +1399,7 @@ export default function ChallengePage() {
               }`}
             >
               <div className="relative flex items-center justify-center gap-2">
-                                      <span>{selectedType === 'Gauntlet' ? 'Pay $19.99 Entry Fee' : 'Pay with Crypto'}</span>
+                                      <span>{selectedType === 'Gauntlet' ? 'Pay $19.99 Entry Fee' : 'Pay'}</span>
                       <ChevronRight size={20} className={isFormValid() ? 'group-hover:translate-x-1 transition-transform' : ''} />
                     </div>
               </button>
