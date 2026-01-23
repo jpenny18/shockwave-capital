@@ -41,6 +41,23 @@ interface CryptoOrder {
   originalAmount?: number;
   createdAt: string;
   updatedAt: string;
+  applicationType?: string;
+  applicationData?: {
+    q1_experience: string;
+    q2_markets: string[];
+    q3_frequency: string;
+    q4_challenges: string[];
+    q5_risk: string;
+    q6_style: string;
+    q7_mistakes: string[];
+    q8_rules: string;
+    q9_accountSize: string;
+    q10_priority: string;
+    score: number;
+    riskTag: string;
+    highRiskBehavior: boolean;
+    highValueIntent: boolean;
+  };
 }
 
 export default function CryptoOrdersPage() {
@@ -381,7 +398,14 @@ export default function CryptoOrdersPage() {
                     <td className="px-4 py-4">
                       <div className="text-sm font-medium text-white">{order.challengeType}</div>
                       <div className="text-sm text-gray-400">{order.challengeAmount}</div>
-                      <div className="text-xs text-[#0FF1CE] mt-1">{order.platform}</div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="text-xs text-[#0FF1CE]">{order.platform}</div>
+                        {order.applicationType === 'fund-trader' && (
+                          <span className="text-[10px] bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full font-medium">
+                            FUND
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-4">
                       <div className="text-sm font-medium text-white">${order.usdAmount.toFixed(2)}</div>
@@ -488,7 +512,7 @@ export default function CryptoOrdersPage() {
                   {expandedRows.has(order.id) && (
                     <tr className="bg-[#151515]/50">
                       <td colSpan={7} className="px-8 py-4">
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                        <div className={`grid ${order.applicationData ? 'grid-cols-1 md:grid-cols-4' : 'grid-cols-2 md:grid-cols-3'} gap-6`}>
                           {/* Customer Details */}
                           <div>
                             <h3 className="text-[#0FF1CE] font-medium mb-2">Customer Details</h3>
@@ -634,6 +658,65 @@ export default function CryptoOrdersPage() {
                               </div>
                             </div>
                           </div>
+
+                          {/* Application Details - Only for fund trader applications */}
+                          {order.applicationData && (
+                            <div>
+                              <h3 className="text-[#0FF1CE] font-medium mb-2">Fund Application Data</h3>
+                              <div className="space-y-2 text-sm">
+                                <div>
+                                  <div className="text-gray-400">Application Score</div>
+                                  <div className="text-white font-bold">{order.applicationData.score}</div>
+                                </div>
+                                <div>
+                                  <div className="text-gray-400">Risk Profile</div>
+                                  <div className={`font-medium ${
+                                    order.applicationData.riskTag === 'Risk_A' ? 'text-green-400' :
+                                    order.applicationData.riskTag === 'Risk_B' ? 'text-yellow-400' :
+                                    'text-orange-400'
+                                  }`}>
+                                    {order.applicationData.riskTag}
+                                  </div>
+                                </div>
+                                {order.applicationData.highRiskBehavior && (
+                                  <div>
+                                    <div className="text-red-400 font-medium">⚠️ High Risk Behavior</div>
+                                  </div>
+                                )}
+                                {order.applicationData.highValueIntent && (
+                                  <div>
+                                    <div className="text-[#0FF1CE] font-medium">⭐ High Value Intent</div>
+                                  </div>
+                                )}
+                                <div>
+                                  <div className="text-gray-400">Experience</div>
+                                  <div className="text-white capitalize">{order.applicationData.q1_experience}</div>
+                                </div>
+                                <div>
+                                  <div className="text-gray-400">Trading Style</div>
+                                  <div className="text-white capitalize">{order.applicationData.q6_style}</div>
+                                </div>
+                                <div>
+                                  <div className="text-gray-400">Risk Per Trade</div>
+                                  <div className="text-white">{order.applicationData.q5_risk}</div>
+                                </div>
+                                <div>
+                                  <div className="text-gray-400">Markets</div>
+                                  <div className="text-white text-xs">
+                                    {order.applicationData.q2_markets.map((m, i) => (
+                                      <span key={i} className="capitalize">{m}{i < order.applicationData.q2_markets.length - 1 ? ', ' : ''}</span>
+                                    ))}
+                                  </div>
+                                </div>
+                                <div>
+                                  <div className="text-gray-400">Priority Access Reason</div>
+                                  <div className="text-white text-xs bg-[#1A1A1A] p-2 rounded mt-1 max-h-24 overflow-y-auto">
+                                    {order.applicationData.q10_priority}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </td>
                     </tr>

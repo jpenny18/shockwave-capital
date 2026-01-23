@@ -7,7 +7,7 @@ export async function POST(req: Request) {
     const { challengeData, cryptoDetails } = body;
 
     // Create crypto order in Firebase
-    const orderRef = await db.collection('crypto-orders').add({
+    const orderData: any = {
       status: 'PENDING',
       cryptoType: cryptoDetails.type,
       cryptoAmount: cryptoDetails.amount.toString(),
@@ -28,7 +28,15 @@ export async function POST(req: Request) {
       originalAmount: challengeData.discount ? Math.round(challengeData.price / (1 - challengeData.discount.value / 100)) : challengeData.price,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
-    });
+    };
+
+    // If this is a fund trader application, include the application data
+    if (challengeData.applicationData) {
+      orderData.applicationData = challengeData.applicationData;
+      orderData.applicationType = 'fund-trader';
+    }
+
+    const orderRef = await db.collection('crypto-orders').add(orderData);
 
     return NextResponse.json({ success: true, orderId: orderRef.id });
   } catch (error) {
