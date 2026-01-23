@@ -704,7 +704,7 @@ export default function CryptoOrdersPage() {
                                   <div className="text-gray-400">Markets</div>
                                   <div className="text-white text-xs">
                                     {order.applicationData.q2_markets.map((m, i) => (
-                                      <span key={i} className="capitalize">{m}{i < order.applicationData.q2_markets.length - 1 ? ', ' : ''}</span>
+                                      <span key={i} className="capitalize">{m}{i < order.applicationData!.q2_markets.length - 1 ? ', ' : ''}</span>
                                     ))}
                                   </div>
                                 </div>
