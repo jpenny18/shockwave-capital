@@ -92,9 +92,19 @@ export interface OrderData {
   phone: string;
   country: string;
   discordUsername?: string;
-  challengeType: string;
-  challengeAmount: string;
-  platform: string;
+  // Legacy single account fields (optional for backward compatibility)
+  challengeType?: string;
+  challengeAmount?: string;
+  platform?: string;
+  // New subscription fields
+  subscriptionTier?: 'entry' | 'surge' | 'pulse';
+  subscriptionPrice?: number;
+  accountsCount?: number;
+  accounts?: Array<{
+    type: string | null;
+    amount: string | null;
+    platform: string | null;
+  }>;
   addOns?: string[];
   totalAmount: number;
   paymentMethod: 'card' | 'crypto';
