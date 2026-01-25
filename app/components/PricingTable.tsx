@@ -39,7 +39,7 @@ const tooltipData: TooltipData = {
   "profit-split": "Your share of profits once you become a funded trader. This percentage increases with consistent performance.",
   "trading-days": "Minimum number of days you must trade to complete each phase. Ensures consistent trading activity.",
   "payout-eligibility": "Waiting period before your first withdrawal becomes available after reaching the funded phase.",
-  "refundable-fee": "One-time challenge fee that gets refunded with your second profit withdrawal upon successful completion.",
+  "funded-activation-fee": "One-time activation fee paid when you successfully pass the challenge and want to activate your funded account.",
   "one-free-retry": "One free retry if you breach the drawdown limits or reach the time limit. This DOES NOT reset the 30 calendar day period it ONLY resets the account balance.",
   "pay-when-pass": "Pay only $99 to try the challenge, then pay the activation fee only when you successfully pass.",
   "no-restrictions": "No trading rules, no time restrictions, no news trading limits - trade however you want."
@@ -200,9 +200,9 @@ const challengeData: ChallengeData = {
         }
       },
       {
-        name: "Refundable Fee",
-        subtitle: "We refund the full price",
-        tooltip: "refundable-fee",
+        name: "Funded Activation Fee",
+        subtitle: "Pay only when you pass",
+        tooltip: "funded-activation-fee",
         values: {
           5000: "$59",
           10000: "$109",
@@ -679,9 +679,18 @@ export default function PricingTable() {
 
   return (
     <div className="relative z-10">
-      <h2 className="text-center font-bold text-[2rem] md:text-[4rem] text-white mb-4">
-        Choose the Best Plan
-      </h2>
+      {/* Step 2 Header */}
+      <div className="text-center mb-8">
+        {/* Number Badge */}
+        <div className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black rounded-full text-lg font-bold mb-4">
+          2
+        </div>
+        
+        {/* Title */}
+        <h2 className="font-bold text-xl md:text-4xl text-white">
+          Configure Your Accounts
+        </h2>
+      </div>
 
       {/* Plan Type Selection - Desktop */}
       <div className="hidden lg:block container max-w-6xl mx-auto pt-10 mb-8">
@@ -801,7 +810,7 @@ export default function PricingTable() {
               </div>
             ))}
             <div className="mt-2 px-2">
-              <p className="text-gray-500 text-[10px]">All prices are one-time payments</p>
+              <p className="text-gray-500 text-[10px]">Activation payments are one-time payments</p>
             </div>
           </div>
 
@@ -920,7 +929,7 @@ export default function PricingTable() {
                   <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-[#0FF1CE] to-[#0AA89E] p-[2px] transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[#0FF1CE]/25">
                     <div className="flex flex-col items-center rounded-lg bg-gradient-to-br from-[#0FF1CE] to-[#0AA89E] px-6 py-3 transition-all duration-300">
                       <span className="text-lg font-bold text-black">Get Plan</span>
-                      <span className="text-sm text-black/80">Fee: ${data.prices[selectedAccount]}</span>
+                      <span className="text-sm text-black/80">Funded Activation Fee: ${data.prices[selectedAccount]}</span>
                     </div>
                   </div>
                 </button>
@@ -964,7 +973,7 @@ export default function PricingTable() {
       </div>
 
       {/* Add-ons Section */}
-      <div className="mb-16 lg:mb-24 mt-12 lg:mt-16 max-w-6xl mx-auto px-4">
+      <div className="mb-16 lg:mb-24 mt-12 lg:mt-16 max-w-6xl mx-auto px-4 hidden">
         <h3 className="text-xl lg:text-2xl font-bold text-[#0FF1CE] mb-6 text-center">
           Available Add-ons
         </h3>
@@ -1006,7 +1015,7 @@ export default function PricingTable() {
               <div className="w-2 h-2 bg-[#0FF1CE] rounded-full mt-2 flex-shrink-0"></div>
               <div>
                 <h4 className="text-white font-semibold text-sm lg:text-base mb-1">150% Reward</h4>
-                <p className="text-white/60 text-xs lg:text-sm">Boost your refundable fee to 50% extra</p>
+                <p className="text-white/60 text-xs lg:text-sm">Boost your rewards with 50% extra</p>
               </div>
             </div>
           </div>
@@ -1014,7 +1023,7 @@ export default function PricingTable() {
       </div>
 
       {/* CTA Section */}
-      <div className="text-center mt-8 lg:mt-16">
+      <div className="text-center mt-8 lg:mt-16 hidden">
         <button
           onClick={() => {
             sessionStorage.setItem('preselectedChallengeType', 'Standard');

@@ -17,10 +17,22 @@ import {
 import CryptoPayment from '../../components/CryptoPayment';
 import StripeCardForm from '../../components/StripeCardForm';
 
+interface AccountConfig {
+  type: string | null;
+  amount: string | null;
+  platform: string | null;
+}
+
 interface ChallengeData {
-  type: string;
-  amount: string;
-  platform: string;
+  // Legacy single account fields (for backward compatibility)
+  type?: string;
+  amount?: string;
+  platform?: string;
+  // New subscription fields
+  subscriptionTier?: 'entry' | 'surge' | 'pulse';
+  subscriptionPrice?: number;
+  accountsCount?: number;
+  accounts?: AccountConfig[];
   formData: {
     firstName: string;
     lastName: string;
@@ -58,11 +70,8 @@ const addOnNames: { [key: string]: string } = {
 const validateChallengeData = (data: ChallengeData | null): boolean => {
   if (!data) return false;
   
-  // Required fields
-  const requiredFields = [
-    data.type,
-    data.amount,
-    data.platform,
+  // Common required fields
+  const commonFields = [
     data.price,
     data.formData.firstName,
     data.formData.lastName,
@@ -71,7 +80,23 @@ const validateChallengeData = (data: ChallengeData | null): boolean => {
     data.formData.country
   ];
   
-  return requiredFields.every(field => field && String(field).trim() !== '');
+  const commonValid = commonFields.every(field => field && String(field).trim() !== '');
+  if (!commonValid) return false;
+  
+  // Check if it's a subscription-based order
+  if (data.subscriptionTier) {
+    // Validate subscription data
+    return !!(
+      data.subscriptionPrice &&
+      data.accountsCount &&
+      data.accounts &&
+      data.accounts.length > 0 &&
+      data.accounts.every(acc => acc.type && acc.amount && acc.platform)
+    );
+  } else {
+    // Legacy single account validation
+    return !!(data.type && data.amount && data.platform);
+  }
 };
 
 const PaymentProcessingOverlay = () => (
@@ -466,18 +491,50 @@ export default function PaymentPage() {
               <h2 className="text-xl font-semibold mb-6">Order Summary</h2>
               
               <div className="mb-6">
-                <div className="flex justify-between mb-2">
-                  <span className="text-white/70">Challenge Type:</span>
-                  <span className="font-medium">{challengeData.type}</span>
-                </div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-white/70">Account Size:</span>
-                  <span className="font-medium">{challengeData.amount}</span>
-                </div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-white/70">Platform:</span>
-                  <span className="font-medium">{challengeData.platform}</span>
-                </div>
+                {challengeData.subscriptionTier ? (
+                  // New subscription-based order display
+                  <>
+                    <div className="flex justify-between mb-2">
+                      <span className="text-white/70">Subscription:</span>
+                      <span className="font-medium capitalize">{challengeData.subscriptionTier}</span>
+                    </div>
+                    <div className="flex justify-between mb-2">
+                      <span className="text-white/70">Active Accounts:</span>
+                      <span className="font-medium">{challengeData.accountsCount}</span>
+                    </div>
+                    {challengeData.accounts && challengeData.accounts.length > 0 && (
+                      <div className="border-t border-[#2F2F2F]/30 mt-3 pt-3">
+                        <div className="text-white/70 text-sm mb-2">Account Details:</div>
+                        {challengeData.accounts.map((account, idx) => (
+                          <div key={idx} className="mb-3 p-2 bg-[#151515] rounded-lg">
+                            <div className="text-[#0FF1CE] text-sm font-semibold mb-1">Account {idx + 1}</div>
+                            <div className="text-xs space-y-1 text-white/60">
+                              <div>Type: <span className="text-white">{account.type}</span></div>
+                              <div>Size: <span className="text-white">{account.amount}</span></div>
+                              <div>Platform: <span className="text-white">{account.platform}</span></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  // Legacy single account display
+                  <>
+                    <div className="flex justify-between mb-2">
+                      <span className="text-white/70">Challenge Type:</span>
+                      <span className="font-medium">{challengeData.type}</span>
+                    </div>
+                    <div className="flex justify-between mb-2">
+                      <span className="text-white/70">Account Size:</span>
+                      <span className="font-medium">{challengeData.amount}</span>
+                    </div>
+                    <div className="flex justify-between mb-2">
+                      <span className="text-white/70">Platform:</span>
+                      <span className="font-medium">{challengeData.platform}</span>
+                    </div>
+                  </>
+                )}
                 {challengeData.addOns && challengeData.addOns.length > 0 && (
                   <>
                     <div className="border-t border-[#2F2F2F]/30 mt-3 pt-3">

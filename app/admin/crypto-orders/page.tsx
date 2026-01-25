@@ -18,6 +18,12 @@ import {
 import { db } from '@/lib/firebase';
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 
+interface AccountConfig {
+  type: string;
+  amount: string;
+  platform: string;
+}
+
 interface CryptoOrder {
   id: string;
   status: 'PENDING' | 'COMPLETED' | 'CANCELLED';
@@ -27,9 +33,15 @@ interface CryptoOrder {
   cryptoAddress: string;
   usdAmount: number;
   verificationPhrase: string;
-  challengeType: string;
-  challengeAmount: string;
-  platform: string;
+  // Legacy single account fields (for backward compatibility)
+  challengeType?: string;
+  challengeAmount?: string;
+  platform?: string;
+  // New subscription fields
+  subscriptionTier?: 'entry' | 'surge' | 'pulse';
+  subscriptionPrice?: number;
+  accountsCount?: number;
+  accounts?: AccountConfig[];
   addOns?: string[];
   customerEmail: string;
   customerName: string;
@@ -396,16 +408,35 @@ export default function CryptoOrdersPage() {
                       </div>
                     </td>
                     <td className="px-4 py-4">
-                      <div className="text-sm font-medium text-white">{order.challengeType}</div>
-                      <div className="text-sm text-gray-400">{order.challengeAmount}</div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="text-xs text-[#0FF1CE]">{order.platform}</div>
-                        {order.applicationType === 'fund-trader' && (
-                          <span className="text-[10px] bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full font-medium">
-                            FUND
-                          </span>
-                        )}
-                      </div>
+                      {order.subscriptionTier ? (
+                        // New subscription-based order
+                        <>
+                          <div className="text-sm font-medium text-white capitalize">{order.subscriptionTier} Subscription</div>
+                          <div className="text-sm text-gray-400">${order.subscriptionPrice}/mo</div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="text-xs text-[#0FF1CE]">{order.accountsCount} {order.accountsCount === 1 ? 'Account' : 'Accounts'}</div>
+                            {order.applicationType === 'fund-trader' && (
+                              <span className="text-[10px] bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full font-medium">
+                                FUND
+                              </span>
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        // Legacy single account order
+                        <>
+                          <div className="text-sm font-medium text-white">{order.challengeType}</div>
+                          <div className="text-sm text-gray-400">{order.challengeAmount}</div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="text-xs text-[#0FF1CE]">{order.platform}</div>
+                            {order.applicationType === 'fund-trader' && (
+                              <span className="text-[10px] bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full font-medium">
+                                FUND
+                              </span>
+                            )}
+                          </div>
+                        </>
+                      )}
                     </td>
                     <td className="px-4 py-4">
                       <div className="text-sm font-medium text-white">${order.usdAmount.toFixed(2)}</div>
@@ -568,22 +599,71 @@ export default function CryptoOrdersPage() {
                             </div>
                           </div>
 
-                          {/* Challenge Details */}
+                          {/* Challenge/Subscription Details */}
                           <div>
-                            <h3 className="text-[#0FF1CE] font-medium mb-2">Challenge Details</h3>
+                            <h3 className="text-[#0FF1CE] font-medium mb-2">
+                              {order.subscriptionTier ? 'Subscription Details' : 'Challenge Details'}
+                            </h3>
                             <div className="space-y-2 text-sm">
-                              <div>
-                                <div className="text-gray-400">Type</div>
-                                <div className="text-white">{order.challengeType}</div>
-                              </div>
-                              <div>
-                                <div className="text-gray-400">Amount</div>
-                                <div className="text-white">{order.challengeAmount}</div>
-                              </div>
-                              <div>
-                                <div className="text-gray-400">Platform</div>
-                                <div className="text-white">{order.platform}</div>
-                              </div>
+                              {order.subscriptionTier ? (
+                                // New subscription-based order
+                                <>
+                                  <div>
+                                    <div className="text-gray-400">Tier</div>
+                                    <div className="text-white capitalize">{order.subscriptionTier}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-gray-400">Monthly Price</div>
+                                    <div className="text-white">${order.subscriptionPrice}/mo</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-gray-400">Active Accounts</div>
+                                    <div className="text-white">{order.accountsCount}</div>
+                                  </div>
+                                  {order.accounts && order.accounts.length > 0 && (
+                                    <div>
+                                      <div className="text-gray-400 mb-2">Account Configurations</div>
+                                      <div className="space-y-3">
+                                        {order.accounts.map((account, idx) => (
+                                          <div key={idx} className="bg-[#1A1A1A] p-3 rounded-lg">
+                                            <div className="text-[#0FF1CE] font-semibold mb-2">Account {idx + 1}</div>
+                                            <div className="grid grid-cols-3 gap-2 text-xs">
+                                              <div>
+                                                <div className="text-gray-500">Type</div>
+                                                <div className="text-white">{account.type}</div>
+                                              </div>
+                                              <div>
+                                                <div className="text-gray-500">Amount</div>
+                                                <div className="text-white">{account.amount}</div>
+                                              </div>
+                                              <div>
+                                                <div className="text-gray-500">Platform</div>
+                                                <div className="text-white">{account.platform}</div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                </>
+                              ) : (
+                                // Legacy single account order
+                                <>
+                                  <div>
+                                    <div className="text-gray-400">Type</div>
+                                    <div className="text-white">{order.challengeType}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-gray-400">Amount</div>
+                                    <div className="text-white">{order.challengeAmount}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-gray-400">Platform</div>
+                                    <div className="text-white">{order.platform}</div>
+                                  </div>
+                                </>
+                              )}
                               {order.addOns && order.addOns.length > 0 && (
                                 <div>
                                   <div className="text-gray-400">Add-ons</div>

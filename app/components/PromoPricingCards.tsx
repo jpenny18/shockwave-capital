@@ -222,7 +222,7 @@ export default function PromoPricingCards() {
               </div>
             ))}
             <div className="mt-2 px-2">
-              <p className="text-gray-500 text-[10px]">All prices are one-time payments</p>
+              <p className="text-gray-500 text-[10px]">Activation payments are one-time payments</p>
             </div>
           </div>
 

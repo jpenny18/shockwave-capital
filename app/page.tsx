@@ -7,151 +7,163 @@ import Particles from './components/Particles';
 import Header from './components/Header';
 import Link from 'next/link';
 import PricingTable from './components/PricingTable';
-import { ChevronRight, ChevronDown } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 
-// Gauntlet Card Component with Accordion
-const GauntletCard = () => {
-  const [isExpanded, setIsExpanded] = useState(false);
+// Subscription Tiers & Pricing Combined Component
+const SubscriptionAndPricingSection = () => {
+  const tiers = [
+    {
+      name: 'Entry',
+      price: 49,
+      description: 'Perfect for beginners',
+      accounts: 1,
+      accountsText: '1 Active Account',
+      accountsSubtext: 'Manage one funded account at a time',
+      features: [
+        { label: 'All Account Sizes', subtext: 'Choose from $10K to $200K' },
+        { label: 'Both Challenge Types', subtext: '1-Step or Elite challenges' }
+      ]
+    },
+    {
+      name: 'Surge',
+      price: 99,
+      description: 'Scale your trading',
+      accounts: 2,
+      accountsText: '2 Active Accounts',
+      accountsSubtext: 'Diversify across two accounts',
+      features: [
+        { label: 'All Account Sizes', subtext: 'Mix different account sizes' },
+        { label: 'Both Challenge Types', subtext: 'Mix 1-Step and Elite challenges' }
+      ],
+      popular: true
+    },
+    {
+      name: 'Pulse',
+      price: 199,
+      description: 'Maximum growth potential',
+      accounts: 5,
+      accountsText: '5 Active Accounts',
+      accountsSubtext: 'Manage five accounts simultaneously',
+      features: [
+        { label: 'All Account Sizes', subtext: 'Maximum flexibility in sizing' },
+        { label: 'Both Challenge Types', subtext: 'Complete portfolio control' }
+      ]
+    }
+  ];
 
   return (
-    <div className="max-w-6xl mx-auto mb-16">
-      <div className="relative group bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-3xl p-8 border-2 border-[#0FF1CE]/30 hover:border-[#0FF1CE]/50 transition-all duration-300 overflow-hidden">
-        {/* Background Effects */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0FF1CE]/5 to-transparent rounded-3xl opacity-50"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2/3 h-2/3 bg-[#0FF1CE]/10 blur-[60px] rounded-full"></div>
+    <div className="max-w-7xl mx-auto">
+      {/* Step 1: Choose Your Plan Header */}
+      <div className="text-center mb-12">
+        {/* Number Badge */}
+        <div className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black rounded-full text-lg font-bold mb-4">
+          1
+        </div>
         
-        {/* Content */}
-        <div className="relative z-10">
-          {/* Header Section - Always Visible */}
-          <div 
-            className="cursor-pointer"
-            onClick={() => setIsExpanded(!isExpanded)}
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                {/* Badge */}
-                <div className="inline-block bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black px-4 py-2 rounded-full text-sm font-bold mb-4">
-                  NEW CHALLENGE
-                </div>
-                
-                {/* Title */}
-                <h2 className="text-3xl md:text-4xl font-extrabold text-[#0FF1CE] mb-4">
-                  Shockwave Gauntlet
-                </h2>
-                
-                {/* Description */}
-                <p className="text-white text-base md:text-lg leading-relaxed">
-                  The ultimate trading challenge with <span className="text-[#0FF1CE] font-semibold">zero restrictions</span>. 
-                  One phase evaluation, complete trading freedom, and you only pay when you succeed.
-                </p>
-              </div>
-              
-              {/* Expand/Collapse Button */}
-              <button 
-                className="flex-shrink-0 w-10 h-10 rounded-full bg-[#0FF1CE]/20 border border-[#0FF1CE]/40 flex items-center justify-center hover:bg-[#0FF1CE]/30 transition-all"
-                aria-label={isExpanded ? "Collapse details" : "Expand details"}
-              >
-                <ChevronDown 
-                  size={24} 
-                  className={`text-[#0FF1CE] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
-                />
-              </button>
+        {/* Title */}
+        <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">
+          Choose Your Plan
+        </h2>
+        
+        {/* Description Bullets */}
+        <div className="mx-auto text-left" style={{ maxWidth: 400 }}>
+          <div className="space-y-2 text-gray-300 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 bg-[#0FF1CE] rounded-full"></div>
+              <span>Unlimited retries</span>
             </div>
-          </div>
-
-          {/* Expandable Details Section */}
-          <div 
-            className={`overflow-hidden transition-all duration-500 ease-in-out ${
-              isExpanded ? 'max-h-[2000px] opacity-100 mt-8' : 'max-h-0 opacity-0'
-            }`}
-          >
-            <div className="space-y-6">
-              {/* Key Points Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                <div className="group bg-gradient-to-br from-[#0FF1CE]/15 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl p-4 border border-[#0FF1CE]/30 hover:border-[#0FF1CE]/50 transition-all duration-300">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#0FF1CE]/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <div className="w-3 h-3 bg-[#0FF1CE] rounded-full"></div>
-                    </div>
-                    <div>
-                      <div className="text-[#0FF1CE] font-bold text-sm">Pay When Pass</div>
-                      <div className="text-gray-300 text-xs">Only $19.99 upfront</div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="group bg-gradient-to-br from-[#0FF1CE]/15 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl p-4 border border-[#0FF1CE]/30 hover:border-[#0FF1CE]/50 transition-all duration-300">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#0FF1CE]/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <div className="w-3 h-3 bg-[#0FF1CE] rounded-full"></div>
-                    </div>
-                    <div>
-                      <div className="text-[#0FF1CE] font-bold text-sm">One Phase</div>
-                      <div className="text-gray-300 text-xs">No verification needed</div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="group bg-gradient-to-br from-[#0FF1CE]/15 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl p-4 border border-[#0FF1CE]/30 hover:border-[#0FF1CE]/50 transition-all duration-300 sm:col-span-2 lg:col-span-1">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#0FF1CE]/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <div className="w-3 h-3 bg-[#0FF1CE] rounded-full"></div>
-                    </div>
-                    <div>
-                      <div className="text-[#0FF1CE] font-bold text-sm">No Restrictions</div>
-                      <div className="text-gray-300 text-xs">Trade however you want</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Special Callout */}
-              <div className="bg-gradient-to-r from-[#0FF1CE]/20 via-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl p-4 border border-[#0FF1CE]/40 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-[#0FF1CE]/5 to-transparent rounded-xl"></div>
-                <div className="relative z-10 text-center">
-                  <div className="text-[#0FF1CE] font-bold text-sm mb-1">
-                    Revolutionary Model: We believe in your success
-                  </div>
-                  <div className="text-gray-300 text-xs">
-                    Pay activation fees only when you prove yourself. No upfront risk, maximum reward.
-                  </div>
-                </div>
-              </div>
-              
-              {/* Features */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
-                  { label: "Max DD", value: "15%" },
-                  { label: "Daily DD", value: "8%" },
-                  { label: "Leverage", value: "1:200" },
-                  { label: "Target", value: "10%" }
-                ].map((item, index) => (
-                  <div key={index} className="text-center bg-[#0FF1CE]/5 rounded-lg p-3 border border-[#0FF1CE]/20">
-                    <div className="text-[#0FF1CE] font-bold text-xl">{item.value}</div>
-                    <div className="text-gray-300 text-sm">{item.label}</div>
-                  </div>
-                ))}
-              </div>
-              
-              {/* CTA */}
-              <div className="flex flex-col items-center gap-3 pt-4">
-                <Link href="/challenge">
-                  <button className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black text-lg font-bold rounded-xl hover:scale-105 transition-transform shadow-lg hover:shadow-[#0FF1CE]/25 group">
-                    <div className="flex items-center justify-center gap-2">
-                      <span>Try the Gauntlet</span>
-                      <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  </button>
-                </Link>
-                <p className="text-center text-gray-400 text-sm">Pay $19.99 now, activation fee only when you pass</p>
-              </div>
+            <div className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 bg-[#0FF1CE] rounded-full"></div>
+              <span>No obligation to activate funded account</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 bg-[#0FF1CE] rounded-full"></div>
+              <span>An active account occupies a slot until failed or expired</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 bg-[#0FF1CE] rounded-full"></div>
+              <span>Retries and accounts are available only while the subscription is active. Cancelling pauses access</span>
             </div>
           </div>
         </div>
-        
-        {/* Decorative Elements */}
-        <div className="absolute top-4 right-4 w-16 h-16 bg-[#0FF1CE]/10 rounded-full blur-xl"></div>
-        <div className="absolute bottom-4 left-4 w-12 h-12 bg-[#0FF1CE]/10 rounded-full blur-xl"></div>
+      </div>
+
+      {/* Subscription Tiers Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20 px-4">
+        {tiers.map((tier, index) => (
+          <div 
+            key={index}
+            className={`relative bg-gradient-to-br from-[#1A1A1A] to-[#0D0D0D] rounded-2xl p-6 border-2 transition-all duration-300 ${
+              tier.popular 
+                ? 'border-[#0FF1CE] shadow-lg shadow-[#0FF1CE]/25' 
+                : 'border-[#2F2F2F]/50'
+            }`}
+          >
+            {/* Popular Badge */}
+            {tier.popular && (
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <span className="bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black text-xs font-bold px-4 py-1 rounded-full">
+                  POPULAR
+                </span>
+              </div>
+            )}
+
+            {/* Tier Name */}
+            <h3 className="text-2xl font-bold text-white mb-2">{tier.name}</h3>
+            
+            {/* Price */}
+            <div className="mb-4">
+              <span className="text-4xl font-extrabold text-[#0FF1CE]">${tier.price}</span>
+              <span className="text-gray-400 text-lg">/mo</span>
+            </div>
+            
+            {/* Active Accounts Feature */}
+            <div className="mb-6 p-4 bg-[#0FF1CE]/10 border border-[#0FF1CE]/30 rounded-lg">
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 mt-0.5 bg-[#0FF1CE]/20 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-2 h-2 bg-[#0FF1CE] rounded-full"></div>
+                </div>
+                <div>
+                  <div className="text-[#0FF1CE] font-bold text-base">{tier.accountsText}</div>
+                  <div className="text-gray-400 text-xs mt-1">{tier.accountsSubtext}</div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Additional Features */}
+            <div className="space-y-3 mb-6">
+              {tier.features.map((feature, featureIndex) => (
+                <div key={featureIndex} className="flex items-start gap-3">
+                  <div className="w-5 h-5 mt-0.5 bg-[#0FF1CE]/20 rounded-full flex items-center justify-center flex-shrink-0">
+                    <div className="w-2 h-2 bg-[#0FF1CE] rounded-full"></div>
+                  </div>
+                  <div>
+                    <div className="text-white font-semibold text-sm">{feature.label}</div>
+                    <div className="text-gray-400 text-xs mt-0.5">{feature.subtext}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Step 2: Configure Your Accounts - Pricing Table */}
+      <div className="mt-16">
+        <PricingTable />
+      </div>
+
+      {/* CTA */}
+      <div className="flex flex-col items-center gap-3 pt-12 pb-8">
+        <Link href="/challenge">
+          <button className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black text-lg font-bold rounded-xl hover:scale-105 transition-transform shadow-lg hover:shadow-[#0FF1CE]/25 group">
+            <div className="flex items-center justify-center gap-2">
+              <span>Get Started Now</span>
+              <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+            </div>
+          </button>
+        </Link>
+        <p className="text-center text-gray-400 text-sm">Choose your plan and configure your accounts</p>
       </div>
     </div>
   );
@@ -291,62 +303,149 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
   */
 };
 
-// On-Demand Payouts Modal - Up to $5K Instant Payouts
-const OnDemandPayoutsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+// New Subscription Business Model Modal
+const SubscriptionModelModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm overflow-y-auto">
-      <div className="min-h-full flex items-start md:items-center justify-center p-4 pt-8 md:pt-12 pb-8 md:pb-12">
-        <div className="relative w-full max-w-lg mx-auto" style={{ transform: 'scale(0.75)' }}>
+      <div className="min-h-full flex items-center justify-center p-4 py-8">
+        <div className="relative w-full max-w-2xl mx-auto">
           {/* Close Button */}
           <button
             onClick={onClose}
-            className="absolute -top-2 -right-2 z-10 w-10 h-10 bg-white text-black rounded-full flex items-center justify-center font-bold hover:scale-110 transition-transform shadow-lg text-2xl"
+            className="absolute -top-2 -right-2 z-10 w-10 h-10 bg-[#0FF1CE] text-black rounded-full flex items-center justify-center font-bold hover:scale-110 transition-transform shadow-lg text-2xl"
           >
             ×
           </button>
 
           {/* Modal Content */}
-          <div className="relative bg-gradient-to-br from-[#0D0D0D] via-[#121212] to-[#0D0D0D] border-2 border-[#0FF1CE]/30 rounded-3xl overflow-hidden shadow-2xl">
-            {/* On-Demand Payouts Image - 9:16 aspect ratio */}
-            <div className="relative w-full aspect-[9/16]">
-              <Image
-                src="/ondemandmarketing.png"
-                alt="On-Demand Payouts - Up to $5,000 Instantly on Standard, 1-Step & Instant Accounts"
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 512px"
-                priority
-                onError={(e) => {
-                  // Fallback if image doesn't exist
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  const parent = target.parentElement;
-                  if (parent) {
-                    parent.innerHTML = `
-                      <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#0D0D0D] to-[#1A1A1A]">
-                        <div class="text-center p-8">
-                          <div class="text-[#0FF1CE] text-6xl mb-4">💰</div>
-                          <div class="text-white text-3xl font-bold mb-2">ON-DEMAND PAYOUTS</div>
-                          <div class="text-[#0FF1CE] text-xl mb-4">Up to $5,000</div>
-                          <div class="text-gray-400 text-sm">Instantly available on Standard, 1-Step & Instant accounts</div>
-                        </div>
-                      </div>
-                    `;
-                  }
-                }}
-              />
-            </div>
+          <div className="relative bg-gradient-to-br from-[#0D0D0D] via-[#121212] to-[#0D0D0D] border-2 border-[#0FF1CE]/50 rounded-3xl p-8 md:p-10 overflow-hidden shadow-2xl">
+            {/* Background Effects */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#0FF1CE]/5 to-transparent rounded-3xl"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-[#0FF1CE]/10 blur-[80px] rounded-full"></div>
+            
+            <div className="relative z-10">
+              {/* Badge */}
+              <div className="text-center mb-6">
+                <span className="inline-block px-6 py-2 rounded-full bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black font-bold uppercase tracking-wide text-sm">
+                  New Business Model
+                </span>
+              </div>
 
-            {/* CTA Button */}
-            <div className="p-6">
+              {/* Main Heading */}
+              <h2 className="text-3xl md:text-4xl font-extrabold text-white text-center mb-8">
+               Pay for access, not a chance
+              </h2>
+
+              {/* Features Grid */}
+              <div className="grid md:grid-cols-2 gap-4 mb-8">
+                {/* Left Column - Main Benefits */}
+                <div className="space-y-3">
+                  <h3 className="text-[#0FF1CE] font-semibold text-base mb-2">What You Get</h3>
+                  <div className="flex items-start gap-2">
+                    <div className="flex-shrink-0 w-4 h-4 rounded-full bg-[#36ecec]/20 flex items-center justify-center mt-0.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE]"></div>
+                    </div>
+                    <div className="text-gray-100 text-sm">
+                      Unlimited retries
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <div className="flex-shrink-0 w-4 h-4 rounded-full bg-[#36ecec]/20 flex items-center justify-center mt-0.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE]"></div>
+                    </div>
+                    <div className="text-gray-100 text-sm">
+                      Only pay challenge fee after you pass
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <div className="flex-shrink-0 w-4 h-4 rounded-full bg-[#36ecec]/20 flex items-center justify-center mt-0.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE]"></div>
+                    </div>
+                    <div className="text-gray-100 text-sm">
+                      No obligation to activate funded account
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column - Additional Benefits */}
+                <div className="space-y-3">
+                  <h3 className="text-[#0FF1CE] font-semibold text-base mb-2">Why It Matters</h3>
+                  <div className="flex items-start gap-2">
+                    <div className="flex-shrink-0 w-4 h-4 rounded-full bg-[#36ecec]/20 flex items-center justify-center mt-0.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE]"></div>
+                    </div>
+                    <div className="text-gray-100 text-sm">
+                      No more paying <span className="font-semibold text-white">big upfront fees</span>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <div className="flex-shrink-0 w-4 h-4 rounded-full bg-[#36ecec]/20 flex items-center justify-center mt-0.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE]"></div>
+                    </div>
+                    <div className="text-gray-100 text-sm">
+                      Pay for <span className="font-semibold text-white">access</span>, not a chance
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <div className="flex-shrink-0 w-4 h-4 rounded-full bg-[#36ecec]/20 flex items-center justify-center mt-0.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE]"></div>
+                    </div>
+                    <div className="text-gray-100 text-sm">
+                      <span className="font-semibold text-white">Risk-free trials</span> & unlimited attempts
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <div className="flex-shrink-0 w-4 h-4 rounded-full bg-[#36ecec]/20 flex items-center justify-center mt-0.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#0FF1CE]"></div>
+                    </div>
+                    <div className="text-gray-100 text-sm">
+                      <span className="font-semibold text-white">Cancel anytime</span>, no strings attached
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Pricing Tiers Preview */}
+              <div className="bg-[#0FF1CE]/10 border border-[#0FF1CE]/30 rounded-xl p-4 mb-8">
+                <p className="text-center text-white text-sm mb-3">
+                  Choose from <span className="font-bold text-[#0FF1CE]">3 flexible tiers</span>:
+                </p>
+                <div className="flex flex-wrap justify-center gap-3">
+                  <div className="px-4 py-2 bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg flex flex-col items-center min-w-[120px]">
+                    <span className="text-[#0FF1CE] font-bold">Entry</span>
+                    <span className="text-white text-sm ml-2">$49/mo</span>
+                    <span className="text-xs text-gray-400 mt-1">1 active account</span>
+                  </div>
+                  <div className="px-4 py-2 bg-[#1A1A1A] border border-[#0FF1CE] rounded-lg shadow-lg shadow-[#0FF1CE]/25 flex flex-col items-center min-w-[120px]">
+                    <span className="text-[#0FF1CE] font-bold">Surge</span>
+                    <span className="text-white text-sm ml-2">$99/mo</span>
+                    <span className="text-xs text-gray-400 mt-1">2 active accounts</span>
+                  </div>
+                  <div className="px-4 py-2 bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg flex flex-col items-center min-w-[120px]">
+                    <span className="text-[#0FF1CE] font-bold">Pulse</span>
+                    <span className="text-white text-sm ml-2">$199/mo</span>
+                    <span className="text-xs text-gray-400 mt-1">5 active accounts</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* CTA Button */}
               <Link href="/challenge" onClick={onClose}>
                 <button className="w-full bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black font-bold py-4 px-6 rounded-xl hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(15,241,206,0.4)] hover:shadow-[0_0_30px_rgba(15,241,206,0.6)] text-lg">
-                  START CHALLENGE →
+                  Get Started →
                 </button>
               </Link>
+
+              <p className="text-center text-gray-400 text-sm mt-4">
+                Start your trading journey with unlimited opportunities
+              </p>
             </div>
+
+            {/* Decorative Elements */}
+            <div className="absolute top-4 right-4 w-20 h-20 bg-[#0FF1CE]/10 rounded-full blur-xl"></div>
+            <div className="absolute bottom-4 left-4 w-16 h-16 bg-[#00D9FF]/10 rounded-full blur-xl"></div>
           </div>
         </div>
       </div>
@@ -357,7 +456,7 @@ const OnDemandPayoutsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
 export default function ShockwaveLandingPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
-    const [showOnDemandModal, setShowOnDemandModal] = useState(false); // On-demand payouts modal enabled
+    const [showSubscriptionModal, setShowSubscriptionModal] = useState(false); // Subscription model modal enabled
     
     useEffect(() => {
       const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -370,11 +469,11 @@ export default function ShockwaveLandingPage() {
       return () => unsubscribe();
     }, [router, loading]);
 
-    // Show on-demand payouts modal after page loads
+    // Show subscription model modal after page loads
     useEffect(() => {
       if (!loading) {
         const timer = setTimeout(() => {
-          setShowOnDemandModal(true);
+          setShowSubscriptionModal(true);
         }, 1500); // Show modal 1.5 seconds after page loads
   
         return () => clearTimeout(timer);
@@ -393,10 +492,10 @@ export default function ShockwaveLandingPage() {
       <div className="bg-black text-white min-h-screen font-sans">
         <Header />
         
-        {/* On-Demand Payouts Modal */}
-        <OnDemandPayoutsModal 
-          isOpen={showOnDemandModal} 
-          onClose={() => setShowOnDemandModal(false)}
+        {/* Subscription Business Model Modal */}
+        <SubscriptionModelModal 
+          isOpen={showSubscriptionModal} 
+          onClose={() => setShowSubscriptionModal(false)}
         />
         
         {/* Hero Section */}
@@ -1191,14 +1290,12 @@ export default function ShockwaveLandingPage() {
           </div>
         </section>
   
-        {/* Challenge Details Table Section */}
+        {/* Subscription & Pricing Section */}
         <section id="pricing" className="relative py-20 px-6 bg-black overflow-hidden">
           <div className="absolute top-1/2 left-1/4 w-1/2 h-[400px] bg-[#0FF1CE]/[0.02] blur-[150px] rounded-full"></div>
           
-          {/* Gauntlet Showcase Card */}
-          <GauntletCard />
-          
-          <PricingTable />
+          {/* Combined Subscription Tiers & Pricing Table */}
+          <SubscriptionAndPricingSection />
         </section>
 
         {/* Scaling Plan Section */}

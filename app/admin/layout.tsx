@@ -20,13 +20,15 @@ import {
   Bitcoin,
   Server,
   Shield,
-  DollarSign
+  DollarSign,
+  CreditCard
 } from 'lucide-react';
 
 const navItems = [
   { name: 'Dashboard', href: '/admin', icon: BarChart2 },
   { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
   { name: 'Crypto Orders', href: '/admin/crypto-orders', icon: Bitcoin },
+  { name: 'Card Orders', href: '/admin/card-orders', icon: CreditCard },
   { name: 'Customers', href: '/admin/customers', icon: Users },
   { name: 'KYC Management', href: '/admin/kyc', icon: Shield },
   { name: 'Withdrawals', href: '/admin/withdrawals', icon: DollarSign },

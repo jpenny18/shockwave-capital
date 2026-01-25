@@ -6,11 +6,41 @@ import Particles from '../components/Particles';
 import Image from 'next/image';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db, createOrder, Timestamp } from '@/lib/firebase';
-import { Check, Zap, Shield, TrendingUp, ChevronRight, AlertCircle, CreditCard } from 'lucide-react';
+import { Check, Zap, Shield, TrendingUp, ChevronRight, AlertCircle, CreditCard, X } from 'lucide-react';
 import Link from 'next/link';
+import { WhopCheckoutEmbed } from '@whop/checkout/react';
 
 // Define the type for challenge options
 type ChallengeType = 'Standard' | '1-Step' | 'Instant' | 'Gauntlet';
+type SubscriptionTier = 'entry' | 'surge' | 'pulse';
+
+// Account configuration interface
+interface AccountConfig {
+  type: ChallengeType | null;
+  amount: string | null;
+  platform: string | null;
+}
+
+const subscriptionTiers = {
+  entry: {
+    name: 'Entry',
+    price: 49,
+    accountCount: 1,
+    planId: 'plan_CBPzk6dCBzCnx'
+  },
+  surge: {
+    name: 'Surge',
+    price: 99,
+    accountCount: 2,
+    planId: 'plan_bMFStmaBybgnH'
+  },
+  pulse: {
+    name: 'Pulse',
+    price: 199,
+    accountCount: 5,
+    planId: 'plan_xY0X9aGFM47nn'
+  }
+};
 
 const challengeTypes = [
   { 
@@ -381,9 +411,8 @@ const calculateTableValues = (selectedType: ChallengeType | null, selectedAmount
 
 export default function ChallengePage() {
   const router = useRouter();
-  const [selectedType, setSelectedType] = useState<ChallengeType | null>(null);
-  const [selectedAmount, setSelectedAmount] = useState<string | null>(null);
-  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
+  const [selectedSubscription, setSelectedSubscription] = useState<SubscriptionTier | null>(null);
+  const [accounts, setAccounts] = useState<AccountConfig[]>([]);
   const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -398,6 +427,25 @@ export default function ChallengePage() {
   const [discountCode, setDiscountCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState<DiscountCode | null>(null);
   const [isValidatingCode, setIsValidatingCode] = useState(false);
+  const [showWhopPayment, setShowWhopPayment] = useState(false);
+  
+  // Initialize accounts array when subscription tier changes
+  useEffect(() => {
+    if (selectedSubscription) {
+      const tierConfig = subscriptionTiers[selectedSubscription];
+      const newAccounts: AccountConfig[] = [];
+      
+      for (let i = 0; i < tierConfig.accountCount; i++) {
+        newAccounts.push({
+          type: accounts[i]?.type || null,
+          amount: accounts[i]?.amount || null,
+          platform: accounts[i]?.platform || null
+        });
+      }
+      
+      setAccounts(newAccounts);
+    }
+  }, [selectedSubscription]);
   
   // Check for preselected values from pricing table
   useEffect(() => {
@@ -414,31 +462,47 @@ export default function ChallengePage() {
       } else if (preselectedType === 'Gauntlet') {
         mappedType = 'Gauntlet';
       }
-      setSelectedType(mappedType);
+      // Set first account type if entry tier is selected
+      if (selectedSubscription === 'entry' && accounts.length > 0) {
+        updateAccountField(0, 'type', mappedType);
+      }
       sessionStorage.removeItem('preselectedChallengeType');
     }
     
     if (preselectedBalance) {
       const formattedBalance = `$${parseInt(preselectedBalance).toLocaleString()}`;
-      setSelectedAmount(formattedBalance);
+      // Set first account amount if entry tier is selected
+      if (selectedSubscription === 'entry' && accounts.length > 0) {
+        updateAccountField(0, 'amount', formattedBalance);
+      }
       sessionStorage.removeItem('preselectedBalance');
     }
   }, []);
-  
-  // Calculate table values when selectedType or selectedAmount changes
-  const tableValues = calculateTableValues(selectedType, selectedAmount);
 
-  const handleTypeSelect = (type: ChallengeType) => {
-    setSelectedType(type);
-    setSelectedAmount(null);
+  const handleSubscriptionSelect = (tier: SubscriptionTier) => {
+    setSelectedSubscription(tier);
   };
 
-  const handleAmountSelect = (amount: string) => {
-    setSelectedAmount(amount);
+  const updateAccountField = (index: number, field: keyof AccountConfig, value: any) => {
+    setAccounts(prev => {
+      const newAccounts = [...prev];
+      newAccounts[index] = { ...newAccounts[index], [field]: value };
+      return newAccounts;
+    });
   };
 
-  const handlePlatformSelect = (platform: string) => {
-    setSelectedPlatform(platform);
+  const handleTypeSelect = (index: number, type: ChallengeType) => {
+    updateAccountField(index, 'type', type);
+    // Reset amount when type changes as different types have different amounts
+    updateAccountField(index, 'amount', null);
+  };
+
+  const handleAmountSelect = (index: number, amount: string) => {
+    updateAccountField(index, 'amount', amount);
+  };
+
+  const handlePlatformSelect = (index: number, platform: string) => {
+    updateAccountField(index, 'platform', platform);
   };
 
   const handleAddOnToggle = (addOnId: string) => {
@@ -458,6 +522,14 @@ export default function ChallengePage() {
       }
     });
     return basePrice * totalMultiplier;
+  };
+
+  const getCurrentSubscriptionPrice = () => {
+    if (!selectedSubscription) return null;
+    const basePrice = subscriptionTiers[selectedSubscription].price;
+    const addOnsPrice = calculateAddOnsPrice(basePrice);
+    const priceWithAddOns = basePrice + addOnsPrice;
+    return calculateDiscountedPrice(priceWithAddOns, appliedDiscount);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -529,11 +601,7 @@ export default function ChallengePage() {
   };
 
   const getCurrentPrice = () => {
-    if (!selectedType || !selectedAmount) return null;
-    const basePrice = calculatePrice(selectedType, selectedAmount);
-    const addOnsPrice = calculateAddOnsPrice(basePrice);
-    const priceWithAddOns = basePrice + addOnsPrice;
-    return calculateDiscountedPrice(priceWithAddOns, appliedDiscount);
+    return getCurrentSubscriptionPrice();
   };
 
   const handleProceedToPayment = () => {
@@ -545,20 +613,24 @@ export default function ChallengePage() {
       if (!formData.email) errors.email = 'Email is required';
       if (!formData.phone) errors.phone = 'Phone number is required';
       if (!formData.country) errors.country = 'Country is required';
-      if (!selectedType) errors.type = 'Please select a challenge type';
-      if (!selectedAmount) errors.amount = 'Please select an amount';
-      if (!selectedPlatform) errors.platform = 'Please select a platform';
+      if (!selectedSubscription) errors.type = 'Please select a subscription tier';
+      if (!accounts.every(acc => acc.type && acc.amount && acc.platform)) {
+        errors.platform = 'Please complete all account configurations';
+      }
       if (!termsAccepted) errors.terms = 'Please accept the terms and conditions';
       
       setFormErrors(errors);
       return;
     }
     
-    // Store form data in session storage
+    const tierConfig = subscriptionTiers[selectedSubscription!];
+    
+    // Store form data in session storage for crypto payment
     sessionStorage.setItem('challengeData', JSON.stringify({
-      type: selectedType,
-      amount: selectedAmount,
-      platform: selectedPlatform,
+      subscriptionTier: selectedSubscription,
+      subscriptionPrice: tierConfig.price,
+      accountsCount: tierConfig.accountCount,
+      accounts: accounts,
       addOns: selectedAddOns,
       formData: {
         firstName: formData.firstName,
@@ -568,7 +640,7 @@ export default function ChallengePage() {
         country: formData.country,
         discordUsername: formData.discordUsername || ''
       },
-      price: getCurrentPrice(),
+      price: tierConfig.price,
       discount: appliedDiscount ? {
         id: appliedDiscount.id,
         code: appliedDiscount.code,
@@ -580,51 +652,7 @@ export default function ChallengePage() {
     router.push('/challenge/payment');
   };
 
-  // Credit card payment links mapping
-  const getCreditCardPaymentLink = (type: ChallengeType, amount: string): string => {
-    const baseAmount = parseInt(amount.replace(/\$|,/g, ''));
-    
-    // Map challenge types and amounts to payment links
-    const linkMap: Record<ChallengeType, Record<number, string>> = {
-      'Standard': {
-        5000: 'https://www.hub-shockwave.com/shockpb/p/5-standard-pb',
-        10000: 'https://www.hub-shockwave.com/shockpb/p/10-standard-pb',
-        25000: 'https://www.hub-shockwave.com/shockpb/p/25-standard-pb',
-        50000: 'https://www.hub-shockwave.com/shockpb/p/50-standard-pb',
-        100000: 'https://www.hub-shockwave.com/shockpb/p/100-standard-pb',
-        200000: 'https://www.hub-shockwave.com/shockpb/p/200-standard-pb',
-        500000: 'https://www.hub-shockwave.com/shockpb/p/500-standard-pb',
-      },
-      'Instant': {
-        5000: 'https://www.hub-shockwave.com/shockpb/p/5-instant-playbook',
-        10000: 'https://www.hub-shockwave.com/shockpb/p/5-instant-playbook-bg3s6',
-        25000: 'https://www.hub-shockwave.com/shockpb/p/5-instant-playbook-r2xm3',
-        50000: 'https://www.hub-shockwave.com/shockpb/p/5-instant-playbook-bg3s6-3sayc',
-        100000: 'https://www.hub-shockwave.com/shockpb/p/5-instant-playbook-hrhlp',
-        200000: 'https://www.hub-shockwave.com/shockpb/p/5-instant-playbook-hrhlp-e3exg',
-        500000: 'https://www.hub-shockwave.com/shockpb/p/5-instant-playbook-hrhlp-e3exg-4s8ya',
-      },
-      '1-Step': {
-        5000: 'https://www.hub-shockwave.com/shockpb/p/5-one-step-playbook',
-        10000: 'https://www.hub-shockwave.com/shockpb/p/5-one-step-playbook-yp7fc',
-        25000: 'https://www.hub-shockwave.com/shockpb/p/5-one-step-playbook-r7rtb',
-        50000: 'https://www.hub-shockwave.com/shockpb/p/5-one-step-playbook-87wmp',
-        100000: 'https://www.hub-shockwave.com/shockpb/p/5-one-step-playbook-tzmch',
-        200000: 'https://www.hub-shockwave.com/shockpb/p/5-one-step-playbook-bd8cz',
-        500000: 'https://www.hub-shockwave.com/shockpb/p/5-one-step-playbook-yp7fc-99ncy',
-      },
-      'Gauntlet': {
-        10000: '', // No external payment links for Gauntlet - handled by crypto payment
-        25000: '',
-        50000: '',
-        100000: '',
-        200000: '',
-      }
-    };
-    
-    return linkMap[type][baseAmount] || '';
-  };
-
+  // Whop card payment handler - save order to Firebase and show Whop payment modal
   const handleCreditCardPayment = async () => {
     if (!isFormValid()) {
       // Show validation errors
@@ -634,9 +662,10 @@ export default function ChallengePage() {
       if (!formData.email) errors.email = 'Email is required';
       if (!formData.phone) errors.phone = 'Phone number is required';
       if (!formData.country) errors.country = 'Country is required';
-      if (!selectedType) errors.type = 'Please select a challenge type';
-      if (!selectedAmount) errors.amount = 'Please select an amount';
-      if (!selectedPlatform) errors.platform = 'Please select a platform';
+      if (!selectedSubscription) errors.type = 'Please select a subscription tier';
+      if (!accounts.every(acc => acc.type && acc.amount && acc.platform)) {
+        errors.platform = 'Please complete all account configurations';
+      }
       if (!termsAccepted) errors.terms = 'Please accept the terms and conditions';
       
       setFormErrors(errors);
@@ -644,46 +673,152 @@ export default function ChallengePage() {
     }
     
     try {
-      // Create order in Firebase
+      const tierConfig = subscriptionTiers[selectedSubscription!];
+      
+      // Create pending order in Firebase BEFORE showing Whop payment
       const orderData = {
+        status: 'PENDING', // Will be updated to COMPLETED when payment succeeds
+        subscriptionTier: selectedSubscription,
+        subscriptionPrice: tierConfig.price,
+        subscriptionPlanId: tierConfig.planId,
+        accountsCount: tierConfig.accountCount,
+        accounts: accounts.map(acc => ({
+          type: acc.type,
+          amount: acc.amount,
+          platform: acc.platform
+        })),
         customerEmail: formData.email,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        phone: formData.phone,
-        country: formData.country,
-        discordUsername: formData.discordUsername || '',
-        challengeType: selectedType!,
-        challengeAmount: selectedAmount!,
-        platform: selectedPlatform!,
-        addOns: selectedAddOns,
-        totalAmount: getCurrentPrice() || 0,
-        paymentMethod: 'card' as const,
-        paymentStatus: 'pending' as const,
+        customerName: `${formData.firstName} ${formData.lastName}`,
+        customerPhone: formData.phone,
+        customerCountry: formData.country,
+        customerDiscordUsername: formData.discordUsername || '',
+        paymentMethod: 'card',
+        paymentStatus: 'pending',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
-      
-      await createOrder(orderData);
-      
-      // Get the payment link
-      const paymentLink = getCreditCardPaymentLink(selectedType!, selectedAmount!);
-      
-      if (paymentLink) {
-        // Redirect to payment link
-        window.location.href = paymentLink;
-      } else {
-        console.error('No payment link found for this selection');
-        alert('Payment link not available for this selection. Please contact support.');
+
+      // Save pending order to Firebase
+      const response = await fetch('/api/card-orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save order');
       }
+
+      const savedOrder = await response.json();
+      console.log('Pending card order saved:', savedOrder.orderId);
+
+      // Send admin notification email about pending card order
+      try {
+        await fetch('/api/send-card-order-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...orderData,
+            orderId: savedOrder.orderId,
+            isPending: true // Flag to indicate this is a pending order notification
+          })
+        });
+        console.log('Admin notification sent for pending card order');
+      } catch (emailError) {
+        console.error('Error sending admin email:', emailError);
+        // Don't block the flow if email fails
+      }
+
+      // Show Whop payment modal
+      setShowWhopPayment(true);
     } catch (error) {
-      console.error('Error creating order:', error);
-      alert('Failed to process order. Please try again.');
+      console.error('Error creating pending order:', error);
+      alert('There was an error processing your request. Please try again.');
+    }
+  };
+
+  // Handle when Whop payment completes successfully
+  const handlePaymentComplete = async (planId: string, receiptId?: string) => {
+    try {
+      const tierConfig = subscriptionTiers[selectedSubscription!];
+      
+      // Find the pending order in Firebase and update it to COMPLETED
+      // For now, we'll create a completed order record
+      // In production, you'd want to find and update the pending order by email
+      const completedOrderData = {
+        status: 'COMPLETED',
+        subscriptionTier: selectedSubscription,
+        subscriptionPrice: tierConfig.price,
+        subscriptionPlanId: tierConfig.planId,
+        accountsCount: tierConfig.accountCount,
+        accounts: accounts.map(acc => ({
+          type: acc.type,
+          amount: acc.amount,
+          platform: acc.platform
+        })),
+        customerEmail: formData.email,
+        customerName: `${formData.firstName} ${formData.lastName}`,
+        customerPhone: formData.phone,
+        customerCountry: formData.country,
+        customerDiscordUsername: formData.discordUsername || '',
+        totalAmount: tierConfig.price,
+        paymentMethod: 'card',
+        paymentStatus: 'completed',
+        receiptId: receiptId || 'N/A',
+        planId: planId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      // Save completed order to Firebase
+      const response = await fetch('/api/card-orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(completedOrderData)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save completed order');
+      }
+
+      const savedOrder = await response.json();
+      console.log('Completed card order saved:', savedOrder.orderId);
+
+      // Send confirmation emails (customer + admin)
+      try {
+        await fetch('/api/send-card-order-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...completedOrderData,
+            orderId: savedOrder.orderId,
+            isPending: false // This is a completed order
+          })
+        });
+        console.log('Confirmation emails sent for completed order');
+      } catch (emailError) {
+        console.error('Error sending confirmation emails:', emailError);
+      }
+
+      // Redirect to dashboard
+      router.push('/dashboard');
+    } catch (error) {
+      console.error('Error processing payment completion:', error);
+      alert('Payment completed but there was an error saving your order. Please contact support with your receipt.');
     }
   };
 
   const isFormValid = () => {
+    // Check if subscription tier is selected
+    if (!selectedSubscription) return false;
+    
+    // Check if all accounts are properly configured
+    const allAccountsValid = accounts.every(acc => 
+      acc.type && acc.amount && acc.platform
+    );
+    
     return (
-      selectedType &&
-      selectedAmount &&
-      selectedPlatform &&
+      allAccountsValid &&
       formData.firstName &&
       formData.lastName &&
       formData.email &&
@@ -693,14 +828,17 @@ export default function ChallengePage() {
     );
   };
 
-  const renderAddOnsSection = () => (
-    <div className={`mb-8 ${selectedPlatform ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
+  const renderAddOnsSection = () => {
+    const allAccountsConfigured = accounts.length > 0 && accounts.every(acc => acc.type && acc.amount && acc.platform);
+    
+    return (
+    <div className={`mb-8 ${allAccountsConfigured ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
       <h3 className="text-lg font-medium mb-4 text-[#0FF1CE]">Available Add-ons</h3>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {addOns.map((addOn) => (
           <div
             key={addOn.id}
-            onClick={() => selectedPlatform && handleAddOnToggle(addOn.id)}
+            onClick={() => allAccountsConfigured && handleAddOnToggle(addOn.id)}
             className={`p-4 rounded-lg border-2 transition-all duration-300 cursor-pointer ${
               selectedAddOns.includes(addOn.id)
                 ? 'border-[#0FF1CE] bg-[#0FF1CE]/10'
@@ -750,7 +888,8 @@ export default function ChallengePage() {
         </div>
       )}
     </div>
-  );
+    );
+  };
 
   const renderDiscountSection = () => (
     <div className="mb-8">
@@ -799,9 +938,9 @@ export default function ChallengePage() {
   );
 
   const renderPriceSection = () => {
-    if (!selectedType || !selectedAmount) return null;
+    if (!selectedSubscription) return null;
     
-    const basePrice = calculatePrice(selectedType, selectedAmount);
+    const basePrice = subscriptionTiers[selectedSubscription].price;
     const addOnsPrice = calculateAddOnsPrice(basePrice);
     const subtotal = basePrice + addOnsPrice;
     const finalPrice = calculateDiscountedPrice(subtotal, appliedDiscount);
@@ -809,8 +948,8 @@ export default function ChallengePage() {
     return (
       <div className="space-y-2">
         <div className="flex justify-between items-center">
-          <span className="text-gray-400">Base Price:</span>
-          <span className="text-white font-semibold">${basePrice.toFixed(2)}</span>
+          <span className="text-gray-400">Subscription:</span>
+          <span className="text-white font-semibold">${basePrice.toFixed(2)}/mo</span>
         </div>
         
         {selectedAddOns.length > 0 && (
@@ -823,14 +962,14 @@ export default function ChallengePage() {
                 return (
                   <div key={addOnId} className="flex justify-between items-center text-sm">
                     <span className="text-gray-400">{addOn.name}:</span>
-                    <span className="text-white">+${addOnPrice.toFixed(2)}</span>
+                    <span className="text-white">+${addOnPrice.toFixed(2)}/mo</span>
                   </div>
                 );
               })}
             </div>
             <div className="flex justify-between items-center font-semibold">
               <span className="text-gray-400">Subtotal:</span>
-              <span className="text-white">${subtotal.toFixed(2)}</span>
+              <span className="text-white">${subtotal.toFixed(2)}/mo</span>
             </div>
           </>
         )}
@@ -848,8 +987,8 @@ export default function ChallengePage() {
         
         <div className="border-t border-[#0FF1CE]/30 pt-2">
           <div className="flex justify-between items-center">
-            <span className="text-lg font-bold text-white">Total:</span>
-            <span className="text-2xl font-bold text-[#0FF1CE]">${finalPrice.toFixed(2)}</span>
+            <span className="text-lg font-bold text-white">Monthly Total:</span>
+            <span className="text-2xl font-bold text-[#0FF1CE]">${finalPrice.toFixed(2)}/mo</span>
           </div>
         </div>
       </div>
@@ -857,7 +996,12 @@ export default function ChallengePage() {
   };
 
   const renderChallengeTable = () => {
-    if (!selectedType) return null;
+    // Show table based on first account's type if any account has a type selected
+    const firstAccountWithType = accounts.find(acc => acc.type);
+    if (!firstAccountWithType) return null;
+    const selectedType = firstAccountWithType.type;
+    const selectedAmount = firstAccountWithType.amount;
+    const tableValues = calculateTableValues(selectedType, selectedAmount);
 
     return (
       <div className="bg-gradient-to-br from-[#1A1A1A]/80 to-[#151515]/80 backdrop-blur-sm rounded-2xl p-6 border border-[#2F2F2F]/50">
@@ -1079,159 +1223,160 @@ export default function ChallengePage() {
             </div>
 
         {/* Launch Day Sale Banner - Mobile Optimized */}
-        <div className="mb-8 lg:mb-12 relative space-y-5">
-          {/* Launch Sale Promo: 50% Off + Free Retry */}
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0FF1CE]/30 to-[#5059FC]/20 rounded-2xl blur-xl"></div>
-            <div className="relative bg-gradient-to-r from-[#0FF1CE]/15 to-[#5059FC]/15 rounded-2xl p-6 lg:p-8 border border-[#0FF1CE]/30 backdrop-blur-sm overflow-hidden">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <div className="text-center lg:text-left w-full">
-                  <div className="flex items-center justify-center lg:justify-start gap-2 mb-2">
-                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-[#0FF1CE]/15 mr-1">
-                      <span className="text-[#0FF1CE] font-bold text-lg">%</span>
-                    </span>
-                    <span className="text-sm font-bold text-[#0FF1CE] uppercase tracking-wider">SAVE 50%</span>
-                  </div>
-                  <div className="text-xl lg:text-2xl font-bold text-white mb-2">
-                    <span className="text-[#0FF1CE]">50% Off</span> + <span className="text-[#0FF1CE]">1 Free Retry</span>
-                  </div>
-                  <div className="mt-1 text-sm text-gray-100 flex flex-col sm:flex-row items-center sm:gap-2 justify-center lg:justify-start">
-                    Use code: 
-                    <code className="bg-[#0FF1CE]/15 text-[#0FF1CE] px-2 py-0.5 rounded font-mono font-semibold tracking-wide text-xs ml-1 sm:ml-0">SAVE50</code>
-                  </div>
-                  <div className="mt-1 text-[11px] text-gray-400">
-                   limited time
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          {/* On-Demand Payouts Promo */}
+        <div className="mb-8 lg:mb-12 relative">
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-[#0FF1CE]/20 to-[#5059FC]/20 rounded-2xl blur-xl"></div>
-            <div className="relative bg-gradient-to-r from-[#0FF1CE]/10 to-[#5059FC]/10 rounded-2xl p-6 lg:p-8 border border-[#0FF1CE]/20 backdrop-blur-sm">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <div className="text-center lg:text-left">
-                  <div className="flex items-center justify-center lg:justify-start gap-2 mb-2">
-                    <Zap className="w-5 h-5 text-[#0FF1CE]" />
-                    <span className="text-sm font-bold text-white">On-Demand Payouts Now Available!</span>
-                  </div>
-                  <div className="text-2xl lg:text-3xl font-bold text-[#0FF1CE] mb-1">
-                    Up to $5,000 Instantly
-                  </div>
-                  <div className="text-sm text-white font-medium">
-                    Available on <span className="font-bold text-[#0FF1CE]">Standard</span>, <span className="font-bold text-[#0FF1CE]">1-Step</span>, and <span className="font-bold text-[#0FF1CE]">Instant</span> accounts
-                  </div>
-                </div>
+            <div className="relative bg-gradient-to-r from-[#0FF1CE]/10 to-[#5059FC]/10 rounded-2xl p-6 lg:p-8 border border-[#0FF1CE]/25 backdrop-blur-sm overflow-hidden flex flex-col items-center justify-center text-center">
+              <div className="mb-3">
+                <span className="inline-block px-4 py-1 rounded-full bg-[#0FF1CE]/20 text-[#0FF1CE] font-bold uppercase tracking-wide text-sm">
+                  New business model
+                </span>
               </div>
+              <div className="text-2xl lg:text-3xl font-bold text-white mb-2">
+                Select a tier
+              </div>
+              <ul className="text-white text-sm mb-1 space-y-1 mt-3 text-left max-w-md mx-auto">
+                <li className="flex items-center gap-2">
+                  <span className="inline-block w-2 h-2 rounded-full bg-[#0FF1CE]" /> Unlimited retries
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="inline-block w-2 h-2 rounded-full bg-[#0FF1CE]" /> Only pay challenge fee after you pass
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="inline-block w-2 h-2 rounded-full bg-[#0FF1CE]" /> No obligation to activate funded account
+                </li>
+              </ul>
             </div>
           </div>
         </div>
 
         {/* Challenge Selection Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* First Card - Challenge Selection */}
+          {/* First Card - Subscription & Account Configuration */}
           <div className="lg:col-span-7 bg-gradient-to-br from-[#1A1A1A]/80 to-[#151515]/80 backdrop-blur-sm rounded-2xl p-6 border border-[#2F2F2F]/50">
+            
+            {/* Subscription Tier Selection */}
             <div className="mb-8">
-              <h3 className="text-lg font-medium mb-4 text-[#0FF1CE]">Select Challenge Type</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {challengeTypes.map((type) => (
+              <h3 className="text-lg font-medium mb-4 text-[#0FF1CE]">Select Tier</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {Object.entries(subscriptionTiers).map(([key, tier]) => (
                   <button
-                    key={type.id}
-                    onClick={() => handleTypeSelect(type.id)}
-                    className={`relative group w-full rounded-xl overflow-hidden border-2 transition-all duration-300 ${
-                      selectedType === type.id
-                        ? 'border-[#0FF1CE] shadow-[0_0_20px_rgba(15,241,206,0.3)]'
+                    key={key}
+                    onClick={() => handleSubscriptionSelect(key as SubscriptionTier)}
+                    className={`p-4 rounded-xl border-2 transition-all duration-300 ${
+                      selectedSubscription === key
+                        ? 'border-[#0FF1CE] bg-[#0FF1CE]/10 shadow-[0_0_20px_rgba(15,241,206,0.3)]'
                         : 'border-[#2F2F2F]/50 hover:border-[#0FF1CE]/50'
                     }`}
                   >
-                    {/* Image section */}
-                    <div className="relative w-full aspect-[16/12] overflow-hidden flex items-center justify-center bg-gradient-to-b from-[#151515] to-[#0D0D0D]">
-                      <div className="relative w-[85%] h-[85%]">
-                        <Image
-                          src={type.image}
-                          alt={type.name}
-                          fill
-                          className="object-contain"
-                          sizes="(max-width: 768px) 100vw, 33vw"
-                        />
+                    <div className="text-center">
+                      <h4 className="text-xl font-bold text-white mb-1">{tier.name}</h4>
+                      <div className="text-2xl font-bold text-[#0FF1CE] mb-2">
+                        ${tier.price}<span className="text-sm text-gray-400">/mo</span>
+                      </div>
+                      <div className="text-xs font-semibold text-[#0FF1CE]">
+                        {tier.accountCount} Active {tier.accountCount === 1 ? 'Account' : 'Accounts'}
                       </div>
                     </div>
-                    
-                    {/* Text section */}
-                    <div className="p-3 bg-[#0D0D0D]">
-                      <h2 className="text-xs lg:text-sm font-bold mb-1 text-white text-center">
-                        {type.name}
-                      </h2>
-                      <div className="h-0.5 w-12 bg-[#0FF1CE] mb-2 rounded mx-auto"></div>
-                      <p className="text-[10px] lg:text-xs text-gray-400 text-center">
-                        {type.description}
-                      </p>
-                    </div>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Amount Selection */}
-            <div className={`mb-8 ${selectedType ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
-              <h3 className="text-lg font-medium mb-4 text-[#0FF1CE]">Select Account Size</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                {(selectedType ? challengeTypes.find(type => type.id === selectedType)?.amounts : [])?.map((amount) => (
-                  <button
-                    key={amount}
-                    onClick={() => handleAmountSelect(amount)}
-                    className={`p-3 rounded-lg border-2 transition-all duration-300 ${
-                      selectedAmount === amount
-                        ? 'border-[#0FF1CE] bg-[#0FF1CE]/10 text-[#0FF1CE] shadow-[0_0_15px_rgba(15,241,206,0.2)]'
-                        : 'border-[#2F2F2F]/50 hover:border-[#0FF1CE]/30 text-gray-300'
-                    }`}
-                  >
-                    {amount}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Platform Selection */}
-            <div className={`mb-8 ${selectedAmount ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
-              <h3 className="text-lg font-medium mb-4 text-[#0FF1CE]">Select Platform</h3>
-              <div className="grid grid-cols-2 gap-4">
-                {platforms.map((platform) => (
-                  <button
-                    key={platform}
-                    onClick={() => handlePlatformSelect(platform)}
-                    className={`p-4 rounded-lg border-2 transition-all duration-300 ${
-                      selectedPlatform === platform
-                        ? 'border-[#0FF1CE] bg-[#0FF1CE]/10 text-[#0FF1CE] shadow-[0_0_15px_rgba(15,241,206,0.2)]'
-                        : 'border-[#2F2F2F]/50 hover:border-[#0FF1CE]/30 text-gray-300'
-                    }`}
-                  >
-                    {platform}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Add-ons Selection */}
-            {renderAddOnsSection()}
-
-            {/* Discount Code */}
-            {selectedType && selectedAmount && selectedPlatform && (
-              <>
-                {renderDiscountSection()}
+            {/* Account Configurations */}
+            {selectedSubscription && accounts.map((account, index) => (
+              <div key={index} className="mb-8 p-5 bg-[#0D0D0D]/50 rounded-xl border border-[#2F2F2F]/30">
+                <h3 className="text-lg font-medium mb-4 text-[#0FF1CE]">
+                  Account {index + 1} of {accounts.length}
+                </h3>
                 
-                {/* Desktop Price Display - Below Discount */}
-                <div className="hidden lg:block p-4 bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 rounded-lg border border-[#0FF1CE]/20">
-                  {renderPriceSection()}
+                {/* Challenge Type Selection for this account */}
+                <div className="mb-6">
+                  <h4 className="text-sm font-medium mb-3 text-gray-300">Select Challenge Type</h4>
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    {challengeTypes.map((type) => (
+                      <button
+                        key={type.id}
+                        onClick={() => handleTypeSelect(index, type.id)}
+                        className={`p-3 rounded-lg border-2 transition-all duration-300 ${
+                          account.type === type.id
+                            ? 'border-[#0FF1CE] bg-[#0FF1CE]/10 text-[#0FF1CE]'
+                            : 'border-[#2F2F2F]/50 hover:border-[#0FF1CE]/30 text-gray-300'
+                        }`}
+                      >
+                        <div className="text-center">
+                          <div className="text-xs font-bold">{type.name.replace('Shockwave ', '')}</div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                
-                {/* Mobile Price Display - Original */}
-                <div className="p-4 bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 rounded-lg border border-[#0FF1CE]/20 lg:hidden">
-                  {renderPriceSection()}
+
+                {/* Amount Selection for this account */}
+                <div className={`mb-6 ${account.type ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
+                  <h4 className="text-sm font-medium mb-3 text-gray-300">Select Account Size</h4>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2">
+                    {(account.type ? challengeTypes.find(type => type.id === account.type)?.amounts : [])?.map((amount) => (
+                      <button
+                        key={amount}
+                        onClick={() => handleAmountSelect(index, amount)}
+                        className={`p-2 rounded-lg border-2 transition-all duration-300 text-sm ${
+                          account.amount === amount
+                            ? 'border-[#0FF1CE] bg-[#0FF1CE]/10 text-[#0FF1CE]'
+                            : 'border-[#2F2F2F]/50 hover:border-[#0FF1CE]/30 text-gray-300'
+                        }`}
+                      >
+                        {amount}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </>
-            )}
+
+                {/* Platform Selection for this account */}
+                <div className={`${account.amount ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
+                  <h4 className="text-sm font-medium mb-3 text-gray-300">Select Platform</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    {platforms.map((platform) => (
+                      <button
+                        key={platform}
+                        onClick={() => handlePlatformSelect(index, platform)}
+                        className={`p-3 rounded-lg border-2 transition-all duration-300 ${
+                          account.platform === platform
+                            ? 'border-[#0FF1CE] bg-[#0FF1CE]/10 text-[#0FF1CE]'
+                            : 'border-[#2F2F2F]/50 hover:border-[#0FF1CE]/30 text-gray-300'
+                        }`}
+                      >
+                        {platform}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {/* Add-ons Selection - HIDDEN for now (Whop uses fixed pricing) */}
+            <div className="hidden">
+              {renderAddOnsSection()}
+            </div>
+
+            {/* Discount Code - HIDDEN for now (Whop uses fixed pricing) */}
+            <div className="hidden">
+              {selectedSubscription && accounts.length > 0 && accounts.every(acc => acc.type && acc.amount && acc.platform) && (
+                <>
+                  {renderDiscountSection()}
+                  
+                  {/* Desktop Price Display - Below Discount */}
+                  <div className="hidden lg:block p-4 bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 rounded-lg border border-[#0FF1CE]/20">
+                    {renderPriceSection()}
+                  </div>
+                  
+                  {/* Mobile Price Display - Original */}
+                  <div className="p-4 bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 rounded-lg border border-[#0FF1CE]/20 lg:hidden">
+                    {renderPriceSection()}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Second Card - Challenge Details */}
@@ -1239,17 +1384,19 @@ export default function ChallengePage() {
             {/* Sticky container for desktop */}
             <div className="lg:sticky lg:top-8">
               {/* Sticky Price Display - Desktop Only */}
-              {selectedType && selectedAmount && (
+              {selectedSubscription && (
                 <div className="hidden lg:block mb-4 bg-gradient-to-br from-[#1A1A1A]/80 to-[#151515]/80 backdrop-blur-sm rounded-2xl p-4 border border-[#0FF1CE]/30">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-sm text-gray-400">Your Selection</div>
-                      <div className="text-lg font-semibold text-white">{selectedType} - {selectedAmount}</div>
+                      <div className="text-sm text-gray-400">Your selected tier</div>
+                      <div className="text-lg font-semibold text-white">
+                        {subscriptionTiers[selectedSubscription].name} - {subscriptionTiers[selectedSubscription].accountCount} {subscriptionTiers[selectedSubscription].accountCount === 1 ? 'Account' : 'Accounts'}
+                      </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm text-gray-400">Total Price</div>
+                      <div className="text-sm text-gray-400">Monthly Price</div>
                       <div className="text-2xl font-bold text-[#0FF1CE]">
-                        ${getCurrentPrice()?.toFixed(2) || '0.00'}
+                        ${getCurrentPrice()?.toFixed(2) || '0.00'}/mo
                       </div>
                     </div>
                   </div>
@@ -1390,52 +1537,148 @@ export default function ChallengePage() {
             {formErrors.terms && <p className="mt-1 text-sm text-red-400 flex items-center gap-1"><AlertCircle size={14} />{formErrors.terms}</p>}
               
               <button
-                onClick={handleProceedToPayment}
-              disabled={!isFormValid()}
-              className={`w-full mt-6 relative overflow-hidden rounded-xl font-bold py-4 px-6 transition-all duration-300 ${
-                isFormValid()
-                  ? 'bg-gradient-to-r from-[#0FF1CE] to-[#0AA89E] text-black hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-[#0FF1CE]/25'
-                  : 'bg-gray-700 text-gray-400 cursor-not-allowed opacity-50'
-              }`}
-            >
-              <div className="relative flex items-center justify-center gap-2">
-                                      <span>{selectedType === 'Gauntlet' ? 'Pay $19.99 Entry Fee' : 'Pay'}</span>
-                      <ChevronRight size={20} className={isFormValid() ? 'group-hover:translate-x-1 transition-transform' : ''} />
-                    </div>
-              </button>
-              
-              <button
                 onClick={handleCreditCardPayment}
                 disabled={!isFormValid()}
-                className={`w-full mt-3 relative overflow-hidden rounded-xl font-bold py-4 px-6 transition-all duration-300 hidden ${
+                className={`w-full mt-6 relative overflow-hidden rounded-xl font-bold py-4 px-6 transition-all duration-300 ${
                   isFormValid()
-                    ? 'bg-gradient-to-r from-[#FF6B6B] to-[#EE5A24] text-white hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-[#FF6B6B]/25'
+                    ? 'bg-gradient-to-r from-[#0FF1CE] to-[#0AA89E] text-black hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-[#0FF1CE]/25'
                     : 'bg-gray-700 text-gray-400 cursor-not-allowed opacity-50'
                 }`}
               >
                 <div className="relative flex items-center justify-center gap-2">
                   <CreditCard size={20} />
-                  <span>Pay with Credit/Debit Card</span>
+                  <span>{selectedSubscription ? `Pay with Card - $${subscriptionTiers[selectedSubscription].price}/mo` : 'Pay with Card'}</span>
+                  <ChevronRight size={20} className={isFormValid() ? 'group-hover:translate-x-1 transition-transform' : ''} />
                 </div>
               </button>
-              {selectedType === 'Gauntlet' ? (
-                <div className="text-center mt-3 p-3 bg-[#FF6B6B]/10 border border-[#FF6B6B]/30 rounded-lg">
-                  <p className="text-[#FF6B6B] font-bold text-sm mb-1">🔥 Gauntlet Challenge</p>
-                  <p className="text-white text-xs">
-                    Pay only $19.99 now. If you pass, you'll pay the activation fee to get your funded account.
-                  </p>
-                  <p className="text-gray-400 text-xs mt-1">
-                    Activation fees: $10k→$99, $25k→$199, $50k→$399, $100k→$499, $200k→$999
-                  </p>
+              
+              <button
+                onClick={handleProceedToPayment}
+                disabled={!isFormValid()}
+                className={`w-full mt-3 relative overflow-hidden rounded-xl font-bold py-4 px-6 transition-all duration-300 ${
+                  isFormValid()
+                    ? 'bg-gradient-to-r from-[#10B981] to-[#059669] text-white hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-[#10B981]/25'
+                    : 'bg-gray-700 text-gray-400 cursor-not-allowed opacity-50'
+                }`}
+              >
+                <div className="relative flex items-center justify-center gap-2">
+                  <span>{selectedSubscription ? `Pay with Crypto - $${subscriptionTiers[selectedSubscription].price}/mo` : 'Pay with Crypto'}</span>
+                  <ChevronRight size={20} className={isFormValid() ? 'group-hover:translate-x-1 transition-transform' : ''} />
                 </div>
-              ) : (
-                <p className="text-xs text-gray-400 text-center mt-2">
-                  You will be redirected to complete your purchase
-                </p>
-              )}
+              </button>
+
+              <p className="text-xs text-gray-400 text-center mt-2">
+                Monthly subscription • Cancel anytime
+              </p>
             </div>
           </div>
         </div>
+
+        {/* Whop Payment Modal */}
+        {showWhopPayment && selectedSubscription && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div className="bg-[#0D0D0D] rounded-2xl border border-[#0FF1CE]/30 max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
+              {/* Close Button */}
+              <button
+                onClick={() => setShowWhopPayment(false)}
+                className="absolute top-4 right-4 z-10 p-2 hover:bg-[#1A1A1A] rounded-lg transition-colors"
+              >
+                <X size={24} className="text-gray-400 hover:text-white" />
+              </button>
+
+              {/* Header */}
+              <div className="p-6 border-b border-[#2F2F2F]/50">
+                <h2 className="text-2xl font-bold text-white mb-2">Complete Your Payment</h2>
+                <p className="text-gray-400 text-sm">Subscribe to {subscriptionTiers[selectedSubscription].name} - ${subscriptionTiers[selectedSubscription].price}/month</p>
+              </div>
+
+              {/* Order Summary */}
+              <div className="p-6 bg-[#151515]/50 border-b border-[#2F2F2F]/50">
+                <h3 className="text-lg font-semibold text-white mb-4">Order Summary</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Subscription:</span>
+                    <span className="text-white font-semibold capitalize">{subscriptionTiers[selectedSubscription].name}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Active Accounts:</span>
+                    <span className="text-white font-semibold">{subscriptionTiers[selectedSubscription].accountCount}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Email:</span>
+                    <span className="text-white font-semibold">{formData.email}</span>
+                  </div>
+                  
+                  {/* Account Details */}
+                  {accounts.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-[#2F2F2F]/50">
+                      <div className="text-sm text-gray-400 mb-2">Configured Accounts:</div>
+                      <div className="space-y-2">
+                        {accounts.map((account, idx) => (
+                          <div key={idx} className="bg-[#0D0D0D] p-3 rounded-lg">
+                            <div className="text-xs font-semibold text-[#0FF1CE] mb-1">Account {idx + 1}</div>
+                            <div className="grid grid-cols-3 gap-2 text-xs">
+                              <div>
+                                <div className="text-gray-500">Type</div>
+                                <div className="text-white">{account.type}</div>
+                              </div>
+                              <div>
+                                <div className="text-gray-500">Size</div>
+                                <div className="text-white">{account.amount}</div>
+                              </div>
+                              <div>
+                                <div className="text-gray-500">Platform</div>
+                                <div className="text-white">{account.platform}</div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="pt-4 border-t border-[#2F2F2F]/50">
+                    <div className="flex justify-between text-lg font-bold">
+                      <span className="text-white">Monthly Total:</span>
+                      <span className="text-[#0FF1CE]">${getCurrentPrice()?.toFixed(2) || subscriptionTiers[selectedSubscription].price}/mo</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Whop Payment Embed */}
+              <div className="p-6">
+                <div className="min-h-[400px] rounded-lg overflow-hidden">
+                  <WhopCheckoutEmbed
+                    planId={subscriptionTiers[selectedSubscription].planId}
+                    theme="dark"
+                    hideAddressForm={true}
+                    hideEmail={false}
+                    prefill={{
+                      email: formData.email,
+                      address: {
+                        name: `${formData.firstName} ${formData.lastName}`,
+                        country: formData.country
+                      }
+                    }}
+                    onComplete={handlePaymentComplete}
+                    fallback={
+                      <div className="flex items-center justify-center h-96">
+                        <div className="text-white text-lg">Loading payment form...</div>
+                      </div>
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="p-6 bg-[#151515]/50 border-t border-[#2F2F2F]/50">
+                <p className="text-center text-gray-400 text-xs">
+                  Secure checkout • Cancel anytime
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
     </div>
   );
 } 
