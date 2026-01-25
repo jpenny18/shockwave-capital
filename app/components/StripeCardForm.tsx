@@ -216,8 +216,8 @@ const CardForm: React.FC<CardFormProps> = ({
         country: challengeData.formData.country,
         discordUsername: challengeData.formData.discordUsername,
         totalAmount: challengeData.price,
-        paymentMethod: 'card',
-        paymentStatus: 'completed',
+        paymentMethod: 'card' as const,
+        paymentStatus: 'completed' as const,
         paymentIntentId: paymentIntent.id,
       };
 
