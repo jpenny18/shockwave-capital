@@ -49,9 +49,19 @@ const CARD_ELEMENT_OPTIONS = {
 interface CardFormProps {
   clientSecret: string;
   challengeData: {
-    type: string;
-    amount: string;
-    platform: string;
+    // Legacy single account fields (for backward compatibility)
+    type?: string;
+    amount?: string;
+    platform?: string;
+    // New subscription fields
+    subscriptionTier?: 'entry' | 'surge' | 'pulse';
+    subscriptionPrice?: number;
+    accountsCount?: number;
+    accounts?: Array<{
+      type: string | null;
+      amount: string | null;
+      platform: string | null;
+    }>;
     formData: {
       firstName: string;
       lastName: string;
@@ -61,6 +71,13 @@ interface CardFormProps {
       discordUsername?: string;
     };
     price: number;
+    addOns?: string[];
+    discount?: {
+      id: string;
+      code: string;
+      type: 'percentage' | 'fixed';
+      value: number;
+    };
   };
   successRedirectPath: string;
   onProcessingStateChange?: (isProcessing: boolean) => void;
@@ -189,42 +206,46 @@ const CardForm: React.FC<CardFormProps> = ({
     console.log('Payment succeeded, creating order...');
     
     try {
-      // Create order in Firebase
-      const orderId = await createOrder({
+      // Build order data based on whether it's a subscription or legacy order
+      const baseOrderData = {
         userId: null,
-          customerEmail: challengeData.formData.email,
-          firstName: challengeData.formData.firstName,
-          lastName: challengeData.formData.lastName,
-          phone: challengeData.formData.phone,
-          country: challengeData.formData.country,
-          discordUsername: challengeData.formData.discordUsername,
-          challengeType: challengeData.type,
-          challengeAmount: challengeData.amount,
-          platform: challengeData.platform,
-          totalAmount: challengeData.price,
-          paymentMethod: 'card',
-          paymentStatus: 'completed',
-        paymentIntentId: paymentIntent.id,
-      });
-      
-      console.log('Order created with ID:', orderId);
-
-      // Prepare order data for email notifications
-      const orderData = {
-        id: orderId,
         customerEmail: challengeData.formData.email,
         firstName: challengeData.formData.firstName,
         lastName: challengeData.formData.lastName,
         phone: challengeData.formData.phone,
         country: challengeData.formData.country,
         discordUsername: challengeData.formData.discordUsername,
-        challengeType: challengeData.type,
-        challengeAmount: challengeData.amount,
-        platform: challengeData.platform,
         totalAmount: challengeData.price,
-        paymentMethod: 'card' as const,
-        paymentStatus: 'completed' as const,
+        paymentMethod: 'card',
+        paymentStatus: 'completed',
         paymentIntentId: paymentIntent.id,
+      };
+
+      // Add subscription or legacy challenge fields
+      const orderDataToCreate = challengeData.subscriptionTier
+        ? {
+            ...baseOrderData,
+            subscriptionTier: challengeData.subscriptionTier,
+            subscriptionPrice: challengeData.subscriptionPrice,
+            accountsCount: challengeData.accountsCount,
+            accounts: challengeData.accounts,
+          }
+        : {
+            ...baseOrderData,
+            challengeType: challengeData.type || 'N/A',
+            challengeAmount: challengeData.amount || 'N/A',
+            platform: challengeData.platform || 'N/A',
+          };
+
+      // Create order in Firebase
+      const orderId = await createOrder(orderDataToCreate);
+      
+      console.log('Order created with ID:', orderId);
+
+      // Prepare order data for email notifications
+      const orderData = {
+        id: orderId,
+        ...orderDataToCreate,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -237,20 +258,20 @@ const CardForm: React.FC<CardFormProps> = ({
       }
 
       // Store payment success data
-        sessionStorage.setItem('paymentSuccess', JSON.stringify({
+      sessionStorage.setItem('paymentSuccess', JSON.stringify({
         orderId: paymentIntent.id,
-          amount: challengeData.price,
-          challengeType: challengeData.type,
-          paymentMethod: 'card',
-        }));
+        amount: challengeData.price,
+        challengeType: challengeData.type || challengeData.subscriptionTier || 'subscription',
+        paymentMethod: 'card',
+      }));
         
       // Clear payment intent data
-        const paymentIntentKey = `payment_intent_${challengeData.type}_${challengeData.amount}_${challengeData.price}_${challengeData.formData.email}`;
-        sessionStorage.removeItem(`${paymentIntentKey}_client_secret`);
-        sessionStorage.removeItem(`${paymentIntentKey}_payment_intent_id`);
+      const paymentIntentKey = `payment_intent_${challengeData.type || challengeData.subscriptionTier}_${challengeData.amount || challengeData.subscriptionPrice}_${challengeData.price}_${challengeData.formData.email}`;
+      sessionStorage.removeItem(`${paymentIntentKey}_client_secret`);
+      sessionStorage.removeItem(`${paymentIntentKey}_payment_intent_id`);
 
       // Redirect to success page
-        router.push(successRedirectPath);
+      router.push(successRedirectPath);
     } catch (error) {
       console.error('Error handling payment success:', error);
       setFormErrors(prev => ({ ...prev, general: 'Payment successful but there was an error processing your order. Please contact support.' }));

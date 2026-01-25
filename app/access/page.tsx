@@ -502,7 +502,7 @@ export default function EarlyAccessPage() {
                       New business model
                     </div>
                     <div className="text-2xl md:text-2xl font-bold text-white mb-2">
-                      Subscribe to one of the tiers
+                      Select one of the tiers
                     </div>
                     <ul className="text-white text-sm space-y-1 text-left mt-3 max-w-md mx-auto">
                       <li className="flex items-center gap-2">
