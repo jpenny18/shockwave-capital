@@ -84,7 +84,7 @@ export default function AdminWithdrawalsPage() {
   useEffect(() => {
     if (enableEmail.trim()) {
       const filtered = allUsers.filter(u => 
-        u.email.toLowerCase().includes(enableEmail.toLowerCase()) ||
+        u.email?.toLowerCase().includes(enableEmail.toLowerCase()) ||
         u.displayName?.toLowerCase().includes(enableEmail.toLowerCase()) ||
         u.firstName?.toLowerCase().includes(enableEmail.toLowerCase()) ||
         u.lastName?.toLowerCase().includes(enableEmail.toLowerCase())
@@ -103,7 +103,7 @@ export default function AdminWithdrawalsPage() {
     try {
       // Removed automatic eligibility checks - admin can manually enable withdrawal for any user
       setSelectedUser(user);
-      setEnableEmail(user.email);
+      setEnableEmail(user.email || '');
       setShowUserDropdown(false);
       toast.success('User selected successfully');
     } catch (error) {
@@ -439,7 +439,7 @@ export default function AdminWithdrawalsPage() {
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
-                              <p className="text-white font-medium">{user.email}</p>
+                              <p className="text-white font-medium">{user.email || 'No email'}</p>
                               {(user.displayName || user.firstName || user.lastName) && (
                                 <p className="text-gray-400 text-sm">
                                   {user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim()}
