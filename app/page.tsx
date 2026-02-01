@@ -14,7 +14,7 @@ const SubscriptionAndPricingSection = () => {
   const tiers = [
     {
       name: 'Entry',
-      price: 49,
+      price: 19.99,
       description: 'Perfect for beginners',
       accounts: 1,
       accountsText: '1 Active Account',
@@ -26,7 +26,7 @@ const SubscriptionAndPricingSection = () => {
     },
     {
       name: 'Surge',
-      price: 99,
+      price: 49.99,
       description: 'Scale your trading',
       accounts: 2,
       accountsText: '2 Active Accounts',
@@ -39,7 +39,7 @@ const SubscriptionAndPricingSection = () => {
     },
     {
       name: 'Pulse',
-      price: 199,
+      price: 99.99,
       description: 'Maximum growth potential',
       accounts: 5,
       accountsText: '5 Active Accounts',
@@ -415,17 +415,17 @@ const SubscriptionModelModal = ({ isOpen, onClose }: { isOpen: boolean; onClose:
                 <div className="flex flex-wrap justify-center gap-3">
                   <div className="px-4 py-2 bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg flex flex-col items-center min-w-[120px]">
                     <span className="text-[#0FF1CE] font-bold">Entry</span>
-                    <span className="text-white text-sm ml-2">$49/mo</span>
+                    <span className="text-white text-sm ml-2">$19.99/mo</span>
                     <span className="text-xs text-gray-400 mt-1">1 active account</span>
                   </div>
                   <div className="px-4 py-2 bg-[#1A1A1A] border border-[#0FF1CE] rounded-lg shadow-lg shadow-[#0FF1CE]/25 flex flex-col items-center min-w-[120px]">
                     <span className="text-[#0FF1CE] font-bold">Surge</span>
-                    <span className="text-white text-sm ml-2">$99/mo</span>
+                    <span className="text-white text-sm ml-2">$49.99/mo</span>
                     <span className="text-xs text-gray-400 mt-1">2 active accounts</span>
                   </div>
                   <div className="px-4 py-2 bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg flex flex-col items-center min-w-[120px]">
                     <span className="text-[#0FF1CE] font-bold">Pulse</span>
-                    <span className="text-white text-sm ml-2">$199/mo</span>
+                    <span className="text-white text-sm ml-2">$99.99/mo</span>
                     <span className="text-xs text-gray-400 mt-1">5 active accounts</span>
                   </div>
                 </div>
@@ -1715,7 +1715,7 @@ export default function ShockwaveLandingPage() {
                     {
                       question: "What happens if I don't pass?",
                       questionShort: "You get another chance.",
-                      answer: "On our Instant Evaluation plan, every trader gets one free retry. Standard Challenge users can reset for $199 if needed — no penalty, just another shot at proving yourself."
+                      answer: "On our Instant Evaluation plan, every trader gets one free retry. Standard Challenge users can reset for $99.99 if needed — no penalty, just another shot at proving yourself."
                     }
                   ].map(({ question, questionShort, answer }, index) => (
                     <div

@@ -24,19 +24,19 @@ interface AccountConfig {
 const subscriptionTiers = {
   entry: {
     name: 'Entry',
-    price: 49,
+    price: 19.99,
     accountCount: 1,
     planId: 'plan_CBPzk6dCBzCnx'
   },
   surge: {
     name: 'Surge',
-    price: 99,
+    price: 49.99,
     accountCount: 2,
     planId: 'plan_bMFStmaBybgnH'
   },
   pulse: {
     name: 'Pulse',
-    price: 199,
+    price: 99.99,
     accountCount: 5,
     planId: 'plan_xY0X9aGFM47nn'
   }
