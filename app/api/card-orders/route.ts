@@ -42,7 +42,7 @@ export async function POST(req: Request) {
       updatedAt: body.updatedAt || new Date().toISOString()
     };
 
-    // Check if this is a subscription-based order or legacy single account order
+    // Check if this is a subscription-based order, gauntlet activation, or legacy single account order
     if (body.subscriptionTier) {
       // New subscription-based order with multiple accounts
       orderData.subscriptionTier = body.subscriptionTier;
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
       // Use totalAmount if provided (for completed orders), otherwise use subscriptionPrice
       orderData.totalAmount = body.totalAmount || body.subscriptionPrice;
     } else {
-      // Legacy single account order (for backward compatibility)
+      // Legacy single account order or gauntlet activation (for backward compatibility)
       orderData.challengeType = body.challengeType;
       orderData.challengeAmount = body.challengeAmount;
       orderData.platform = body.platform;

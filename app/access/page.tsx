@@ -497,22 +497,28 @@ export default function EarlyAccessPage() {
               <div className="mb-6">
                 <div className="p-4 bg-gradient-to-r from-[#0FF1CE]/10 to-[#5059FC]/10 rounded-xl border border-[#0FF1CE]/20 backdrop-blur-sm relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-20 h-20 bg-[#0FF1CE]/20 rounded-full blur-3xl"></div>
-                  <div className="relative">
+                  <div className="rxelative">
                     <div className="inline-block px-4 py-1 rounded-full bg-[#0FF1CE]/20 text-[#0FF1CE] font-bold uppercase tracking-wider text-sm mb-3">
-                      New business model
+                      Challenge Rules
                     </div>
-                    <div className="text-2xl md:text-2xl font-bold text-white mb-2">
-                      Select one of the tiers
-                    </div>
-                    <ul className="text-white text-sm space-y-1 text-left mt-3 max-w-md mx-auto">
+                    <ul className="text-white text-sm space-y-3 text-left mt-3 max-w-md mx-auto">
                       <li className="flex items-center gap-2">
-                        <span className="inline-block w-2 h-2 rounded-full bg-[#0FF1CE]" /> Unlimited retries
+                        <span className="inline-block w-2 h-2 rounded-full bg-[#0FF1CE]" />
+                        <span>
+                          <span className="font-bold text-[#0FF1CE]">15%</span> Max Drawdown
+                        </span>
                       </li>
                       <li className="flex items-center gap-2">
-                        <span className="inline-block w-2 h-2 rounded-full bg-[#0FF1CE]" /> Only pay challenge fee after you pass
+                        <span className="inline-block w-2 h-2 rounded-full bg-[#0FF1CE]" />
+                        <span>
+                          <span className="font-bold text-[#0FF1CE]">8%</span> Daily Drawdown
+                        </span>
                       </li>
                       <li className="flex items-center gap-2">
-                        <span className="inline-block w-2 h-2 rounded-full bg-[#0FF1CE]" /> No obligation to activate funded account
+                        <span className="inline-block w-2 h-2 rounded-full bg-[#0FF1CE]" />
+                        <span>
+                          <span className="font-bold text-[#0FF1CE]">1:200</span> Leverage
+                        </span>
                       </li>
                     </ul>
                   </div>

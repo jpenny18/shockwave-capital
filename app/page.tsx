@@ -469,16 +469,16 @@ export default function ShockwaveLandingPage() {
       return () => unsubscribe();
     }, [router, loading]);
 
-    // Show subscription model modal after page loads
-    useEffect(() => {
-      if (!loading) {
-        const timer = setTimeout(() => {
-          setShowSubscriptionModal(true);
-        }, 1500); // Show modal 1.5 seconds after page loads
+    // Show subscription model modal after page loads (DISABLED - keeping code for future use)
+    // useEffect(() => {
+    //   if (!loading) {
+    //     const timer = setTimeout(() => {
+    //       setShowSubscriptionModal(true);
+    //     }, 1500); // Show modal 1.5 seconds after page loads
   
-        return () => clearTimeout(timer);
-      }
-    }, [loading]);
+    //     return () => clearTimeout(timer);
+    //   }
+    // }, [loading]);
     
     if (loading) {
       return (
@@ -555,10 +555,14 @@ export default function ShockwaveLandingPage() {
 
             {/* NO BS Rules Card */}
             <div className="max-w-2xl mx-auto mb-8">
-              <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-[#0FF1CE]/20"
-                style={{ boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)' }}>
-                <h3 className="text-xl md:text-2xl font-bold text-[#0FF1CE] mb-6 text-center">NO BS Funded Account RULES</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div
+                className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-4 md:p-8 border border-[#0FF1CE]/20"
+                style={{ boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)' }}
+              >
+                <h3 className="text-lg md:text-2xl font-bold text-[#0FF1CE] mb-4 md:mb-6 text-center">
+                  NO BS Funded Account RULES
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-2 gap-2 md:gap-4">
                   {[
                     "No consistency rules",
                     "News trading allowed",
@@ -567,11 +571,16 @@ export default function ShockwaveLandingPage() {
                     "No Profit Caps",
                     "No Position size caps"
                   ].map((rule, index) => (
-                    <div key={index} className="flex items-center space-x-3 group">
-                      <div className="w-6 h-6 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center group-hover:scale-110 transition-transform shrink-0">
-                        <span className="text-[#0FF1CE] text-sm">✓</span>
+                    <div
+                      key={index}
+                      className="flex items-center space-x-2 md:space-x-3 group py-1 md:py-0"
+                    >
+                      <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center group-hover:scale-110 transition-transform shrink-0">
+                        <span className="text-[#0FF1CE] text-xs md:text-sm">✓</span>
                       </div>
-                      <span className="text-gray-300 text-sm md:text-base group-hover:text-white transition-colors">{rule}</span>
+                      <span className="text-gray-300 text-xs md:text-base group-hover:text-white transition-colors">
+                        {rule}
+                      </span>
                     </div>
                   ))}
                 </div>

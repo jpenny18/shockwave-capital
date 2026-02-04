@@ -26,11 +26,15 @@ interface AccountConfig {
 interface CardOrder {
   id: string;
   status: 'PENDING' | 'COMPLETED' | 'CANCELLED';
-  subscriptionTier: 'entry' | 'surge' | 'pulse';
-  subscriptionPrice: number;
-  subscriptionPlanId: string;
-  accountsCount: number;
-  accounts: AccountConfig[];
+  subscriptionTier?: 'entry' | 'surge' | 'pulse';
+  subscriptionPrice?: number;
+  subscriptionPlanId?: string;
+  accountsCount?: number;
+  accounts?: AccountConfig[];
+  challengeType?: string;
+  challengeAmount?: string;
+  platform?: string;
+  totalAmount: number;
   customerEmail: string;
   customerName: string;
   customerPhone: string;
@@ -132,10 +136,10 @@ export default function CardOrdersPage() {
 
   const getStats = () => {
     const totalOrders = orders.length;
-    const totalValue = orders.reduce((sum, order) => sum + order.subscriptionPrice, 0);
+    const totalValue = orders.reduce((sum, order) => sum + (order.totalAmount || order.subscriptionPrice || 0), 0);
     const completedOrders = orders.filter(order => order.status === 'COMPLETED').length;
     const pendingOrders = orders.filter(order => order.status === 'PENDING').length;
-    const monthlyRevenue = orders.filter(order => order.status === 'COMPLETED').reduce((sum, order) => sum + order.subscriptionPrice, 0);
+    const monthlyRevenue = orders.filter(order => order.status === 'COMPLETED').reduce((sum, order) => sum + (order.totalAmount || order.subscriptionPrice || 0), 0);
 
     return {
       totalOrders,
@@ -150,7 +154,8 @@ export default function CardOrdersPage() {
     const matchesSearch = 
       order.customerEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (order.receiptId && order.receiptId.toLowerCase().includes(searchTerm.toLowerCase()));
+      (order.receiptId && order.receiptId.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (order.challengeType && order.challengeType.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesStatus = statusFilter === 'ALL' || order.status === statusFilter;
     const matchesTier = tierFilter === 'ALL' || order.subscriptionTier === tierFilter;
@@ -337,11 +342,23 @@ export default function CardOrdersPage() {
                       </div>
                     </td>
                     <td className="px-4 py-4">
-                      <div className="text-sm font-medium text-white capitalize">{order.subscriptionTier}</div>
-                      <div className="text-sm text-gray-400">{order.accountsCount} {order.accountsCount === 1 ? 'Account' : 'Accounts'}</div>
+                      {order.subscriptionTier ? (
+                        <>
+                          <div className="text-sm font-medium text-white capitalize">{order.subscriptionTier}</div>
+                          <div className="text-sm text-gray-400">{order.accountsCount} {order.accountsCount === 1 ? 'Account' : 'Accounts'}</div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="text-sm font-medium text-white">{order.challengeType || 'Single Order'}</div>
+                          <div className="text-sm text-gray-400">{order.challengeAmount || 'N/A'}</div>
+                        </>
+                      )}
                     </td>
                     <td className="px-4 py-4">
-                      <div className="text-sm font-medium text-[#0FF1CE]">${order.subscriptionPrice}/mo</div>
+                      <div className="text-sm font-medium text-[#0FF1CE]">
+                        ${order.totalAmount || order.subscriptionPrice || 0}
+                        {order.subscriptionTier && '/mo'}
+                      </div>
                     </td>
                     <td className="px-4 py-4">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -418,26 +435,51 @@ export default function CardOrdersPage() {
                             </div>
                           </div>
 
-                          {/* Subscription Details */}
+                          {/* Order Details */}
                           <div>
-                            <h3 className="text-[#0FF1CE] font-medium mb-2">Subscription Details</h3>
+                            <h3 className="text-[#0FF1CE] font-medium mb-2">
+                              {order.subscriptionTier ? 'Subscription Details' : 'Order Details'}
+                            </h3>
                             <div className="space-y-2 text-sm">
-                              <div>
-                                <div className="text-gray-400">Tier</div>
-                                <div className="text-white capitalize">{order.subscriptionTier}</div>
-                              </div>
-                              <div>
-                                <div className="text-gray-400">Monthly Price</div>
-                                <div className="text-white">${order.subscriptionPrice}/mo</div>
-                              </div>
-                              <div>
-                                <div className="text-gray-400">Active Accounts</div>
-                                <div className="text-white">{order.accountsCount}</div>
-                              </div>
-                              <div>
-                                <div className="text-gray-400">Plan ID</div>
-                                <div className="text-white text-xs font-mono">{order.subscriptionPlanId}</div>
-                              </div>
+                              {order.subscriptionTier ? (
+                                <>
+                                  <div>
+                                    <div className="text-gray-400">Tier</div>
+                                    <div className="text-white capitalize">{order.subscriptionTier}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-gray-400">Monthly Price</div>
+                                    <div className="text-white">${order.subscriptionPrice}/mo</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-gray-400">Active Accounts</div>
+                                    <div className="text-white">{order.accountsCount}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-gray-400">Plan ID</div>
+                                    <div className="text-white text-xs font-mono">{order.subscriptionPlanId}</div>
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <div>
+                                    <div className="text-gray-400">Order Type</div>
+                                    <div className="text-white">{order.challengeType || 'Single Purchase'}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-gray-400">Account Size</div>
+                                    <div className="text-white">{order.challengeAmount || 'N/A'}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-gray-400">Platform</div>
+                                    <div className="text-white">{order.platform || 'N/A'}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-gray-400">Total Amount</div>
+                                    <div className="text-white">${order.totalAmount}</div>
+                                  </div>
+                                </>
+                              )}
                               {order.receiptId && (
                                 <div>
                                   <div className="text-gray-400">Receipt ID</div>
@@ -447,31 +489,33 @@ export default function CardOrdersPage() {
                             </div>
                           </div>
 
-                          {/* Account Configurations */}
-                          <div>
-                            <h3 className="text-[#0FF1CE] font-medium mb-2">Account Configurations</h3>
-                            <div className="space-y-3">
-                              {order.accounts.map((account, idx) => (
-                                <div key={idx} className="bg-[#1A1A1A] p-3 rounded-lg">
-                                  <div className="text-[#0FF1CE] font-semibold mb-2 text-sm">Account {idx + 1}</div>
-                                  <div className="grid grid-cols-3 gap-2 text-xs">
-                                    <div>
-                                      <div className="text-gray-500">Type</div>
-                                      <div className="text-white">{account.type}</div>
-                                    </div>
-                                    <div>
-                                      <div className="text-gray-500">Amount</div>
-                                      <div className="text-white">{account.amount}</div>
-                                    </div>
-                                    <div>
-                                      <div className="text-gray-500">Platform</div>
-                                      <div className="text-white">{account.platform}</div>
+                          {/* Account Configurations - Only for subscription orders */}
+                          {order.subscriptionTier && order.accounts && order.accounts.length > 0 && (
+                            <div>
+                              <h3 className="text-[#0FF1CE] font-medium mb-2">Account Configurations</h3>
+                              <div className="space-y-3">
+                                {order.accounts.map((account, idx) => (
+                                  <div key={idx} className="bg-[#1A1A1A] p-3 rounded-lg">
+                                    <div className="text-[#0FF1CE] font-semibold mb-2 text-sm">Account {idx + 1}</div>
+                                    <div className="grid grid-cols-3 gap-2 text-xs">
+                                      <div>
+                                        <div className="text-gray-500">Type</div>
+                                        <div className="text-white">{account.type}</div>
+                                      </div>
+                                      <div>
+                                        <div className="text-gray-500">Amount</div>
+                                        <div className="text-white">{account.amount}</div>
+                                      </div>
+                                      <div>
+                                        <div className="text-gray-500">Platform</div>
+                                        <div className="text-white">{account.platform}</div>
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                              ))}
+                                ))}
+                              </div>
                             </div>
-                          </div>
+                          )}
                         </div>
                       </td>
                     </tr>

@@ -4,7 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Particles from '../components/Particles';
 import Header from '../components/Header';
-import { Check, ChevronDown, ChevronUp, Bitcoin, Copy } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Bitcoin, Copy, CreditCard } from 'lucide-react';
 import CryptoPayment from '../components/CryptoPayment';
 
 interface CryptoPrice {
@@ -28,12 +28,14 @@ interface ActivationOption {
   level: string;
   price: number;
   features: string[];
+  whopCheckoutUrl?: string;
 }
 
 const ACTIVATION_OPTIONS: ActivationOption[] = [
   {
     level: '$10k',
     price: 99,
+    whopCheckoutUrl: 'https://whop.com/checkout/plan_gYWVAVyu65Zwa',
     features: [
       '$10,000 Simulated Capital',
       '15% Max Drawdown',
@@ -46,6 +48,7 @@ const ACTIVATION_OPTIONS: ActivationOption[] = [
   {
     level: '$25k',
     price: 199,
+    whopCheckoutUrl: 'https://whop.com/checkout/plan_4JiIRmkyRqjq8',
     features: [
       '$25,000 Simulated Capital',
       '15% Max Drawdown',
@@ -58,6 +61,7 @@ const ACTIVATION_OPTIONS: ActivationOption[] = [
   {
     level: '$50k',
     price: 399,
+    whopCheckoutUrl: 'https://whop.com/checkout/plan_9t46Mcti2Gl1G',
     features: [
       '$50,000 Simulated Capital',
       '15% Max Drawdown',
@@ -70,6 +74,7 @@ const ACTIVATION_OPTIONS: ActivationOption[] = [
   {
     level: '$100k',
     price: 499,
+    whopCheckoutUrl: 'https://whop.com/checkout/plan_mYd9abFhGM9Mg',
     features: [
       '$100,000 Simulated Capital',
       '15% Max Drawdown',
@@ -82,6 +87,7 @@ const ACTIVATION_OPTIONS: ActivationOption[] = [
   {
     level: '$200k',
     price: 999,
+    whopCheckoutUrl: 'https://whop.com/checkout/plan_ArcXmNChT9aLe',
     features: [
       '$200,000 Simulated Capital',
       '15% Max Drawdown',
@@ -97,6 +103,7 @@ function GauntletActivationContent() {
   const searchParams = useSearchParams();
   const [selectedOption, setSelectedOption] = useState<ActivationOption | null>(null);
   const [showPayment, setShowPayment] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'crypto' | null>(null);
   const [formData, setFormData] = useState<FormData>({
     firstName: '',
     lastName: '',
@@ -181,6 +188,73 @@ function GauntletActivationContent() {
     }
   };
 
+  const handleCardPayment = async () => {
+    if (!selectedOption) return;
+    
+    setIsProcessingPayment(true);
+    
+    try {
+      // Save order to Firebase first
+      const orderData = {
+        status: 'PENDING',
+        challengeType: 'gauntlet-activation',
+        challengeAmount: selectedOption.level,
+        platform: formData.platform,
+        totalAmount: selectedOption.price,
+        customerEmail: formData.email,
+        customerName: `${formData.firstName} ${formData.lastName}`,
+        customerPhone: formData.phone,
+        customerCountry: formData.country,
+        customerDiscordUsername: formData.discordUsername || '',
+        paymentMethod: 'card',
+        paymentStatus: 'pending',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      const response = await fetch('/api/card-orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save order');
+      }
+
+      const { orderId } = await response.json();
+      console.log('Gauntlet activation order saved:', orderId);
+
+      // Send admin notification email about pending gauntlet activation order
+      try {
+        await fetch('/api/send-card-order-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...orderData,
+            orderId: orderId,
+            isPending: true // Flag to indicate this is a pending order notification
+          })
+        });
+        console.log('Admin notification sent for pending gauntlet activation order');
+      } catch (emailError) {
+        console.error('Error sending admin email:', emailError);
+        // Don't block the flow if email fails
+      }
+
+      // Redirect to Whop checkout
+      if (selectedOption.whopCheckoutUrl) {
+        window.location.href = selectedOption.whopCheckoutUrl;
+      } else {
+        throw new Error('Checkout URL not configured');
+      }
+    } catch (error) {
+      console.error('Error processing card payment:', error);
+      alert('Failed to process payment. Please try again or contact support.');
+      setIsProcessingPayment(false);
+    }
+  };
+
   const getChallengeData = () => {
     if (!selectedOption) return null;
     
@@ -195,13 +269,57 @@ function GauntletActivationContent() {
   };
 
   if (showPayment && selectedOption) {
+    // If crypto payment method is selected, show crypto payment
+    if (paymentMethod === 'crypto') {
+      return (
+        <div className="bg-gradient-to-b from-[#0D0D0D] via-[#121212] to-[#151515] text-white min-h-screen font-sans">
+          <Header />
+          <Particles />
+          
+          <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-32">
+            <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl border border-[#2F2F2F]/50 overflow-hidden">
+              {isProcessingPayment && (
+                <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 rounded-2xl">
+                  <div className="text-center">
+                    <div className="w-12 h-12 border-2 border-[#0FF1CE] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-white">Processing payment...</p>
+                  </div>
+                </div>
+              )}
+              
+              <div className="p-6 md:p-8 border-b border-[#0FF1CE]/20">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-[#0FF1CE]">Activate Your Gauntlet Account</h2>
+                    <p className="text-gray-400 mt-1">Gauntlet Activation - {selectedOption.level}</p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-[#0FF1CE]">${selectedOption.price.toLocaleString()}</div>
+                    <div className="text-gray-400 text-sm">Activation Fee</div>
+                  </div>
+                </div>
+              </div>
+
+              <CryptoPayment
+                challengeData={getChallengeData()}
+                successRedirectPath="/gauntlet-activation/pending"
+                onProcessingStateChange={setIsProcessingPayment}
+                cryptoPrices={cryptoPrices}
+              />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Payment method selection
     return (
       <div className="bg-gradient-to-b from-[#0D0D0D] via-[#121212] to-[#151515] text-white min-h-screen font-sans">
         <Header />
         <Particles />
         
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-32">
-          <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl border border-[#2F2F2F]/50 overflow-hidden">
+          <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-2xl border border-[#2F2F2F]/50 p-8">
             {isProcessingPayment && (
               <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 rounded-2xl">
                 <div className="text-center">
@@ -211,25 +329,77 @@ function GauntletActivationContent() {
               </div>
             )}
             
-            <div className="p-6 md:p-8 border-b border-[#0FF1CE]/20">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-[#0FF1CE]">Activate Your Gauntlet Account</h2>
-                  <p className="text-gray-400 mt-1">Gauntlet Activation - {selectedOption.level}</p>
-                </div>
-                <div className="text-right">
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-[#0FF1CE] mb-2">Select Payment Method</h2>
+              <p className="text-gray-400">Gauntlet Activation - {selectedOption.level}</p>
+            </div>
+
+            <div className="space-y-4 mb-8">
+              {/* Card Payment Option */}
+              <button
+                onClick={handleCardPayment}
+                className="w-full bg-gradient-to-r from-[#0FF1CE]/10 to-[#00D9FF]/10 hover:from-[#0FF1CE]/20 hover:to-[#00D9FF]/20 border-2 border-[#0FF1CE]/30 hover:border-[#0FF1CE] rounded-xl p-6 transition-all duration-300 group"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-[#0FF1CE]/20 rounded-lg flex items-center justify-center group-hover:bg-[#0FF1CE]/30 transition-colors">
+                      <CreditCard size={24} className="text-[#0FF1CE]" />
+                    </div>
+                    <div className="text-left">
+                      <div className="text-lg font-bold text-white">Credit/Debit Card</div>
+                      <div className="text-sm text-gray-400">Secure checkout via Whop</div>
+                    </div>
+                  </div>
                   <div className="text-2xl font-bold text-[#0FF1CE]">${selectedOption.price.toLocaleString()}</div>
-                  <div className="text-gray-400 text-sm">Activation Fee</div>
+                </div>
+              </button>
+
+              {/* Crypto Payment Option */}
+              <button
+                onClick={() => setPaymentMethod('crypto')}
+                className="w-full bg-gradient-to-r from-[#0FF1CE]/10 to-[#00D9FF]/10 hover:from-[#0FF1CE]/20 hover:to-[#00D9FF]/20 border-2 border-[#0FF1CE]/30 hover:border-[#0FF1CE] rounded-xl p-6 transition-all duration-300 group"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-[#0FF1CE]/20 rounded-lg flex items-center justify-center group-hover:bg-[#0FF1CE]/30 transition-colors">
+                      <Bitcoin size={24} className="text-[#0FF1CE]" />
+                    </div>
+                    <div className="text-left">
+                      <div className="text-lg font-bold text-white">Cryptocurrency</div>
+                      <div className="text-sm text-gray-400">Pay with BTC, ETH, USDT, or USDC</div>
+                    </div>
+                  </div>
+                  <div className="text-2xl font-bold text-[#0FF1CE]">${selectedOption.price.toLocaleString()}</div>
+                </div>
+              </button>
+            </div>
+
+            {/* Order Summary */}
+            <div className="bg-[#151515]/50 rounded-xl p-6 border border-[#2F2F2F]/30">
+              <h3 className="text-lg font-semibold text-white mb-4">Order Summary</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Customer:</span>
+                  <span className="text-white">{formData.firstName} {formData.lastName}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Email:</span>
+                  <span className="text-white">{formData.email}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Account Size:</span>
+                  <span className="text-white">{selectedOption.level}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Platform:</span>
+                  <span className="text-white">{formData.platform}</span>
+                </div>
+                <div className="border-t border-[#2F2F2F]/50 pt-3 flex justify-between">
+                  <span className="text-white font-semibold">Total:</span>
+                  <span className="text-[#0FF1CE] font-bold text-xl">${selectedOption.price.toLocaleString()}</span>
                 </div>
               </div>
             </div>
-
-            <CryptoPayment
-              challengeData={getChallengeData()}
-              successRedirectPath="/gauntlet-activation/pending"
-              onProcessingStateChange={setIsProcessingPayment}
-              cryptoPrices={cryptoPrices}
-            />
           </div>
         </div>
       </div>

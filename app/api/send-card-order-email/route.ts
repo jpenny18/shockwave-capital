@@ -10,8 +10,11 @@ export async function POST(req: Request) {
 
     // Format account information
     let accountInfo = '';
+    let orderTypeLabel = '';
+    
     if (body.subscriptionTier) {
       // Subscription-based order
+      orderTypeLabel = 'Subscription Order';
       accountInfo = `
         <h3>Subscription Details:</h3>
         <p><strong>Tier:</strong> ${body.subscriptionTier} ($${body.subscriptionPrice}/month)</p>
@@ -26,11 +29,14 @@ export async function POST(req: Request) {
         </ul>
       `;
     } else {
-      // Legacy single account order
+      // Single account order (legacy or gauntlet activation)
+      orderTypeLabel = body.challengeType === 'gauntlet-activation' ? 'Gauntlet Activation' : 'Single Purchase';
       accountInfo = `
-        <p><strong>Challenge Type:</strong> ${body.challengeType}</p>
+        <h3>Order Details:</h3>
+        <p><strong>Order Type:</strong> ${body.challengeType}</p>
         <p><strong>Account Size:</strong> ${body.challengeAmount}</p>
         <p><strong>Platform:</strong> ${body.platform}</p>
+        <p><strong>Total Amount:</strong> $${body.totalAmount}</p>
       `;
     }
 
@@ -39,22 +45,23 @@ export async function POST(req: Request) {
       await resend.emails.send({
         from: 'support@shockwave-capital.com',
         to: 'support@shockwave-capital.com',
-        subject: `🔔 Card Payment Initiated - ${body.customerName}`,
+        subject: `🔔 Card Payment Initiated - ${body.customerName} (${orderTypeLabel})`,
         html: `
-          <h2>Card Payment Initiated</h2>
+          <h2>Card Payment Initiated - ${orderTypeLabel}</h2>
           <p style="color: #FFA500;"><strong>⚠️ Status: PENDING PAYMENT</strong></p>
           <p>A customer has started the checkout process. Payment is pending completion.</p>
           <hr>
           <p><strong>Order ID:</strong> ${body.orderId}</p>
+          <p><strong>Order Type:</strong> ${orderTypeLabel}</p>
           <p><strong>Customer:</strong> ${body.customerName}</p>
           <p><strong>Email:</strong> ${body.customerEmail}</p>
           <p><strong>Phone:</strong> ${body.customerPhone}</p>
           <p><strong>Country:</strong> ${body.customerCountry}</p>
           ${body.customerDiscordUsername ? `<p><strong>Discord:</strong> ${body.customerDiscordUsername}</p>` : ''}
           ${accountInfo}
-          <p><strong>Expected Amount:</strong> $${body.subscriptionPrice}/month</p>
+          ${body.subscriptionPrice ? `<p><strong>Expected Amount:</strong> $${body.subscriptionPrice}/month</p>` : ''}
           <p><strong>Payment Method:</strong> Card (Whop)</p>
-          <p><strong>Plan ID:</strong> ${body.subscriptionPlanId}</p>
+          ${body.subscriptionPlanId ? `<p><strong>Plan ID:</strong> ${body.subscriptionPlanId}</p>` : ''}
           <hr>
           <p><em>This order will be updated to COMPLETED once payment is confirmed.</em></p>
         `
@@ -82,22 +89,23 @@ export async function POST(req: Request) {
       await resend.emails.send({
         from: 'support@shockwave-capital.com',
         to: 'support@shockwave-capital.com',
-        subject: `✅ Card Order Completed - ${body.customerName}`,
+        subject: `✅ Card Order Completed - ${body.customerName} (${orderTypeLabel})`,
         html: `
-          <h2>Card Order Completed</h2>
+          <h2>Card Order Completed - ${orderTypeLabel}</h2>
           <p style="color: #00FF00;"><strong>✅ Status: COMPLETED</strong></p>
           <hr>
           <p><strong>Order ID:</strong> ${body.orderId}</p>
+          <p><strong>Order Type:</strong> ${orderTypeLabel}</p>
           <p><strong>Customer:</strong> ${body.customerName}</p>
           <p><strong>Email:</strong> ${body.customerEmail}</p>
           <p><strong>Phone:</strong> ${body.customerPhone}</p>
           <p><strong>Country:</strong> ${body.customerCountry}</p>
           ${body.customerDiscordUsername ? `<p><strong>Discord:</strong> ${body.customerDiscordUsername}</p>` : ''}
           ${accountInfo}
-          <p><strong>Total Amount:</strong> $${body.totalAmount || body.subscriptionPrice}/month</p>
+          ${body.subscriptionPrice ? `<p><strong>Total Amount:</strong> $${body.totalAmount || body.subscriptionPrice}/month</p>` : ''}
           <p><strong>Payment Method:</strong> Card</p>
-          <p><strong>Receipt ID:</strong> ${body.receiptId}</p>
-          <p><strong>Plan ID:</strong> ${body.planId}</p>
+          ${body.receiptId ? `<p><strong>Receipt ID:</strong> ${body.receiptId}</p>` : ''}
+          ${body.planId ? `<p><strong>Plan ID:</strong> ${body.planId}</p>` : ''}
         `
       });
     }
