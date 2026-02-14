@@ -497,27 +497,16 @@ export default function EarlyAccessPage() {
               <div className="mb-6">
                 <div className="p-4 bg-gradient-to-r from-[#0FF1CE]/10 to-[#5059FC]/10 rounded-xl border border-[#0FF1CE]/20 backdrop-blur-sm relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-20 h-20 bg-[#0FF1CE]/20 rounded-full blur-3xl"></div>
-                  <div className="rxelative">
+                  <div className="relative">
                     <div className="inline-block px-4 py-1 rounded-full bg-[#0FF1CE]/20 text-[#0FF1CE] font-bold uppercase tracking-wider text-sm mb-3">
-                      Challenge Rules
+                      50% Off + 1 Free Retry
                     </div>
                     <ul className="text-white text-sm space-y-3 text-left mt-3 max-w-md mx-auto">
                       <li className="flex items-center gap-2">
                         <span className="inline-block w-2 h-2 rounded-full bg-[#0FF1CE]" />
                         <span>
-                          <span className="font-bold text-[#0FF1CE]">15%</span> Max Drawdown
-                        </span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <span className="inline-block w-2 h-2 rounded-full bg-[#0FF1CE]" />
-                        <span>
-                          <span className="font-bold text-[#0FF1CE]">8%</span> Daily Drawdown
-                        </span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <span className="inline-block w-2 h-2 rounded-full bg-[#0FF1CE]" />
-                        <span>
-                          <span className="font-bold text-[#0FF1CE]">1:200</span> Leverage
+                          <span className="font-bold text-[#ffffff]">Use code:</span>{' '}
+                          <span className="font-mono bg-[#0FF1CE]/15 text-[#0FF1CE] px-2 py-0.5 rounded font-semibold tracking-wide ml-1">VDAY</span>
                         </span>
                       </li>
                     </ul>

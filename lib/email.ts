@@ -25,39 +25,10 @@ export async function sendAdminNotificationEmail(order: OrderData & { id?: strin
   try {
     console.log('Sending admin notification email for order:', order.id || 'unknown');
     
-    // Determine if this is a subscription or legacy order
-    const isSubscription = !!order.subscriptionTier;
-    const orderType = isSubscription 
-      ? `${order.subscriptionTier} Subscription` 
-      : `${order.challengeType} Challenge (${order.challengeAmount})`;
-    
-    // Build order details HTML
-    const orderDetailsHtml = isSubscription
-      ? `
-        <p style="margin-bottom: 5px;"><strong>Subscription Tier:</strong> ${order.subscriptionTier}</p>
-        <p style="margin-bottom: 5px;"><strong>Monthly Price:</strong> ${formatCurrency(order.subscriptionPrice || 0)}</p>
-        <p style="margin-bottom: 5px;"><strong>Active Accounts:</strong> ${order.accountsCount}</p>
-        ${order.accounts ? `
-          <div style="margin-top: 10px;">
-            <strong>Account Configurations:</strong>
-            <ul style="margin: 5px 0; padding-left: 20px;">
-              ${order.accounts.map((acc, idx) => `
-                <li>Account ${idx + 1}: ${acc.type || 'N/A'} - ${acc.amount || 'N/A'} - ${acc.platform || 'N/A'}</li>
-              `).join('')}
-            </ul>
-          </div>
-        ` : ''}
-      `
-      : `
-        <p style="margin-bottom: 5px;"><strong>Challenge Type:</strong> ${order.challengeType || 'N/A'}</p>
-        <p style="margin-bottom: 5px;"><strong>Account Size:</strong> ${order.challengeAmount || 'N/A'}</p>
-        <p style="margin-bottom: 5px;"><strong>Platform:</strong> ${order.platform || 'N/A'}</p>
-      `;
-    
     const { data, error } = await resend.emails.send({
       from: 'support@shockwave-capital.com',
       to: 'support@shockwave-capital.com',
-      subject: `New Order: ${orderType}`,
+      subject: `New Order: ${order.challengeType} Challenge (${order.challengeAmount})`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
           <div style="background-color: #0D0D0D; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
@@ -82,7 +53,9 @@ export async function sendAdminNotificationEmail(order: OrderData & { id?: strin
           
           <div style="margin-bottom: 30px;">
             <h2 style="color: #0FF1CE; font-size: 18px; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Order Details</h2>
-            ${orderDetailsHtml}
+            <p style="margin-bottom: 5px;"><strong>Challenge Type:</strong> ${order.challengeType}</p>
+            <p style="margin-bottom: 5px;"><strong>Account Size:</strong> ${order.challengeAmount}</p>
+            <p style="margin-bottom: 5px;"><strong>Platform:</strong> ${order.platform}</p>
             <p style="margin-bottom: 5px;"><strong>Payment Method:</strong> ${order.paymentMethod === 'card' ? 'Credit/Debit Card' : 'Cryptocurrency'}</p>
             <p style="margin-bottom: 5px;"><strong>Amount Paid:</strong> ${formatCurrency(order.totalAmount)}</p>
           </div>
@@ -108,10 +81,9 @@ export async function sendAdminNotificationEmail(order: OrderData & { id?: strin
         ${order.discordUsername ? `Discord: ${order.discordUsername}` : ''}
         
         Order Details:
-        ${isSubscription 
-          ? `Subscription Tier: ${order.subscriptionTier}\nMonthly Price: ${formatCurrency(order.subscriptionPrice || 0)}\nActive Accounts: ${order.accountsCount}`
-          : `Challenge Type: ${order.challengeType || 'N/A'}\nAccount Size: ${order.challengeAmount || 'N/A'}\nPlatform: ${order.platform || 'N/A'}`
-        }
+        Challenge Type: ${order.challengeType}
+        Account Size: ${order.challengeAmount}
+        Platform: ${order.platform}
         Payment Method: ${order.paymentMethod === 'card' ? 'Credit/Debit Card' : 'Cryptocurrency'}
         Amount Paid: ${formatCurrency(order.totalAmount)}
       `,
@@ -139,16 +111,10 @@ export async function sendCustomerReceiptEmail(order: OrderData & { id?: string 
   try {
     console.log('Sending customer receipt email to:', order.customerEmail);
     
-    // Determine if this is a subscription or legacy order
-    const isSubscription = !!order.subscriptionTier;
-    const orderType = isSubscription 
-      ? `${order.subscriptionTier} Subscription` 
-      : `${order.challengeType} Challenge`;
-    
     const { data, error } = await resend.emails.send({
       from: 'support@shockwave-capital.com',
       to: order.customerEmail,
-      subject: `Your Shockwave Capital ${orderType} Order`,
+      subject: `Your Shockwave Capital ${order.challengeType} Challenge Order`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
           <div style="background-color: #0D0D0D; padding: 20px; margin-bottom: 20px; border-radius: 5px; text-align: center;">
@@ -157,26 +123,17 @@ export async function sendCustomerReceiptEmail(order: OrderData & { id?: string 
           
           <div style="margin-bottom: 30px;">
             <p>Hello ${order.firstName},</p>
-            <p>Thank you for ${isSubscription ? `subscribing to our ${order.subscriptionTier} tier` : `purchasing our ${order.challengeType} Challenge`}. We're excited to see how you perform!</p>
-            <p>Your payment has been processed successfully${isSubscription ? '' : ', and we\'re preparing your trading account credentials now'}.</p>
+            <p>Thank you for purchasing our ${order.challengeType} Challenge. We're excited to see how you perform!</p>
+            <p>Your payment has been processed successfully, and we're preparing your trading account credentials now.</p>
           </div>
           
           <div style="margin-bottom: 30px; background-color: #f9f9f9; padding: 15px; border-radius: 5px;">
             <h2 style="color: #333; font-size: 18px; margin-bottom: 15px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">Order Summary</h2>
             <p style="margin-bottom: 5px;"><strong>Order ID:</strong> ${order.id || 'N/A'}</p>
             <p style="margin-bottom: 5px;"><strong>Date:</strong> ${order.createdAt.toDate().toLocaleString()}</p>
-            ${isSubscription 
-              ? `
-                <p style="margin-bottom: 5px;"><strong>Subscription Tier:</strong> ${order.subscriptionTier}</p>
-                <p style="margin-bottom: 5px;"><strong>Monthly Price:</strong> ${formatCurrency(order.subscriptionPrice || 0)}</p>
-                <p style="margin-bottom: 5px;"><strong>Active Accounts:</strong> ${order.accountsCount}</p>
-              ` 
-              : `
-                <p style="margin-bottom: 5px;"><strong>Challenge Type:</strong> ${order.challengeType || 'N/A'}</p>
-                <p style="margin-bottom: 5px;"><strong>Account Size:</strong> ${order.challengeAmount || 'N/A'}</p>
-                <p style="margin-bottom: 5px;"><strong>Platform:</strong> ${order.platform || 'N/A'}</p>
-              `
-            }
+            <p style="margin-bottom: 5px;"><strong>Challenge Type:</strong> ${order.challengeType}</p>
+            <p style="margin-bottom: 5px;"><strong>Account Size:</strong> ${order.challengeAmount}</p>
+            <p style="margin-bottom: 5px;"><strong>Platform:</strong> ${order.platform}</p>
             <p style="margin-bottom: 5px;"><strong>Amount Paid:</strong> ${formatCurrency(order.totalAmount)}</p>
           </div>
           
@@ -186,33 +143,24 @@ export async function sendCustomerReceiptEmail(order: OrderData & { id?: string 
             <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
               <div style="background-color: #0FF1CE; color: #000; border-radius: 50%; width: 25px; height: 25px; display: flex; justify-content: center; align-items: center; margin-right: 10px; flex-shrink: 0;">1</div>
               <div>
-                <h3 style="margin: 0 0 5px 0; color: #333;">${isSubscription ? 'Configure Your Accounts' : 'Receive Your Login Credentials'}</h3>
-                <p style="margin: 0; color: #666;">${isSubscription 
-                  ? 'Log into your dashboard to configure and activate your challenge accounts with unlimited retries.' 
-                  : 'We\'ll send your login credentials to this email address within the next few hours. During busy periods, this may take up to 24 hours.'
-                }</p>
+                <h3 style="margin: 0 0 5px 0; color: #333;">Receive Your Login Credentials</h3>
+                <p style="margin: 0; color: #666;">We'll send your login credentials to this email address within the next few hours. During busy periods, this may take up to 24 hours.</p>
               </div>
             </div>
             
             <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
               <div style="background-color: #0FF1CE; color: #000; border-radius: 50%; width: 25px; height: 25px; display: flex; justify-content: center; align-items: center; margin-right: 10px; flex-shrink: 0;">2</div>
               <div>
-                <h3 style="margin: 0 0 5px 0; color: #333;">${isSubscription ? 'Take Challenges' : 'Log Into Your Trading Platform'}</h3>
-                <p style="margin: 0; color: #666;">${isSubscription
-                  ? 'Complete challenges with unlimited retries - only pay activation fees when you pass.'
-                  : `Download and install ${order.platform || 'your trading platform'} if you haven't already, then log in using the credentials we'll provide.`
-                }</p>
+                <h3 style="margin: 0 0 5px 0; color: #333;">Log Into Your Trading Platform</h3>
+                <p style="margin: 0; color: #666;">Download and install ${order.platform} if you haven't already, then log in using the credentials we'll provide.</p>
               </div>
             </div>
             
             <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
               <div style="background-color: #0FF1CE; color: #000; border-radius: 50%; width: 25px; height: 25px; display: flex; justify-content: center; align-items: center; margin-right: 10px; flex-shrink: 0;">3</div>
               <div>
-                <h3 style="margin: 0 0 5px 0; color: #333;">${isSubscription ? 'Get Funded' : 'Start Trading'}</h3>
-                <p style="margin: 0; color: #666;">${isSubscription
-                  ? 'Pass your challenges and activate funded accounts - cancel anytime with no obligations.'
-                  : 'Begin trading with your new account. Remember to follow the challenge rules to maximize your chances of success!'
-                }</p>
+                <h3 style="margin: 0 0 5px 0; color: #333;">Start Trading</h3>
+                <p style="margin: 0; color: #666;">Begin trading with your new account. Remember to follow the challenge rules to maximize your chances of success!</p>
               </div>
             </div>
           </div>

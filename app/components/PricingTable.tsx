@@ -200,7 +200,7 @@ const challengeData: ChallengeData = {
         }
       },
       {
-        name: "Funded Activation Fee",
+        name: "Refundabe Fee",
         subtitle: "Pay only when you pass",
         tooltip: "funded-activation-fee",
         values: {
@@ -683,7 +683,7 @@ export default function PricingTable() {
       <div className="text-center mb-8">
         {/* Number Badge */}
         <div className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black rounded-full text-lg font-bold mb-4">
-          2
+          1
         </div>
         
         {/* Title */}
@@ -869,14 +869,16 @@ export default function PricingTable() {
 
                     {/* Pricing */}
                     <div className="p-3 pt-2 border-t border-[#0FF1CE]/20">
-                      <div className="flex items-center justify-center gap-1.5 mb-2">
-                        <span className="text-[#0FF1CE] text-lg font-bold">${data.prices[account]}</span>
+                      <div className="flex flex-col items-center justify-center gap-0.5 mb-2">
+                        <span className="text-gray-400 text-xs line-through">${data.prices[account]}</span>
+                        <span className="text-[#0FF1CE] text-lg font-bold">${(data.prices[account] / 2).toFixed(2)}</span>
+                        <span className="text-[#0FF1CE] text-[10px] font-semibold">50% OFF</span>
                       </div>
                       
                       <button
                         onClick={() => {
                           sessionStorage.setItem('preselectedBalance', account.toString());
-                          handlePurchase(`${data.name} $${account.toLocaleString()}`, data.prices[account]);
+                          handlePurchase(`${data.name} $${account.toLocaleString()}`, data.prices[account] / 2);
                         }}
                         className="w-full bg-[#0FF1CE] hover:bg-[#0AA89E] text-black font-bold py-1.5 px-2 rounded-md transition-all duration-300 hover:scale-105 text-xs"
                       >
@@ -922,14 +924,17 @@ export default function PricingTable() {
                   onClick={() => {
                     // Update session storage with correct account before navigation
                     sessionStorage.setItem('preselectedBalance', selectedAccount.toString());
-                    handlePurchase(`${data.name} $${selectedAccount.toLocaleString()}`, data.prices[selectedAccount]);
+                    handlePurchase(`${data.name} $${selectedAccount.toLocaleString()}`, data.prices[selectedAccount] / 2);
                   }}
                   className="w-full group"
                 >
                   <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-[#0FF1CE] to-[#0AA89E] p-[2px] transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[#0FF1CE]/25">
                     <div className="flex flex-col items-center rounded-lg bg-gradient-to-br from-[#0FF1CE] to-[#0AA89E] px-6 py-3 transition-all duration-300">
                       <span className="text-lg font-bold text-black">Get Plan</span>
-                      <span className="text-sm text-black/80">Funded Activation Fee: ${data.prices[selectedAccount]}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-black/60 line-through">Was: ${data.prices[selectedAccount]}</span>
+                        <span className="text-sm text-black font-bold">Now: ${(data.prices[selectedAccount] / 2).toFixed(2)}</span>
+                      </div>
                     </div>
                   </div>
                 </button>

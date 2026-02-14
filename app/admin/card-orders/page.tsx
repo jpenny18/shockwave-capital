@@ -13,63 +13,53 @@ import {
   Filter,
   ChevronRight,
   ChevronUp,
-  Copy,
-  CreditCard
+  CreditCard,
+  CheckSquare,
+  Square
 } from 'lucide-react';
-
-interface AccountConfig {
-  type: string;
-  amount: string;
-  platform: string;
-}
 
 interface CardOrder {
   id: string;
-  status: 'PENDING' | 'COMPLETED' | 'CANCELLED';
-  subscriptionTier?: 'entry' | 'surge' | 'pulse';
-  subscriptionPrice?: number;
-  subscriptionPlanId?: string;
-  accountsCount?: number;
-  accounts?: AccountConfig[];
-  challengeType?: string;
-  challengeAmount?: string;
-  platform?: string;
+  status: 'pending' | 'completed' | 'cancelled';
+  challengeType: string;
+  challengeAmount: string;
+  platform: string;
+  addOns?: string[];
   totalAmount: number;
   customerEmail: string;
-  customerName: string;
-  customerPhone: string;
-  customerCountry: string;
-  customerDiscordUsername?: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  country: string;
+  discordUsername?: string;
   paymentMethod: string;
   paymentStatus: string;
-  receiptId?: string;
-  planId?: string;
   createdAt: string;
   updatedAt: string;
 }
+
+type ChallengeTypeFilter = 'ALL' | 'Standard' | '1-Step' | 'Instant' | 'Gauntlet';
 
 export default function CardOrdersPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<CardOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'COMPLETED' | 'CANCELLED'>('ALL');
-  const [tierFilter, setTierFilter] = useState<'ALL' | 'entry' | 'surge' | 'pulse'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'pending' | 'completed' | 'cancelled'>('ALL');
+  const [challengeTypeFilter, setChallengeTypeFilter] = useState<ChallengeTypeFilter>('ALL');
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-  const [copiedText, setCopiedText] = useState<string | null>(null);
+  const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
+  const [showBulkActions, setShowBulkActions] = useState(false);
 
-  // Fetch orders from API
   const fetchOrders = async () => {
     try {
-      setLoading(true);
       const response = await fetch('/api/card-orders');
       if (!response.ok) throw new Error('Failed to fetch orders');
-      
       const data = await response.json();
-      setOrders(data.orders || []);
+      setOrders(data.orders);
+      setLoading(false);
     } catch (error) {
-      console.error('Error fetching orders:', error);
-    } finally {
+      console.error('Error fetching card orders:', error);
       setLoading(false);
     }
   };
@@ -78,25 +68,26 @@ export default function CardOrdersPage() {
     fetchOrders();
   }, []);
 
-  const handleStatusChange = async (orderId: string, newStatus: 'COMPLETED' | 'CANCELLED') => {
+  const handleStatusChange = async (orderId: string, newStatus: 'completed' | 'cancelled') => {
     try {
       const response = await fetch('/api/card-orders', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           orderId,
           status: newStatus,
-          paymentStatus: newStatus.toLowerCase(),
-        })
+          paymentStatus: newStatus,
+        }),
       });
 
       if (!response.ok) throw new Error('Failed to update order');
-
-      // Refresh orders after update
+      
+      // Refresh orders
       await fetchOrders();
     } catch (error) {
       console.error('Error updating order:', error);
-      alert('Failed to update order. Please try again.');
     }
   };
 
@@ -109,12 +100,65 @@ export default function CardOrdersPage() {
       });
 
       if (!response.ok) throw new Error('Failed to delete order');
-
-      // Refresh orders after delete
+      
+      // Refresh orders
       await fetchOrders();
     } catch (error) {
       console.error('Error deleting order:', error);
-      alert('Failed to delete order. Please try again.');
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedOrders.size === 0) return;
+    if (!confirm(`Are you sure you want to delete ${selectedOrders.size} order(s)?`)) return;
+
+    try {
+      const deletePromises = Array.from(selectedOrders).map(orderId =>
+        fetch(`/api/card-orders?orderId=${orderId}`, { method: 'DELETE' })
+      );
+      await Promise.all(deletePromises);
+      setSelectedOrders(new Set());
+      await fetchOrders();
+    } catch (error) {
+      console.error('Error bulk deleting orders:', error);
+    }
+  };
+
+  const handleBulkStatusChange = async (newStatus: 'completed' | 'cancelled') => {
+    if (selectedOrders.size === 0) return;
+    if (!confirm(`Are you sure you want to mark ${selectedOrders.size} order(s) as ${newStatus}?`)) return;
+
+    try {
+      const updatePromises = Array.from(selectedOrders).map(orderId =>
+        fetch('/api/card-orders', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId, status: newStatus, paymentStatus: newStatus }),
+        })
+      );
+      await Promise.all(updatePromises);
+      setSelectedOrders(new Set());
+      await fetchOrders();
+    } catch (error) {
+      console.error('Error bulk updating orders:', error);
+    }
+  };
+
+  const toggleOrderSelection = (orderId: string) => {
+    const newSelected = new Set(selectedOrders);
+    if (newSelected.has(orderId)) {
+      newSelected.delete(orderId);
+    } else {
+      newSelected.add(orderId);
+    }
+    setSelectedOrders(newSelected);
+  };
+
+  const toggleAllOrders = () => {
+    if (selectedOrders.size === filteredOrders.length) {
+      setSelectedOrders(new Set());
+    } else {
+      setSelectedOrders(new Set(filteredOrders.map(o => o.id)));
     }
   };
 
@@ -128,403 +172,365 @@ export default function CardOrdersPage() {
     setExpandedRows(newExpandedRows);
   };
 
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedText(text);
-    setTimeout(() => setCopiedText(null), 2000);
-  };
+  const filteredOrders = orders
+    .filter((order) => {
+      const matchesSearch = 
+        order.customerEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.challengeType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.id.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesStatus = statusFilter === 'ALL' || order.status === statusFilter;
+      const matchesChallengeType = challengeTypeFilter === 'ALL' || order.challengeType === challengeTypeFilter;
+      
+      return matchesSearch && matchesStatus && matchesChallengeType;
+    })
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()); // Most recent first
 
-  const getStats = () => {
-    const totalOrders = orders.length;
-    const totalValue = orders.reduce((sum, order) => sum + (order.totalAmount || order.subscriptionPrice || 0), 0);
-    const completedOrders = orders.filter(order => order.status === 'COMPLETED').length;
-    const pendingOrders = orders.filter(order => order.status === 'PENDING').length;
-    const monthlyRevenue = orders.filter(order => order.status === 'COMPLETED').reduce((sum, order) => sum + (order.totalAmount || order.subscriptionPrice || 0), 0);
-
-    return {
-      totalOrders,
-      totalValue,
-      completedOrders,
-      pendingOrders,
-      monthlyRevenue
+  const getStatusBadge = (status: string) => {
+    const statusConfig = {
+      pending: { bg: 'bg-yellow-500/20', text: 'text-yellow-500', label: 'Pending' },
+      completed: { bg: 'bg-green-500/20', text: 'text-green-500', label: 'Completed' },
+      cancelled: { bg: 'bg-red-500/20', text: 'text-red-500', label: 'Cancelled' },
     };
+    
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
+    
+    return (
+      <span className={`${config.bg} ${config.text} px-3 py-1 rounded-full text-xs font-bold`}>
+        {config.label}
+      </span>
+    );
   };
 
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = 
-      order.customerEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (order.receiptId && order.receiptId.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (order.challengeType && order.challengeType.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesStatus = statusFilter === 'ALL' || order.status === statusFilter;
-    const matchesTier = tierFilter === 'ALL' || order.subscriptionTier === tierFilter;
-
-    return matchesSearch && matchesStatus && matchesTier;
-  });
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0FF1CE]"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-          <CreditCard className="text-[#0FF1CE]" size={28} />
-          Card Orders (Whop)
-        </h1>
-        <button
-          onClick={fetchOrders}
-          className="flex items-center gap-2 px-4 py-2 bg-[#0FF1CE]/10 hover:bg-[#0FF1CE]/20 text-[#0FF1CE] rounded-lg"
-        >
-          <RefreshCw size={16} />
-          <span>Refresh</span>
-        </button>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="bg-[#151515] p-4 rounded-lg border border-[#2F2F2F]/50">
-          <div className="text-gray-400 text-sm">Total Orders</div>
-          <div className="text-2xl font-bold text-white">{getStats().totalOrders}</div>
-        </div>
-        
-        <div className="bg-[#151515] p-4 rounded-lg border border-[#2F2F2F]/50">
-          <div className="text-gray-400 text-sm">Pending Orders</div>
-          <div className="text-2xl font-bold text-yellow-400">{getStats().pendingOrders}</div>
+    <div className="min-h-screen bg-black text-white p-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-transparent bg-clip-text">
+              Card Orders
+            </h1>
+            <p className="text-gray-400">Manage Whop checkout orders</p>
+          </div>
+          <button
+            onClick={fetchOrders}
+            className="flex items-center gap-2 px-4 py-2 bg-[#0FF1CE]/10 border border-[#0FF1CE]/30 rounded-lg hover:bg-[#0FF1CE]/20 transition-all"
+          >
+            <RefreshCw size={16} />
+            <span>Refresh</span>
+          </button>
         </div>
 
-        <div className="bg-[#151515] p-4 rounded-lg border border-[#2F2F2F]/50">
-          <div className="text-gray-400 text-sm">Completed Orders</div>
-          <div className="text-2xl font-bold text-green-400">{getStats().completedOrders}</div>
+        {/* Challenge Type Tabs */}
+        <div className="mb-6 flex items-center gap-2 overflow-x-auto pb-2">
+          {(['ALL', 'Standard', '1-Step', 'Instant', 'Gauntlet'] as ChallengeTypeFilter[]).map((type) => (
+            <button
+              key={type}
+              onClick={() => setChallengeTypeFilter(type)}
+              className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition-all ${
+                challengeTypeFilter === type
+                  ? 'bg-[#0FF1CE] text-black'
+                  : 'bg-[#1A1A1A] text-gray-400 hover:bg-[#2F2F2F] border border-[#2F2F2F]'
+              }`}
+            >
+              {type}
+              {type !== 'ALL' && (
+                <span className="ml-2 text-xs opacity-75">
+                  ({orders.filter(o => o.challengeType === type).length})
+                </span>
+              )}
+            </button>
+          ))}
         </div>
 
-        <div className="bg-[#151515] p-4 rounded-lg border border-[#2F2F2F]/50">
-          <div className="text-gray-400 text-sm">Monthly Revenue</div>
-          <div className="text-2xl font-bold text-[#0FF1CE]">${getStats().monthlyRevenue}</div>
-        </div>
+        {/* Bulk Actions Bar */}
+        {selectedOrders.size > 0 && (
+          <div className="mb-6 bg-[#0FF1CE]/10 border border-[#0FF1CE]/30 rounded-lg p-4">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-2">
+                <CheckSquare size={20} className="text-[#0FF1CE]" />
+                <span className="text-white font-semibold">{selectedOrders.size} order(s) selected</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleBulkStatusChange('completed')}
+                  className="px-4 py-2 bg-green-500/20 text-green-500 rounded-lg hover:bg-green-500/30 transition-all flex items-center gap-2"
+                >
+                  <Check size={16} />
+                  Mark Completed
+                </button>
+                <button
+                  onClick={() => handleBulkStatusChange('cancelled')}
+                  className="px-4 py-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500/30 transition-all flex items-center gap-2"
+                >
+                  <X size={16} />
+                  Mark Cancelled
+                </button>
+                <button
+                  onClick={handleBulkDelete}
+                  className="px-4 py-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500/30 transition-all flex items-center gap-2"
+                >
+                  <Trash2 size={16} />
+                  Delete Selected
+                </button>
+                <button
+                  onClick={() => setSelectedOrders(new Set())}
+                  className="px-4 py-2 bg-gray-500/20 text-gray-400 rounded-lg hover:bg-gray-500/30 transition-all"
+                >
+                  Clear Selection
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
-        <div className="bg-[#151515] p-4 rounded-lg border border-[#2F2F2F]/50">
-          <div className="text-gray-400 text-sm">Potential Revenue</div>
-          <div className="text-2xl font-bold text-white">${getStats().totalValue}</div>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-wrap gap-4">
-        <div className="flex-1 min-w-[200px]">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+        {/* Filters */}
+        <div className="mb-6 flex flex-col md:flex-row gap-4">
+          {/* Search */}
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             <input
               type="text"
-              placeholder="Search by email, name, or receipt..."
+              placeholder="Search by email, name, ID, or challenge type..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-[#151515] border border-[#2F2F2F]/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#0FF1CE]/50"
+              className="w-full pl-10 pr-4 py-3 bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#0FF1CE] transition-colors"
             />
+          </div>
+
+          {/* Status Filter */}
+          <div className="relative min-w-[200px]">
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as any)}
+              className="w-full pl-10 pr-4 py-3 bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg text-white focus:outline-none focus:border-[#0FF1CE] transition-colors appearance-none cursor-pointer"
+            >
+              <option value="ALL">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
           </div>
         </div>
 
-        <div className="relative">
-          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="pl-10 pr-8 py-2 bg-[#151515] border border-[#2F2F2F]/50 rounded-lg text-white appearance-none focus:outline-none focus:border-[#0FF1CE]/50"
-          >
-            <option value="ALL">All Status</option>
-            <option value="PENDING">Pending</option>
-            <option value="COMPLETED">Completed</option>
-            <option value="CANCELLED">Cancelled</option>
-          </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg p-4">
+            <div className="text-gray-400 text-sm mb-1">Total Orders</div>
+            <div className="text-2xl font-bold text-white">{orders.length}</div>
+          </div>
+          <div className="bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg p-4">
+            <div className="text-gray-400 text-sm mb-1">Pending</div>
+            <div className="text-2xl font-bold text-yellow-500">
+              {orders.filter(o => o.status === 'pending').length}
+            </div>
+          </div>
+          <div className="bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg p-4">
+            <div className="text-gray-400 text-sm mb-1">Completed</div>
+            <div className="text-2xl font-bold text-green-500">
+              {orders.filter(o => o.status === 'completed').length}
+            </div>
+          </div>
+          <div className="bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg p-4">
+            <div className="text-gray-400 text-sm mb-1">Total Revenue</div>
+            <div className="text-2xl font-bold text-[#0FF1CE]">
+              ${orders.filter(o => o.status === 'completed').reduce((sum, o) => sum + o.totalAmount, 0).toFixed(2)}
+            </div>
+          </div>
         </div>
 
-        <div className="relative">
-          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-          <select
-            value={tierFilter}
-            onChange={(e) => setTierFilter(e.target.value as any)}
-            className="pl-10 pr-8 py-2 bg-[#151515] border border-[#2F2F2F]/50 rounded-lg text-white appearance-none focus:outline-none focus:border-[#0FF1CE]/50"
-          >
-            <option value="ALL">All Tiers</option>
-            <option value="entry">Entry</option>
-            <option value="surge">Surge</option>
-            <option value="pulse">Pulse</option>
-          </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-        </div>
-      </div>
-
-      {/* Orders Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="border-b border-[#2F2F2F]/50">
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-400"></th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Date</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Customer</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Subscription</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Price</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Status</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
-                  <div className="flex items-center justify-center gap-2">
-                    <RefreshCw className="animate-spin" size={16} />
-                    <span>Loading orders...</span>
-                  </div>
-                </td>
-              </tr>
-            ) : filteredOrders.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
-                  No orders found
-                </td>
-              </tr>
-            ) : (
-              filteredOrders.map((order) => (
-                <>
-                  <tr key={order.id} className="border-b border-[#2F2F2F]/50 hover:bg-[#151515]">
-                    <td className="px-4 py-4">
+        {/* Orders Table */}
+        <div className="bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg overflow-hidden">
+          {filteredOrders.length === 0 ? (
+            <div className="p-8 text-center text-gray-400">
+              <CreditCard size={48} className="mx-auto mb-4 opacity-50" />
+              <p>No card orders found</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-[#0D0D0D] border-b border-[#2F2F2F]">
+                  <tr>
+                    <th className="px-4 py-3 text-left" onClick={(e) => e.stopPropagation()}>
                       <button
-                        onClick={() => toggleRowExpansion(order.id)}
-                        className="p-1 hover:bg-[#2F2F2F]/20 rounded"
+                        onClick={toggleAllOrders}
+                        className="text-gray-400 hover:text-[#0FF1CE] transition-colors"
                       >
-                        {expandedRows.has(order.id) ? (
-                          <ChevronUp size={16} className="text-gray-400" />
+                        {selectedOrders.size === filteredOrders.length && filteredOrders.length > 0 ? (
+                          <CheckSquare size={20} />
                         ) : (
-                          <ChevronRight size={16} className="text-gray-400" />
+                          <Square size={20} />
                         )}
                       </button>
-                    </td>
-                    <td className="px-4 py-4 text-sm">
-                      <div className="text-white">{new Date(order.createdAt).toLocaleDateString()}</div>
-                      <div className="text-gray-400 text-xs">{new Date(order.createdAt).toLocaleTimeString()}</div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-2">
-                        <div>
-                          <div className="text-sm font-medium text-white">{order.customerName}</div>
-                          <div className="text-sm text-gray-400">{order.customerEmail}</div>
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCopy(order.customerName);
-                            }}
-                            className="p-1 hover:bg-[#2F2F2F]/20 rounded transition-colors"
-                            title="Copy name"
-                          >
-                            {copiedText === order.customerName ? (
-                              <Check size={14} className="text-green-400" />
-                            ) : (
-                              <Copy size={14} className="text-gray-400" />
-                            )}
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCopy(order.customerEmail);
-                            }}
-                            className="p-1 hover:bg-[#2F2F2F]/20 rounded transition-colors"
-                            title="Copy email"
-                          >
-                            {copiedText === order.customerEmail ? (
-                              <Check size={14} className="text-green-400" />
-                            ) : (
-                              <Copy size={14} className="text-gray-400" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      {order.subscriptionTier ? (
-                        <>
-                          <div className="text-sm font-medium text-white capitalize">{order.subscriptionTier}</div>
-                          <div className="text-sm text-gray-400">{order.accountsCount} {order.accountsCount === 1 ? 'Account' : 'Accounts'}</div>
-                        </>
-                      ) : (
-                        <>
-                          <div className="text-sm font-medium text-white">{order.challengeType || 'Single Order'}</div>
-                          <div className="text-sm text-gray-400">{order.challengeAmount || 'N/A'}</div>
-                        </>
-                      )}
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="text-sm font-medium text-[#0FF1CE]">
-                        ${order.totalAmount || order.subscriptionPrice || 0}
-                        {order.subscriptionTier && '/mo'}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        order.status === 'COMPLETED' ? 'bg-green-400/10 text-green-400' :
-                        order.status === 'CANCELLED' ? 'bg-red-400/10 text-red-400' :
-                        'bg-yellow-400/10 text-yellow-400'
-                      }`}>
-                        {order.status === 'COMPLETED' && <Check size={12} className="mr-1" />}
-                        {order.status === 'CANCELLED' && <X size={12} className="mr-1" />}
-                        {order.status === 'PENDING' && <Clock size={12} className="mr-1" />}
-                        {order.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-2">
-                        {order.status === 'PENDING' && (
-                          <>
-                            <button
-                              onClick={() => handleStatusChange(order.id, 'COMPLETED')}
-                              className="p-1 text-green-400 hover:bg-green-400/10 rounded"
-                              title="Mark as Completed"
-                            >
-                              <Check size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleStatusChange(order.id, 'CANCELLED')}
-                              className="p-1 text-red-400 hover:bg-red-400/10 rounded"
-                              title="Mark as Cancelled"
-                            >
-                              <X size={16} />
-                            </button>
-                          </>
-                        )}
-                        <button
-                          onClick={() => handleDelete(order.id)}
-                          className="p-1 text-red-400 hover:bg-red-400/10 rounded"
-                          title="Delete Order"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Order
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Customer
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Challenge
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Amount
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
-                  {expandedRows.has(order.id) && (
-                    <tr className="bg-[#151515]/50">
-                      <td colSpan={7} className="px-8 py-4">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                          {/* Customer Details */}
-                          <div>
-                            <h3 className="text-[#0FF1CE] font-medium mb-2">Customer Details</h3>
-                            <div className="space-y-2 text-sm">
-                              <div>
-                                <div className="text-gray-400">Full Name</div>
-                                <div className="text-white">{order.customerName}</div>
-                              </div>
-                              <div>
-                                <div className="text-gray-400">Email</div>
-                                <div className="text-white">{order.customerEmail}</div>
-                              </div>
-                              <div>
-                                <div className="text-gray-400">Phone</div>
-                                <div className="text-white">{order.customerPhone}</div>
-                              </div>
-                              <div>
-                                <div className="text-gray-400">Country</div>
-                                <div className="text-white">{order.customerCountry}</div>
-                              </div>
-                              {order.customerDiscordUsername && (
-                                <div>
-                                  <div className="text-gray-400">Discord</div>
-                                  <div className="text-white">{order.customerDiscordUsername}</div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Order Details */}
-                          <div>
-                            <h3 className="text-[#0FF1CE] font-medium mb-2">
-                              {order.subscriptionTier ? 'Subscription Details' : 'Order Details'}
-                            </h3>
-                            <div className="space-y-2 text-sm">
-                              {order.subscriptionTier ? (
-                                <>
-                                  <div>
-                                    <div className="text-gray-400">Tier</div>
-                                    <div className="text-white capitalize">{order.subscriptionTier}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-gray-400">Monthly Price</div>
-                                    <div className="text-white">${order.subscriptionPrice}/mo</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-gray-400">Active Accounts</div>
-                                    <div className="text-white">{order.accountsCount}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-gray-400">Plan ID</div>
-                                    <div className="text-white text-xs font-mono">{order.subscriptionPlanId}</div>
-                                  </div>
-                                </>
-                              ) : (
-                                <>
-                                  <div>
-                                    <div className="text-gray-400">Order Type</div>
-                                    <div className="text-white">{order.challengeType || 'Single Purchase'}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-gray-400">Account Size</div>
-                                    <div className="text-white">{order.challengeAmount || 'N/A'}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-gray-400">Platform</div>
-                                    <div className="text-white">{order.platform || 'N/A'}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-gray-400">Total Amount</div>
-                                    <div className="text-white">${order.totalAmount}</div>
-                                  </div>
-                                </>
-                              )}
-                              {order.receiptId && (
-                                <div>
-                                  <div className="text-gray-400">Receipt ID</div>
-                                  <div className="text-white text-xs font-mono">{order.receiptId}</div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Account Configurations - Only for subscription orders */}
-                          {order.subscriptionTier && order.accounts && order.accounts.length > 0 && (
+                </thead>
+                <tbody className="divide-y divide-[#2F2F2F]">
+                  {filteredOrders.map((order) => (
+                    <>
+                      <tr
+                        key={order.id}
+                        className="hover:bg-[#1F1F1F] transition-colors"
+                      >
+                        <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={() => toggleOrderSelection(order.id)}
+                            className="text-gray-400 hover:text-[#0FF1CE] transition-colors"
+                          >
+                            {selectedOrders.has(order.id) ? (
+                              <CheckSquare size={20} className="text-[#0FF1CE]" />
+                            ) : (
+                              <Square size={20} />
+                            )}
+                          </button>
+                        </td>
+                        <td className="px-4 py-4 cursor-pointer" onClick={() => toggleRowExpansion(order.id)}>
+                          <div className="flex items-center gap-2">
+                            {expandedRows.has(order.id) ? (
+                              <ChevronDown size={16} className="text-gray-400" />
+                            ) : (
+                              <ChevronRight size={16} className="text-gray-400" />
+                            )}
                             <div>
-                              <h3 className="text-[#0FF1CE] font-medium mb-2">Account Configurations</h3>
-                              <div className="space-y-3">
-                                {order.accounts.map((account, idx) => (
-                                  <div key={idx} className="bg-[#1A1A1A] p-3 rounded-lg">
-                                    <div className="text-[#0FF1CE] font-semibold mb-2 text-sm">Account {idx + 1}</div>
-                                    <div className="grid grid-cols-3 gap-2 text-xs">
-                                      <div>
-                                        <div className="text-gray-500">Type</div>
-                                        <div className="text-white">{account.type}</div>
-                                      </div>
-                                      <div>
-                                        <div className="text-gray-500">Amount</div>
-                                        <div className="text-white">{account.amount}</div>
-                                      </div>
-                                      <div>
-                                        <div className="text-gray-500">Platform</div>
-                                        <div className="text-white">{account.platform}</div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
+                              <div className="text-sm font-mono text-gray-400">
+                                {order.id.substring(0, 8)}...
                               </div>
                             </div>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </>
-              ))
-            )}
-          </tbody>
-        </table>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div>
+                            <div className="text-sm font-medium text-white">
+                              {order.firstName} {order.lastName}
+                            </div>
+                            <div className="text-xs text-gray-400">{order.customerEmail}</div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div>
+                            <div className="text-sm font-medium text-white">{order.challengeType}</div>
+                            <div className="text-xs text-gray-400">
+                              {order.challengeAmount} • {order.platform}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="text-sm font-bold text-[#0FF1CE]">
+                            ${order.totalAmount.toFixed(2)}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4">
+                          {getStatusBadge(order.status)}
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="text-xs text-gray-400">
+                            {new Date(order.createdAt).toLocaleDateString()}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex gap-2">
+                            {order.status === 'pending' && (
+                              <>
+                                <button
+                                  onClick={() => handleStatusChange(order.id, 'completed')}
+                                  className="p-2 bg-green-500/20 text-green-500 rounded hover:bg-green-500/30 transition-colors"
+                                  title="Mark as Completed"
+                                >
+                                  <Check size={16} />
+                                </button>
+                                <button
+                                  onClick={() => handleStatusChange(order.id, 'cancelled')}
+                                  className="p-2 bg-red-500/20 text-red-500 rounded hover:bg-red-500/30 transition-colors"
+                                  title="Cancel Order"
+                                >
+                                  <X size={16} />
+                                </button>
+                              </>
+                            )}
+                            <button
+                              onClick={() => handleDelete(order.id)}
+                              className="p-2 bg-red-500/20 text-red-500 rounded hover:bg-red-500/30 transition-colors"
+                              title="Delete Order"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                      {expandedRows.has(order.id) && (
+                        <tr className="bg-[#0D0D0D]">
+                          <td colSpan={8} className="px-4 py-4">
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <div className="text-gray-400 mb-2 font-semibold">Contact Information</div>
+                                <div className="space-y-1">
+                                  <div><span className="text-gray-500">Email:</span> <span className="text-white">{order.customerEmail}</span></div>
+                                  <div><span className="text-gray-500">Phone:</span> <span className="text-white">{order.phone}</span></div>
+                                  <div><span className="text-gray-500">Country:</span> <span className="text-white">{order.country}</span></div>
+                                  {order.discordUsername && (
+                                    <div><span className="text-gray-500">Discord:</span> <span className="text-white">{order.discordUsername}</span></div>
+                                  )}
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-gray-400 mb-2 font-semibold">Order Details</div>
+                                <div className="space-y-1">
+                                  <div><span className="text-gray-500">Payment Method:</span> <span className="text-white">Card</span></div>
+                                  <div><span className="text-gray-500">Payment Status:</span> <span className="text-white">{order.paymentStatus}</span></div>
+                                  {order.addOns && order.addOns.length > 0 && (
+                                    <div><span className="text-gray-500">Add-ons:</span> <span className="text-white">{order.addOns.join(', ')}</span></div>
+                                  )}
+                                  <div><span className="text-gray-500">Created:</span> <span className="text-white">{new Date(order.createdAt).toLocaleString()}</span></div>
+                                  <div><span className="text-gray-500">Updated:</span> <span className="text-white">{new Date(order.updatedAt).toLocaleString()}</span></div>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

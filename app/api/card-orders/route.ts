@@ -1,89 +1,64 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
+import { Timestamp } from 'firebase-admin/firestore';
 
-export async function GET(req: Request) {
+export async function GET(request: NextRequest) {
   try {
-    // Fetch all card orders from Firebase Admin SDK (bypasses security rules)
-    const ordersSnapshot = await db.collection('card-orders')
-      .orderBy('createdAt', 'desc')
-      .get();
+    const ordersRef = db.collection('card-orders');
+    const snapshot = await ordersRef.orderBy('createdAt', 'desc').get();
+    
+    const orders = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        createdAt: data.createdAt?._seconds 
+          ? new Date(data.createdAt._seconds * 1000).toISOString()
+          : data.createdAt || new Date().toISOString(),
+        updatedAt: data.updatedAt?._seconds
+          ? new Date(data.updatedAt._seconds * 1000).toISOString()
+          : data.updatedAt || new Date().toISOString(),
+      };
+    });
 
-    const orders = ordersSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-
-    return NextResponse.json({ success: true, orders });
+    return NextResponse.json({ orders }, { status: 200 });
   } catch (error) {
     console.error('Error fetching card orders:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch orders' },
+      { error: 'Failed to fetch card orders' },
       { status: 500 }
     );
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const body = await req.json();
-
-    // Create card order in Firebase
-    const orderData: any = {
-      status: body.status || 'COMPLETED',
-      paymentMethod: 'card',
-      paymentStatus: body.paymentStatus || 'completed',
-      customerEmail: body.customerEmail,
-      customerName: body.customerName,
-      customerPhone: body.customerPhone,
-      customerCountry: body.customerCountry,
-      customerDiscordUsername: body.customerDiscordUsername || null,
-      addOns: body.addOns || [],
-      createdAt: body.createdAt || new Date().toISOString(),
-      updatedAt: body.updatedAt || new Date().toISOString()
+    const body = await request.json();
+    
+    const orderData = {
+      ...body,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
     };
 
-    // Check if this is a subscription-based order, gauntlet activation, or legacy single account order
-    if (body.subscriptionTier) {
-      // New subscription-based order with multiple accounts
-      orderData.subscriptionTier = body.subscriptionTier;
-      orderData.subscriptionPrice = body.subscriptionPrice;
-      orderData.subscriptionPlanId = body.subscriptionPlanId;
-      orderData.accountsCount = body.accountsCount;
-      orderData.accounts = body.accounts;
-      
-      // Use totalAmount if provided (for completed orders), otherwise use subscriptionPrice
-      orderData.totalAmount = body.totalAmount || body.subscriptionPrice;
-    } else {
-      // Legacy single account order or gauntlet activation (for backward compatibility)
-      orderData.challengeType = body.challengeType;
-      orderData.challengeAmount = body.challengeAmount;
-      orderData.platform = body.platform;
-      orderData.totalAmount = body.totalAmount;
-    }
-
-    // Only include receiptId and planId if they exist (not undefined)
-    if (body.receiptId !== undefined) {
-      orderData.receiptId = body.receiptId;
-    }
-    if (body.planId !== undefined) {
-      orderData.planId = body.planId;
-    }
-
-    const orderRef = await db.collection('card-orders').add(orderData);
-
-    return NextResponse.json({ success: true, orderId: orderRef.id });
-  } catch (error) {
-    console.error('Error submitting card order:', error);
+    const docRef = await db.collection('card-orders').add(orderData);
+    
     return NextResponse.json(
-      { error: 'Failed to submit order' },
+      { success: true, orderId: docRef.id },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error('Error creating card order:', error);
+    return NextResponse.json(
+      { error: 'Failed to create card order' },
       { status: 500 }
     );
   }
 }
 
-export async function PUT(req: Request) {
+export async function PUT(request: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await request.json();
     const { orderId, ...updateData } = body;
 
     if (!orderId) {
@@ -93,25 +68,27 @@ export async function PUT(req: Request) {
       );
     }
 
-    const orderRef = db.collection('card-orders').doc(orderId);
-    await orderRef.update({
+    await db.collection('card-orders').doc(orderId).update({
       ...updateData,
-      updatedAt: new Date().toISOString()
+      updatedAt: Timestamp.now(),
     });
 
-    return NextResponse.json({ success: true, orderId });
+    return NextResponse.json(
+      { success: true, message: 'Order updated successfully' },
+      { status: 200 }
+    );
   } catch (error) {
     console.error('Error updating card order:', error);
     return NextResponse.json(
-      { error: 'Failed to update order' },
+      { error: 'Failed to update card order' },
       { status: 500 }
     );
   }
 }
 
-export async function DELETE(req: Request) {
+export async function DELETE(request: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
+    const { searchParams } = new URL(request.url);
     const orderId = searchParams.get('orderId');
 
     if (!orderId) {
@@ -121,14 +98,16 @@ export async function DELETE(req: Request) {
       );
     }
 
-    const orderRef = db.collection('card-orders').doc(orderId);
-    await orderRef.delete();
+    await db.collection('card-orders').doc(orderId).delete();
 
-    return NextResponse.json({ success: true, orderId });
+    return NextResponse.json(
+      { success: true, message: 'Order deleted successfully' },
+      { status: 200 }
+    );
   } catch (error) {
     console.error('Error deleting card order:', error);
     return NextResponse.json(
-      { error: 'Failed to delete order' },
+      { error: 'Failed to delete card order' },
       { status: 500 }
     );
   }

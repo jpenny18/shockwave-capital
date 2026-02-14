@@ -14,6 +14,9 @@ export async function POST(req: Request) {
       cryptoAddress: cryptoDetails.address,
       usdAmount: cryptoDetails.usdAmount,
       verificationPhrase: cryptoDetails.verificationPhrase,
+      challengeType: challengeData.type,
+      challengeAmount: challengeData.amount,
+      platform: challengeData.platform,
       addOns: challengeData.addOns || [],
       customerEmail: challengeData.formData.email,
       customerName: `${challengeData.formData.firstName} ${challengeData.formData.lastName}`,
@@ -26,20 +29,6 @@ export async function POST(req: Request) {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
-
-    // Check if this is a subscription-based order or legacy single account order
-    if (challengeData.subscriptionTier) {
-      // New subscription-based order with multiple accounts
-      orderData.subscriptionTier = challengeData.subscriptionTier;
-      orderData.subscriptionPrice = challengeData.subscriptionPrice;
-      orderData.accountsCount = challengeData.accountsCount;
-      orderData.accounts = challengeData.accounts;
-    } else {
-      // Legacy single account order (for backward compatibility)
-      orderData.challengeType = challengeData.type;
-      orderData.challengeAmount = challengeData.amount;
-      orderData.platform = challengeData.platform;
-    }
 
     // If this is a fund trader application, include the application data
     if (challengeData.applicationData) {
