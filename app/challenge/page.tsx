@@ -1129,7 +1129,7 @@ export default function ChallengePage() {
                   </div>
                   <div className="mt-1 text-sm text-gray-100 flex flex-col sm:flex-row items-center sm:gap-2 justify-center lg:justify-start">
                     Use code: 
-                    <code className="bg-[#0FF1CE]/15 text-[#0FF1CE] px-2 py-0.5 rounded font-mono font-semibold tracking-wide text-xs ml-1 sm:ml-0">VDAY</code>
+                    <code className="bg-[#0FF1CE]/15 text-[#0FF1CE] px-2 py-0.5 rounded font-mono font-semibold tracking-wide text-xs ml-1 sm:ml-0">ACTFAST</code>
                   </div>
                   <div className="mt-1 text-[11px] text-gray-400">
                    limited time
