@@ -224,15 +224,15 @@ export default function DiscountsPage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="flex flex-wrap items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-white">Discount Codes</h1>
+    <div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-5 gap-3">
+        <h1 className="text-xl md:text-2xl font-bold text-white">Discount Codes</h1>
         {!isCreating && (
           <button
             onClick={() => setIsCreating(true)}
-            className="flex items-center gap-2 bg-[#0FF1CE] text-black px-4 py-2 rounded-lg font-medium hover:bg-[#0FF1CE]/90 transition-colors"
+            className="flex items-center gap-2 bg-[#0FF1CE] text-black px-3 md:px-4 py-2 rounded-lg font-medium hover:bg-[#0FF1CE]/90 transition-colors text-sm w-full sm:w-auto justify-center sm:justify-start"
           >
-            <Plus size={16} />
+            <Plus size={14} />
             <span>Create Discount</span>
           </button>
         )}
@@ -358,7 +358,44 @@ export default function DiscountsPage() {
         </div>
       )}
 
-      <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 overflow-hidden">
+      {/* Mobile card view */}
+      <div className="md:hidden space-y-2">
+        {discounts.length === 0 ? (
+          <div className="bg-[#0D0D0D]/80 rounded-xl border border-[#2F2F2F]/50 px-4 py-10 text-center text-gray-500">
+            <Tag className="mx-auto mb-2" size={24} />
+            <p>No discount codes found</p>
+          </div>
+        ) : discounts.map((discount) => (
+          <div key={discount.id} className="bg-[#0D0D0D]/80 rounded-xl border border-[#2F2F2F]/50 p-3">
+            <div className="flex items-start justify-between mb-2">
+              <div>
+                <span className="text-white font-bold text-sm font-mono">{discount.code}</span>
+                <div className="text-gray-400 text-xs mt-0.5 capitalize">
+                  {discount.type} · {discount.type === 'percentage' ? `${discount.value}%` : `$${discount.value}`}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => handleToggleActive(discount.id, discount.active)} className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${discount.active ? 'bg-green-500/20 text-green-500' : 'bg-gray-500/20 text-gray-400'}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full mr-1 ${discount.active ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+                  {discount.active ? 'Active' : 'Inactive'}
+                </button>
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="text-gray-500 text-xs">
+                Used {discount.usageCount}/{discount.usageLimit || '∞'} · Expires {discount.expiresAt ? discount.expiresAt.toDate().toLocaleDateString() : 'Never'}
+              </div>
+              <div className="flex items-center gap-1">
+                <button onClick={() => handleEdit(discount)} className="p-1.5 rounded hover:bg-[#2F2F2F] transition-colors"><Edit size={14} className="text-gray-400" /></button>
+                <button onClick={() => handleDelete(discount.id)} className="p-1.5 rounded hover:bg-[#2F2F2F] transition-colors"><Trash2 size={14} className="text-gray-400" /></button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>

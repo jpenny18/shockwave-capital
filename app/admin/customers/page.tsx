@@ -376,20 +376,20 @@ export default function CustomersPage() {
 
   return (
     <div className="relative">
-      <div className="flex flex-wrap items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-white">Customers</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-5 gap-3">
+        <h1 className="text-xl md:text-2xl font-bold text-white">Customers</h1>
         <button
           onClick={handleExportCustomers}
-          className="flex items-center gap-2 bg-[#0FF1CE] text-black px-4 py-2 rounded-lg font-medium hover:bg-[#0FF1CE]/90 transition-colors"
+          className="flex items-center gap-2 bg-[#0FF1CE] text-black px-3 md:px-4 py-2 rounded-lg font-medium hover:bg-[#0FF1CE]/90 transition-colors text-sm w-full sm:w-auto justify-center sm:justify-start"
         >
-          <Download size={16} />
+          <Download size={14} />
           <span>Export Customers</span>
         </button>
       </div>
 
       {/* Filters Row */}
-      <div className="flex flex-wrap gap-3 mb-6">
-        <div className="relative flex-grow max-w-md">
+      <div className="flex flex-col gap-2 md:flex-row md:flex-wrap md:gap-3 mb-4 md:mb-6">
+        <div className="relative w-full md:flex-grow md:max-w-md">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search className="h-4 w-4 text-gray-400" />
           </div>
@@ -398,70 +398,110 @@ export default function CustomersPage() {
             placeholder="Search customers..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#0FF1CE]/50"
+            className="pl-10 w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#0FF1CE]/50"
           />
         </div>
-        
-        <div className="relative">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="appearance-none bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-2.5 pr-8 text-white focus:outline-none focus:border-[#0FF1CE]/50"
-          >
-            <option value="all">All Statuses</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
-            <ChevronDown size={16} />
+        <div className="grid grid-cols-3 gap-2 md:contents">
+          <div className="relative">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="appearance-none w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-3 md:px-4 py-2.5 pr-8 text-white text-sm focus:outline-none focus:border-[#0FF1CE]/50"
+            >
+              <option value="all">All Statuses</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+              <ChevronDown size={14} />
+            </div>
           </div>
-        </div>
-        
-        <div className="relative">
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="appearance-none bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-2.5 pr-8 text-white focus:outline-none focus:border-[#0FF1CE]/50"
-          >
-            <option value="newest">Newest Customers</option>
-            <option value="oldest">Oldest Customers</option>
-            <option value="highest-spend">Highest Spend</option>
-            <option value="most-orders">Most Orders</option>
-            <option value="name-az">Name A-Z</option>
-            <option value="name-za">Name Z-A</option>
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
-            <ChevronDown size={16} />
+          <div className="relative">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="appearance-none w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-3 md:px-4 py-2.5 pr-8 text-white text-sm focus:outline-none focus:border-[#0FF1CE]/50"
+            >
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+              <option value="highest-spend">Top Spend</option>
+              <option value="most-orders">Most Orders</option>
+              <option value="name-az">A-Z</option>
+              <option value="name-za">Z-A</option>
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+              <ChevronDown size={14} />
+            </div>
           </div>
-        </div>
-
-        {/* Items per page selector */}
-        <div className="relative">
-          <select
-            value={itemsPerPage}
-            onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
-            className="appearance-none bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-2.5 pr-8 text-white focus:outline-none focus:border-[#0FF1CE]/50"
-          >
-            <option value={25}>25 per page</option>
-            <option value={50}>50 per page</option>
-            <option value={100}>100 per page</option>
-            <option value={200}>200 per page</option>
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
-            <ChevronDown size={16} />
+          <div className="relative">
+            <select
+              value={itemsPerPage}
+              onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+              className="appearance-none w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-3 md:px-4 py-2.5 pr-8 text-white text-sm focus:outline-none focus:border-[#0FF1CE]/50"
+            >
+              <option value={25}>25/page</option>
+              <option value={50}>50/page</option>
+              <option value={100}>100/page</option>
+              <option value={200}>200/page</option>
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+              <ChevronDown size={14} />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Customers List */}
       <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 overflow-hidden">
-        <div className="overflow-x-auto">
-          {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <Loader className="h-8 w-8 text-[#0FF1CE] animate-spin" />
-              <span className="ml-4 text-gray-400">Loading customers...</span>
-            </div>
-          ) : (
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader className="h-8 w-8 text-[#0FF1CE] animate-spin" />
+            <span className="ml-4 text-gray-400">Loading customers...</span>
+          </div>
+        ) : (
+          <>
+          {/* Mobile card view */}
+          <div className="md:hidden divide-y divide-[#2F2F2F]/50">
+            {paginatedCustomers.length === 0 ? (
+              <div className="px-4 py-10 text-center text-gray-500">
+                <User className="mx-auto mb-2" size={24} />
+                <p>No customers found</p>
+              </div>
+            ) : paginatedCustomers.map((customer) => (
+              <div key={customer.id} className="px-4 py-3 hover:bg-[#151515]/50 transition-colors">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-full bg-[#0FF1CE]/20 flex items-center justify-center text-[#0FF1CE] flex-shrink-0">
+                      <User size={16} />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-medium text-white text-sm truncate">{customer.displayName}</div>
+                      <div className="text-gray-400 text-xs truncate">{customer.email}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                      customer.status === 'active' ? 'bg-green-500/20 text-green-500' : 'bg-gray-500/20 text-gray-400'
+                    }`}>
+                      <span className={`w-1.5 h-1.5 rounded-full mr-1 ${customer.status === 'active' ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+                      {customer.status === 'active' ? 'Active' : 'Inactive'}
+                    </span>
+                    <button onClick={() => handleViewDetails(customer)} className="p-1.5 rounded hover:bg-[#2F2F2F] transition-colors">
+                      <Eye size={15} className="text-gray-400" />
+                    </button>
+                  </div>
+                </div>
+                <div className="mt-2 flex items-center gap-4 pl-12">
+                  <div className="text-xs text-gray-400"><span className="text-white font-medium">{customer.actualOrderCount ?? 0}</span> orders</div>
+                  <div className="text-xs text-gray-400"><span className="text-white font-medium">${(customer.actualTotalSpent ?? 0).toLocaleString()}</span> spent</div>
+                  <div className="text-xs text-gray-500">{customer.country}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop table view */}
+          <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="text-left text-gray-400 text-sm border-b border-[#2F2F2F]">
@@ -565,14 +605,15 @@ export default function CustomersPage() {
               )}
             </tbody>
           </table>
-          )}
-        </div>
+          </div>
+          </>
+        )}
         
         {/* Pagination Controls */}
         {!loading && paginatedCustomers.length > 0 && (
-          <div className="px-6 py-4 border-t border-[#2F2F2F] flex items-center justify-between">
-            <div className="text-sm text-gray-400">
-              Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} customers
+          <div className="px-4 md:px-6 py-4 border-t border-[#2F2F2F] flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="text-xs md:text-sm text-gray-400">
+              Showing {startIndex + 1}–{Math.min(endIndex, totalItems)} of {totalItems}
             </div>
             
             {totalPages > 1 && (

@@ -152,9 +152,33 @@ const TradingObjectivesTable = ({ objectives, accountInfo }: { objectives: Tradi
   ];
 
   return (
-    <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6">
-      <h3 className="text-lg font-semibold text-white mb-4">Trading Objectives</h3>
-      <div className="overflow-x-auto">
+    <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-4 md:p-6">
+      <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4">Trading Objectives</h3>
+      {/* Mobile card view */}
+      <div className="md:hidden space-y-2">
+        {rows.map((row, index) => (
+          <div key={index} className="bg-[#151515] rounded-lg p-3 flex items-center justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-white font-medium truncate">{row.label}</p>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Target: {row.format === 'percent' ? `${row.target}%` : row.target}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className={`text-sm font-medium ${row.passed ? 'text-green-400' : 'text-yellow-400'}`}>
+                {row.format === 'percent' ? `${row.current.toFixed(2)}%` : row.current}
+              </span>
+              {row.passed ? (
+                <CheckCircle className="text-green-400" size={16} />
+              ) : (
+                <XCircle className="text-red-400" size={16} />
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+      {/* Desktop table view */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="border-b border-[#2F2F2F]">
@@ -204,9 +228,33 @@ const RiskEventsTable = ({ riskEvents }: { riskEvents: RiskEvent[] }) => {
   }
 
   return (
-    <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6">
-      <h3 className="text-lg font-semibold text-white mb-4">Risk Events</h3>
-      <div className="overflow-x-auto">
+    <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-4 md:p-6">
+      <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4">Risk Events</h3>
+      {/* Mobile card view */}
+      <div className="md:hidden space-y-2">
+        {riskEvents.map((event, index) => (
+          <div key={event.id || index} className="bg-[#151515] rounded-lg p-3">
+            <div className="flex items-center justify-between mb-1">
+              <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                event.exceededThresholdType === 'drawdown'
+                  ? 'bg-red-500/20 text-red-400'
+                  : event.exceededThresholdType === 'dailyDrawdown'
+                  ? 'bg-orange-500/20 text-orange-400'
+                  : 'bg-yellow-500/20 text-yellow-400'
+              }`}>
+                {event.exceededThresholdType}
+              </span>
+              <span className="text-sm font-medium text-red-400">{event.relativeDrawdown.toFixed(2)}%</span>
+            </div>
+            <div className="flex items-center justify-between text-xs text-gray-400">
+              <span>{new Date(event.brokerTime).toLocaleString()}</span>
+              <span>${event.absoluteDrawdown.toLocaleString()}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      {/* Desktop table view */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="border-b border-[#2F2F2F]">
@@ -260,9 +308,37 @@ const PeriodStatsChart = ({ periodStats }: { periodStats: PeriodStatistic[] }) =
   }
 
   return (
-    <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6">
-      <h3 className="text-lg font-semibold text-white mb-4">Daily Performance (Last 30 Days)</h3>
-      <div className="overflow-x-auto">
+    <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-4 md:p-6">
+      <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4">Daily Performance (Last 7 Days)</h3>
+      {/* Mobile card view */}
+      <div className="md:hidden space-y-2">
+        {periodStats.slice(-7).map((stat, index) => (
+          <div key={index} className="bg-[#151515] rounded-lg p-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-white">{new Date(stat.startBrokerTime).toLocaleDateString()}</span>
+              <span className={`text-sm font-semibold ${stat.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {stat.profit >= 0 ? '+' : ''}${stat.profit.toLocaleString()}
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-xs">
+              <div>
+                <p className="text-gray-500">Balance</p>
+                <p className="text-white">${stat.balance.toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-gray-500">Max DD</p>
+                <p className="text-yellow-400">{stat.maxDrawdown.toFixed(2)}%</p>
+              </div>
+              <div>
+                <p className="text-gray-500">Trades</p>
+                <p className="text-gray-300">{stat.trades}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      {/* Desktop table view */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="border-b border-[#2F2F2F]">
@@ -276,7 +352,7 @@ const PeriodStatsChart = ({ periodStats }: { periodStats: PeriodStatistic[] }) =
             </tr>
           </thead>
           <tbody>
-            {periodStats.slice(-7).map((stat, index) => ( // Show last 7 days
+            {periodStats.slice(-7).map((stat, index) => (
               <tr key={index} className="border-b border-[#2F2F2F]/50">
                 <td className="py-3 px-4 text-sm text-white">
                   {new Date(stat.startBrokerTime).toLocaleDateString()}
@@ -354,77 +430,121 @@ const TradingJournal = ({ trades }: { trades: TradeData[] }) => {
   };
   
   return (
-    <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-white">Trading Journal</h3>
-        <span className="text-sm text-gray-400">
-          {trades.length} {trades.length === 1 ? 'Trade' : 'Trades'} Total
+    <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-4 md:p-6">
+      <div className="flex items-center justify-between mb-3 md:mb-4">
+        <h3 className="text-base md:text-lg font-semibold text-white">Trading Journal</h3>
+        <span className="text-xs md:text-sm text-gray-400">
+          {trades.length} {trades.length === 1 ? 'Trade' : 'Trades'}
         </span>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[800px]">
-          <thead>
-            <tr className="border-b border-[#2F2F2F]">
-              <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase">Symbol</th>
-              <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase">Type</th>
-              <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase">Volume</th>
-              <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase">Open Price</th>
-              <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase">Close Price</th>
-              <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase">Profit</th>
-              <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase">Open Time</th>
-              <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase">Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#2F2F2F]/50">
-            {trades.length === 0 ? (
-              <tr>
-                <td colSpan={8} className="py-8 text-center text-gray-400">No trades found</td>
-              </tr>
-            ) : (
-              currentTrades.map((trade) => (
-                <tr key={trade.id} className="hover:bg-white/5 transition-colors">
-                  <td className="py-3 px-4 text-sm text-white">{trade.symbol}</td>
-                  <td className="py-3 px-4 text-sm">
-                    <span className={`px-2 py-1 rounded-full text-xs ${
+      {trades.length === 0 ? (
+        <p className="text-gray-400 text-sm py-4 text-center">No trades found</p>
+      ) : (
+        <>
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-2">
+            {currentTrades.map((trade) => (
+              <div key={trade.id} className="bg-[#151515] rounded-lg p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-white">{trade.symbol}</span>
+                    <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
                       trade.type === 'buy' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
                     }`}>
                       {trade.type?.toUpperCase() || 'N/A'}
                     </span>
-                  </td>
-                  <td className="py-3 px-4 text-sm text-gray-300">{trade.volume != null ? trade.volume.toFixed(2) : '-'}</td>
-                  <td className="py-3 px-4 text-sm text-gray-300">{trade.openPrice != null ? trade.openPrice.toFixed(5) : '-'}</td>
-                  <td className="py-3 px-4 text-sm text-gray-300">
-                    {trade.closePrice != null ? trade.closePrice.toFixed(5) : '-'}
-                  </td>
-                  <td className="py-3 px-4 text-sm">
-                    <span className={trade.profit != null && trade.profit >= 0 ? 'text-green-400' : 'text-red-400'}>
-                      {trade.profit != null ? `$${trade.profit.toFixed(2)}` : '-'}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 text-sm text-gray-300">
-                    {trade.openTime ? formatDistanceToNow(new Date(trade.openTime), { addSuffix: true }) : '-'}
-                  </td>
-                  <td className="py-3 px-4 text-sm">
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      trade.state === 'opened' 
-                        ? 'bg-blue-500/20 text-blue-400' 
-                        : 'bg-gray-500/20 text-gray-400'
+                    <span className={`px-1.5 py-0.5 rounded text-xs ${
+                      trade.state === 'opened' ? 'bg-blue-500/20 text-blue-400' : 'bg-gray-500/20 text-gray-400'
                     }`}>
                       {trade.state || 'unknown'}
                     </span>
-                  </td>
+                  </div>
+                  <span className={`text-sm font-semibold ${trade.profit != null && trade.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {trade.profit != null ? `$${trade.profit.toFixed(2)}` : '-'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-xs text-gray-400">
+                  <div>
+                    <span className="text-gray-500">Vol: </span>
+                    <span>{trade.volume != null ? trade.volume.toFixed(2) : '-'}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Open: </span>
+                    <span>{trade.openPrice != null ? trade.openPrice.toFixed(5) : '-'}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Close: </span>
+                    <span>{trade.closePrice != null ? trade.closePrice.toFixed(5) : '-'}</span>
+                  </div>
+                </div>
+                <div className="mt-1 text-xs text-gray-500">
+                  {trade.openTime ? formatDistanceToNow(new Date(trade.openTime), { addSuffix: true }) : '-'}
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full min-w-[800px]">
+              <thead>
+                <tr className="border-b border-[#2F2F2F]">
+                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase">Symbol</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase">Type</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase">Volume</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase">Open Price</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase">Close Price</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase">Profit</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase">Open Time</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase">Status</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              </thead>
+              <tbody className="divide-y divide-[#2F2F2F]/50">
+                {currentTrades.map((trade) => (
+                  <tr key={trade.id} className="hover:bg-white/5 transition-colors">
+                    <td className="py-3 px-4 text-sm text-white">{trade.symbol}</td>
+                    <td className="py-3 px-4 text-sm">
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        trade.type === 'buy' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                      }`}>
+                        {trade.type?.toUpperCase() || 'N/A'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-sm text-gray-300">{trade.volume != null ? trade.volume.toFixed(2) : '-'}</td>
+                    <td className="py-3 px-4 text-sm text-gray-300">{trade.openPrice != null ? trade.openPrice.toFixed(5) : '-'}</td>
+                    <td className="py-3 px-4 text-sm text-gray-300">
+                      {trade.closePrice != null ? trade.closePrice.toFixed(5) : '-'}
+                    </td>
+                    <td className="py-3 px-4 text-sm">
+                      <span className={trade.profit != null && trade.profit >= 0 ? 'text-green-400' : 'text-red-400'}>
+                        {trade.profit != null ? `$${trade.profit.toFixed(2)}` : '-'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-sm text-gray-300">
+                      {trade.openTime ? formatDistanceToNow(new Date(trade.openTime), { addSuffix: true }) : '-'}
+                    </td>
+                    <td className="py-3 px-4 text-sm">
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        trade.state === 'opened' 
+                          ? 'bg-blue-500/20 text-blue-400' 
+                          : 'bg-gray-500/20 text-gray-400'
+                      }`}>
+                        {trade.state || 'unknown'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+
       
       {/* Pagination Controls */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-6 pt-4 border-t border-[#2F2F2F]/50">
-          <div className="text-sm text-gray-400">
-            Showing {startIndex + 1} to {Math.min(endIndex, trades.length)} of {trades.length} trades
+        <div className="flex items-center justify-between mt-4 md:mt-6 pt-4 border-t border-[#2F2F2F]/50">
+          <div className="text-xs md:text-sm text-gray-400">
+            {startIndex + 1}–{Math.min(endIndex, trades.length)} of {trades.length}
           </div>
           
           <div className="flex items-center gap-1">
@@ -901,44 +1021,46 @@ export default function AdminAccountDetailsPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 md:mb-8 gap-3">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => router.push('/admin/accounts')}
             className="p-2 rounded-lg bg-[#0D0D0D]/80 border border-[#2F2F2F]/50 hover:border-[#0FF1CE]/30 transition-all"
           >
-            <ArrowLeft size={20} className="text-white" />
+            <ArrowLeft size={18} className="text-white" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-white">Admin: Account Metrics</h1>
-            <div className="flex items-center gap-2 mt-1">
-              <User size={16} className="text-gray-400" />
-              <p className="text-sm text-gray-400">
+            <h1 className="text-xl md:text-2xl font-bold text-white">Account Metrics</h1>
+            <div className="flex items-center gap-2 mt-0.5">
+              <User size={14} className="text-gray-400" />
+              <p className="text-xs md:text-sm text-gray-400 truncate max-w-[200px] md:max-w-none">
                 {userInfo?.email || 'Unknown User'} • {accountId.slice(0, 8)}...
               </p>
             </div>
             {lastUpdate && (
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 mt-0.5">
                 Last updated {formatDistanceToNow(lastUpdate, { addSuffix: true })}
               </p>
             )}
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
           <button
             onClick={() => window.open(`/dashboard/accounts/${accountId}`, '_blank')}
-            className="bg-white/10 text-white font-semibold py-2 px-4 rounded-lg hover:bg-white/20 transition-colors flex items-center gap-2"
+            className="bg-white/10 text-white font-semibold py-2 px-3 md:px-4 rounded-lg hover:bg-white/20 transition-colors flex items-center gap-1.5 text-sm"
           >
-            <Eye size={16} />
-            View as User
+            <Eye size={15} />
+            <span className="hidden sm:inline">View as User</span>
+            <span className="sm:hidden">View</span>
           </button>
           <button
             onClick={refreshMetrics}
             disabled={refreshing}
-            className="bg-[#0FF1CE] text-black font-semibold py-2 px-4 rounded-lg hover:bg-[#0FF1CE]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="bg-[#0FF1CE] text-black font-semibold py-2 px-3 md:px-4 rounded-lg hover:bg-[#0FF1CE]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 text-sm"
           >
-            <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
-            Refresh Data
+            <RefreshCw size={15} className={refreshing ? 'animate-spin' : ''} />
+            <span className="hidden sm:inline">Refresh Data</span>
+            <span className="sm:hidden">Refresh</span>
           </button>
         </div>
       </div>
@@ -1016,7 +1138,7 @@ export default function AdminAccountDetailsPage() {
       )}
 
       {/* Main Metrics Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4 mb-6 md:mb-8">
         <MetricCard title="Balance" value={metrics?.balance || 0} icon={DollarSign} format="currency" />
         <MetricCard title="Equity" value={metrics?.equity || 0} icon={TrendingUp} format="currency" />
         <MetricCard title="Profit/Loss" value={metrics?.profit || 0} icon={metrics?.profit >= 0 ? TrendingUp : TrendingDown} format="currency" />

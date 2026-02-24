@@ -54,13 +54,13 @@ export default function SettingsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-white">Settings</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-5 gap-3">
+        <h1 className="text-xl md:text-2xl font-bold text-white">Settings</h1>
         <button
           onClick={handleSaveSettings}
-          className="flex items-center gap-2 bg-[#0FF1CE] text-black px-4 py-2 rounded-lg font-medium hover:bg-[#0FF1CE]/90 transition-colors"
+          className="flex items-center gap-2 bg-[#0FF1CE] text-black px-3 md:px-4 py-2 rounded-lg font-medium hover:bg-[#0FF1CE]/90 transition-colors text-sm w-full sm:w-auto justify-center sm:justify-start"
         >
-          <Save size={16} />
+          <Save size={14} />
           <span>Save Settings</span>
         </button>
       </div>

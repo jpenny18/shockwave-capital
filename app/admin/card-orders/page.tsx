@@ -206,42 +206,39 @@ export default function CardOrdersPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black text-white p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0FF1CE]"></div>
-          </div>
+      <div className="text-white">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0FF1CE]"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+    <div className="text-white space-y-4 md:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-transparent bg-clip-text">
+            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-transparent bg-clip-text">
               Card Orders
             </h1>
-            <p className="text-gray-400">Manage Whop checkout orders</p>
+            <p className="text-gray-400 text-sm mt-0.5">Manage Whop checkout orders</p>
           </div>
           <button
             onClick={fetchOrders}
-            className="flex items-center gap-2 px-4 py-2 bg-[#0FF1CE]/10 border border-[#0FF1CE]/30 rounded-lg hover:bg-[#0FF1CE]/20 transition-all"
+            className="flex items-center gap-2 px-3 md:px-4 py-2 bg-[#0FF1CE]/10 border border-[#0FF1CE]/30 rounded-lg hover:bg-[#0FF1CE]/20 transition-all text-sm w-full sm:w-auto justify-center sm:justify-start"
           >
-            <RefreshCw size={16} />
+            <RefreshCw size={14} />
             <span>Refresh</span>
           </button>
         </div>
 
         {/* Challenge Type Tabs */}
-        <div className="mb-6 flex items-center gap-2 overflow-x-auto pb-2">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-0.5 px-0.5">
           {(['ALL', 'Standard', '1-Step', 'Instant', 'Gauntlet'] as ChallengeTypeFilter[]).map((type) => (
             <button
               key={type}
               onClick={() => setChallengeTypeFilter(type)}
-              className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition-all ${
+              className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-semibold whitespace-nowrap transition-all text-sm ${
                 challengeTypeFilter === type
                   ? 'bg-[#0FF1CE] text-black'
                   : 'bg-[#1A1A1A] text-gray-400 hover:bg-[#2F2F2F] border border-[#2F2F2F]'
@@ -249,7 +246,7 @@ export default function CardOrdersPage() {
             >
               {type}
               {type !== 'ALL' && (
-                <span className="ml-2 text-xs opacity-75">
+                <span className="ml-1.5 text-xs opacity-75">
                   ({orders.filter(o => o.challengeType === type).length})
                 </span>
               )}
@@ -259,39 +256,24 @@ export default function CardOrdersPage() {
 
         {/* Bulk Actions Bar */}
         {selectedOrders.size > 0 && (
-          <div className="mb-6 bg-[#0FF1CE]/10 border border-[#0FF1CE]/30 rounded-lg p-4">
-            <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="bg-[#0FF1CE]/10 border border-[#0FF1CE]/30 rounded-lg p-3 md:p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <CheckSquare size={20} className="text-[#0FF1CE]" />
-                <span className="text-white font-semibold">{selectedOrders.size} order(s) selected</span>
+                <CheckSquare size={18} className="text-[#0FF1CE]" />
+                <span className="text-white font-semibold text-sm">{selectedOrders.size} selected</span>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleBulkStatusChange('completed')}
-                  className="px-4 py-2 bg-green-500/20 text-green-500 rounded-lg hover:bg-green-500/30 transition-all flex items-center gap-2"
-                >
-                  <Check size={16} />
-                  Mark Completed
+              <div className="flex items-center gap-2 flex-wrap">
+                <button onClick={() => handleBulkStatusChange('completed')} className="px-3 py-1.5 bg-green-500/20 text-green-500 rounded-lg hover:bg-green-500/30 transition-all flex items-center gap-1 text-sm">
+                  <Check size={14} /><span>Complete</span>
                 </button>
-                <button
-                  onClick={() => handleBulkStatusChange('cancelled')}
-                  className="px-4 py-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500/30 transition-all flex items-center gap-2"
-                >
-                  <X size={16} />
-                  Mark Cancelled
+                <button onClick={() => handleBulkStatusChange('cancelled')} className="px-3 py-1.5 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500/30 transition-all flex items-center gap-1 text-sm">
+                  <X size={14} /><span>Cancel</span>
                 </button>
-                <button
-                  onClick={handleBulkDelete}
-                  className="px-4 py-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500/30 transition-all flex items-center gap-2"
-                >
-                  <Trash2 size={16} />
-                  Delete Selected
+                <button onClick={handleBulkDelete} className="px-3 py-1.5 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500/30 transition-all flex items-center gap-1 text-sm">
+                  <Trash2 size={14} /><span>Delete</span>
                 </button>
-                <button
-                  onClick={() => setSelectedOrders(new Set())}
-                  className="px-4 py-2 bg-gray-500/20 text-gray-400 rounded-lg hover:bg-gray-500/30 transition-all"
-                >
-                  Clear Selection
+                <button onClick={() => setSelectedOrders(new Set())} className="px-3 py-1.5 bg-gray-500/20 text-gray-400 rounded-lg hover:bg-gray-500/30 transition-all text-sm">
+                  Clear
                 </button>
               </div>
             </div>
@@ -299,26 +281,22 @@ export default function CardOrdersPage() {
         )}
 
         {/* Filters */}
-        <div className="mb-6 flex flex-col md:flex-row gap-4">
-          {/* Search */}
+        <div className="flex flex-col gap-2 md:flex-row md:gap-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
             <input
               type="text"
-              placeholder="Search by email, name, ID, or challenge type..."
+              placeholder="Search by email, name, ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#0FF1CE] transition-colors"
+              className="w-full pl-9 pr-4 py-2.5 bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:border-[#0FF1CE] transition-colors"
             />
           </div>
-
-          {/* Status Filter */}
-          <div className="relative min-w-[200px]">
-            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+          <div className="relative md:min-w-[160px]">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="w-full pl-10 pr-4 py-3 bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg text-white focus:outline-none focus:border-[#0FF1CE] transition-colors appearance-none cursor-pointer"
+              className="w-full px-3 py-2.5 bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg text-white text-sm focus:outline-none focus:border-[#0FF1CE] transition-colors appearance-none cursor-pointer"
             >
               <option value="ALL">All Status</option>
               <option value="pending">Pending</option>
@@ -329,33 +307,86 @@ export default function CardOrdersPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg p-4">
-            <div className="text-gray-400 text-sm mb-1">Total Orders</div>
-            <div className="text-2xl font-bold text-white">{orders.length}</div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
+          <div className="bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg p-3 md:p-4">
+            <div className="text-gray-400 text-xs md:text-sm mb-0.5">Total</div>
+            <div className="text-xl md:text-2xl font-bold text-white">{orders.length}</div>
           </div>
-          <div className="bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg p-4">
-            <div className="text-gray-400 text-sm mb-1">Pending</div>
-            <div className="text-2xl font-bold text-yellow-500">
-              {orders.filter(o => o.status === 'pending').length}
-            </div>
+          <div className="bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg p-3 md:p-4">
+            <div className="text-gray-400 text-xs md:text-sm mb-0.5">Pending</div>
+            <div className="text-xl md:text-2xl font-bold text-yellow-500">{orders.filter(o => o.status === 'pending').length}</div>
           </div>
-          <div className="bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg p-4">
-            <div className="text-gray-400 text-sm mb-1">Completed</div>
-            <div className="text-2xl font-bold text-green-500">
-              {orders.filter(o => o.status === 'completed').length}
-            </div>
+          <div className="bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg p-3 md:p-4">
+            <div className="text-gray-400 text-xs md:text-sm mb-0.5">Completed</div>
+            <div className="text-xl md:text-2xl font-bold text-green-500">{orders.filter(o => o.status === 'completed').length}</div>
           </div>
-          <div className="bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg p-4">
-            <div className="text-gray-400 text-sm mb-1">Total Revenue</div>
-            <div className="text-2xl font-bold text-[#0FF1CE]">
-              ${orders.filter(o => o.status === 'completed').reduce((sum, o) => sum + o.totalAmount, 0).toFixed(2)}
+          <div className="bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg p-3 md:p-4">
+            <div className="text-gray-400 text-xs md:text-sm mb-0.5">Revenue</div>
+            <div className="text-xl md:text-2xl font-bold text-[#0FF1CE]">
+              ${orders.filter(o => o.status === 'completed').reduce((sum, o) => sum + o.totalAmount, 0).toFixed(0)}
             </div>
           </div>
         </div>
 
-        {/* Orders Table */}
-        <div className="bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg overflow-hidden">
+        {/* Orders: Mobile cards */}
+        <div className="md:hidden space-y-2">
+          {filteredOrders.length === 0 ? (
+            <div className="p-8 text-center text-gray-400 bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg">
+              <CreditCard size={32} className="mx-auto mb-3 opacity-50" />
+              <p>No card orders found</p>
+            </div>
+          ) : filteredOrders.map((order) => {
+            const isExpanded = expandedRows.has(order.id);
+            return (
+              <div key={order.id} className={`rounded-xl border transition-all ${isExpanded ? 'border-[#0FF1CE]/30 bg-[#0FF1CE]/5' : 'border-[#2F2F2F] bg-[#1A1A1A]'}`}>
+                <div className="p-3">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => toggleOrderSelection(order.id)} className="text-gray-400 hover:text-[#0FF1CE]">
+                        {selectedOrders.has(order.id) ? <CheckSquare size={16} className="text-[#0FF1CE]" /> : <Square size={16} />}
+                      </button>
+                      <div>
+                        <div className="text-white text-sm font-medium">{order.firstName} {order.lastName}</div>
+                        <div className="text-gray-500 text-xs">{order.customerEmail}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {getStatusBadge(order.status)}
+                      <button onClick={() => toggleRowExpansion(order.id)} className="text-gray-400 p-1">
+                        {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between pl-6">
+                    <div className="text-gray-500 text-xs">{order.challengeType} · {order.challengeAmount} · {order.platform}</div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-[#0FF1CE] font-semibold text-sm">${order.totalAmount.toFixed(2)}</span>
+                      {order.status === 'pending' && (
+                        <>
+                          <button onClick={() => handleStatusChange(order.id, 'completed')} className="p-1.5 bg-green-500/20 text-green-500 rounded hover:bg-green-500/30"><Check size={12} /></button>
+                          <button onClick={() => handleStatusChange(order.id, 'cancelled')} className="p-1.5 bg-red-500/20 text-red-500 rounded hover:bg-red-500/30"><X size={12} /></button>
+                        </>
+                      )}
+                      <button onClick={() => handleDelete(order.id)} className="p-1.5 text-gray-500 hover:text-red-500"><Trash2 size={12} /></button>
+                    </div>
+                  </div>
+                </div>
+                {isExpanded && (
+                  <div className="border-t border-[#2F2F2F] p-3 grid grid-cols-2 gap-2 text-xs">
+                    <div className="text-gray-500">Phone: <span className="text-white">{order.phone}</span></div>
+                    <div className="text-gray-500">Country: <span className="text-white">{order.country}</span></div>
+                    {order.discordUsername && <div className="text-gray-500">Discord: <span className="text-white">{order.discordUsername}</span></div>}
+                    <div className="text-gray-500">Payment: <span className="text-white">{order.paymentStatus}</span></div>
+                    <div className="col-span-2 text-gray-500">Date: <span className="text-white">{new Date(order.createdAt).toLocaleString()}</span></div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Orders Table - Desktop */}
+        <div className="hidden md:block bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg overflow-hidden">
           {filteredOrders.length === 0 ? (
             <div className="p-8 text-center text-gray-400">
               <CreditCard size={48} className="mx-auto mb-4 opacity-50" />
@@ -531,7 +562,6 @@ export default function CardOrdersPage() {
             </div>
           )}
         </div>
-      </div>
     </div>
   );
 }

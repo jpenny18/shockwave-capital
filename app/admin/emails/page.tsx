@@ -1405,16 +1405,16 @@ export default function EmailTemplatesPage() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-5 gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white mb-2">Email Templates</h1>
-          <p className="text-gray-400">Create and manage email templates with user selection</p>
+          <h1 className="text-xl md:text-2xl font-bold text-white mb-1">Email Templates</h1>
+          <p className="text-gray-400 text-sm">Create and manage email templates</p>
         </div>
         <button 
           onClick={handleCreateNew}
-          className="flex items-center gap-2 bg-[#0FF1CE] text-black px-4 py-2 rounded-lg font-medium hover:bg-[#0FF1CE]/90 transition-colors"
+          className="flex items-center gap-2 bg-[#0FF1CE] text-black px-3 md:px-4 py-2 rounded-lg font-medium hover:bg-[#0FF1CE]/90 transition-colors text-sm w-full sm:w-auto justify-center sm:justify-start flex-shrink-0"
         >
-          <Plus size={16} />
+          <Plus size={14} />
           <span>New Template</span>
         </button>
       </div>
@@ -1435,7 +1435,7 @@ export default function EmailTemplatesPage() {
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4">
             <div className="bg-[#0D0D0D]/50 rounded-lg p-4 border border-[#2F2F2F]">
               <div className="text-gray-400 text-sm mb-1">Total Recipients</div>
               <div className="text-2xl font-bold text-white">{bulkRecipients.length}</div>

@@ -145,49 +145,34 @@ export default function PulseManagementPage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-4">Pulse Management</h1>
-        <div className="flex gap-4 mb-6">
-          <button
-            onClick={() => setFilter('all')}
-            className={`px-4 py-2 rounded-lg ${filter === 'all' ? 'bg-[#0FF1CE] text-black' : 'bg-[#1A1A1A] text-white'}`}
-          >
-            All Polls
-          </button>
-          <button
-            onClick={() => setFilter('active')}
-            className={`px-4 py-2 rounded-lg ${filter === 'active' ? 'bg-[#0FF1CE] text-black' : 'bg-[#1A1A1A] text-white'}`}
-          >
-            Active
-          </button>
-          <button
-            onClick={() => setFilter('archived')}
-            className={`px-4 py-2 rounded-lg ${filter === 'archived' ? 'bg-[#0FF1CE] text-black' : 'bg-[#1A1A1A] text-white'}`}
-          >
-            Archived
-          </button>
-          <button
-            onClick={() => setFilter('flagged')}
-            className={`px-4 py-2 rounded-lg ${filter === 'flagged' ? 'bg-[#0FF1CE] text-black' : 'bg-[#1A1A1A] text-white'}`}
-          >
-            Flagged
-          </button>
+    <div>
+      <div className="mb-5 md:mb-8">
+        <h1 className="text-xl md:text-3xl font-bold text-white mb-3 md:mb-4">Pulse Management</h1>
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-0.5 px-0.5">
+          {['all', 'active', 'archived', 'flagged'].map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f as any)}
+              className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-sm whitespace-nowrap capitalize ${filter === f ? 'bg-[#0FF1CE] text-black font-medium' : 'bg-[#1A1A1A] text-white'}`}
+            >
+              {f === 'all' ? 'All Polls' : f}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-6">
         {polls.map((poll) => (
-          <div key={poll.id} className="bg-[#0D0D0D] rounded-xl p-6 border border-[#2F2F2F]">
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h3 className="text-xl font-bold text-white mb-2">{poll.title}</h3>
-                <p className="text-gray-300">{poll.description}</p>
-                <div className="mt-2 text-sm text-gray-400">
-                  Created by: {poll.createdBy} | Votes: {poll.yesVotes + poll.noVotes}
+          <div key={poll.id} className="bg-[#0D0D0D] rounded-xl p-4 md:p-6 border border-[#2F2F2F]">
+            <div className="flex justify-between items-start mb-3 md:mb-4 gap-3">
+              <div className="min-w-0">
+                <h3 className="text-base md:text-xl font-bold text-white mb-1 md:mb-2">{poll.title}</h3>
+                <p className="text-gray-300 text-sm">{poll.description}</p>
+                <div className="mt-1 md:mt-2 text-xs md:text-sm text-gray-400">
+                  By: {poll.createdBy} · {poll.yesVotes + poll.noVotes} votes
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
                 <button
                   onClick={() => handleUpdatePollStatus(poll.id, 'active')}
                   className={`p-2 rounded-lg ${poll.status === 'active' ? 'text-[#0FF1CE]' : 'text-gray-400'} hover:bg-[#1A1A1A]`}
@@ -228,34 +213,37 @@ export default function PulseManagementPage() {
             </button>
 
             {selectedPoll === poll.id && (
-              <div className="mt-4 space-y-4">
+              <div className="mt-3 space-y-3">
                 {comments
                   .filter(comment => comment.pollId === poll.id)
                   .map(comment => (
-                    <div key={comment.id} className="bg-[#1A1A1A] rounded-lg p-4 flex justify-between items-start">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-[#0FF1CE]">{comment.username}</span>
+                    <div key={comment.id} className="bg-[#1A1A1A] rounded-lg p-3 flex justify-between items-start gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <span className="text-[#0FF1CE] text-sm font-medium">{comment.username}</span>
                           <span className="text-xs text-gray-400">
                             {comment.createdAt?.toDate().toLocaleDateString()}
                           </span>
+                          {comment.status === 'hidden' && (
+                            <span className="text-xs text-yellow-500 bg-yellow-500/10 px-1.5 py-0.5 rounded">Hidden</span>
+                          )}
                         </div>
-                        <p className="text-gray-300">{comment.text}</p>
+                        <p className="text-gray-300 text-sm">{comment.text}</p>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 shrink-0">
                         <button
                           onClick={() => handleToggleCommentVisibility(comment.id, comment.status || 'active')}
-                          className={`p-1 rounded-lg ${comment.status === 'hidden' ? 'text-yellow-500' : 'text-[#0FF1CE]'} hover:bg-[#0D0D0D]`}
+                          className={`p-1.5 rounded-lg ${comment.status === 'hidden' ? 'text-yellow-500' : 'text-[#0FF1CE]'} hover:bg-[#0D0D0D]`}
                           title={comment.status === 'hidden' ? 'Show Comment' : 'Hide Comment'}
                         >
-                          {comment.status === 'hidden' ? <AlertCircle size={16} /> : <CheckCircle size={16} />}
+                          {comment.status === 'hidden' ? <AlertCircle size={15} /> : <CheckCircle size={15} />}
                         </button>
                         <button
                           onClick={() => handleDeleteComment(comment.id)}
-                          className="p-1 rounded-lg text-red-500 hover:bg-[#0D0D0D]"
+                          className="p-1.5 rounded-lg text-red-500 hover:bg-[#0D0D0D]"
                           title="Delete Comment"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={15} />
                         </button>
                       </div>
                     </div>

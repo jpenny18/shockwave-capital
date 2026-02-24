@@ -246,30 +246,30 @@ export default function AdminKYCPage() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">KYC Management</h1>
-        <p className="text-gray-400">Review and manage KYC submissions from traders</p>
+      <div className="mb-5 md:mb-8">
+        <h1 className="text-xl md:text-3xl font-bold text-white mb-1 md:mb-2">KYC Management</h1>
+        <p className="text-gray-400 text-sm">Review and manage KYC submissions from traders</p>
       </div>
 
       {/* User Search Section */}
-      <div className="bg-[#1A1A1A] rounded-xl p-6 border border-[#2F2F2F] mb-8">
-        <h2 className="text-lg font-semibold text-white mb-4">Unlock KYC for User</h2>
-        <p className="text-sm text-gray-400 mb-4">
+      <div className="bg-[#1A1A1A] rounded-xl p-4 md:p-6 border border-[#2F2F2F] mb-5 md:mb-8">
+        <h2 className="text-base md:text-lg font-semibold text-white mb-2 md:mb-4">Unlock KYC for User</h2>
+        <p className="text-xs md:text-sm text-gray-400 mb-3 md:mb-4">
           Search for a user by email to manually unlock KYC verification for them.
         </p>
         
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
           <input
             type="email"
             value={userSearchEmail}
             onChange={(e) => setUserSearchEmail(e.target.value)}
             placeholder="user@example.com"
-            className="flex-1 bg-[#0D0D0D] border border-[#2F2F2F] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#0FF1CE]/50"
+            className="flex-1 bg-[#0D0D0D] border border-[#2F2F2F] rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-[#0FF1CE]/50"
           />
           <button
             onClick={searchUserByEmail}
             disabled={isSearching || !userSearchEmail}
-            className="px-6 py-2 bg-[#0FF1CE] text-black rounded-lg font-medium hover:bg-[#0FF1CE]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-4 md:px-6 py-2 bg-[#0FF1CE] text-black rounded-lg font-medium hover:bg-[#0FF1CE]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
           >
             {isSearching ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -313,16 +313,16 @@ export default function AdminKYCPage() {
       </div>
 
       {/* Filters and Stats */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-8">
-        <div className="lg:col-span-2">
+      <div className="flex flex-col gap-3 md:grid md:grid-cols-5 md:gap-4 mb-5 md:mb-8">
+        <div className="md:col-span-2">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by name or email..."
-              className="w-full bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:border-[#0FF1CE]/50"
+              className="w-full bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg pl-9 pr-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#0FF1CE]/50"
             />
           </div>
         </div>
@@ -331,7 +331,7 @@ export default function AdminKYCPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="w-full bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg px-4 py-3 text-white appearance-none focus:outline-none focus:border-[#0FF1CE]/50"
+            className="w-full bg-[#1A1A1A] border border-[#2F2F2F] rounded-lg px-3 py-2.5 text-white text-sm appearance-none focus:outline-none focus:border-[#0FF1CE]/50"
           >
             <option value="all">All Status</option>
             <option value="pending">Pending</option>
@@ -339,57 +339,85 @@ export default function AdminKYCPage() {
             <option value="rejected">Rejected</option>
             <option value="needs_resubmission">Needs Resubmission</option>
           </select>
-          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
+          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
         </div>
         
         {/* Stats Cards */}
-        <div className="bg-[#1A1A1A] rounded-lg p-4 border border-[#2F2F2F]">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-sm">Total</p>
-              <p className="text-2xl font-bold text-white">{submissions.length}</p>
+        <div className="grid grid-cols-2 gap-2 md:contents">
+          <div className="bg-[#1A1A1A] rounded-lg p-3 md:p-4 border border-[#2F2F2F]">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-xs md:text-sm">Total</p>
+                <p className="text-xl md:text-2xl font-bold text-white">{submissions.length}</p>
+              </div>
+              <Shield className="text-[#0FF1CE]" size={20} />
             </div>
-            <Shield className="text-[#0FF1CE]" size={24} />
           </div>
-        </div>
-        
-        <div className="bg-[#1A1A1A] rounded-lg p-4 border border-[#2F2F2F]">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-sm">Pending</p>
-              <p className="text-2xl font-bold text-yellow-500">
-                {submissions.filter(s => s.status === 'pending').length}
-              </p>
+          
+          <div className="bg-[#1A1A1A] rounded-lg p-3 md:p-4 border border-[#2F2F2F]">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-xs md:text-sm">Pending</p>
+                <p className="text-xl md:text-2xl font-bold text-yellow-500">
+                  {submissions.filter(s => s.status === 'pending').length}
+                </p>
+              </div>
+              <Clock className="text-yellow-500" size={20} />
             </div>
-            <Clock className="text-yellow-500" size={24} />
           </div>
         </div>
       </div>
 
-      {/* KYC Submissions Table */}
-      <div className="bg-[#1A1A1A] rounded-xl border border-[#2F2F2F] overflow-hidden">
+      {/* KYC Submissions - Mobile cards */}
+      <div className="md:hidden space-y-2">
+        {filteredSubmissions.length === 0 ? (
+          <div className="bg-[#1A1A1A] rounded-xl border border-[#2F2F2F] px-4 py-8 text-center text-gray-400">
+            No KYC submissions found
+          </div>
+        ) : filteredSubmissions.map((submission) => (
+          <div key={submission.id} className="bg-[#1A1A1A] rounded-xl border border-[#2F2F2F] p-3">
+            <div className="flex items-start justify-between mb-2">
+              <div>
+                <p className="text-white font-medium text-sm">{submission.personalInfo.firstName} {submission.personalInfo.lastName}</p>
+                <p className="text-gray-400 text-xs">{submission.email}</p>
+              </div>
+              {getStatusBadge(submission.status)}
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 text-xs">
+                <div className="flex items-center gap-1">
+                  {submission.documents.governmentIdUrl ? <CheckCircle className="w-3 h-3 text-green-500" /> : <XCircle className="w-3 h-3 text-gray-500" />}
+                  <span className="text-gray-400">ID</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  {submission.documents.proofOfAddressUrl ? <CheckCircle className="w-3 h-3 text-green-500" /> : <XCircle className="w-3 h-3 text-gray-500" />}
+                  <span className="text-gray-400">Address</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  {submission.documents.tradingAgreementSignedAt ? <CheckCircle className="w-3 h-3 text-green-500" /> : <XCircle className="w-3 h-3 text-gray-500" />}
+                  <span className="text-gray-400">Agreement</span>
+                </div>
+              </div>
+              <button onClick={() => setSelectedSubmission(submission)} className="text-[#0FF1CE] text-sm flex items-center gap-1 font-medium">
+                <Eye className="w-3.5 h-3.5" />Review
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* KYC Submissions Table - Desktop */}
+      <div className="hidden md:block bg-[#1A1A1A] rounded-xl border border-[#2F2F2F] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-[#2F2F2F]">
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                  User
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                  Contact
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                  Documents
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                  Submitted
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                  Actions
-                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">User</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Contact</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Documents</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Submitted</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#2F2F2F]">

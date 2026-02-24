@@ -1421,33 +1421,36 @@ export default function ChallengePage() {
                 </div>
             {formErrors.terms && <p className="mt-1 text-sm text-red-400 flex items-center gap-1"><AlertCircle size={14} />{formErrors.terms}</p>}
               
-              <button
-                onClick={handleCreditCardPayment}
-                disabled={!isFormValid()}
-                className={`w-full mt-6 relative overflow-hidden rounded-xl font-bold py-4 px-6 transition-all duration-300 ${
-                  isFormValid()
-                    ? 'bg-gradient-to-r from-[#0FF1CE] to-[#0AA89E] text-black hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-[#0FF1CE]/25'
-                    : 'bg-gray-700 text-gray-400 cursor-not-allowed opacity-50'
-                }`}
-              >
-                <div className="relative flex items-center justify-center gap-2">
-                  <CreditCard size={20} />
-                  <span>Pay with Credit/Debit Card</span>
-                  <ChevronRight size={20} className={isFormValid() ? 'group-hover:translate-x-1 transition-transform' : ''} />
-                </div>
-              </button>
+              {/* Credit/Debit Card payment - hidden (Whop dropped us) */}
+              <div className="hidden">
+                <button
+                  onClick={handleCreditCardPayment}
+                  disabled={!isFormValid()}
+                  className={`w-full mt-6 relative overflow-hidden rounded-xl font-bold py-4 px-6 transition-all duration-300 ${
+                    isFormValid()
+                      ? 'bg-gradient-to-r from-[#0FF1CE] to-[#0AA89E] text-black hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-[#0FF1CE]/25'
+                      : 'bg-gray-700 text-gray-400 cursor-not-allowed opacity-50'
+                  }`}
+                >
+                  <div className="relative flex items-center justify-center gap-2">
+                    <CreditCard size={20} />
+                    <span>Pay with Credit/Debit Card</span>
+                    <ChevronRight size={20} className={isFormValid() ? 'group-hover:translate-x-1 transition-transform' : ''} />
+                  </div>
+                </button>
+              </div>
               
               <button
                 onClick={handleProceedToPayment}
                 disabled={!isFormValid()}
-                className={`w-full mt-3 relative overflow-hidden rounded-xl font-bold py-4 px-6 transition-all duration-300 ${
+                className={`w-full mt-6 relative overflow-hidden rounded-xl font-bold py-4 px-6 transition-all duration-300 ${
                   isFormValid()
-                    ? 'bg-gradient-to-r from-[#FF6B6B] to-[#EE5A24] text-white hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-[#FF6B6B]/25'
+                    ? 'bg-gradient-to-r from-[#0FF1CE] to-[#00D4FF] text-black hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-[#0FF1CE]/25'
                     : 'bg-gray-700 text-gray-400 cursor-not-allowed opacity-50'
                 }`}
               >
                 <div className="relative flex items-center justify-center gap-2">
-                  <span>Pay with Crypto</span>
+                  <span>Continue To Payment</span>
                   <ChevronRight size={20} className={isFormValid() ? 'group-hover:translate-x-1 transition-transform' : ''} />
                 </div>
               </button>

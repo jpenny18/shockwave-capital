@@ -243,94 +243,99 @@ export default function AdminWithdrawalsPage() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Withdrawal Management</h1>
-        <p className="text-gray-400">Review and manage user withdrawal requests</p>
+      <div className="mb-5 md:mb-8">
+        <h1 className="text-xl md:text-3xl font-bold text-white mb-1 md:mb-2">Withdrawal Management</h1>
+        <p className="text-gray-400 text-sm">Review and manage user withdrawal requests</p>
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-        <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-sm">Total Requests</p>
-              <p className="text-2xl font-bold text-white">{stats.total}</p>
+      <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-4 mb-5 md:mb-8">
+        {[
+          { label: 'Total', value: stats.total, color: 'text-white', Icon: FileText, iconColor: 'text-gray-500' },
+          { label: 'Pending', value: stats.pending, color: 'text-yellow-400', Icon: Clock, iconColor: 'text-yellow-400' },
+          { label: 'Approved', value: stats.approved, color: 'text-blue-400', Icon: Check, iconColor: 'text-blue-400' },
+          { label: 'Completed', value: stats.completed, color: 'text-green-400', Icon: CheckCircle, iconColor: 'text-green-400' },
+          { label: 'Rejected', value: stats.rejected, color: 'text-red-400', Icon: X, iconColor: 'text-red-400' },
+        ].map(({ label, value, color, Icon, iconColor }) => (
+          <div key={label} className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-2.5 md:p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-[10px] md:text-sm truncate">{label}</p>
+                <p className={`text-lg md:text-2xl font-bold ${color}`}>{value}</p>
+              </div>
+              <Icon className={`${iconColor} hidden md:block`} size={22} />
             </div>
-            <FileText className="text-gray-500" size={24} />
           </div>
-        </div>
-        <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-sm">Pending</p>
-              <p className="text-2xl font-bold text-yellow-400">{stats.pending}</p>
-            </div>
-            <Clock className="text-yellow-400" size={24} />
-          </div>
-        </div>
-        <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-sm">Approved</p>
-              <p className="text-2xl font-bold text-blue-400">{stats.approved}</p>
-            </div>
-            <Check className="text-blue-400" size={24} />
-          </div>
-        </div>
-        <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-sm">Completed</p>
-              <p className="text-2xl font-bold text-green-400">{stats.completed}</p>
-            </div>
-            <CheckCircle className="text-green-400" size={24} />
-          </div>
-        </div>
-        <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-sm">Rejected</p>
-              <p className="text-2xl font-bold text-red-400">{stats.rejected}</p>
-            </div>
-            <X className="text-red-400" size={24} />
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* Controls */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+      <div className="flex flex-col gap-2 sm:flex-row sm:gap-4 mb-4 md:mb-6">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
           <input
             type="text"
             placeholder="Search by email or user ID..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-[#0D0D0D]/80 backdrop-blur-sm text-white pl-10 pr-4 py-2 rounded-lg border border-[#2F2F2F]/50 focus:border-[#0FF1CE]/50 focus:outline-none"
+            className="w-full bg-[#0D0D0D]/80 backdrop-blur-sm text-white pl-9 pr-4 py-2 text-sm rounded-lg border border-[#2F2F2F]/50 focus:border-[#0FF1CE]/50 focus:outline-none"
           />
         </div>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as any)}
-          className="bg-[#0D0D0D]/80 backdrop-blur-sm text-white px-4 py-2 rounded-lg border border-[#2F2F2F]/50 focus:border-[#0FF1CE]/50 focus:outline-none"
-        >
-          <option value="all">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="approved">Approved</option>
-          <option value="completed">Completed</option>
-          <option value="rejected">Rejected</option>
-        </select>
-        <button
-          onClick={() => setShowEnableModal(true)}
-          className="bg-[#0FF1CE] text-black font-semibold px-4 py-2 rounded-lg hover:bg-[#0FF1CE]/90 transition-colors flex items-center gap-2"
-        >
-          <Plus size={20} />
-          Enable Withdrawal
-        </button>
+        <div className="flex gap-2">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as any)}
+            className="flex-1 sm:flex-none bg-[#0D0D0D]/80 backdrop-blur-sm text-white px-3 py-2 text-sm rounded-lg border border-[#2F2F2F]/50 focus:border-[#0FF1CE]/50 focus:outline-none"
+          >
+            <option value="all">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="completed">Completed</option>
+            <option value="rejected">Rejected</option>
+          </select>
+          <button
+            onClick={() => setShowEnableModal(true)}
+            className="bg-[#0FF1CE] text-black font-semibold px-3 md:px-4 py-2 rounded-lg hover:bg-[#0FF1CE]/90 transition-colors flex items-center gap-1.5 text-sm whitespace-nowrap"
+          >
+            <Plus size={16} />
+            <span className="hidden sm:inline">Enable Withdrawal</span>
+            <span className="sm:hidden">Enable</span>
+          </button>
+        </div>
       </div>
 
-      {/* Withdrawals Table */}
-      <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 overflow-hidden">
+      {/* Withdrawals - Mobile cards */}
+      <div className="md:hidden space-y-2">
+        {filteredWithdrawals.length === 0 ? (
+          <div className="bg-[#0D0D0D]/80 rounded-xl border border-[#2F2F2F]/50 py-8 text-center text-gray-400">
+            No withdrawal requests found
+          </div>
+        ) : filteredWithdrawals.map((withdrawal) => (
+          <div key={withdrawal.id} className="bg-[#0D0D0D]/80 rounded-xl border border-[#2F2F2F]/50 p-3">
+            <div className="flex items-start justify-between mb-2">
+              <div>
+                <p className="text-white font-medium text-sm">{withdrawal.userEmail}</p>
+                <p className="text-gray-500 text-xs">{withdrawal.userId.slice(0, 12)}...</p>
+              </div>
+              <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${getStatusColor(withdrawal.status)}`}>
+                {withdrawal.status.toUpperCase()}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-[#0FF1CE] font-semibold text-sm">${withdrawal.payoutAmount.toFixed(2)}</div>
+                <div className="text-gray-500 text-xs">{getPaymentMethodDisplay(withdrawal.paymentMethod)}</div>
+              </div>
+              <button onClick={() => setSelectedWithdrawal(withdrawal)} className="text-[#0FF1CE] flex items-center gap-1 text-sm font-medium">
+                <Eye size={15} />Review
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Withdrawals Table - Desktop */}
+      <div className="hidden md:block bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>

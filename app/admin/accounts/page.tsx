@@ -1876,9 +1876,9 @@ export default function AdminAccountsPage() {
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header with Alerts */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-white">Account Management Dashboard</h1>
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-5 gap-3">
+        <h1 className="text-xl md:text-2xl font-bold text-white">Account Management</h1>
+        <div className="flex items-center gap-2 md:gap-4 flex-wrap">
           <button
             onClick={() => {
               setShowConnectModal(true);
@@ -1906,10 +1906,11 @@ export default function AdminAccountsPage() {
                 step: 1 as 1 | 2 | 3
               });
             }}
-            className="bg-green-500 text-white font-semibold px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
+            className="bg-green-500 text-white font-semibold px-3 md:px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center gap-1.5 text-sm"
           >
-            <Plus size={20} />
-            Connect Demo Account
+            <Plus size={16} />
+            <span className="hidden sm:inline">Connect Demo Account</span>
+            <span className="sm:hidden">Connect Demo</span>
           </button>
           <button
             onClick={() => {
@@ -1926,10 +1927,11 @@ export default function AdminAccountsPage() {
                 step: 1 as 1 | 2 | 3
               });
             }}
-            className="bg-[#0FF1CE] text-black font-semibold px-4 py-2 rounded-lg hover:bg-[#0FF1CE]/90 transition-colors flex items-center gap-2"
+            className="bg-[#0FF1CE] text-black font-semibold px-3 md:px-4 py-2 rounded-lg hover:bg-[#0FF1CE]/90 transition-colors flex items-center gap-1.5 text-sm"
           >
-            <Plus size={20} />
-            Add Existing Account
+            <Plus size={16} />
+            <span className="hidden sm:inline">Add Existing Account</span>
+            <span className="sm:hidden">Add Account</span>
           </button>
           <button
             onClick={() => window.location.reload()}
@@ -2087,7 +2089,7 @@ export default function AdminAccountsPage() {
       {/* Overview Statistics */}
       <div className="mb-6">
         {/* Primary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-3 md:mb-4">
           <div className="bg-gradient-to-br from-[#0D0D0D] to-[#0D0D0D]/60 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6 hover:border-[#0FF1CE]/30 transition-all duration-300">
             <div className="flex items-start justify-between mb-4">
               <div className="p-3 bg-[#0FF1CE]/10 rounded-lg">
@@ -2147,7 +2149,7 @@ export default function AdminAccountsPage() {
         </div>
         
         {/* Secondary Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-5 gap-2 md:gap-3">
           <div className="bg-[#0D0D0D]/60 backdrop-blur-sm rounded-lg border border-[#2F2F2F]/30 p-4 hover:bg-[#0D0D0D]/80 transition-colors">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -2206,23 +2208,23 @@ export default function AdminAccountsPage() {
       </div>
 
       {/* Filters and Search */}
-      <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-4 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
+      <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-3 md:p-4 mb-4 md:mb-6">
+        <div className="flex flex-col gap-2 md:flex-row md:gap-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
             <input
               type="text"
               placeholder="Search by email, name, or account ID..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg pl-10 pr-10 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-[#0FF1CE]/50"
+              className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg pl-9 pr-9 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#0FF1CE]/50"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             )}
           </div>
@@ -2231,7 +2233,7 @@ export default function AdminAccountsPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#0FF1CE]/50"
+              className="flex-1 md:flex-none bg-[#151515] border border-[#2F2F2F] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#0FF1CE]/50"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
@@ -2244,7 +2246,7 @@ export default function AdminAccountsPage() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#0FF1CE]/50 min-w-[160px]"
+              className="flex-1 md:flex-none bg-[#151515] border border-[#2F2F2F] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#0FF1CE]/50 md:min-w-[160px]"
               title="Sort accounts by"
             >
               <optgroup label="Date & Time">
@@ -2277,15 +2279,20 @@ export default function AdminAccountsPage() {
             <button
               onClick={handleBulkRefresh}
               disabled={bulkRefreshing || refreshQueue.length > 0}
-              className="bg-[#0FF1CE]/10 text-[#0FF1CE] px-4 py-2 rounded-lg hover:bg-[#0FF1CE]/20 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-[#0FF1CE]/10 text-[#0FF1CE] px-3 py-2 rounded-lg hover:bg-[#0FF1CE]/20 transition-colors flex items-center gap-1.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <RefreshCw size={16} className={bulkRefreshing || refreshQueue.length > 0 ? 'animate-spin' : ''} />
-              {refreshQueue.length > 0 
-                ? `Refreshing (${refreshQueue.length})` 
-                : selectedAccounts.length > 0 
-                  ? `Refresh (${selectedAccounts.length})`
-                  : 'Refresh All'
-              }
+              <RefreshCw size={15} className={bulkRefreshing || refreshQueue.length > 0 ? 'animate-spin' : ''} />
+              <span className="hidden sm:inline">
+                {refreshQueue.length > 0 
+                  ? `Refreshing (${refreshQueue.length})` 
+                  : selectedAccounts.length > 0 
+                    ? `Refresh (${selectedAccounts.length})`
+                    : 'Refresh All'
+                }
+              </span>
+              <span className="sm:hidden">
+                {refreshQueue.length > 0 ? refreshQueue.length : selectedAccounts.length > 0 ? selectedAccounts.length : 'All'}
+              </span>
             </button>
               {nextAutoRefreshTime && (
                 <div className="absolute -bottom-5 left-0 text-xs text-gray-500 whitespace-nowrap flex items-center gap-1">
@@ -2298,18 +2305,19 @@ export default function AdminAccountsPage() {
             {selectedAccounts.length > 0 && (
               <button
                 onClick={handleBulkDisconnect}
-                className="bg-red-500/10 text-red-400 px-4 py-2 rounded-lg hover:bg-red-500/20 transition-colors flex items-center gap-2"
+                className="bg-red-500/10 text-red-400 px-3 py-2 rounded-lg hover:bg-red-500/20 transition-colors flex items-center gap-1.5 text-sm"
               >
-                <Power size={16} />
-                Disconnect ({selectedAccounts.length})
+                <Power size={15} />
+                <span className="hidden sm:inline">Disconnect ({selectedAccounts.length})</span>
+                <span className="sm:hidden">({selectedAccounts.length})</span>
               </button>
             )}
             
             <button
               onClick={handleExport}
-              className="bg-[#0FF1CE]/10 text-[#0FF1CE] px-4 py-2 rounded-lg hover:bg-[#0FF1CE]/20 transition-colors flex items-center gap-2"
+              className="bg-[#0FF1CE]/10 text-[#0FF1CE] px-3 py-2 rounded-lg hover:bg-[#0FF1CE]/20 transition-colors flex items-center gap-1.5 text-sm"
             >
-              <Download size={16} />
+              <Download size={15} />
               Export
             </button>
           </div>
@@ -2337,7 +2345,367 @@ export default function AdminAccountsPage() {
             <p className="text-gray-400">No accounts found</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          {/* Mobile Card View */}
+          <div className="md:hidden divide-y divide-[#2F2F2F]/50">
+            {filteredAccounts.map((account) => {
+              const metrics = account.cachedMetrics;
+              const config = account.metaApiAccount;
+              const isBreached = metrics && (
+                metrics.maxDrawdown > (config?.accountType === 'standard' ? 15 : config?.accountType === 'gauntlet' ? 15 : config?.accountType === '1-step' ? 8 : 4) ||
+                (metrics.maxDailyDrawdown || metrics.dailyDrawdown) > (config?.accountType === 'standard' ? 8 : config?.accountType === 'gauntlet' ? 8 : config?.accountType === '1-step' ? 4 : 999)
+              );
+              const profitPercent = config && metrics ? ((metrics.balance - config.accountSize) / config.accountSize * 100) : 0;
+              const targetProfit = config?.accountType === '1-step' ? 10 :
+                                   config?.accountType === 'gauntlet' ? 10 :
+                                   config?.accountType === 'standard'
+                                     ? (config.step === 1 ? 10 : 5)
+                                     : 12;
+              const minTradingDays = config?.accountType === 'gauntlet' ? 0 : 5;
+              const currentTradingDays = metrics?.tradingDays || 0;
+              const hasPassed = config?.status === 'passed' ||
+                                (config?.status === 'active' && profitPercent >= targetProfit && !isBreached && currentTradingDays >= minTradingDays);
+              const maxDDLimit = config?.accountType === 'standard' || config?.accountType === 'gauntlet' ? 15 : config?.accountType === '1-step' ? 8 : 4;
+              const dailyDDLimit = config?.accountType === 'standard' || config?.accountType === 'gauntlet' ? 8 : config?.accountType === '1-step' ? 4 : 999;
+              const dailyDDValue = metrics?.maxDailyDrawdown || metrics?.dailyDrawdown || 0;
+
+              return (
+                <div key={config?.accountId || account.uid} className={`p-4 ${isBreached ? 'bg-red-500/5' : hasPassed ? 'bg-green-500/5' : ''}`}>
+
+                  {/* Row 1: Checkbox + User info + Status */}
+                  <div className="flex items-start gap-3 mb-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedAccounts.includes(config?.accountId || '')}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedAccounts([...selectedAccounts, config?.accountId || '']);
+                        } else {
+                          setSelectedAccounts(selectedAccounts.filter(id => id !== config?.accountId));
+                        }
+                      }}
+                      className="rounded border-gray-600 mt-0.5 shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-white truncate">{account.email}</p>
+                          <p className="text-xs text-gray-400 truncate">{account.displayName || `${account.firstName} ${account.lastName}`.trim() || 'No name'}</p>
+                          {config?.accountId && (
+                            <p className="text-xs text-gray-500 font-mono mt-0.5" title={config.accountId}>{config.accountId.slice(0, 12)}...</p>
+                          )}
+                        </div>
+                        <span className={`shrink-0 px-2 py-0.5 text-xs font-medium rounded-full ${
+                          config?.status === 'active' ? 'bg-green-500/20 text-green-400' :
+                          config?.status === 'passed' ? 'bg-blue-500/20 text-blue-400' :
+                          config?.status === 'failed' ? 'bg-red-500/20 text-red-400' :
+                          config?.status === 'funded' ? 'bg-purple-500/20 text-purple-400' :
+                          'bg-gray-500/20 text-gray-400'
+                        }`}>
+                          {config?.status?.toUpperCase() || 'UNKNOWN'}
+                        </span>
+                      </div>
+                      {/* Account Type + Step */}
+                      <div className="flex items-center gap-1 mt-1.5">
+                        <Shield size={11} className="text-gray-500 shrink-0" />
+                        <span className="text-xs text-gray-400">
+                          {config?.accountType === '1-step' ? '1-Step' :
+                           config?.accountType === 'gauntlet' ? 'Gauntlet' :
+                           config?.accountType === 'standard' ? 'Standard' : 'Instant'}
+                          {config?.step && ` · ${config.step === 3 ? 'Funded' :
+                            (config.accountType === '1-step' || config.accountType === 'gauntlet') ? 'Challenge' :
+                            `Step ${config.step}`}`}
+                          {config?.accountSize && ` · $${config.accountSize.toLocaleString()}`}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Row 2: Stats grid */}
+                  <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
+                    {/* Balance */}
+                    <div className="bg-[#151515] rounded-lg p-2.5">
+                      <p className="text-gray-500 mb-1">Balance</p>
+                      <p className="text-white font-medium">${metrics?.balance?.toLocaleString() || '-'}</p>
+                      {config && metrics && config.status === 'active' && (
+                        <div className="mt-1.5">
+                          <div className="h-1 bg-[#0D0D0D] rounded-full overflow-hidden mb-0.5">
+                            <div
+                              className={`h-full transition-all duration-500 ${
+                                profitPercent >= targetProfit ? 'bg-green-400' :
+                                profitPercent >= targetProfit * 0.8 ? 'bg-yellow-400' :
+                                profitPercent >= 0 ? 'bg-[#0FF1CE]' : 'bg-red-400'
+                              }`}
+                              style={{ width: `${Math.min(Math.max((profitPercent / targetProfit) * 100, 0), 100)}%` }}
+                            />
+                          </div>
+                          <span className={`text-[10px] ${
+                            profitPercent >= targetProfit ? 'text-green-400' :
+                            profitPercent < 0 ? 'text-red-400' : 'text-gray-500'
+                          }`}>
+                            {profitPercent >= 0 ? '+' : ''}{profitPercent.toFixed(1)}% / {targetProfit}%
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Equity */}
+                    <div className="bg-[#151515] rounded-lg p-2.5">
+                      <p className="text-gray-500 mb-1">Equity</p>
+                      <p className="text-white font-medium">${metrics?.equity?.toLocaleString() || '-'}</p>
+                      {metrics?.balance && metrics?.equity && (
+                        <p className="text-[10px] text-gray-500 mt-0.5">
+                          {metrics.equity < metrics.balance ? '-' : '+'}{Math.abs(((metrics.equity - metrics.balance) / metrics.balance * 100)).toFixed(1)}% vs bal
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Max Drawdown */}
+                    <div className="bg-[#151515] rounded-lg p-2.5">
+                      <p className="text-gray-500 mb-1">Max DD</p>
+                      <div className="flex items-center gap-1.5">
+                        <div className="flex-1 h-1 bg-[#0D0D0D] rounded-full overflow-hidden">
+                          <div
+                            className={`h-full transition-all duration-500 ${
+                              (metrics?.maxDrawdown || 0) > maxDDLimit ? 'bg-red-400' :
+                              (metrics?.maxDrawdown || 0) > maxDDLimit * 0.8 ? 'bg-yellow-400' : 'bg-green-400'
+                            }`}
+                            style={{ width: `${Math.min(((metrics?.maxDrawdown || 0) / maxDDLimit) * 100, 100)}%` }}
+                          />
+                        </div>
+                        <span className={`font-medium ${
+                          (metrics?.maxDrawdown || 0) > maxDDLimit ? 'text-red-400' :
+                          (metrics?.maxDrawdown || 0) > maxDDLimit * 0.8 ? 'text-yellow-400' : 'text-gray-300'
+                        }`}>
+                          {metrics?.maxDrawdown?.toFixed(2) || '-'}%
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-gray-600 mt-0.5">Limit: {maxDDLimit}%</p>
+                    </div>
+
+                    {/* Daily DD */}
+                    <div className="bg-[#151515] rounded-lg p-2.5">
+                      <p className="text-gray-500 mb-1">Daily DD (Peak)</p>
+                      {config?.accountType === 'instant' ? (
+                        <p className="text-gray-400 font-medium">N/A</p>
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-1.5">
+                            <div className="flex-1 h-1 bg-[#0D0D0D] rounded-full overflow-hidden">
+                              <div
+                                className={`h-full transition-all duration-500 ${
+                                  dailyDDValue > dailyDDLimit ? 'bg-red-400' :
+                                  dailyDDValue > dailyDDLimit * 0.75 ? 'bg-yellow-400' : 'bg-green-400'
+                                }`}
+                                style={{ width: `${Math.min((dailyDDValue / dailyDDLimit) * 100, 100)}%` }}
+                              />
+                            </div>
+                            <span className={`font-medium ${
+                              dailyDDValue > dailyDDLimit ? 'text-red-400' :
+                              dailyDDValue > dailyDDLimit * 0.75 ? 'text-yellow-400' : 'text-gray-300'
+                            }`}>
+                              {dailyDDValue.toFixed(2)}%
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-gray-600 mt-0.5">Limit: {dailyDDLimit}%</p>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Trading Days */}
+                    <div className="bg-[#151515] rounded-lg p-2.5">
+                      <p className="text-gray-500 mb-1">Trading Days</p>
+                      <div className="flex items-center gap-1.5">
+                        <div className="flex-1 h-1 bg-[#0D0D0D] rounded-full overflow-hidden">
+                          <div
+                            className={`h-full transition-all duration-500 ${
+                              currentTradingDays >= minTradingDays ? 'bg-green-400' :
+                              currentTradingDays >= minTradingDays * 0.8 ? 'bg-yellow-400' : 'bg-gray-400'
+                            }`}
+                            style={{ width: minTradingDays > 0 ? `${Math.min((currentTradingDays / minTradingDays) * 100, 100)}%` : '0%' }}
+                          />
+                        </div>
+                        <span className={`font-medium ${currentTradingDays >= minTradingDays ? 'text-green-400' : 'text-gray-300'}`}>
+                          {currentTradingDays}/{minTradingDays}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Last Updated */}
+                    <div className="bg-[#151515] rounded-lg p-2.5">
+                      <p className="text-gray-500 mb-1">Last Updated</p>
+                      <p className="text-gray-400 text-[11px] leading-tight">
+                        {metrics?.lastUpdated
+                          ? formatDistanceToNow(metrics.lastUpdated.toDate ? metrics.lastUpdated.toDate() : new Date(metrics.lastUpdated), { addSuffix: true })
+                          : config?.updatedAt
+                            ? formatDistanceToNow(config.updatedAt.toDate(), { addSuffix: true })
+                            : 'Never'
+                        }
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Row 3: Action buttons */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {/* Primary Actions */}
+                    <div className="flex items-center gap-1 bg-[#151515] rounded-lg p-1">
+                      <button
+                        onClick={() => window.location.href = `/admin/accounts/${config?.accountId}`}
+                        className="p-1.5 text-gray-400 hover:text-[#0FF1CE] hover:bg-[#0FF1CE]/10 rounded transition-all"
+                        title="View Account Details"
+                      >
+                        <Eye size={15} />
+                      </button>
+                      <button
+                        onClick={() => refreshAccount(account)}
+                        disabled={refreshingAccounts.has(config?.accountId || '')}
+                        className="p-1.5 text-gray-400 hover:text-[#0FF1CE] hover:bg-[#0FF1CE]/10 rounded transition-all disabled:opacity-50"
+                        title="Refresh Metrics"
+                      >
+                        <RefreshCw size={15} className={refreshingAccounts.has(config?.accountId || '') ? 'animate-spin' : ''} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedUser(account);
+                          setAccountForm({
+                            accountId: config?.accountId || '',
+                            accountToken: config?.accountToken || '',
+                            accountType: config?.accountType || 'standard',
+                            accountSize: config?.accountSize || 10000,
+                            platform: config?.platform || 'mt5',
+                            status: config?.status || 'active',
+                            step: config?.step || 1
+                          });
+                          setShowEditModal(true);
+                        }}
+                        className="p-1.5 text-gray-400 hover:text-[#0FF1CE] hover:bg-[#0FF1CE]/10 rounded transition-all"
+                        title="Edit Configuration"
+                      >
+                        <Edit2 size={15} />
+                      </button>
+                    </div>
+
+                    {/* Email Actions */}
+                    {(config?.status === 'active' || config?.status === 'failed' || config?.status === 'passed' || config?.status === 'funded') && (
+                      <div className="flex items-center gap-1 bg-[#151515] rounded-lg p-1">
+                        {config?.status === 'passed' && (
+                          <button
+                            onClick={() => sendEmailWithModal(() => sendPassEmail(account), 'pass email')}
+                            className="p-1.5 text-gray-400 hover:text-green-400 hover:bg-green-400/10 rounded transition-all"
+                            title="Send Pass Email"
+                          >
+                            <Mail size={15} />
+                          </button>
+                        )}
+                        {config?.status === 'failed' && (
+                          <button
+                            onClick={() => sendEmailWithModal(() => config.step === 3 ? sendFundedFailEmail(account) : sendFailEmail(account), config.step === 3 ? 'funded fail email' : 'fail email')}
+                            className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded transition-all"
+                            title={config.step === 3 ? 'Send Funded Fail Email' : 'Send Fail Email'}
+                          >
+                            <Mail size={15} />
+                          </button>
+                        )}
+                        {config?.status === 'funded' && (
+                          <>
+                            <button
+                              onClick={() => sendEmailWithModal(() => sendFundedPassEmail(account), 'funded welcome email')}
+                              className="p-1.5 text-gray-400 hover:text-purple-400 hover:bg-purple-400/10 rounded transition-all"
+                              title="Send Funded Welcome Email"
+                            >
+                              <Mail size={15} />
+                            </button>
+                            <button
+                              onClick={() => sendEmailWithModal(() => sendFundedFailEmail(account), 'funded fail email')}
+                              className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded transition-all"
+                              title="Send Funded Fail Email"
+                            >
+                              <Mail size={15} />
+                            </button>
+                            {metrics && (metrics.maxDrawdown >= 6 || (metrics.maxDailyDrawdown || metrics.dailyDrawdown) <= 3) && (
+                              <button
+                                onClick={() => sendEmailWithModal(() => sendFundedDrawdownWarningEmail(account), 'funded risk warning email')}
+                                className="p-1.5 text-gray-400 hover:text-yellow-400 hover:bg-yellow-400/10 rounded transition-all"
+                                title="Send Funded Risk Warning Email"
+                              >
+                                <Mail size={15} />
+                              </button>
+                            )}
+                          </>
+                        )}
+                        {config?.status === 'active' && (
+                          <>
+                            <button
+                              onClick={() => sendEmailWithModal(() => sendPassEmail(account), 'pass email')}
+                              className="p-1.5 text-gray-400 hover:text-green-400 hover:bg-green-400/10 rounded transition-all"
+                              title="Send Pass Email"
+                            >
+                              <Mail size={15} />
+                            </button>
+                            <button
+                              onClick={() => sendEmailWithModal(() => sendFailEmail(account), 'fail email')}
+                              className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded transition-all"
+                              title="Send Fail Email"
+                            >
+                              <Mail size={15} />
+                            </button>
+                            {metrics && metrics.maxDrawdown >= 6 && (
+                              <button
+                                onClick={() => sendEmailWithModal(() => sendDrawdownWarningEmail(account), 'drawdown warning email')}
+                                className="p-1.5 text-gray-400 hover:text-yellow-400 hover:bg-yellow-400/10 rounded transition-all"
+                                title="Send Drawdown Warning Email"
+                              >
+                                <Mail size={15} />
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Account Management Actions */}
+                    <div className="flex items-center gap-1 bg-[#151515] rounded-lg p-1">
+                      <button
+                        onClick={() => enableAccountFeatures(account)}
+                        className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-blue-400/10 rounded transition-all"
+                        title="Enable MetaStats & Risk APIs"
+                      >
+                        <Activity size={15} />
+                      </button>
+                      {config?.status === 'active' && (
+                        <>
+                          <button
+                            onClick={() => handleDisconnect(account.uid, config?.accountId || '')}
+                            className="p-1.5 text-gray-400 hover:text-yellow-400 hover:bg-yellow-400/10 rounded transition-all"
+                            title="Disconnect Account"
+                          >
+                            <Power size={15} />
+                          </button>
+                          <button
+                            onClick={() => handleFail(account.uid, config?.accountId || '')}
+                            className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded transition-all"
+                            title="Mark as Failed"
+                          >
+                            <XCircle size={15} />
+                          </button>
+                        </>
+                      )}
+                      <button
+                        onClick={() => handleDelete(account.uid, config?.accountId || '')}
+                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-all"
+                        title="Delete Account"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+              );
+            })}
+          </div>
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-[#2F2F2F] bg-[#151515]">
@@ -2748,6 +3116,7 @@ export default function AdminAccountsPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
 

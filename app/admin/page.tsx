@@ -36,33 +36,33 @@ const StatCard = ({ title, value, icon: Icon, change, changeType, isLoading }: {
   changeType?: 'up' | 'down' | 'neutral';
   isLoading?: boolean;
 }) => (
-  <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6 hover:border-[#0FF1CE]/30 transition-all">
+  <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-4 md:p-6 hover:border-[#0FF1CE]/30 transition-all">
     <div className="flex items-start justify-between">
-      <div>
-        <p className="text-gray-400 text-sm">{title}</p>
+      <div className="min-w-0 flex-1">
+        <p className="text-gray-400 text-xs md:text-sm truncate">{title}</p>
         {isLoading ? (
-          <div className="h-8 w-24 bg-white/10 animate-pulse rounded mt-1"></div>
+          <div className="h-7 md:h-8 w-20 md:w-24 bg-white/10 animate-pulse rounded mt-1"></div>
         ) : (
-          <h3 className="text-2xl font-bold text-white mt-1">{value}</h3>
+          <h3 className="text-xl md:text-2xl font-bold text-white mt-1 truncate">{value}</h3>
         )}
         
         {change && !isLoading && (
-          <div className={`flex items-center mt-2 text-xs font-medium ${
+          <div className={`flex items-center mt-1.5 text-xs font-medium ${
             changeType === 'up' ? 'text-green-500' : 
             changeType === 'down' ? 'text-red-500' : 'text-gray-400'
           }`}>
             {changeType === 'up' ? (
-              <ArrowUp size={12} className="mr-1" />
+              <ArrowUp size={11} className="mr-1 flex-shrink-0" />
             ) : changeType === 'down' ? (
-              <ArrowDown size={12} className="mr-1" />
+              <ArrowDown size={11} className="mr-1 flex-shrink-0" />
             ) : null}
-            <span>{change} from last period</span>
+            <span className="truncate">{change}</span>
           </div>
         )}
       </div>
       
-      <div className="p-3 rounded-lg bg-[#0FF1CE]/10 text-[#0FF1CE]">
-        <Icon size={20} />
+      <div className="p-2.5 md:p-3 rounded-lg bg-[#0FF1CE]/10 text-[#0FF1CE] ml-3 flex-shrink-0">
+        <Icon size={18} />
       </div>
     </div>
   </div>
@@ -323,24 +323,22 @@ export default function AdminDashboard() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-        <div className="flex items-center space-x-2">
-          <select 
-            className="bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-[#0FF1CE]/50"
-            value={timeRange}
-            onChange={(e) => setTimeRange(e.target.value)}
-          >
-            <option value="7">Last 7 days</option>
-            <option value="30">Last 30 days</option>
-            <option value="90">Last 3 months</option>
-            <option value="365">Last 12 months</option>
-          </select>
-        </div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-5 gap-3">
+        <h1 className="text-xl md:text-2xl font-bold text-white">Dashboard</h1>
+        <select 
+          className="bg-[#151515] border border-[#2F2F2F] rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#0FF1CE]/50 w-full sm:w-auto"
+          value={timeRange}
+          onChange={(e) => setTimeRange(e.target.value)}
+        >
+          <option value="7">Last 7 days</option>
+          <option value="30">Last 30 days</option>
+          <option value="90">Last 3 months</option>
+          <option value="365">Last 12 months</option>
+        </select>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8">
         <StatCard 
           title="Total Orders" 
           value={stats.totalOrders.toLocaleString()} 
@@ -376,94 +374,38 @@ export default function AdminDashboard() {
       </div>
 
       {/* Additional Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-        <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-xs">Card Orders</p>
-              {isLoading ? (
-                <div className="h-6 w-16 bg-white/10 animate-pulse rounded mt-1"></div>
-              ) : (
-                <h4 className="text-xl font-bold text-white mt-1">{stats.cardOrders}</h4>
-              )}
-            </div>
-            <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400">
-              <ShoppingCart size={16} />
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-xs">Crypto Orders</p>
-              {isLoading ? (
-                <div className="h-6 w-16 bg-white/10 animate-pulse rounded mt-1"></div>
-              ) : (
-                <h4 className="text-xl font-bold text-white mt-1">{stats.cryptoOrders}</h4>
-              )}
-            </div>
-            <div className="p-2 rounded-lg bg-orange-500/10 text-orange-400">
-              <Bitcoin size={16} />
+      <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-4 mb-6 md:mb-8">
+        {[
+          { label: 'Card Orders', value: stats.cardOrders, color: 'blue', Icon: ShoppingCart, textColor: 'text-white' },
+          { label: 'Crypto', value: stats.cryptoOrders, color: 'orange', Icon: Bitcoin, textColor: 'text-white' },
+          { label: 'Passed', value: stats.challengeStatuses.passed, color: 'green', Icon: CheckCircle, textColor: 'text-green-400' },
+          { label: 'Failed', value: stats.challengeStatuses.failed, color: 'red', Icon: AlertCircle, textColor: 'text-red-400' },
+          { label: 'In Progress', value: stats.challengeStatuses.inProgress, color: 'yellow', Icon: Clock, textColor: 'text-yellow-400' },
+        ].map(({ label, value, color, Icon, textColor }) => (
+          <div key={label} className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-2.5 md:p-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-1 md:gap-0">
+              <div className="min-w-0">
+                <p className="text-gray-400 text-[10px] md:text-xs truncate">{label}</p>
+                {isLoading ? (
+                  <div className="h-5 md:h-6 w-10 md:w-16 bg-white/10 animate-pulse rounded mt-1"></div>
+                ) : (
+                  <h4 className={`text-lg md:text-xl font-bold mt-0.5 ${textColor}`}>{value}</h4>
+                )}
+              </div>
+              <div className={`p-1.5 md:p-2 rounded-lg bg-${color}-500/10 text-${color}-400 self-end md:self-auto`}>
+                <Icon size={14} />
+              </div>
             </div>
           </div>
-        </div>
-        
-        <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-xs">Passed</p>
-              {isLoading ? (
-                <div className="h-6 w-16 bg-white/10 animate-pulse rounded mt-1"></div>
-              ) : (
-                <h4 className="text-xl font-bold text-green-400 mt-1">{stats.challengeStatuses.passed}</h4>
-              )}
-            </div>
-            <div className="p-2 rounded-lg bg-green-500/10 text-green-400">
-              <CheckCircle size={16} />
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-xs">Failed</p>
-              {isLoading ? (
-                <div className="h-6 w-16 bg-white/10 animate-pulse rounded mt-1"></div>
-              ) : (
-                <h4 className="text-xl font-bold text-red-400 mt-1">{stats.challengeStatuses.failed}</h4>
-              )}
-            </div>
-            <div className="p-2 rounded-lg bg-red-500/10 text-red-400">
-              <AlertCircle size={16} />
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-xs">In Progress</p>
-              {isLoading ? (
-                <div className="h-6 w-16 bg-white/10 animate-pulse rounded mt-1"></div>
-              ) : (
-                <h4 className="text-xl font-bold text-yellow-400 mt-1">{stats.challengeStatuses.inProgress}</h4>
-              )}
-            </div>
-            <div className="p-2 rounded-lg bg-yellow-500/10 text-yellow-400">
-              <Clock size={16} />
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
         {/* Revenue Overview */}
-        <div className="lg:col-span-2 bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-white">Revenue & Orders Overview</h2>
+        <div className="lg:col-span-2 bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-4 md:p-6">
+          <div className="flex items-center justify-between mb-4 md:mb-6">
+            <h2 className="text-base md:text-lg font-semibold text-white">Revenue & Orders Overview</h2>
           </div>
           
           {isLoading ? (
@@ -550,9 +492,9 @@ export default function AdminDashboard() {
         </div>
         
         {/* Challenge Types Breakdown */}
-        <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-white">Challenge Types Distribution</h2>
+        <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-4 md:p-6">
+          <div className="flex items-center justify-between mb-4 md:mb-6">
+            <h2 className="text-base md:text-lg font-semibold text-white">Challenge Types</h2>
           </div>
           
           {isLoading ? (
@@ -615,128 +557,158 @@ export default function AdminDashboard() {
       </div>
 
       {/* Recent Orders */}
-      <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-white">Recent Orders (Card & Crypto)</h2>
-          <div className="flex gap-4">
+      <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-4 md:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 md:mb-6 gap-3">
+          <h2 className="text-base md:text-lg font-semibold text-white">Recent Orders</h2>
+          <div className="flex gap-3">
             <button 
               onClick={() => window.location.href = '/admin/orders'}
-              className="text-[#0FF1CE] hover:underline text-sm"
+              className="text-[#0FF1CE] hover:underline text-xs md:text-sm"
             >
-              View Card Orders
+              Card Orders
             </button>
+            <span className="text-gray-600">|</span>
             <button 
               onClick={() => window.location.href = '/admin/crypto-orders'}
-              className="text-[#0FF1CE] hover:underline text-sm"
+              className="text-[#0FF1CE] hover:underline text-xs md:text-sm"
             >
-              View Crypto Orders
+              Crypto Orders
             </button>
           </div>
         </div>
         
-        <div className="overflow-x-auto">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-8 h-8 text-[#0FF1CE] animate-spin" />
-            </div>
-          ) : recentOrders.length === 0 ? (
-            <div className="flex items-center justify-center py-8 text-gray-400">
-              No orders found
-            </div>
-          ) : (
-            <table className="w-full min-w-[900px]">
-              <thead>
-                <tr className="border-b border-[#2F2F2F]">
-                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Order Type</th>
-                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Order ID</th>
-                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Customer</th>
-                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Challenge Type</th>
-                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Account Size</th>
-                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Amount</th>
-                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
-                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Date</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#2F2F2F]">
-                {recentOrders.map((order) => {
-                  const statusKey = order.displayStatus as keyof typeof statusStyles;
-                  const Status = statusStyles[statusKey]?.icon || statusStyles.unknown.icon;
-                  const isCrypto = order.orderType === 'crypto';
-                  
-                  return (
-                    <tr key={`${order.orderType}-${order.id}`} className="hover:bg-white/5 transition-colors">
-                      <td className="py-4 px-4 whitespace-nowrap">
-                        <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-8 h-8 text-[#0FF1CE] animate-spin" />
+          </div>
+        ) : recentOrders.length === 0 ? (
+          <div className="flex items-center justify-center py-8 text-gray-400">
+            No orders found
+          </div>
+        ) : (
+          <>
+            {/* Mobile card view */}
+            <div className="md:hidden space-y-2">
+              {recentOrders.map((order) => {
+                const statusKey = order.displayStatus as keyof typeof statusStyles;
+                const Status = statusStyles[statusKey]?.icon || statusStyles.unknown.icon;
+                const isCrypto = order.orderType === 'crypto';
+                return (
+                  <div key={`${order.orderType}-${order.id}`} className="bg-[#151515]/60 rounded-lg p-3 border border-[#2F2F2F]/40">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                           isCrypto ? 'bg-orange-500/10 text-orange-400' : 'bg-blue-500/10 text-blue-400'
                         }`}>
-                          {isCrypto ? (
-                            <>
-                              <Bitcoin size={12} className="mr-1" />
-                              Crypto
-                            </>
-                          ) : (
-                            <>
-                              <ShoppingCart size={12} className="mr-1" />
-                              Card
-                            </>
-                          )}
+                          {isCrypto ? <Bitcoin size={10} className="mr-1" /> : <ShoppingCart size={10} className="mr-1" />}
+                          {isCrypto ? 'Crypto' : 'Card'}
                         </div>
-                      </td>
-                      <td className="py-4 px-4 whitespace-nowrap text-sm font-medium text-white">
-                        #{order.id.slice(0, 8)}
-                      </td>
-                      <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">
-                        {order.displayName}
-                        {isCrypto && (
-                          <div className="text-xs text-gray-500">
-                            {(order as CryptoOrder).customerEmail}
+                        <span className="text-white text-xs font-mono">#{order.id.slice(0, 8)}</span>
+                      </div>
+                      <div className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusStyles[statusKey]?.bg || statusStyles.unknown.bg} ${statusStyles[statusKey]?.color || statusStyles.unknown.color}`}>
+                        <Status size={10} className="mr-1" />
+                        <span className="capitalize">{order.displayStatus}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-white text-sm font-medium">{order.displayName}</div>
+                        <div className="text-gray-500 text-xs">{order.challengeType} · {order.challengeAmount}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-[#0FF1CE] text-sm font-semibold">${order.displayAmount.toFixed(2)}</div>
+                        <div className="text-gray-500 text-xs">{formatDate(order.displayDate)}</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop table view */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full min-w-[900px]">
+                <thead>
+                  <tr className="border-b border-[#2F2F2F]">
+                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Order Type</th>
+                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Order ID</th>
+                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Customer</th>
+                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Challenge Type</th>
+                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Account Size</th>
+                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Amount</th>
+                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Date</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#2F2F2F]">
+                  {recentOrders.map((order) => {
+                    const statusKey = order.displayStatus as keyof typeof statusStyles;
+                    const Status = statusStyles[statusKey]?.icon || statusStyles.unknown.icon;
+                    const isCrypto = order.orderType === 'crypto';
+                    
+                    return (
+                      <tr key={`${order.orderType}-${order.id}`} className="hover:bg-white/5 transition-colors">
+                        <td className="py-4 px-4 whitespace-nowrap">
+                          <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                            isCrypto ? 'bg-orange-500/10 text-orange-400' : 'bg-blue-500/10 text-blue-400'
+                          }`}>
+                            {isCrypto ? (
+                              <><Bitcoin size={12} className="mr-1" />Crypto</>
+                            ) : (
+                              <><ShoppingCart size={12} className="mr-1" />Card</>
+                            )}
                           </div>
-                        )}
-                      </td>
-                      <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">
-                        {order.challengeType}
-                      </td>
-                      <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">
-                        {order.challengeAmount}
-                      </td>
-                      <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">
-                        ${order.displayAmount.toFixed(2)}
-                        {isCrypto && (
-                          <div className="text-xs text-gray-500">
-                            {(order as CryptoOrder).cryptoAmount} {(order as CryptoOrder).cryptoType}
-                          </div>
-                        )}
-                      </td>
-                      <td className="py-4 px-4 whitespace-nowrap">
-                        <div className="flex flex-col gap-1">
-                          <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusStyles[statusKey]?.bg || statusStyles.unknown.bg} ${statusStyles[statusKey]?.color || statusStyles.unknown.color}`}>
-                            <Status size={12} className="mr-1" />
-                            <span className="capitalize">{order.displayStatus}</span>
-                          </div>
-                          {isCrypto && (order as CryptoOrder).challengeStatus && (
-                            <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                              (order as CryptoOrder).challengeStatus === 'PASSED' ? 'bg-green-400/10 text-green-400' :
-                              (order as CryptoOrder).challengeStatus === 'FAILED' ? 'bg-red-400/10 text-red-400' :
-                              'bg-yellow-400/10 text-yellow-400'
-                            }`}>
-                              {(order as CryptoOrder).challengeStatus === 'PASSED' && <CheckCircle size={12} className="mr-1" />}
-                              {(order as CryptoOrder).challengeStatus === 'FAILED' && <AlertCircle size={12} className="mr-1" />}
-                              {(order as CryptoOrder).challengeStatus === 'IN_PROGRESS' && <Clock size={12} className="mr-1" />}
-                              <span className="capitalize">{(order as CryptoOrder).challengeStatus?.replace('_', ' ')}</span>
+                        </td>
+                        <td className="py-4 px-4 whitespace-nowrap text-sm font-medium text-white">
+                          #{order.id.slice(0, 8)}
+                        </td>
+                        <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">
+                          {order.displayName}
+                          {isCrypto && (
+                            <div className="text-xs text-gray-500">{(order as CryptoOrder).customerEmail}</div>
+                          )}
+                        </td>
+                        <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">{order.challengeType}</td>
+                        <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">{order.challengeAmount}</td>
+                        <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">
+                          ${order.displayAmount.toFixed(2)}
+                          {isCrypto && (
+                            <div className="text-xs text-gray-500">
+                              {(order as CryptoOrder).cryptoAmount} {(order as CryptoOrder).cryptoType}
                             </div>
                           )}
-                        </div>
-                      </td>
-                      <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">
-                        {formatDate(order.displayDate)}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-        </div>
+                        </td>
+                        <td className="py-4 px-4 whitespace-nowrap">
+                          <div className="flex flex-col gap-1">
+                            <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusStyles[statusKey]?.bg || statusStyles.unknown.bg} ${statusStyles[statusKey]?.color || statusStyles.unknown.color}`}>
+                              <Status size={12} className="mr-1" />
+                              <span className="capitalize">{order.displayStatus}</span>
+                            </div>
+                            {isCrypto && (order as CryptoOrder).challengeStatus && (
+                              <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                                (order as CryptoOrder).challengeStatus === 'PASSED' ? 'bg-green-400/10 text-green-400' :
+                                (order as CryptoOrder).challengeStatus === 'FAILED' ? 'bg-red-400/10 text-red-400' :
+                                'bg-yellow-400/10 text-yellow-400'
+                              }`}>
+                                {(order as CryptoOrder).challengeStatus === 'PASSED' && <CheckCircle size={12} className="mr-1" />}
+                                {(order as CryptoOrder).challengeStatus === 'FAILED' && <AlertCircle size={12} className="mr-1" />}
+                                {(order as CryptoOrder).challengeStatus === 'IN_PROGRESS' && <Clock size={12} className="mr-1" />}
+                                <span className="capitalize">{(order as CryptoOrder).challengeStatus?.replace('_', ' ')}</span>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">
+                          {formatDate(order.displayDate)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

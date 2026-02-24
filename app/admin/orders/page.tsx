@@ -372,35 +372,35 @@ export default function OrdersPage() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-white">Orders</h1>
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-5 gap-3">
+        <h1 className="text-xl md:text-2xl font-bold text-white">Orders</h1>
+        <div className="flex items-center gap-2 md:gap-4">
           {selectedOrders.size > 0 && (
             <button 
               onClick={() => {
                 setOrderToDelete(null);
                 setShowDeleteConfirm(true);
               }}
-              className="flex items-center gap-2 bg-red-500/10 text-red-500 px-4 py-2 rounded-lg font-medium hover:bg-red-500/20 transition-colors"
+              className="flex items-center gap-2 bg-red-500/10 text-red-500 px-3 md:px-4 py-2 rounded-lg font-medium hover:bg-red-500/20 transition-colors text-sm"
             >
-              <Trash2 size={16} />
-              <span>Delete Selected ({selectedOrders.size})</span>
+              <Trash2 size={14} />
+              <span className="hidden sm:inline">Delete Selected ({selectedOrders.size})</span>
+              <span className="sm:hidden">({selectedOrders.size})</span>
             </button>
           )}
           <button 
             onClick={handleExportCSV}
-            className="flex items-center gap-2 bg-[#0FF1CE] text-black px-4 py-2 rounded-lg font-medium hover:bg-[#0FF1CE]/90 transition-colors"
+            className="flex items-center gap-2 bg-[#0FF1CE] text-black px-3 md:px-4 py-2 rounded-lg font-medium hover:bg-[#0FF1CE]/90 transition-colors text-sm"
           >
-            <Download size={16} />
+            <Download size={14} />
             <span>Export CSV</span>
           </button>
         </div>
       </div>
 
       {/* Filters Row */}
-      <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-4 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* Search */}
+      <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-3 md:p-4 mb-4 md:mb-6">
+        <div className="flex flex-col gap-2 md:flex-row md:gap-4">
           <div className="flex-1">
             <div className="relative">
               <input 
@@ -408,44 +408,34 @@ export default function OrdersPage() {
                 placeholder="Search orders..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg pl-10 pr-4 py-2 text-white focus:outline-none focus:border-[#0FF1CE]/50"
+                className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg pl-9 pr-4 py-2 text-white text-sm focus:outline-none focus:border-[#0FF1CE]/50"
               />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={14} />
             </div>
           </div>
-          
-          {/* Status Filter */}
-          <div className="w-full md:w-48">
+          <div className="grid grid-cols-3 gap-2 md:contents">
             <select 
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#0FF1CE]/50"
+              className="w-full md:w-36 bg-[#151515] border border-[#2F2F2F] rounded-lg px-2 md:px-4 py-2 text-white text-sm focus:outline-none focus:border-[#0FF1CE]/50"
             >
               {filterOptions.status.map((status) => (
-                <option key={status} value={status}>{status} Status</option>
+                <option key={status} value={status}>{status}</option>
               ))}
             </select>
-          </div>
-          
-          {/* Type Filter */}
-          <div className="w-full md:w-48">
             <select 
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#0FF1CE]/50"
+              className="w-full md:w-44 bg-[#151515] border border-[#2F2F2F] rounded-lg px-2 md:px-4 py-2 text-white text-sm focus:outline-none focus:border-[#0FF1CE]/50"
             >
               {filterOptions.type.map((type) => (
                 <option key={type} value={type}>{type}</option>
               ))}
             </select>
-          </div>
-          
-          {/* Sort */}
-          <div className="w-full md:w-48">
             <select 
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#0FF1CE]/50"
+              className="w-full md:w-36 bg-[#151515] border border-[#2F2F2F] rounded-lg px-2 md:px-4 py-2 text-white text-sm focus:outline-none focus:border-[#0FF1CE]/50"
             >
               {sortOptions.map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
@@ -455,8 +445,106 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      {/* Orders Table */}
-      <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50 p-6">
+      {/* Orders Table / Cards */}
+      <div className="bg-[#0D0D0D]/80 backdrop-blur-sm rounded-xl border border-[#2F2F2F]/50">
+        
+        {/* Mobile card view */}
+        <div className="md:hidden p-3 space-y-2">
+          {sortedOrders.length === 0 ? (
+            <p className="text-center text-gray-400 py-8">No orders found matching your filters.</p>
+          ) : sortedOrders.map((order) => {
+            const status = order.paymentStatus && statusStyles[order.paymentStatus] ? order.paymentStatus : 'unknown';
+            const StatusIcon = statusStyles[status].icon;
+            const challengeStatus = order.challengeStatus || 'pending';
+            const ChallengeIcon = challengeStatusStyles[challengeStatus]?.icon || AlertCircle;
+            const isExpanded = expandedOrderId === order.id;
+            return (
+              <div key={order.id} className={`rounded-xl border transition-all ${isExpanded ? 'border-[#0FF1CE]/30 bg-[#0FF1CE]/5' : 'border-[#2F2F2F]/50 bg-[#151515]/40'}`}>
+                <div className="p-3">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedOrders.has(order.id)}
+                        onChange={() => handleSelectOrder(order.id)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="rounded border-gray-600 text-[#0FF1CE] focus:ring-[#0FF1CE] focus:ring-offset-0 bg-[#1A1A1A]"
+                      />
+                      <span className="text-white text-xs font-mono font-medium">#{order.id.slice(0, 10)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusStyles[status].bg} ${statusStyles[status].color}`}>
+                        <StatusIcon size={10} className="mr-1" />
+                        <span className="capitalize">{order.paymentStatus}</span>
+                      </div>
+                      <button onClick={() => toggleOrderDetails(order.id)} className="text-gray-400 hover:text-[#0FF1CE] p-1">
+                        {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-white text-sm font-medium">{order.firstName} {order.lastName}</div>
+                      <div className="text-gray-500 text-xs">{order.challengeType} · {order.challengeAmount}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[#0FF1CE] font-semibold text-sm">${order.totalAmount}</div>
+                      <div className="text-gray-500 text-xs">{new Date(order.createdAt.seconds * 1000).toLocaleDateString()}</div>
+                    </div>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between">
+                    <div className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${challengeStatusStyles[challengeStatus]?.bg || 'bg-gray-500/10'} ${challengeStatusStyles[challengeStatus]?.color || 'text-gray-500'}`}>
+                      <ChallengeIcon size={10} className="mr-1" />
+                      <span className="capitalize">{challengeStatus}</span>
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setOrderToDelete(order.id); setShowDeleteConfirm(true); }}
+                      className="p-1 text-gray-500 hover:text-red-500 transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+                {isExpanded && (
+                  <div className="border-t border-[#2F2F2F]/50 p-3 space-y-3 text-sm">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <div className="text-gray-400 text-xs mb-1">Email</div>
+                        <div className="text-white text-xs break-all">{order.customerEmail}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-400 text-xs mb-1">Phone</div>
+                        <div className="text-white text-xs">{order.phone}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-400 text-xs mb-1">Country</div>
+                        <div className="text-white text-xs">{order.country}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-400 text-xs mb-1">Platform</div>
+                        <div className="text-white text-xs">{order.platform}</div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 pt-1">
+                      <button onClick={() => handleUpdatePaymentStatus(order.id, 'completed')} disabled={updatingOrderId === order.id || order.paymentStatus === 'completed'} className="flex-1 flex items-center justify-center gap-1 bg-green-500/10 hover:bg-green-500/20 text-green-500 py-1.5 rounded text-xs font-medium transition-colors disabled:opacity-50">
+                        <CheckCircle size={11} /><span>Complete</span>
+                      </button>
+                      <button onClick={() => handleUpdatePaymentStatus(order.id, 'failed')} disabled={updatingOrderId === order.id || order.paymentStatus === 'failed'} className="flex-1 flex items-center justify-center gap-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 py-1.5 rounded text-xs font-medium transition-colors disabled:opacity-50">
+                        <X size={11} /><span>Fail</span>
+                      </button>
+                      <button onClick={() => handleResendCredentials(order.customerEmail)} className="flex-1 flex items-center justify-center gap-1 bg-[#0FF1CE]/10 hover:bg-[#0FF1CE]/20 text-[#0FF1CE] py-1.5 rounded text-xs font-medium transition-colors">
+                        <Mail size={11} /><span>Resend</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Desktop table view */}
+        <div className="hidden md:block p-6">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[900px]">
             <thead>
@@ -753,6 +841,15 @@ export default function OrdersPage() {
                                     {new Date(order.updatedAt.seconds * 1000).toLocaleString()}
                                   </span>
                                 </div>
+
+                                {/* Resend Credentials Button */}
+                                <button 
+                                  onClick={() => handleResendCredentials(order.customerEmail)}
+                                  className="w-full flex items-center justify-center gap-2 bg-[#0FF1CE]/10 hover:bg-[#0FF1CE]/20 text-[#0FF1CE] py-2 rounded-lg transition-colors"
+                                >
+                                  <Mail size={16} />
+                                  <span>Resend Credentials</span>
+                                </button>
                               </div>
                               
                               <div className="mt-4 pt-4 border-t border-[#2F2F2F]/50 space-y-4">
@@ -841,15 +938,6 @@ export default function OrdersPage() {
                                     </button>
                                   </div>
                                 </div>
-
-                                {/* Resend Credentials Button */}
-                                <button 
-                                  onClick={() => handleResendCredentials(order.customerEmail)}
-                                  className="w-full flex items-center justify-center gap-2 bg-[#0FF1CE]/10 hover:bg-[#0FF1CE]/20 text-[#0FF1CE] py-2 rounded-lg transition-colors"
-                                >
-                                  <Mail size={16} />
-                                  <span>Resend Credentials</span>
-                                </button>
                               </div>
                             </div>
                           </div>
@@ -867,6 +955,7 @@ export default function OrdersPage() {
               <p className="text-gray-400">No orders found matching your filters.</p>
             </div>
           )}
+        </div>
         </div>
       </div>
 
