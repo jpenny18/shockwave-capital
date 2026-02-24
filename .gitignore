@@ -48,3 +48,7 @@ metaapi-riskmanagement-models.md
 testemail.html
 firebaserules.md 
 invoice.html
+
+# Dev-only tools (local marketing/screenshot utilities — never deploy)
+app/admin/dev-tools/
+lib/devTools.ts
