@@ -335,24 +335,26 @@ function GauntletActivationContent() {
             </div>
 
             <div className="space-y-4 mb-8">
-              {/* Card Payment Option */}
-              <button
-                onClick={handleCardPayment}
-                className="w-full bg-gradient-to-r from-[#0FF1CE]/10 to-[#00D9FF]/10 hover:from-[#0FF1CE]/20 hover:to-[#00D9FF]/20 border-2 border-[#0FF1CE]/30 hover:border-[#0FF1CE] rounded-xl p-6 transition-all duration-300 group"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-[#0FF1CE]/20 rounded-lg flex items-center justify-center group-hover:bg-[#0FF1CE]/30 transition-colors">
-                      <CreditCard size={24} className="text-[#0FF1CE]" />
+              {/* Card Payment Option - hidden until payment processor is restored */}
+              <div className="hidden">
+                <button
+                  onClick={handleCardPayment}
+                  className="w-full bg-gradient-to-r from-[#0FF1CE]/10 to-[#00D9FF]/10 hover:from-[#0FF1CE]/20 hover:to-[#00D9FF]/20 border-2 border-[#0FF1CE]/30 hover:border-[#0FF1CE] rounded-xl p-6 transition-all duration-300 group"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-[#0FF1CE]/20 rounded-lg flex items-center justify-center group-hover:bg-[#0FF1CE]/30 transition-colors">
+                        <CreditCard size={24} className="text-[#0FF1CE]" />
+                      </div>
+                      <div className="text-left">
+                        <div className="text-lg font-bold text-white">Credit/Debit Card</div>
+                        <div className="text-sm text-gray-400">Secure checkout via Whop</div>
+                      </div>
                     </div>
-                    <div className="text-left">
-                      <div className="text-lg font-bold text-white">Credit/Debit Card</div>
-                      <div className="text-sm text-gray-400">Secure checkout via Whop</div>
-                    </div>
+                    <div className="text-2xl font-bold text-[#0FF1CE]">${selectedOption.price.toLocaleString()}</div>
                   </div>
-                  <div className="text-2xl font-bold text-[#0FF1CE]">${selectedOption.price.toLocaleString()}</div>
-                </div>
-              </button>
+                </button>
+              </div>
 
               {/* Crypto Payment Option */}
               <button
