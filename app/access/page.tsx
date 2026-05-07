@@ -465,6 +465,29 @@ export default function EarlyAccessPage() {
                 </button> */}
               </div>
 
+              {/* Mobile-only Stats Cards */}
+              <div className="lg:hidden grid grid-cols-3 gap-2 px-2 mb-8">
+                {[
+                  { value: "15%", label: "Max Drawdown", delay: "0s" },
+                  { value: "8%", label: "Daily Drawdown", delay: "0.1s" },
+                  { value: "1:200", label: "Leverage", delay: "0.2s" }
+                ].map(({ value, label, delay }) => (
+                  <div
+                    key={label}
+                    className="group relative w-full bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl p-3 hover:scale-105 transition-all duration-300"
+                    style={{
+                      animation: `float 3s ease-in-out infinite`,
+                      animationDelay: delay,
+                      boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)'
+                    }}
+                  >
+                    <div className="text-xl font-bold text-[#0FF1CE] mb-1">{value}</div>
+                    <div className="text-xs text-gray-400">{label}</div>
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#0FF1CE]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </div>
+                ))}
+              </div>
+
               {/* Tab Switcher */}
               <div className="flex bg-[#1A1A1A]/30 backdrop-blur-sm rounded-xl p-1 mb-8">
                 <button
@@ -499,20 +522,27 @@ export default function EarlyAccessPage() {
                   <div className="absolute top-0 right-0 w-20 h-20 bg-[#0FF1CE]/20 rounded-full blur-3xl"></div>
                   <div className="relative">
                     <div className="inline-block px-4 py-1 rounded-full bg-[#0FF1CE]/20 text-[#0FF1CE] font-bold uppercase tracking-wider text-sm mb-3">
-                      50% Off + 1 Free Retry
+                      60% Off + 1 Free Retry
                     </div>
                     <ul className="text-white text-sm space-y-3 text-left mt-3 max-w-md mx-auto">
                       <li className="flex items-center gap-2">
                         <span className="inline-block w-2 h-2 rounded-full bg-[#0FF1CE]" />
                         <span>
                           <span className="font-bold text-[#ffffff]">Use code:</span>{' '}
-                          <span className="font-mono bg-[#0FF1CE]/15 text-[#0FF1CE] px-2 py-0.5 rounded font-semibold tracking-wide ml-1">ACTFAST</span>
+                          <span className="font-mono bg-[#0FF1CE]/15 text-[#0FF1CE] px-2 py-0.5 rounded font-semibold tracking-wide ml-1">MOTHERSDAY</span>
+                        </span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="inline-block w-2 h-2 rounded-full bg-[#0FF1CE]" />
+                        <span>
+                          <span className="text-gray-400">Mother&apos;s Day Special • limited time</span>
                         </span>
                       </li>
                     </ul>
                   </div>
                 </div>
               </div>
+         
 
               {success && (
                 <div className="mb-6 p-4 bg-green-500/10 backdrop-blur-sm border border-green-500/30 rounded-xl text-green-400 flex items-center gap-2 animate-slideIn">

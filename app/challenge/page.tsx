@@ -1122,22 +1122,23 @@ export default function ChallengePage() {
                     <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-[#0FF1CE]/15 mr-1">
                       <span className="text-[#0FF1CE] font-bold text-lg">%</span>
                     </span>
-                    <span className="text-sm font-bold text-[#0FF1CE] uppercase tracking-wider">SAVE 50%</span>
+                    <span className="text-sm font-bold text-[#0FF1CE] uppercase tracking-wider">SAVE 60%</span>
                   </div>
                   <div className="text-xl lg:text-2xl font-bold text-white mb-2">
-                    <span className="text-[#0FF1CE]">50% Off</span> + <span className="text-[#0FF1CE]">1 Free Retry</span>
+                    <span className="text-[#0FF1CE]">60% Off</span> + <span className="text-[#0FF1CE]">1 Free Retry</span>
                   </div>
                   <div className="mt-1 text-sm text-gray-100 flex flex-col sm:flex-row items-center sm:gap-2 justify-center lg:justify-start">
                     Use code: 
-                    <code className="bg-[#0FF1CE]/15 text-[#0FF1CE] px-2 py-0.5 rounded font-mono font-semibold tracking-wide text-xs ml-1 sm:ml-0">ACTFAST</code>
+                    <code className="bg-[#0FF1CE]/15 text-[#0FF1CE] px-2 py-0.5 rounded font-mono font-semibold tracking-wide text-xs ml-1 sm:ml-0">MOTHERSDAY</code>
                   </div>
                   <div className="mt-1 text-[11px] text-gray-400">
-                   limited time
+                   limited time • Mother&apos;s Day Special
                   </div>
                 </div>
               </div>
             </div>
           </div>
+     
           {/* On-Demand Payouts Promo */}
           <div className="relative hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-[#0FF1CE]/20 to-[#5059FC]/20 rounded-2xl blur-xl"></div>

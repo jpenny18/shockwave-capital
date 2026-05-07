@@ -291,7 +291,7 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
   */
 };
 
-// Promotional Modal - 50% OFF + Free Retry
+// Promotional Modal - Mother's Day 60% OFF + Free Retry
 const OnDemandPayoutsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   if (!isOpen) return null;
 
@@ -310,20 +310,21 @@ const OnDemandPayoutsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
           {/* Modal Content */}
           <div className="relative bg-gradient-to-br from-[#0D0D0D] via-[#121212] to-[#0D0D0D] border-2 border-[#0FF1CE]/30 rounded-3xl overflow-hidden shadow-2xl p-8">
             {/* Promo Badge */}
-            <div className="absolute top-0 right-0 bg-gradient-to-r from-[#FF6B6B] to-[#FF3838] text-white px-6 py-2 rounded-bl-2xl font-bold text-sm shadow-lg">
-              LIMITED TIME
+            <div className="absolute top-0 right-0 bg-gradient-to-r from-[#FF6B9D] to-[#FF3870] text-white px-6 py-2 rounded-bl-2xl font-bold text-sm shadow-lg">
+              MOTHER&apos;S DAY
             </div>
 
             {/* Content */}
             <div className="text-center pt-6">
               {/* Main Heading */}
-              <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-4">
-                Special Promo!
+              <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-2">
+                Happy Mother&apos;s Day!
               </h2>
-              
+              <div className="text-2xl mb-4">🌸</div>
+
               {/* Subheading */}
               <div className="bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-transparent bg-clip-text text-2xl md:text-3xl font-bold mb-8">
-                50% OFF All Challenges
+                60% OFF All Challenges
               </div>
 
               {/* Key Benefits */}
@@ -331,24 +332,30 @@ const OnDemandPayoutsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                 <div className="flex items-start gap-3 bg-[#1A1A1A]/50 p-4 rounded-lg border border-[#0FF1CE]/20">
                   <div className="text-[#0FF1CE] text-2xl mt-1 font-bold">•</div>
                   <div>
-                    <div className="text-white font-bold text-lg">50% Off All Challenges</div>
-                    <div className="text-gray-400 text-sm">Every challenge type at half price</div>
+                    <div className="text-white font-bold text-lg">60% Off All Challenges</div>
+                    <div className="text-gray-400 text-sm">Our biggest discount — every challenge type included</div>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-3 bg-[#1A1A1A]/50 p-4 rounded-lg border border-[#0FF1CE]/20">
                   <div className="text-[#0FF1CE] text-2xl mt-1 font-bold">•</div>
                   <div>
                     <div className="text-white font-bold text-lg">1 Free Retry Included</div>
-                    <div className="text-gray-400 text-sm">Get 2 chances for the price of 1 (at 50% off!)</div>
+                    <div className="text-gray-400 text-sm">Get 2 chances for the price of 1 (at 60% off!)</div>
                   </div>
                 </div>
+              </div>
+
+              {/* Promo Code */}
+              <div className="mb-6 bg-[#1A1A1A] border border-[#FF6B9D]/40 rounded-xl py-3 px-4">
+                <div className="text-gray-400 text-xs mb-1 uppercase tracking-widest">Use code at checkout</div>
+                <div className="text-[#FF6B9D] font-extrabold text-2xl tracking-widest">MOTHERSDAY</div>
               </div>
 
               {/* CTA Button */}
               <Link href="/challenge" onClick={onClose}>
                 <button className="w-full bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black font-bold py-4 px-8 rounded-xl hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(15,241,206,0.4)] hover:shadow-[0_0_30px_rgba(15,241,206,0.6)] text-lg">
-                  CLAIM YOUR 50% OFF NOW →
+                  CLAIM YOUR 60% OFF NOW →
                 </button>
               </Link>
             </div>
