@@ -24,6 +24,7 @@ import {
   Eye
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { calculateTradingObjectives, ChallengeType } from '../../../../lib/metaapi/objectives';
 
 // Dynamically import ApexCharts to avoid SSR issues
 const ApexChart = dynamic(() => import('react-apexcharts'), { ssr: false });
@@ -32,7 +33,8 @@ const ApexChart = dynamic(() => import('react-apexcharts'), { ssr: false });
 interface TradingObjectives {
   minTradingDays: { target: number; current: number; passed: boolean };
   maxDrawdown: { target: number; current: number; passed: boolean; recentBreach?: boolean };
-  maxDailyDrawdown: { target: number; current: number; passed: boolean; recentBreach?: boolean };
+  // Optional: instant challenges have no daily-drawdown objective
+  maxDailyDrawdown?: { target: number; current: number; passed: boolean; recentBreach?: boolean };
   profitTarget: { target: number; current: number; passed: boolean };
 }
 
@@ -135,13 +137,13 @@ const TradingObjectivesTable = ({ objectives, accountInfo }: { objectives: Tradi
       passed: objectives.maxDrawdown.passed,
       format: 'percent'
     },
-    { 
+    ...(objectives.maxDailyDrawdown ? [{
       label: 'Max Daily Drawdown % (Highest Achieved)', 
       target: objectives.maxDailyDrawdown.target,
       current: objectives.maxDailyDrawdown.current,
       passed: objectives.maxDailyDrawdown.passed,
       format: 'percent'
-    },
+    }] : []),
     { 
       label: 'Profit Target %', 
       target: objectives.profitTarget.target,
@@ -742,95 +744,30 @@ export default function AdminAccountDetailsPage() {
         if (cachedData.lastObjectives) {
           setObjectives(cachedData.lastObjectives);
         } else {
-          // Fallback: Calculate objectives based on account type and step
-          const isFunded = accountData.step === 3 || accountData.status === 'funded';
-          
-          if (isFunded) {
-            // Funded account objectives
-            const profitPercent = ((cachedData.balance - accountData.accountSize) / accountData.accountSize) * 100;
-            
-            setObjectives({
-              minTradingDays: {
-                target: 5, // 5 days with 0.5% gain required for payout eligibility
-                current: cachedData.tradingDays || 0,
-                passed: (cachedData.tradingDays || 0) >= 5
-              },
-              maxDrawdown: {
-                target: 15, // 15% for funded accounts
-                current: cachedData.maxDrawdown || 0,
-                passed: (cachedData.maxDrawdown || 0) <= 15,
-                recentBreach: false
-              },
-              maxDailyDrawdown: {
-                target: 8, // 8% for funded accounts
-                current: cachedData.maxDailyDrawdown || cachedData.dailyDrawdown || 0,
-                passed: (cachedData.maxDailyDrawdown || cachedData.dailyDrawdown || 0) <= 8,
-                recentBreach: false
-              },
-              profitTarget: {
-                target: 0, // No profit target for funded accounts
-                current: profitPercent,
-                passed: true
-              }
-            });
-          } else {
-            // Regular challenge objectives
-            const targetDrawdown = accountData.accountType === 'standard' || accountData.accountType === 'gauntlet' ? 15 : 
-                                  accountData.accountType === '1-step' ? 8 : 4;
-            const targetDailyDrawdown = accountData.accountType === 'standard' || accountData.accountType === 'gauntlet' ? 8 : 
-                                       accountData.accountType === '1-step' ? 4 : 4;
-            const targetProfit = accountData.accountType === 'gauntlet' ? 10 :  // Gauntlet: 10% (single phase)
-                               accountData.accountType === '1-step' ? 10 :  // 1-Step: 10%
-                               accountData.accountType === 'standard' 
-              ? (accountData.step === 1 ? 10 : 5)  // Standard: Step 1 = 10%, Step 2 = 5%
-              : 12;  // Instant: 12%
-            const targetTradingDays = 5;
-            
-            const profitPercent = ((cachedData.balance - accountData.accountSize) / accountData.accountSize) * 100;
-            
-            // Check for recent breaches in risk events
-            const recentBreaches = {
-              maxDrawdown: false,
-              dailyDrawdown: false
-            };
-            
-            if (cachedData.lastRiskEvents && cachedData.lastRiskEvents.length > 0) {
-              const recentEvents = cachedData.lastRiskEvents.filter((e: any) => {
-                const eventTime = new Date(e.brokerTime);
-                const dayAgo = new Date();
-                dayAgo.setDate(dayAgo.getDate() - 1);
-                return eventTime > dayAgo;
-              });
-              
-              recentBreaches.maxDrawdown = recentEvents.some((e: any) => e.exceededThresholdType === 'drawdown');
-              recentBreaches.dailyDrawdown = recentEvents.some((e: any) => e.exceededThresholdType === 'dailyDrawdown');
+          // Fallback: recompute objectives from cached metrics using the shared logic.
+          const recentEvents = (cachedData.lastRiskEvents || []).filter((e: any) => {
+            const eventTime = new Date(e.brokerTime);
+            const dayAgo = new Date();
+            dayAgo.setDate(dayAgo.getDate() - 1);
+            return eventTime > dayAgo;
+          });
+          const profitPercent = accountData.accountSize > 0
+            ? ((cachedData.balance - accountData.accountSize) / accountData.accountSize) * 100
+            : 0;
+
+          setObjectives(calculateTradingObjectives({
+            challengeType: accountData.accountType as ChallengeType,
+            accountStartBalance: accountData.accountSize,
+            step: accountData.step || 1,
+            maxDrawdownPercent: cachedData.maxDrawdown || 0,
+            dailyDrawdownPercent: cachedData.maxDailyDrawdown ?? cachedData.dailyDrawdown ?? 0,
+            tradingDays: cachedData.tradingDays || 0,
+            profitPercent,
+            recentBreaches: {
+              maxDrawdown: recentEvents.some((e: any) => e.exceededThresholdType === 'drawdown'),
+              dailyDrawdown: recentEvents.some((e: any) => e.exceededThresholdType === 'dailyDrawdown')
             }
-            
-            setObjectives({
-              minTradingDays: {
-                target: targetTradingDays,
-                current: cachedData.tradingDays || 0,
-                passed: (cachedData.tradingDays || 0) >= targetTradingDays
-              },
-              maxDrawdown: {
-                target: targetDrawdown,
-                current: cachedData.maxDrawdown || 0,
-                passed: (cachedData.maxDrawdown || 0) <= targetDrawdown,
-                recentBreach: recentBreaches.maxDrawdown
-              },
-              maxDailyDrawdown: {
-                target: targetDailyDrawdown,
-                current: cachedData.maxDailyDrawdown || cachedData.dailyDrawdown || 0,
-                passed: (cachedData.maxDailyDrawdown || cachedData.dailyDrawdown || 0) <= targetDailyDrawdown,
-                recentBreach: recentBreaches.dailyDrawdown
-              },
-              profitTarget: {
-                target: targetProfit,
-                current: profitPercent,
-                passed: profitPercent >= targetProfit
-              }
-            });
-          }
+          }) as TradingObjectives);
         }
         
         setLastUpdate(cachedData.lastUpdated.toDate());
@@ -940,7 +877,7 @@ export default function AdminAccountDetailsPage() {
         profitFactor: data.metrics.profitFactor,
         maxDrawdown: data.metrics.maxDrawdown,
         dailyDrawdown: data.metrics.relativeDrawdown,
-        maxDailyDrawdown: data.objectives.maxDailyDrawdown.current,
+        maxDailyDrawdown: data.objectives.maxDailyDrawdown?.current ?? 0,
         currentProfit: data.metrics.profit,
         tradingDays: data.objectives.minTradingDays.current
       });
