@@ -498,6 +498,16 @@ export async function POST(req: NextRequest) {
     }
     combinedMetrics.relativeDrawdown = calculatedDailyDrawdown;
 
+    // The "Max Daily Drawdown (Highest Achieved)" objective must reflect the
+    // WORST daily drawdown ever recorded, not just today's value (which is 0
+    // when there has been no trading today). Combine the freshly computed value
+    // with the previously recorded peak from cache so it never regresses and a
+    // past breach correctly fails the objective.
+    const peakDailyDrawdown = Math.max(
+      calculatedDailyDrawdown,
+      Number(existingCachedData?.maxDailyDrawdown ?? 0)
+    );
+
     // Normalize tracker events: convert fraction drawdowns to percent and
     // classify daily vs overall breaches using the originating tracker's period
     // (the SDK only emits 'drawdown' | 'profit', never 'dailyDrawdown').
@@ -560,7 +570,7 @@ export async function POST(req: NextRequest) {
       accountStartBalance: accountSize,
       step: step || 1,
       maxDrawdownPercent: combinedMetrics.maxDrawdown,
-      dailyDrawdownPercent: calculatedDailyDrawdown,
+      dailyDrawdownPercent: peakDailyDrawdown,
       tradingDays,
       profitPercent,
       recentBreaches
