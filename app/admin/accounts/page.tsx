@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { collection, query, where, getDocs, orderBy, limit, onSnapshot, doc, updateDoc, deleteDoc, setDoc, getDoc } from 'firebase/firestore';
 import { db, getAllUsers, setUserMetaApiAccount, getUserMetaApiAccount, UserData, UserMetaApiAccount, Timestamp, getCachedMetrics } from '../../../lib/firebase';
 import { 
@@ -363,14 +363,41 @@ export default function AdminAccountsPage() {
     };
   }, []);
 
-  // Set up automatic refresh every 12 hours
+  // Keep a ref with the latest accounts so the auto-refresh timers always see
+  // fresh data without having to be torn down and recreated on every change
+  const allAccountsRef = useRef<UserWithAccount[]>([]);
   useEffect(() => {
-    // Only set up auto-refresh after accounts have been loaded
-    if (allAccounts.length === 0) return;
+    allAccountsRef.current = allAccounts;
+  }, [allAccounts]);
+
+  // Set up automatic refresh every 12 hours.
+  // Initializes once (after accounts first load) and keeps timer ids in refs so
+  // they survive re-renders; timers are cleared only on unmount. The previous
+  // version recreated leaked timers every time allAccounts changed.
+  const autoRefreshInitialized = useRef(false);
+  const autoRefreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoRefreshIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  
+  useEffect(() => {
+    // Only set up auto-refresh after accounts have been loaded, and only once
+    if (allAccounts.length === 0 || autoRefreshInitialized.current) return;
+    autoRefreshInitialized.current = true;
+    
+    const twelveHours = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
+    
+    const queueActiveAccounts = async () => {
+      console.log('Auto-refreshing all active accounts...');
+      const activeAccounts = allAccountsRef.current.filter(a => a.metaApiAccount?.status === 'active');
+      if (activeAccounts.length > 0) {
+        const accountIds = activeAccounts.map(a => a.metaApiAccount?.accountId).filter(Boolean) as string[];
+        setRefreshQueue(accountIds);
+        setMessage({ type: 'info', text: `Auto-refresh started for ${accountIds.length} active accounts` });
+        await setAutoRefreshTime(Date.now());
+      }
+      setNextAutoRefreshTime(new Date(Date.now() + twelveHours));
+    };
     
     const setupAutoRefresh = async () => {
-      const twelveHours = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
-      
       // Check last auto-refresh time from Firebase
       const lastAutoRefresh = await getAutoRefreshTime();
       const now = Date.now();
@@ -389,46 +416,25 @@ export default function AdminAccountsPage() {
       }
       
       // Calculate and set next refresh time
-      const nextRefresh = new Date(now + timeUntilNextRefresh);
-      setNextAutoRefreshTime(nextRefresh);
+      setNextAutoRefreshTime(new Date(now + timeUntilNextRefresh));
       
-      // Set up the initial timeout for the first refresh
-      const initialTimeout = setTimeout(async () => {
-        console.log('Auto-refreshing all active accounts...');
-        const activeAccounts = allAccounts.filter(a => a.metaApiAccount?.status === 'active');
-        if (activeAccounts.length > 0) {
-          const accountIds = activeAccounts.map(a => a.metaApiAccount?.accountId).filter(Boolean) as string[];
-          setRefreshQueue(accountIds);
-          setMessage({ type: 'info', text: `Auto-refresh started for ${accountIds.length} active accounts` });
-          await setAutoRefreshTime(Date.now());
-        }
-        
-        // Set up recurring interval after the first refresh
-        const autoRefreshInterval = setInterval(async () => {
-          console.log('Auto-refreshing all active accounts...');
-          const currentActiveAccounts = allAccounts.filter(a => a.metaApiAccount?.status === 'active');
-          if (currentActiveAccounts.length > 0) {
-            const currentAccountIds = currentActiveAccounts.map(a => a.metaApiAccount?.accountId).filter(Boolean) as string[];
-            setRefreshQueue(currentAccountIds);
-            setMessage({ type: 'info', text: `Auto-refresh started for ${currentAccountIds.length} active accounts` });
-            await setAutoRefreshTime(Date.now());
-            
-            // Update next refresh time
-            setNextAutoRefreshTime(new Date(Date.now() + twelveHours));
-          }
-        }, twelveHours);
-        
-        // Store interval ID for cleanup
-        return () => clearInterval(autoRefreshInterval);
+      // Initial timeout for the first refresh, then a recurring interval
+      autoRefreshTimeoutRef.current = setTimeout(async () => {
+        await queueActiveAccounts();
+        autoRefreshIntervalRef.current = setInterval(queueActiveAccounts, twelveHours);
       }, timeUntilNextRefresh);
-      
-      return () => {
-        clearTimeout(initialTimeout);
-      };
     };
     
     setupAutoRefresh();
-  }, [allAccounts]); // Depend on allAccounts to get fresh data
+  }, [allAccounts]);
+  
+  // Clear auto-refresh timers on unmount only
+  useEffect(() => {
+    return () => {
+      if (autoRefreshTimeoutRef.current) clearTimeout(autoRefreshTimeoutRef.current);
+      if (autoRefreshIntervalRef.current) clearInterval(autoRefreshIntervalRef.current);
+    };
+  }, []);
 
   // Send admin notification email
   const sendAdminNotification = async (type: 'pass' | 'fail', account: UserWithAccount) => {
@@ -752,7 +758,7 @@ export default function AdminAccountsPage() {
   const refreshAccount = async (account: UserWithAccount) => {
     if (!account.metaApiAccount) return;
     
-    const { accountId, accountToken, accountType, accountSize } = account.metaApiAccount;
+    const { accountId, accountToken, accountType, accountSize, step } = account.metaApiAccount;
     
     setRefreshingAccounts(prev => new Set(prev).add(accountId)); // Use accountId instead of uid
     
@@ -767,19 +773,31 @@ export default function AdminAccountsPage() {
           accountToken,
           accountType,
           accountSize,
+          step, // Required so funded (step 3) accounts get funded rules, not step-1 rules
           isAdmin: true
         })
       });
       
       if (!response.ok) {
-        throw new Error('Failed to refresh metrics');
+        let serverError = '';
+        try {
+          const errorData = await response.json();
+          serverError = errorData?.error || '';
+        } catch {}
+        throw new Error(serverError || 'Failed to refresh metrics');
       }
       
-      // Reload accounts to get updated data
-      await loadAllAccounts();
-    } catch (error) {
+      // Update just this account's row from the fresh cache instead of reloading
+      // every account (the old full reload caused O(N^2) reads during bulk refresh)
+      const updatedMetrics = await getCachedMetrics(accountId);
+      setAllAccounts(prev => prev.map(a =>
+        a.metaApiAccount?.accountId === accountId
+          ? { ...a, cachedMetrics: updatedMetrics }
+          : a
+      ));
+    } catch (error: any) {
       console.error('Error refreshing account:', error);
-      setMessage({ type: 'error', text: `Failed to refresh account ${accountId}` });
+      setMessage({ type: 'error', text: `Failed to refresh account ${accountId}${error?.message ? `: ${error.message}` : ''}` });
     } finally {
       setRefreshingAccounts(prev => {
         const newSet = new Set(prev);
@@ -800,10 +818,21 @@ export default function AdminAccountsPage() {
       
       if (account) {
         await refreshAccount(account);
+        // Small delay between accounts so we don't hammer MetaApi rate limits
+        if (refreshQueue.length > 1) {
+          await new Promise(resolve => setTimeout(resolve, 1500));
+        }
       }
       
+      const wasLastItem = refreshQueue.length === 1;
       setRefreshQueue(prev => prev.slice(1));
       setBulkRefreshing(false);
+      
+      // Single full reload at the end of the queue (refreshes alerts and any
+      // data that changed outside the refreshed rows)
+      if (wasLastItem) {
+        await loadAllAccounts();
+      }
     };
     
     processQueue();

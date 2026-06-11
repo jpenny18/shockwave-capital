@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth, getUserMetaApiAccount, getCachedMetrics, updateCachedMetrics, Timestamp } from '../../../../lib/firebase';
+import { auth, getUserMetaApiAccount, getCachedMetrics } from '../../../../lib/firebase';
 import dynamic from 'next/dynamic';
 import { 
   TrendingUp, 
@@ -29,7 +29,8 @@ const ApexChart = dynamic(() => import('react-apexcharts'), { ssr: false });
 interface TradingObjectives {
   minTradingDays: { target: number; current: number; passed: boolean };
   maxDrawdown: { target: number; current: number; passed: boolean; recentBreach?: boolean };
-  maxDailyDrawdown: { target: number; current: number; passed: boolean; recentBreach?: boolean };
+  // Optional: instant challenges have no daily drawdown objective
+  maxDailyDrawdown?: { target: number; current: number; passed: boolean; recentBreach?: boolean };
   profitTarget: { target: number; current: number; passed: boolean };
 }
 
@@ -117,13 +118,14 @@ const TradingObjectivesTable = ({ objectives, accountStatus }: { objectives: Tra
       passed: objectives.maxDrawdown.passed,
       format: 'percent'
     },
-    { 
+    // Instant challenges have no daily drawdown objective
+    ...(objectives.maxDailyDrawdown ? [{
       label: 'Max Daily Drawdown % (Highest Achieved)', 
       target: objectives.maxDailyDrawdown.target,
       current: objectives.maxDailyDrawdown.current,
       passed: objectives.maxDailyDrawdown.passed,
       format: 'percent'
-    },
+    }] : []),
     { 
       label: 'Profit Target %', 
       target: objectives.profitTarget.target,
@@ -342,7 +344,7 @@ const RiskAlertBanner = ({ objectives, riskEvents }: {
   objectives: TradingObjectives; 
   riskEvents: RiskEvent[] 
 }) => {
-  const hasRecentBreach = objectives.maxDrawdown.recentBreach || objectives.maxDailyDrawdown.recentBreach;
+  const hasRecentBreach = objectives.maxDrawdown.recentBreach || objectives.maxDailyDrawdown?.recentBreach;
   const recentRiskEvents = riskEvents.filter(event => {
     const eventTime = new Date(event.brokerTime);
     const dayAgo = new Date();
@@ -493,8 +495,9 @@ export default function AccountDetailsPage() {
       // Check if we have recent cached data (less than 30 minutes old)
       const cachedData = await getCachedMetrics(userAccount.accountId);
       const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+      const cachedLastUpdated = cachedData?.lastUpdated?.toDate ? cachedData.lastUpdated.toDate() : null;
       
-      if (cachedData && cachedData.lastUpdated.toDate() > thirtyMinutesAgo && !showLoading) {
+      if (cachedData && cachedLastUpdated && cachedLastUpdated > thirtyMinutesAgo && !showLoading) {
         // Use cached data
         setMetrics({
           balance: cachedData.balance,
@@ -512,7 +515,7 @@ export default function AccountDetailsPage() {
           winRate: cachedData.winRate,
           avgRRR: cachedData.averageRRR
         });
-        setLastUpdate(cachedData.lastUpdated.toDate());
+        setLastUpdate(cachedLastUpdated);
         return;
       }
 
@@ -552,28 +555,10 @@ export default function AccountDetailsPage() {
       setObjectives(data.objectives);
       setRiskEvents(data.riskEvents);
 
-      // Don't update cache if account is failed (we're using cached data)
-      if (!isFailed) {
-        // Update cached metrics
-        await updateCachedMetrics(userAccount.accountId, {
-          accountId: userAccount.accountId,
-          balance: data.metrics.balance,
-          equity: data.metrics.equity,
-          averageProfit: data.metrics.averageWin,
-          averageLoss: data.metrics.averageLoss,
-          numberOfTrades: data.metrics.trades,
-          averageRRR: data.metrics.avgRRR,
-          lots: data.metrics.lots,
-          expectancy: data.metrics.expectancy,
-          winRate: data.metrics.winRate,
-          profitFactor: data.metrics.profitFactor,
-          maxDrawdown: data.metrics.maxDrawdown,
-          dailyDrawdown: data.metrics.relativeDrawdown,
-          maxDailyDrawdown: data.objectives.maxDailyDrawdown.current,
-          currentProfit: data.metrics.profit,
-          tradingDays: data.objectives.minTradingDays.current
-        });
-      }
+      // Note: the metrics API route already caches the full result server-side.
+      // The previous client-side cache write here overwrote that document with a
+      // partial subset (wiping trades/equity chart/objectives) and crashed for
+      // instant accounts (no maxDailyDrawdown objective), so it was removed.
 
       setLastUpdate(new Date());
     } catch (err: any) {

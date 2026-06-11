@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getCachedMetrics, updateCachedMetrics, Timestamp, db } from '../../../../lib/firebase';
+import { getCachedMetrics, db } from '../../../../lib/firebase';
 import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 import dynamic from 'next/dynamic';
 import { 
@@ -32,7 +32,8 @@ const ApexChart = dynamic(() => import('react-apexcharts'), { ssr: false });
 interface TradingObjectives {
   minTradingDays: { target: number; current: number; passed: boolean };
   maxDrawdown: { target: number; current: number; passed: boolean; recentBreach?: boolean };
-  maxDailyDrawdown: { target: number; current: number; passed: boolean; recentBreach?: boolean };
+  // Optional: instant challenges have no daily drawdown objective
+  maxDailyDrawdown?: { target: number; current: number; passed: boolean; recentBreach?: boolean };
   profitTarget: { target: number; current: number; passed: boolean };
 }
 
@@ -135,13 +136,14 @@ const TradingObjectivesTable = ({ objectives, accountInfo }: { objectives: Tradi
       passed: objectives.maxDrawdown.passed,
       format: 'percent'
     },
-    { 
+    // Instant challenges have no daily drawdown objective
+    ...(objectives.maxDailyDrawdown ? [{
       label: 'Max Daily Drawdown % (Highest Achieved)', 
       target: objectives.maxDailyDrawdown.target,
       current: objectives.maxDailyDrawdown.current,
       passed: objectives.maxDailyDrawdown.passed,
       format: 'percent'
-    },
+    }] : []),
     { 
       label: 'Profit Target %', 
       target: objectives.profitTarget.target,
@@ -777,8 +779,9 @@ export default function AdminAccountDetailsPage() {
             // Regular challenge objectives
             const targetDrawdown = accountData.accountType === 'standard' || accountData.accountType === 'gauntlet' ? 15 : 
                                   accountData.accountType === '1-step' ? 8 : 4;
-            const targetDailyDrawdown = accountData.accountType === 'standard' || accountData.accountType === 'gauntlet' ? 8 : 
-                                       accountData.accountType === '1-step' ? 4 : 4;
+            // Instant challenges have no daily drawdown limit
+            const targetDailyDrawdown: number | null = accountData.accountType === 'standard' || accountData.accountType === 'gauntlet' ? 8 : 
+                                       accountData.accountType === '1-step' ? 4 : null;
             const targetProfit = accountData.accountType === 'gauntlet' ? 10 :  // Gauntlet: 10% (single phase)
                                accountData.accountType === '1-step' ? 10 :  // 1-Step: 10%
                                accountData.accountType === 'standard' 
@@ -818,12 +821,14 @@ export default function AdminAccountDetailsPage() {
                 passed: (cachedData.maxDrawdown || 0) <= targetDrawdown,
                 recentBreach: recentBreaches.maxDrawdown
               },
-              maxDailyDrawdown: {
-                target: targetDailyDrawdown,
-                current: cachedData.maxDailyDrawdown || cachedData.dailyDrawdown || 0,
-                passed: (cachedData.maxDailyDrawdown || cachedData.dailyDrawdown || 0) <= targetDailyDrawdown,
-                recentBreach: recentBreaches.dailyDrawdown
-              },
+              ...(targetDailyDrawdown !== null ? {
+                maxDailyDrawdown: {
+                  target: targetDailyDrawdown,
+                  current: cachedData.maxDailyDrawdown || cachedData.dailyDrawdown || 0,
+                  passed: (cachedData.maxDailyDrawdown || cachedData.dailyDrawdown || 0) <= targetDailyDrawdown,
+                  recentBreach: recentBreaches.dailyDrawdown
+                }
+              } : {}),
               profitTarget: {
                 target: targetProfit,
                 current: profitPercent,
@@ -833,7 +838,7 @@ export default function AdminAccountDetailsPage() {
           }
         }
         
-        setLastUpdate(cachedData.lastUpdated.toDate());
+        setLastUpdate(cachedData.lastUpdated?.toDate ? cachedData.lastUpdated.toDate() : null);
         
         // Set basic account info
         setAccountInfo({
@@ -925,25 +930,10 @@ export default function AdminAccountDetailsPage() {
       setRiskEvents(data.riskEvents || []);
       setPeriodStats(data.periodStats || []);
       
-      // Update cached metrics in Firebase
-      await updateCachedMetrics(accountId, {
-        accountId: accountId,
-        balance: data.metrics.balance,
-        equity: data.metrics.equity,
-        averageProfit: data.metrics.averageWin,
-        averageLoss: data.metrics.averageLoss,
-        numberOfTrades: data.metrics.trades,
-        averageRRR: data.metrics.avgRRR,
-        lots: data.metrics.lots,
-        expectancy: data.metrics.expectancy,
-        winRate: data.metrics.winRate,
-        profitFactor: data.metrics.profitFactor,
-        maxDrawdown: data.metrics.maxDrawdown,
-        dailyDrawdown: data.metrics.relativeDrawdown,
-        maxDailyDrawdown: data.objectives.maxDailyDrawdown.current,
-        currentProfit: data.metrics.profit,
-        tradingDays: data.objectives.minTradingDays.current
-      });
+      // Note: the metrics API route already caches the full result server-side.
+      // The previous client-side cache write here overwrote that document with a
+      // partial subset (wiping trades/equity chart/objectives) and crashed for
+      // instant accounts (no maxDailyDrawdown objective), so it was removed.
       
       setLastUpdate(new Date());
       

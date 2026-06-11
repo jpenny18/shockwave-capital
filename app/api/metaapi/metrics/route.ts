@@ -275,58 +275,29 @@ export async function POST(req: NextRequest) {
       console.error('Error fetching trades:', error.message);
     }
 
-    // 4. Fetch equity data using MetaStats
-    try {
-      // Check if getAccountEquityChart method exists
-      if (typeof metaStats.getAccountEquityChart === 'function') {
-        equityData = await metaStats.getAccountEquityChart(accountId);
-      console.log(`Retrieved ${equityData.length} equity data points`);
-      
-      // Log sample equity data to understand structure
-      if (equityData.length > 0) {
-        console.log('Sample equity data:', JSON.stringify(equityData[0], null, 2));
-        }
-      } else {
-        console.log('getAccountEquityChart method not available in this SDK version');
-      }
-    } catch (error: any) {
-      console.error('Error fetching equity chart:', error.message);
-    }
-
-    // 5. Enhanced features: Try Risk Management API for advanced features
+    // 4. Fetch equity data using the Risk Management API
+    // (MetaStats has no equity chart method - Risk Management is the only source)
     let riskApi = null;
     try {
       riskApi = riskManagement.riskManagementApi;
-      
-      // If we didn't get equity data from MetaStats, try Risk Management API
-      if ((!equityData || equityData.length === 0) && riskApi) {
-        console.log('Trying to get equity data from Risk Management API as fallback');
-        try {
-          equityData = await riskApi.getEquityChart(accountId);
-          console.log(`Retrieved ${equityData.length} equity data points from Risk Management API`);
-        } catch (riskError: any) {
-          console.log('Risk Management equity chart also not available:', riskError.message);
-        }
-      }
     } catch (error: any) {
       console.log('Risk Management API not available:', error.message);
     }
 
     if (riskApi) {
       try {
-        // Setup risk trackers for automated monitoring (enhanced feature)
-        // Only attempt setup if we don't already have sufficient trackers
-        const existingTrackers = await riskApi.getTrackers(accountId);
-        const needsSetup = existingTrackers.length < 2; // We expect 2 trackers (max drawdown + daily drawdown)
-        
-        if (needsSetup) {
-          console.log(`Account has ${existingTrackers.length} trackers, setting up automated risk monitoring...`);
-          trackers = await setupRiskTrackers(riskApi, accountId, accountType, accountSize, step);
-          console.log(`Risk tracker setup completed: ${trackers.length} active trackers`);
-        } else {
-          console.log(`Account already has ${existingTrackers.length} trackers configured`);
-          trackers = existingTrackers;
-        }
+        equityData = await riskApi.getEquityChart(accountId);
+        console.log(`Retrieved ${equityData.length} equity data points from Risk Management API`);
+      } catch (riskError: any) {
+        console.log('Risk Management equity chart not available:', riskError.message);
+      }
+    }
+
+    if (riskApi) {
+      try {
+        // Setup risk trackers for automated monitoring (also migrates wrongly-configured ones)
+        trackers = await setupRiskTrackers(riskApi, accountId, accountType, accountSize, step);
+        console.log(`Risk tracker setup completed: ${trackers.length} active trackers`);
       } catch (error: any) {
         console.error('Error with risk tracker management:', error.message);
         // Fallback: try to get existing trackers even if setup failed
@@ -339,68 +310,83 @@ export async function POST(req: NextRequest) {
       }
 
       try {
-        // Get tracker events (breach notifications) - enhanced feature
-        riskEvents = await riskApi.getTrackerEvents(accountId, null, null, 100);
+        // Get tracker events (breach notifications).
+        // Signature is (startBrokerTime, endBrokerTime, accountId, trackerId, limit) -
+        // the account id MUST go in the third slot or we'd get events for ALL accounts.
+        riskEvents = await riskApi.getTrackerEvents(undefined, undefined, accountId, undefined, 100);
         console.log(`Retrieved ${riskEvents.length} risk events`);
       } catch (error: any) {
         console.error('Error fetching tracker events:', error.message);
-      }
-
-      try {
-        // Try to get period statistics - enhanced feature (may not exist)
-        const endDate = new Date();
-        const startDate = new Date();
-        startDate.setDate(startDate.getDate() - 30); // Last 30 days
-        
-        if (typeof riskApi.getPeriodStatistics === 'function') {
-          periodStats = await riskApi.getPeriodStatistics(
-            accountId,
-            startDate.toISOString(),
-            endDate.toISOString(),
-            'day'
-          );
-          console.log(`Retrieved ${periodStats.length} period statistics`);
-        } else {
-          console.log('Period statistics not available in this SDK version');
-        }
-      } catch (error: any) {
-        console.error('Error fetching period statistics:', error.message);
       }
     } else {
       console.log('Risk Management API not available - skipping enhanced features');
     }
 
-    // 6. Process and combine data
-    // Use MetaStats data as primary source, enhanced by Risk Management where available
+    // Classify risk events as daily vs max drawdown using their tracker
+    // (the API only reports 'profit' | 'drawdown' as exceededThresholdType)
+    const categorizedRiskEvents = categorizeRiskEvents(riskEvents, trackers);
+
+    // Compute per-day statistics from the equity chart + trades
+    // (replaces the non-existent riskApi.getPeriodStatistics call)
+    periodStats = computeDailyPeriodStats(equityData, tradesData);
+
+    // 6. Validity guard: if BOTH MetaStats and the live account info failed, this
+    // refresh produced no usable data. Returning zeros here would overwrite good
+    // cached metrics with $0 balance / 0% drawdown, so fail loudly instead.
+    const hasStatsData = !!metricsFromStats;
+    const hasLiveAccountData = !!accountData && ((accountData.balance ?? 0) > 0 || (accountData.equity ?? 0) > 0);
+    if (!hasStatsData && !hasLiveAccountData) {
+      console.error(`No usable data for account ${accountId} - refusing to overwrite cached metrics`);
+      return NextResponse.json({
+        error: 'MetaApi did not return account data (rate limit, deployment or connection issue). Cached metrics were preserved - try again shortly.',
+        accountStatus: 'unavailable',
+        accountId
+      }, { status: 502 });
+    }
+
+    // 7. Process and combine data
+    // Use MetaStats data as primary source, enhanced by Risk Management where available.
+    // Use ?? (not ||) so a legitimate value of 0 is preserved.
     const combinedMetrics = {
-      balance: metricsFromStats?.balance || accountData?.balance || 0,
-      equity: metricsFromStats?.equity || accountData?.equity || 0,
-      margin: metricsFromStats?.margin || 0,
-      freeMargin: metricsFromStats?.freeMargin || 0,
-      profit: metricsFromStats?.profit || 0,
-      credit: metricsFromStats?.credit || 0,
-      trades: metricsFromStats?.trades || 0,
-      wonTrades: metricsFromStats?.wonTrades || 0,
-      lostTrades: metricsFromStats?.lostTrades || 0,
-      averageWin: metricsFromStats?.averageWin || 0,
-      averageLoss: metricsFromStats?.averageLoss || 0,
-      expectancy: metricsFromStats?.expectancy || 0,
-      profitFactor: metricsFromStats?.profitFactor || 0,
-      absoluteDrawdown: metricsFromStats?.absoluteDrawdown || 0,
-      maxDrawdown: metricsFromStats?.maxDrawdown || 0,
-      relativeDrawdown: metricsFromStats?.relativeDrawdown || 0,
-      lots: metricsFromStats?.lots || 0,
-      commissions: metricsFromStats?.commissions || 0
+      balance: metricsFromStats?.balance ?? accountData?.balance ?? 0,
+      equity: metricsFromStats?.equity ?? accountData?.equity ?? 0,
+      margin: metricsFromStats?.margin ?? 0,
+      freeMargin: metricsFromStats?.freeMargin ?? 0,
+      profit: metricsFromStats?.profit ?? 0,
+      credit: metricsFromStats?.credit ?? 0,
+      trades: metricsFromStats?.trades ?? 0,
+      wonTrades: metricsFromStats?.wonTrades ?? 0,
+      lostTrades: metricsFromStats?.lostTrades ?? 0,
+      averageWin: metricsFromStats?.averageWin ?? 0,
+      averageLoss: metricsFromStats?.averageLoss ?? 0,
+      expectancy: metricsFromStats?.expectancy ?? 0,
+      profitFactor: metricsFromStats?.profitFactor ?? 0,
+      absoluteDrawdown: metricsFromStats?.absoluteDrawdown ?? 0,
+      maxDrawdown: metricsFromStats?.maxDrawdown ?? 0,
+      relativeDrawdown: metricsFromStats?.relativeDrawdown ?? 0,
+      lots: metricsFromStats?.lots ?? 0,
+      commissions: metricsFromStats?.commissions ?? 0
     };
 
     // Calculate additional metrics
     const winRate = combinedMetrics.trades > 0 ? (combinedMetrics.wonTrades / combinedMetrics.trades) * 100 : 0;
     const avgRRR = combinedMetrics.averageLoss !== 0 ? Math.abs(combinedMetrics.averageWin / combinedMetrics.averageLoss) : 0;
 
-    // Calculate daily drawdown from equity data
-    const calculatedDailyDrawdown = equityData && equityData.length > 0 
-      ? calculateDailyDrawdown(equityData)
-      : combinedMetrics.relativeDrawdown || 0;
+    // Max drawdown per Shockwave rules, computed from the equity chart:
+    // - standard/gauntlet/1-step/funded: static, measured from the initial account balance
+    // - instant: trailing, measured from the equity high-water mark
+    // Falls back to the MetaStats balance-based figure when no equity data exists.
+    const isTrailingMaxDD = accountType === 'instant' && (step || 1) !== 3;
+    const ruleBasedMaxDrawdown = calculateMaxDrawdown(equityData, accountSize, isTrailingMaxDD);
+    if (ruleBasedMaxDrawdown !== null) {
+      combinedMetrics.maxDrawdown = ruleBasedMaxDrawdown;
+    }
+
+    // Daily drawdown measured from the START-OF-DAY balance/equity baseline
+    // (worst intraday equity dip vs that baseline), per broker-time days.
+    const dailyDrawdownStats = calculateDailyDrawdownStats(equityData);
+    const calculatedDailyDrawdown = dailyDrawdownStats.maxDailyDrawdown;
+    const todayDrawdown = dailyDrawdownStats.todayDrawdown;
 
     // Calculate trading objectives with enhanced data
     const objectives = calculateTradingObjectives(
@@ -408,9 +394,9 @@ export async function POST(req: NextRequest) {
       accountType, 
       accountSize, 
       step || 1,
-      equityData, 
+      calculatedDailyDrawdown,
       tradesData, 
-      riskEvents,
+      categorizedRiskEvents,
       periodStats,
       await getCachedMaxDailyDrawdown(accountId)
     );
@@ -421,7 +407,8 @@ export async function POST(req: NextRequest) {
         ...combinedMetrics,
         winRate,
         avgRRR,
-        dailyDrawdown: calculatedDailyDrawdown
+        dailyDrawdown: calculatedDailyDrawdown,
+        todayDrawdown
       },
       accountInfo: accountData || {
         accountId,
@@ -453,20 +440,25 @@ export async function POST(req: NextRequest) {
       })),
       equityChart: formatEquityChart(equityData),
       objectives,
-      riskEvents: riskEvents.map(event => ({
-        id: event.id,
-        type: event.exceededThresholdType,
+      riskEvents: categorizedRiskEvents.map(event => ({
+        // TrackerEvent has no id field - build a stable one for alert dedup keys
+        id: event.id ?? `${event.trackerId || 'tracker'}_${event.sequenceNumber ?? event.brokerTime}`,
+        type: event.category,
         accountId: event.accountId,
+        trackerId: event.trackerId,
         sequenceNumber: event.sequenceNumber,
         brokerTime: event.brokerTime,
         absoluteDrawdown: event.absoluteDrawdown,
         relativeDrawdown: event.relativeDrawdown,
-        exceededThresholdType: event.exceededThresholdType
+        // Expose the resolved category ('drawdown' | 'dailyDrawdown' | 'profit') so
+        // existing UI checks for 'dailyDrawdown' keep working
+        exceededThresholdType: event.category
       })),
       periodStats: periodStats.map(stat => ({
         period: stat.period,
         startBrokerTime: stat.startBrokerTime,
         endBrokerTime: stat.endBrokerTime,
+        initialBalance: stat.initialBalance,
         balance: stat.balance,
         equity: stat.equity,
         maxDrawdown: stat.maxDrawdown,
@@ -478,7 +470,8 @@ export async function POST(req: NextRequest) {
       trackers: trackers.map(tracker => {
         // Clean object by removing undefined values
         const cleanTracker: any = {
-          id: tracker.id || `tracker_${tracker.name}_${Date.now()}`,
+          // SDK trackers expose their id as _id
+          id: tracker._id || tracker.id || `tracker_${tracker.name}_${Date.now()}`,
           name: tracker.name || 'Unknown Tracker',
           period: tracker.period || 'day'
         };
@@ -535,6 +528,7 @@ export async function POST(req: NextRequest) {
           profitFactor: response.metrics.profitFactor,
           maxDrawdown: response.metrics.maxDrawdown,
           dailyDrawdown: calculatedDailyDrawdown,
+          todayDrawdown,
           maxDailyDrawdown,
           currentProfit: response.metrics.profit,
           tradingDays: response.objectives.minTradingDays.current,
@@ -550,7 +544,8 @@ export async function POST(req: NextRequest) {
           lastUpdated: new Date()
         };
 
-        await adminDb.collection('cachedMetrics').doc(accountId).set(metricsToCache);
+        // Merge write: never deletes fields written by other code paths
+        await adminDb.collection('cachedMetrics').doc(accountId).set(metricsToCache, { merge: true });
         console.log('Enhanced metrics cached to Firebase for account:', accountId);
         console.log(`Max Daily Drawdown recorded: ${maxDailyDrawdown.toFixed(2)}%, Risk Events: ${response.riskEvents.length}`);
       } catch (cacheError) {
@@ -609,12 +604,14 @@ async function setupRiskTrackers(riskApi: any, accountId: string, accountType: '
       targetDailyDrawdown = 8;
     }
     
-    // Required trackers using correct NewTracker format
+    // Required trackers using correct NewTracker format.
+    // The max/trailing drawdown tracker must use period 'lifetime' - a 'day' period
+    // resets every broker day and can never police a whole-challenge drawdown.
     const requiredTrackers: any[] = [
       {
         name: isFunded ? 'Funded Max Drawdown Monitor' : 
               accountType === 'instant' ? 'Trailing Max Loss Monitor' : 'Max Drawdown Monitor',
-        period: accountType === 'instant' && !isFunded ? 'day' : 'day',
+        period: 'lifetime',
         relativeDrawdownThreshold: targetDrawdown / 100,
         absoluteDrawdownThreshold: (accountSize * targetDrawdown) / 100
       }
@@ -630,11 +627,22 @@ async function setupRiskTrackers(riskApi: any, accountId: string, accountType: '
       });
     }
     
-    // Check if trackers already exist and create missing ones
+    // Create missing trackers; migrate existing ones whose period is wrong
+    // (older versions created the max-DD tracker with period 'day')
     for (const requiredTracker of requiredTrackers) {
       const existingTracker = existingTrackers.find((t: any) => t.name === requiredTracker.name);
       
-      if (!existingTracker) {
+      if (existingTracker && existingTracker.period !== requiredTracker.period) {
+        const existingId = existingTracker._id || existingTracker.id;
+        console.log(`Tracker ${requiredTracker.name} has wrong period '${existingTracker.period}' (expected '${requiredTracker.period}') - recreating`);
+        try {
+          await riskApi.deleteTracker(accountId, existingId);
+          await riskApi.createTracker(accountId, requiredTracker);
+          console.log(`Successfully migrated tracker: ${requiredTracker.name}`);
+        } catch (migrateError: any) {
+          console.error(`Failed to migrate tracker ${requiredTracker.name}:`, migrateError.message);
+        }
+      } else if (!existingTracker) {
         console.log(`Creating tracker: ${requiredTracker.name}`);
         try {
           await riskApi.createTracker(accountId, requiredTracker);
@@ -656,6 +664,47 @@ async function setupRiskTrackers(riskApi: any, accountId: string, accountType: '
     console.error('Error setting up risk trackers:', error);
     return [];
   }
+}
+
+// Classify tracker events as 'dailyDrawdown' | 'drawdown' | 'profit' based on the
+// tracker that produced them. The raw API only reports 'profit' | 'drawdown'.
+function categorizeRiskEvents(riskEvents: any[], trackers: any[]): any[] {
+  if (!riskEvents || riskEvents.length === 0) return [];
+  
+  const trackerById: { [key: string]: any } = {};
+  (trackers || []).forEach((t: any) => {
+    const id = t._id || t.id;
+    if (id) trackerById[id] = t;
+  });
+  
+  const isDailyTrackerName = (name: string) =>
+    !!name && (name.includes('Daily Drawdown') || name.includes('Risk Limit'));
+  
+  return riskEvents.map((event: any) => {
+    let category: 'dailyDrawdown' | 'drawdown' | 'profit';
+    
+    if (event.exceededThresholdType === 'profit') {
+      category = 'profit';
+    } else {
+      const tracker = event.trackerId ? trackerById[event.trackerId] : null;
+      if (tracker) {
+        category = isDailyTrackerName(tracker.name) ? 'dailyDrawdown' : 'drawdown';
+      } else if (event.period === 'lifetime') {
+        // Tracker no longer exists - lifetime period means max drawdown
+        category = 'drawdown';
+      } else {
+        // Legacy events: both trackers used 'day' period, fall back to nothing
+        // smarter than treating them as max drawdown breaches
+        category = 'drawdown';
+      }
+    }
+    
+    return {
+      ...event,
+      sequenceNumber: event.sequenceNumber ?? event.sequencenumber,
+      category
+    };
+  });
 }
 
 // Enhanced function to format equity chart data
@@ -726,9 +775,11 @@ async function fetchAccountInfo(metaApi: any, accountId: string) {
       }
       
       // Wait for connection if not connected
+      // NOTE: waitConnected takes (timeoutInSeconds, intervalInMilliseconds) as numbers,
+      // not an options object. Passing an object made the wait abort immediately.
       if (account.connectionStatus !== 'CONNECTED') {
         console.log(`Waiting for account ${accountId} to connect. Status: ${account.connectionStatus}`);
-        await account.waitConnected({ timeoutInSeconds: 30 });
+        await account.waitConnected(30);
       }
       
       // After account is connected, get account information
@@ -737,7 +788,8 @@ async function fetchAccountInfo(metaApi: any, accountId: string) {
       
       try {
         await connection.connect();
-        await connection.waitSynchronized({ timeoutInSeconds: 10 });
+        // RPC waitSynchronized takes a plain number of seconds
+        await connection.waitSynchronized(10);
         
         // Get account information
         const accountInfo = await connection.getAccountInformation();
@@ -793,51 +845,176 @@ async function fetchAccountInfo(metaApi: any, accountId: string) {
   }
 }
 
-// Helper function to calculate daily drawdown from equity data
-function calculateDailyDrawdown(equityData: any[]): number {
-  if (!equityData || equityData.length === 0) return 0;
+// Extract the broker-time day key (YYYY-MM-DD) from a broker time string without
+// any timezone conversion. Broker times come as 'YYYY-MM-DD HH:mm:ss[.SSS]'.
+function brokerDayKey(brokerTime: any): string | null {
+  if (!brokerTime || typeof brokerTime !== 'string' || brokerTime.length < 10) return null;
+  return brokerTime.slice(0, 10);
+}
+
+// Group equity chart buckets by broker day, sorted chronologically within each day
+function groupEquityByBrokerDay(equityData: any[]): { [day: string]: any[] } {
+  const days: { [day: string]: any[] } = {};
+  (equityData || []).forEach(point => {
+    const dayKey = brokerDayKey(point.startBrokerTime) || brokerDayKey(point.endBrokerTime) || brokerDayKey(point.brokerTime);
+    if (!dayKey) return;
+    if (!days[dayKey]) days[dayKey] = [];
+    days[dayKey].push(point);
+  });
+  Object.values(days).forEach(dayPoints => {
+    dayPoints.sort((a, b) => String(a.startBrokerTime || '').localeCompare(String(b.startBrokerTime || '')));
+  });
+  return days;
+}
+
+// Daily drawdown per Shockwave rules: the worst intraday equity dip measured from
+// the START-OF-DAY balance/equity baseline (the higher of the two at day open),
+// using broker-time day boundaries.
+// Returns the peak across all days plus today's (latest day's) value.
+function calculateDailyDrawdownStats(equityData: any[]): {
+  maxDailyDrawdown: number;
+  todayDrawdown: number;
+  dailyBreakdown: Array<{
+    day: string;
+    baseline: number;
+    minEquity: number;
+    drawdown: number;
+    startBalance: number;
+    startEquity: number;
+    lastBalance: number;
+    lastEquity: number;
+  }>;
+} {
+  const empty = { maxDailyDrawdown: 0, todayDrawdown: 0, dailyBreakdown: [] as any[] };
+  if (!equityData || equityData.length === 0) return empty;
   
+  const days = groupEquityByBrokerDay(equityData);
+  const dayKeys = Object.keys(days).sort();
+  if (dayKeys.length === 0) return empty;
+  
+  const dailyBreakdown: any[] = [];
   let maxDailyDrawdown = 0;
   
-  // Group equity data by day
-  const dailyData: { [key: string]: any[] } = {};
-  
-  equityData.forEach(point => {
-    const date = new Date(point.brokerTime || point.endBrokerTime || point.date);
-    const dayKey = date.toISOString().slice(0, 10); // YYYY-MM-DD
+  dayKeys.forEach(dayKey => {
+    const dayPoints = days[dayKey];
+    const firstPoint = dayPoints[0];
+    const lastPoint = dayPoints[dayPoints.length - 1];
     
-    if (!dailyData[dayKey]) {
-      dailyData[dayKey] = [];
-    }
-    dailyData[dayKey].push(point);
-  });
-  
-  // Calculate max drawdown for each day
-  Object.values(dailyData).forEach(dayPoints => {
-    let dayHighBalance = 0;
-    let dayHighEquity = 0;
-    let maxDayDrawdown = 0;
+    const startBalance = Number(firstPoint.startBalance ?? firstPoint.balance ?? 0);
+    const startEquity = Number(firstPoint.startEquity ?? firstPoint.equity ?? 0);
+    // Start-of-day baseline: the higher of balance/equity at day open
+    const baseline = Math.max(startBalance, startEquity);
     
+    // Worst equity point of the day (minEquity captures intraday dips inside a bucket)
+    let minEquity = Infinity;
     dayPoints.forEach(point => {
-      // Track highest balance/equity for the day
-      const balance = parseFloat(point.balance || point.lastBalance || point.maxBalance || 0);
-      const equity = parseFloat(point.equity || point.lastEquity || point.maxEquity || 0);
-      
-      dayHighBalance = Math.max(dayHighBalance, balance);
-      dayHighEquity = Math.max(dayHighEquity, equity);
-      
-      // Calculate current drawdown from day's high
-      const currentEquity = parseFloat(point.lastEquity || point.equity || point.minEquity || 0);
-      const drawdownFromHigh = dayHighEquity > 0 ? ((dayHighEquity - currentEquity) / dayHighEquity) * 100 : 0;
-      
-      maxDayDrawdown = Math.max(maxDayDrawdown, drawdownFromHigh);
+      const candidates = [point.minEquity, point.lastEquity, point.equity]
+        .map(v => Number(v))
+        .filter(v => Number.isFinite(v) && v > 0);
+      if (candidates.length > 0) {
+        minEquity = Math.min(minEquity, Math.min(...candidates));
+      }
     });
+    if (!Number.isFinite(minEquity)) minEquity = baseline;
     
-    // Track the worst daily drawdown across all days
-    maxDailyDrawdown = Math.max(maxDailyDrawdown, maxDayDrawdown);
+    const drawdown = baseline > 0 ? Math.max(0, ((baseline - minEquity) / baseline) * 100) : 0;
+    maxDailyDrawdown = Math.max(maxDailyDrawdown, drawdown);
+    
+    dailyBreakdown.push({
+      day: dayKey,
+      baseline,
+      minEquity,
+      drawdown,
+      startBalance,
+      startEquity,
+      lastBalance: Number(lastPoint.lastBalance ?? lastPoint.balance ?? startBalance),
+      lastEquity: Number(lastPoint.lastEquity ?? lastPoint.equity ?? startEquity)
+    });
   });
   
-  return maxDailyDrawdown;
+  return {
+    maxDailyDrawdown,
+    todayDrawdown: dailyBreakdown[dailyBreakdown.length - 1]?.drawdown ?? 0,
+    dailyBreakdown
+  };
+}
+
+// Max drawdown per Shockwave rules, computed from the equity chart.
+// - static (standard/gauntlet/1-step/funded): % below the INITIAL account balance
+//   reached by the lowest equity point over the whole history
+// - trailing (instant): worst % dip from the running equity high-water mark
+// Returns null when there is no equity data (caller falls back to MetaStats).
+function calculateMaxDrawdown(equityData: any[], accountStartBalance: number, trailing: boolean): number | null {
+  if (!equityData || equityData.length === 0) return null;
+  
+  const sorted = [...equityData].sort((a, b) =>
+    String(a.startBrokerTime || '').localeCompare(String(b.startBrokerTime || '')));
+  
+  const pointMinEquity = (point: any): number | null => {
+    const candidates = [point.minEquity, point.lastEquity, point.equity]
+      .map(v => Number(v))
+      .filter(v => Number.isFinite(v) && v > 0);
+    return candidates.length > 0 ? Math.min(...candidates) : null;
+  };
+  const pointMaxEquity = (point: any): number | null => {
+    const candidates = [point.maxEquity, point.lastEquity, point.equity]
+      .map(v => Number(v))
+      .filter(v => Number.isFinite(v) && v > 0);
+    return candidates.length > 0 ? Math.max(...candidates) : null;
+  };
+  
+  if (trailing) {
+    let peak = 0;
+    let maxDD = 0;
+    sorted.forEach(point => {
+      const high = pointMaxEquity(point);
+      if (high !== null) peak = Math.max(peak, high);
+      const low = pointMinEquity(point);
+      if (low !== null && peak > 0) {
+        maxDD = Math.max(maxDD, ((peak - low) / peak) * 100);
+      }
+    });
+    return maxDD;
+  }
+  
+  // Static: measured from the initial account balance
+  if (!accountStartBalance || accountStartBalance <= 0) return null;
+  let lowestEquity = Infinity;
+  sorted.forEach(point => {
+    const low = pointMinEquity(point);
+    if (low !== null) lowestEquity = Math.min(lowestEquity, low);
+  });
+  if (!Number.isFinite(lowestEquity)) return null;
+  return Math.max(0, ((accountStartBalance - lowestEquity) / accountStartBalance) * 100);
+}
+
+// Build per-day statistics from the equity chart + trade history.
+// This replaces the previous riskApi.getPeriodStatistics call, which does not
+// exist in the SDK (the method is getTrackingStatistics and has different fields).
+function computeDailyPeriodStats(equityData: any[], tradesData: any[]): any[] {
+  const { dailyBreakdown } = calculateDailyDrawdownStats(equityData);
+  if (dailyBreakdown.length === 0) return [];
+  
+  // Count trades per broker day
+  const tradesPerDay: { [day: string]: number } = {};
+  (tradesData || []).forEach(trade => {
+    const dayKey = brokerDayKey(trade.openTime || trade.time || trade.date);
+    if (dayKey) tradesPerDay[dayKey] = (tradesPerDay[dayKey] || 0) + 1;
+  });
+  
+  return dailyBreakdown.map(day => ({
+    period: 'day',
+    startBrokerTime: `${day.day} 00:00:00.000`,
+    endBrokerTime: `${day.day} 23:59:59.999`,
+    initialBalance: day.startBalance,
+    balance: day.lastBalance,
+    equity: day.lastEquity,
+    maxDrawdown: day.drawdown,
+    maxDailyDrawdown: day.drawdown,
+    profit: day.lastBalance - day.startBalance,
+    trades: tradesPerDay[day.day] || 0,
+    tradingDays: (tradesPerDay[day.day] || 0) > 0 ? 1 : 0
+  }));
 }
 
 // Helper function to get cached max daily drawdown
@@ -859,7 +1036,7 @@ function calculateTradingObjectives(
   challengeType: 'standard' | 'instant' | '1-step' | 'gauntlet',
   accountStartBalance: number,
   step: number = 1,
-  equityData?: any[],
+  currentDailyDrawdown?: number,
   tradesData?: any[],
   riskEvents?: any[],
   periodStats?: any[],
@@ -868,37 +1045,15 @@ function calculateTradingObjectives(
   const currentBalance = metrics.balance || 0;
   const currentDrawdown = metrics.maxDrawdown || 0;
   
-  // Enhanced daily drawdown calculation using multiple sources
-  let maxDailyDrawdown = 0;
-  
-  // Priority 1: Use period statistics (most accurate)
-  if (periodStats && periodStats.length > 0) {
-    maxDailyDrawdown = Math.max(...periodStats.map(p => p.maxDailyDrawdown || 0));
-  }
-  // Priority 2: Check risk events for daily drawdown breaches
-  else if (riskEvents && riskEvents.length > 0) {
-    const dailyDDEvents = riskEvents.filter(e => e.exceededThresholdType === 'dailyDrawdown');
-    if (dailyDDEvents.length > 0) {
-      maxDailyDrawdown = Math.max(...dailyDDEvents.map(e => e.relativeDrawdown || 0));
-    }
-  }
-  // Priority 3: Use detailed calculation from equity data
-  else if (equityData && equityData.length > 0) {
-    maxDailyDrawdown = calculateDailyDrawdown(equityData);
-  }
-  // Priority 4: Use cached max daily drawdown
-  else if (cachedMaxDailyDrawdown !== undefined) {
-    maxDailyDrawdown = cachedMaxDailyDrawdown;
-  }
-  // Priority 5: Fallback to metrics data
-  else {
-    maxDailyDrawdown = Math.max(
-      metrics.dailyDrawdown || 0,
-      metrics.relativeDrawdown || 0,
-      metrics.maxDailyDrawdown || 0,
-      metrics.maxRelativeDrawdown || 0
-    );
-  }
+  // Daily drawdown (peak): high-water mark across the freshly calculated
+  // start-of-day value, the cached historical peak, and any cached metric values.
+  // Never goes down on a refresh with partial data.
+  const maxDailyDrawdown = Math.max(
+    currentDailyDrawdown ?? 0,
+    cachedMaxDailyDrawdown ?? 0,
+    metrics.maxDailyDrawdown ?? 0,
+    metrics.dailyDrawdown ?? 0
+  );
   
   const profitPercentage = accountStartBalance > 0 
     ? ((currentBalance - accountStartBalance) / accountStartBalance) * 100 
@@ -947,51 +1102,38 @@ function calculateTradingObjectives(
   const isFunded = step === 3;
   const target = isFunded ? targets.funded : (targets[challengeType] || targets.standard);
   
-  // Enhanced trading days calculation with updated logic (1 trade per day instead of 2)
+  // Trading days: count distinct broker-time days with at least 1 trade,
+  // straight from the trade history (no timezone conversion of broker times).
   let tradingDays = 0;
   
-  if (isFunded && periodStats && periodStats.length > 0) {
-    // For funded accounts: count days with 0.5% gain from starting balance
-    const gainThreshold = accountStartBalance * 0.005; // 0.5% of starting balance
-    
-    periodStats.forEach(stat => {
-      if (stat.profit >= gainThreshold) {
-        tradingDays++;
-      }
-    });
-  } else if (periodStats && periodStats.length > 0) {
-    // For challenge accounts: Use the most recent period stat's trading days count
-    const latestStat = periodStats[periodStats.length - 1];
-    tradingDays = latestStat.tradingDays || 0;
-  } else if (tradesData && tradesData.length > 0) {
-    // Group trades by day
-    const tradesByDay: { [key: string]: number } = {};
-    
-    tradesData.forEach(trade => {
-      const tradeDate = trade.openTime || trade.time || trade.date;
-      if (tradeDate) {
-        const date = new Date(tradeDate);
-        const dayKey = date.toISOString().slice(0, 10); // YYYY-MM-DD
-        
-        if (!tradesByDay[dayKey]) {
-          tradesByDay[dayKey] = 0;
+  const distinctTradeDays = new Set<string>();
+  (tradesData || []).forEach(trade => {
+    const dayKey = brokerDayKey(trade.openTime || trade.time || trade.date);
+    if (dayKey) distinctTradeDays.add(dayKey);
+  });
+  
+  if (isFunded) {
+    // For funded accounts: count days with a 0.5% gain from starting balance
+    if (periodStats && periodStats.length > 0) {
+      const gainThreshold = accountStartBalance * 0.005; // 0.5% of starting balance
+      periodStats.forEach(stat => {
+        if ((stat.profit || 0) >= gainThreshold) {
+          tradingDays++;
         }
-        tradesByDay[dayKey]++;
-      }
-    });
-    
-    // Updated: Count days with at least 1 trade (changed from 2)
-    Object.values(tradesByDay).forEach(tradesCount => {
-      if (tradesCount >= 1) {
-        tradingDays++;
-      }
-    });
+      });
+    } else {
+      // No daily stats available - keep previously recorded value
+      tradingDays = metrics.tradingDays || 0;
+    }
+  } else if (distinctTradeDays.size > 0) {
+    tradingDays = distinctTradeDays.size;
+  } else if (periodStats && periodStats.length > 0) {
+    tradingDays = periodStats.reduce((sum, stat) => sum + (stat.tradingDays || 0), 0);
   } else if (metrics.tradingDays) {
-    // If MetaStats provides trading days directly
+    // Cached/previously calculated trading days
     tradingDays = metrics.tradingDays;
   } else if (metrics.trades > 0) {
-    // Fallback estimation - assume trades are distributed across days
-    // Updated: with an average of 2 trades per trading day (changed from 3)
+    // Last-resort estimation - assume an average of 2 trades per trading day
     tradingDays = Math.min(Math.floor(metrics.trades / 2), 30);
   }
   
@@ -1010,13 +1152,17 @@ function calculateTradingObjectives(
       return eventTime > dayAgo;
     });
     
-    recentBreaches.maxDrawdown = recentEvents.some(e => e.exceededThresholdType === 'drawdown');
-    recentBreaches.dailyDrawdown = recentEvents.some(e => e.exceededThresholdType === 'dailyDrawdown');
+    // Events carry a resolved category ('drawdown' | 'dailyDrawdown' | 'profit');
+    // fall back to the raw exceededThresholdType for older cached events
+    const eventCategory = (e: any) => e.category ?? e.exceededThresholdType;
+    
+    recentBreaches.maxDrawdown = recentEvents.some(e => eventCategory(e) === 'drawdown');
+    recentBreaches.dailyDrawdown = recentEvents.some(e => eventCategory(e) === 'dailyDrawdown');
     
     // For funded accounts, check if daily drawdown went above 2%
     if (isFunded) {
       recentBreaches.fundedRiskViolation = recentEvents.some(e => 
-        e.exceededThresholdType === 'dailyDrawdown' && e.relativeDrawdown > 0.02
+        eventCategory(e) === 'dailyDrawdown' && e.relativeDrawdown > 0.02
       );
     }
   }

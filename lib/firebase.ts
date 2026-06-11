@@ -652,13 +652,15 @@ export async function getCachedMetrics(accountId: string): Promise<CachedMetrics
 /**
  * Update cached metrics for an account
  */
-export async function updateCachedMetrics(accountId: string, metrics: Omit<CachedMetrics, 'lastUpdated'>): Promise<void> {
+export async function updateCachedMetrics(accountId: string, metrics: Partial<Omit<CachedMetrics, 'lastUpdated'>>): Promise<void> {
   try {
     const metricsRef = doc(db, 'cachedMetrics', accountId);
+    // Merge write: a partial update must never delete fields written by the
+    // server-side metrics route (lastTrades, lastEquityChart, lastObjectives, ...)
     await setDoc(metricsRef, {
       ...metrics,
       lastUpdated: Timestamp.now()
-    });
+    }, { merge: true });
   } catch (error) {
     console.error('Error updating cached metrics:', error);
     throw error;
