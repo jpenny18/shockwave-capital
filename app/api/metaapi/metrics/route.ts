@@ -261,11 +261,77 @@ export async function POST(req: NextRequest) {
     // If core MetaStats metrics could not be fetched (the call threw) and we also
     // have no live account balance, do NOT continue and cache a zeroed-out
     // response — that is what clobbers previously good cached balance/equity/
-    // drawdown in production. Surface a clear error and preserve the cache.
+    // drawdown. Instead, gracefully return the last-known CACHED metrics (200)
+    // so the dashboard keeps working, and leave the cache untouched.
     if (!metricsFromStats && !(accountData && (accountData.balance || 0) > 0)) {
-      console.error(`Core MetaStats metrics unavailable for account ${accountId}; preserving cached data and aborting`);
+      console.warn(`Core MetaStats metrics unavailable for account ${accountId}; serving cached data`);
+      try {
+        const cachedMetricsDoc = await adminDb.collection('cachedMetrics').doc(accountId).get();
+        const cachedData = cachedMetricsDoc.exists ? cachedMetricsDoc.data() : null;
+
+        if (cachedData) {
+          return NextResponse.json({
+            metrics: {
+              balance: cachedData.balance || 0,
+              equity: cachedData.equity || 0,
+              averageProfit: cachedData.averageProfit || 0,
+              averageLoss: cachedData.averageLoss || 0,
+              numberOfTrades: cachedData.numberOfTrades || 0,
+              wonTrades: cachedData.wonTrades || 0,
+              lostTrades: cachedData.lostTrades || 0,
+              averageRRR: cachedData.averageRRR || 0,
+              lots: cachedData.lots || 0,
+              expectancy: cachedData.expectancy || 0,
+              winRate: cachedData.winRate || 0,
+              profitFactor: cachedData.profitFactor || 0,
+              maxDrawdown: cachedData.maxDrawdown || 0,
+              dailyDrawdown: cachedData.dailyDrawdown || 0,
+              maxDailyDrawdown: cachedData.maxDailyDrawdown ?? cachedData.dailyDrawdown ?? 0,
+              currentProfit: cachedData.currentProfit || 0,
+              trades: cachedData.numberOfTrades || 0,
+              avgRRR: cachedData.averageRRR || 0
+            },
+            accountInfo: {
+              accountId,
+              name: cachedData.accountName || accountData?.name || 'Account',
+              broker: cachedData.broker || accountData?.broker || 'Unknown',
+              server: cachedData.server || accountData?.server || 'Unknown',
+              balance: cachedData.balance || 0,
+              equity: cachedData.equity || 0,
+              currency: accountData?.currency || 'USD',
+              leverage: accountData?.leverage || 100,
+              type: accountData?.type || 'ACCOUNT_TRADE_MODE_DEMO',
+              platform: accountData?.platform || 'mt5',
+              state: accountData?.state || 'UNKNOWN',
+              connectionStatus: accountData?.connectionStatus || 'DISCONNECTED'
+            },
+            trades: cachedData.lastTrades || [],
+            equityChart: cachedData.lastEquityChart || [],
+            objectives: cachedData.lastObjectives || calculateTradingObjectives({
+              challengeType: accountType as ChallengeType,
+              accountStartBalance: accountSize,
+              step: step || 1,
+              maxDrawdownPercent: cachedData.maxDrawdown || 0,
+              dailyDrawdownPercent: cachedData.maxDailyDrawdown ?? cachedData.dailyDrawdown ?? 0,
+              tradingDays: cachedData.tradingDays || 0,
+              profitPercent: accountSize > 0
+                ? (((cachedData.balance || 0) - accountSize) / accountSize) * 100
+                : 0
+            }),
+            riskEvents: cachedData.lastRiskEvents || [],
+            periodStats: cachedData.lastPeriodStats || [],
+            trackers: cachedData.lastTrackers || [],
+            accountStatus: 'cached',
+            dataStale: true
+          });
+        }
+      } catch (cacheReadError: any) {
+        console.error('Error reading cached metrics for fallback:', cacheReadError?.message);
+      }
+
+      // No cached data exists yet — surface a soft error (nothing to preserve).
       return NextResponse.json({
-        error: 'Live metrics are temporarily unavailable for this account. Previously cached values have been preserved.',
+        error: 'Live metrics are temporarily unavailable for this account and no cached data exists yet.',
         accountStatus: 'metrics_unavailable',
         accountId
       }, { status: 502 });
