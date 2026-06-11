@@ -1118,19 +1118,26 @@ export default function ChallengePage() {
             <div className="relative bg-gradient-to-r from-[#0FF1CE]/15 to-[#5059FC]/15 rounded-2xl p-6 lg:p-8 border border-[#0FF1CE]/30 backdrop-blur-sm overflow-hidden">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div className="text-center lg:text-left w-full">
+                  <div className="flex items-center justify-center lg:justify-start gap-2 mb-2">
+                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-[#0FF1CE]/15 mr-1">
+                      <span className="text-[#0FF1CE] font-bold text-lg">%</span>
+                    </span>
+                    <span className="text-sm font-bold text-[#0FF1CE] uppercase tracking-wider">ONE YEAR ANNIVERSARY SALE</span>
+                  </div>
                   <div className="text-xl lg:text-2xl font-bold text-white mb-2">
                     <span className="text-[#0FF1CE]">50% Off All Challenges</span> + <span className="text-[#0FF1CE]">1 Free Retry</span>
                   </div>
                   <div className="mt-1 text-sm text-gray-100 flex flex-col sm:flex-row items-center sm:gap-2 justify-center lg:justify-start">
                     Use code: 
-                    <code className="bg-[#0FF1CE]/15 text-[#0FF1CE] px-2 py-0.5 rounded font-mono font-semibold tracking-wide text-xs ml-1 sm:ml-0">SHOCKWAVE</code>
+                    <code className="bg-[#0FF1CE]/15 text-[#0FF1CE] px-2 py-0.5 rounded font-mono font-semibold tracking-wide text-xs ml-1 sm:ml-0">ONEYEAR</code>
+                  </div>
+                  <div className="mt-1 text-[11px] text-gray-400">
+                    limited time • One Year Anniversary
                   </div>
                 </div>
               </div>
             </div>
           </div>
-     
-     
      
      
           {/* On-Demand Payouts Promo */}

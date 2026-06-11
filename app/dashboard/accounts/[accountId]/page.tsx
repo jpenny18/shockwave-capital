@@ -29,8 +29,7 @@ const ApexChart = dynamic(() => import('react-apexcharts'), { ssr: false });
 interface TradingObjectives {
   minTradingDays: { target: number; current: number; passed: boolean };
   maxDrawdown: { target: number; current: number; passed: boolean; recentBreach?: boolean };
-  // Optional: instant challenges have no daily-drawdown objective
-  maxDailyDrawdown?: { target: number; current: number; passed: boolean; recentBreach?: boolean };
+  maxDailyDrawdown: { target: number; current: number; passed: boolean; recentBreach?: boolean };
   profitTarget: { target: number; current: number; passed: boolean };
 }
 
@@ -118,14 +117,13 @@ const TradingObjectivesTable = ({ objectives, accountStatus }: { objectives: Tra
       passed: objectives.maxDrawdown.passed,
       format: 'percent'
     },
-    // Daily drawdown objective only applies to challenges that define it
-    ...(objectives.maxDailyDrawdown ? [{
+    { 
       label: 'Max Daily Drawdown % (Highest Achieved)', 
       target: objectives.maxDailyDrawdown.target,
       current: objectives.maxDailyDrawdown.current,
       passed: objectives.maxDailyDrawdown.passed,
       format: 'percent'
-    }] : []),
+    },
     { 
       label: 'Profit Target %', 
       target: objectives.profitTarget.target,
@@ -344,7 +342,7 @@ const RiskAlertBanner = ({ objectives, riskEvents }: {
   objectives: TradingObjectives; 
   riskEvents: RiskEvent[] 
 }) => {
-  const hasRecentBreach = objectives.maxDrawdown.recentBreach || objectives.maxDailyDrawdown?.recentBreach;
+  const hasRecentBreach = objectives.maxDrawdown.recentBreach || objectives.maxDailyDrawdown.recentBreach;
   const recentRiskEvents = riskEvents.filter(event => {
     const eventTime = new Date(event.brokerTime);
     const dayAgo = new Date();
@@ -571,7 +569,7 @@ export default function AccountDetailsPage() {
           profitFactor: data.metrics.profitFactor,
           maxDrawdown: data.metrics.maxDrawdown,
           dailyDrawdown: data.metrics.relativeDrawdown,
-          maxDailyDrawdown: data.objectives.maxDailyDrawdown?.current ?? 0,
+          maxDailyDrawdown: data.objectives.maxDailyDrawdown.current,
           currentProfit: data.metrics.profit,
           tradingDays: data.objectives.minTradingDays.current
         });

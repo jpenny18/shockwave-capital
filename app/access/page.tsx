@@ -529,15 +529,19 @@ export default function EarlyAccessPage() {
                         <span className="inline-block w-2 h-2 rounded-full bg-[#0FF1CE]" />
                         <span>
                           <span className="font-bold text-[#ffffff]">Use code:</span>{' '}
-                          <span className="font-mono bg-[#0FF1CE]/15 text-[#0FF1CE] px-2 py-0.5 rounded font-semibold tracking-wide ml-1">SHOCKWAVE</span>
+                          <span className="font-mono bg-[#0FF1CE]/15 text-[#0FF1CE] px-2 py-0.5 rounded font-semibold tracking-wide ml-1">ONEYEAR</span>
+                        </span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="inline-block w-2 h-2 rounded-full bg-[#0FF1CE]" />
+                        <span>
+                          <span className="text-gray-400">One Year Anniversary Sale • limited time</span>
                         </span>
                       </li>
                     </ul>
                   </div>
                 </div>
               </div>
-         
-         
          
          
 
