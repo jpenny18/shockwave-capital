@@ -655,10 +655,13 @@ export async function getCachedMetrics(accountId: string): Promise<CachedMetrics
 export async function updateCachedMetrics(accountId: string, metrics: Omit<CachedMetrics, 'lastUpdated'>): Promise<void> {
   try {
     const metricsRef = doc(db, 'cachedMetrics', accountId);
+    // IMPORTANT: merge so we only update the summary fields passed in and never
+    // wipe the richer cached data (lastObjectives, lastTrades, lastEquityChart,
+    // lastRiskEvents, lastPeriodStats, lastTrackers) written by the API route.
     await setDoc(metricsRef, {
       ...metrics,
       lastUpdated: Timestamp.now()
-    });
+    }, { merge: true });
   } catch (error) {
     console.error('Error updating cached metrics:', error);
     throw error;
