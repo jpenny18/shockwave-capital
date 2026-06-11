@@ -5,6 +5,7 @@ import {
   RecentBreaches,
   calculateTradingObjectives,
   computeDailyDrawdownFromEquity,
+  computeMaxDrawdownFromEquity,
   computeTradingDaysFromTrades,
   isFundedAccount,
   toPercent,
@@ -324,6 +325,7 @@ export async function POST(req: NextRequest) {
     let riskApi: any = null;
     let trackerPeriodById: Record<string, string> = {};
     let dailyTrackerStats: any[] = [];
+    let overallTrackerStats: any[] = [];
 
     try {
       riskApi = riskManagement.riskManagementApi;
@@ -375,6 +377,8 @@ export async function POST(req: NextRequest) {
         if (id) trackerPeriodById[id] = t.period || 'day';
       });
       const dailyTracker = trackers.find((t: any) => t.period === 'day');
+      // The overall/lifetime tracker monitors total max drawdown.
+      const overallTracker = trackers.find((t: any) => t.period && t.period !== 'day');
 
       // Tracker events (breach notifications). Correct argument order is
       // (startBrokerTime, endBrokerTime, accountId, trackerId, limit).
@@ -393,6 +397,18 @@ export async function POST(req: NextRequest) {
           console.log(`Retrieved ${dailyTrackerStats.length} daily tracking statistics`);
         } catch (error: any) {
           console.error('Error fetching tracking statistics:', error.message);
+        }
+      }
+
+      // Overall (lifetime) tracking statistics for total max drawdown — this is
+      // our source of truth for max drawdown when MetaStats metrics are down.
+      if (overallTracker) {
+        try {
+          const overallTrackerId = overallTracker._id || overallTracker.id;
+          overallTrackerStats = await riskApi.getTrackingStatistics(accountId, overallTrackerId, undefined, 30, true);
+          console.log(`Retrieved ${overallTrackerStats.length} overall tracking statistics`);
+        } catch (error: any) {
+          console.error('Error fetching overall tracking statistics:', error.message);
         }
       }
     } else {
@@ -506,6 +522,28 @@ export async function POST(req: NextRequest) {
     const peakDailyDrawdown = Math.max(
       calculatedDailyDrawdown,
       Number(existingCachedData?.maxDailyDrawdown ?? 0)
+    );
+
+    // Overall max drawdown (percent). Priority: live MetaStats -> overall
+    // (lifetime) risk tracker stats -> equity-chart computation -> cached peak.
+    // Max drawdown is monotonic, so we take the highest across every source so
+    // it never regresses to 0 when MetaStats is unavailable.
+    let calculatedMaxDrawdown = 0;
+    if (overallTrackerStats && overallTrackerStats.length > 0) {
+      calculatedMaxDrawdown = Math.max(
+        0,
+        ...overallTrackerStats.map((s: any) => toPercent(s.maxRelativeDrawdown))
+      );
+    } else if (equityData && equityData.length > 0) {
+      calculatedMaxDrawdown = computeMaxDrawdownFromEquity(equityData);
+    }
+    // Prefer the authoritative live MetaStats value; otherwise use the
+    // risk-management/equity-derived value. Always floor at the cached peak so a
+    // monotonic max drawdown never regresses (and never shows 0 once recorded).
+    const liveMaxDrawdown = statsLive ? Number(metricsFromStats?.maxDrawdown || 0) : 0;
+    combinedMetrics.maxDrawdown = Math.max(
+      liveMaxDrawdown > 0 ? liveMaxDrawdown : calculatedMaxDrawdown,
+      Number(cachedStats.maxDrawdown || 0)
     );
 
     // Normalize tracker events: convert fraction drawdowns to percent and
@@ -685,7 +723,11 @@ export async function POST(req: NextRequest) {
         const liveBalanceMissing = !(response.metrics.balance > 0);
         const safeBalance = liveBalanceMissing && hasGoodExisting ? existingData.balance : response.metrics.balance;
         const safeEquity = liveBalanceMissing && hasGoodExisting ? (existingData.equity ?? existingData.balance) : response.metrics.equity;
-        const safeMaxDrawdown = liveBalanceMissing && hasGoodExisting ? (existingData.maxDrawdown ?? response.metrics.maxDrawdown) : response.metrics.maxDrawdown;
+        // Max drawdown is monotonic — always keep the highest ever recorded.
+        const safeMaxDrawdown = Math.max(
+          Number(response.metrics.maxDrawdown || 0),
+          Number(existingData?.maxDrawdown || 0)
+        );
 
         const metricsToCache = {
           accountId,

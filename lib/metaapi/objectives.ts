@@ -245,6 +245,48 @@ export function computeDailyDrawdownFromEquity(
 }
 
 /**
+ * Compute the overall maximum drawdown (in percent) from an equity series.
+ * Tracks the running peak equity and the largest decline from that peak.
+ * Used as a fallback for the overall max-drawdown objective when MetaStats
+ * metrics are unavailable (e.g. account not synced) but the risk-management
+ * equity chart is. Max drawdown is monotonic over an account's life, so callers
+ * should take the max of this and any previously recorded value.
+ */
+export function computeMaxDrawdownFromEquity(
+  equityData: Array<any>
+): number {
+  if (!equityData || equityData.length === 0) return 0;
+
+  const points = equityData
+    .map((p) => {
+      const time = new Date(
+        p.endBrokerTime || p.brokerTime || p.startBrokerTime || p.date || 0
+      ).getTime();
+      const high = Number(
+        p.maxEquity ?? p.lastEquity ?? p.equity ?? p.averageEquity ?? p.maxBalance ?? p.lastBalance ?? p.balance ?? 0
+      );
+      const low = Number(
+        p.minEquity ?? p.lastEquity ?? p.equity ?? p.averageEquity ?? p.minBalance ?? p.lastBalance ?? p.balance ?? 0
+      );
+      return { time, high, low };
+    })
+    .filter((p) => p.high > 0 || p.low > 0)
+    .sort((a, b) => a.time - b.time);
+
+  let peak = 0;
+  let maxDrawdown = 0;
+  for (const p of points) {
+    if (p.high > peak) peak = p.high;
+    const low = p.low > 0 ? p.low : p.high;
+    if (peak > 0 && low > 0) {
+      const dd = ((peak - low) / peak) * 100;
+      if (dd > maxDrawdown) maxDrawdown = dd;
+    }
+  }
+  return maxDrawdown;
+}
+
+/**
  * Count trading days (days with at least one trade) from a list of trades.
  */
 export function computeTradingDaysFromTrades(
