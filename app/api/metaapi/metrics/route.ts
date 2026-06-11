@@ -729,29 +729,42 @@ export async function POST(req: NextRequest) {
           Number(existingData?.maxDrawdown || 0)
         );
 
+        // Trade-derived stats (profit, trades, win rate, RRR, lots, expectancy,
+        // profit factor, trading days, journal) come ONLY from MetaStats. When
+        // MetaStats is unavailable (it currently returns HTTP 503) every live
+        // value is 0/empty, so — exactly like balance and max drawdown above —
+        // we keep the last-known-good cached value instead of clobbering it with
+        // zeros. The moment MetaStats responds, real values are cached and stick.
+        // `!== 0` (not `> 0`) so legitimately negative figures like loss/profit
+        // are still treated as real values.
+        const keepNum = (live: any, cached: any) =>
+          Number(live) !== 0 ? Number(live) : Number(cached ?? 0);
+        const keepList = (live: any[], cached: any) =>
+          Array.isArray(live) && live.length > 0 ? live : (Array.isArray(cached) ? cached : []);
+
         const metricsToCache = {
           accountId,
           balance: safeBalance,
           equity: safeEquity,
-          averageProfit: response.metrics.averageWin,
-          averageLoss: response.metrics.averageLoss,
-          numberOfTrades: response.metrics.trades,
-          wonTrades: response.metrics.wonTrades,
-          lostTrades: response.metrics.lostTrades,
-          averageRRR: response.metrics.avgRRR,
-          lots: response.metrics.lots,
-          expectancy: response.metrics.expectancy,
-          winRate: response.metrics.winRate,
-          profitFactor: response.metrics.profitFactor,
+          averageProfit: keepNum(response.metrics.averageWin, existingData?.averageProfit),
+          averageLoss: keepNum(response.metrics.averageLoss, existingData?.averageLoss),
+          numberOfTrades: keepNum(response.metrics.trades, existingData?.numberOfTrades),
+          wonTrades: keepNum(response.metrics.wonTrades, existingData?.wonTrades),
+          lostTrades: keepNum(response.metrics.lostTrades, existingData?.lostTrades),
+          averageRRR: keepNum(response.metrics.avgRRR, existingData?.averageRRR),
+          lots: keepNum(response.metrics.lots, existingData?.lots),
+          expectancy: keepNum(response.metrics.expectancy, existingData?.expectancy),
+          winRate: keepNum(response.metrics.winRate, existingData?.winRate),
+          profitFactor: keepNum(response.metrics.profitFactor, existingData?.profitFactor),
           maxDrawdown: safeMaxDrawdown,
           dailyDrawdown: calculatedDailyDrawdown,
           maxDailyDrawdown,
-          currentProfit: response.metrics.profit,
-          tradingDays: response.objectives.minTradingDays.current,
+          currentProfit: keepNum(response.metrics.profit, existingData?.currentProfit),
+          tradingDays: keepNum(response.objectives.minTradingDays.current, existingData?.tradingDays),
           accountName: response.accountInfo.name,
           broker: response.accountInfo.broker,
           server: response.accountInfo.server,
-          lastTrades: response.trades,
+          lastTrades: keepList(response.trades, existingData?.lastTrades),
           lastEquityChart: response.equityChart,
           lastObjectives: response.objectives,
           lastRiskEvents: response.riskEvents,
