@@ -594,9 +594,23 @@ export async function POST(req: NextRequest) {
       if (!tradingDays) tradingDays = computeTradingDaysFromTrades(tradesData);
     } else {
       tradingDays = computeTradingDaysFromTrades(tradesData);
+      // Trades come from MetaStats; when it's unavailable (HTTP 503) the trade
+      // list is empty, so fall back to the risk-management daily tracker's
+      // tradeDayCount (count of days with >= 1 trade) — exactly what the
+      // challenge "min trading days" objective needs, from a service that works.
+      if (!tradingDays && dailyTrackerStats && dailyTrackerStats.length > 0) {
+        const rmTradingDays = dailyTrackerStats.reduce(
+          (sum: number, s: any) => sum + (Number(s.tradeDayCount) || 0),
+          0
+        );
+        if (rmTradingDays > 0) tradingDays = rmTradingDays;
+      }
     }
-    // Don't let a failed live fetch reset the trading-day count.
-    if (!tradingDays && cachedStats.tradingDays) tradingDays = Number(cachedStats.tradingDays);
+    // Trading days only accumulate — never let a failed live fetch reduce the
+    // previously recorded count.
+    if (cachedStats.tradingDays) {
+      tradingDays = Math.max(tradingDays, Number(cachedStats.tradingDays));
+    }
 
     const profitPercent = accountSize > 0
       ? ((combinedMetrics.balance - accountSize) / accountSize) * 100
