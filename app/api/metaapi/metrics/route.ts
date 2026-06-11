@@ -258,78 +258,23 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // If core MetaStats metrics could not be fetched (the call threw) and we also
-    // have no live account balance, do NOT continue and cache a zeroed-out
-    // response — that is what clobbers previously good cached balance/equity/
-    // drawdown. Instead, gracefully return the last-known CACHED metrics (200)
-    // so the dashboard keeps working, and leave the cache untouched.
-    if (!metricsFromStats && !(accountData && (accountData.balance || 0) > 0)) {
-      console.warn(`Core MetaStats metrics unavailable for account ${accountId}; serving cached data`);
-      try {
-        const cachedMetricsDoc = await adminDb.collection('cachedMetrics').doc(accountId).get();
-        const cachedData = cachedMetricsDoc.exists ? cachedMetricsDoc.data() : null;
+    // Load any previously cached metrics ONCE. We use this as a fallback so a
+    // failed live fetch (e.g. MetaStats ERR_BAD_RESPONSE / account not synced)
+    // never zeroes out balance/equity/trade stats — while still refreshing the
+    // data we CAN fetch (equity chart, daily drawdown, risk events) and bumping
+    // the "last updated" timestamp on every refresh.
+    let existingCachedData: any = null;
+    try {
+      const existingCachedDoc = await adminDb.collection('cachedMetrics').doc(accountId).get();
+      if (existingCachedDoc.exists) existingCachedData = existingCachedDoc.data();
+    } catch (cacheReadError: any) {
+      console.error('Error reading existing cached metrics:', cacheReadError?.message);
+    }
 
-        if (cachedData) {
-          return NextResponse.json({
-            metrics: {
-              balance: cachedData.balance || 0,
-              equity: cachedData.equity || 0,
-              averageProfit: cachedData.averageProfit || 0,
-              averageLoss: cachedData.averageLoss || 0,
-              numberOfTrades: cachedData.numberOfTrades || 0,
-              wonTrades: cachedData.wonTrades || 0,
-              lostTrades: cachedData.lostTrades || 0,
-              averageRRR: cachedData.averageRRR || 0,
-              lots: cachedData.lots || 0,
-              expectancy: cachedData.expectancy || 0,
-              winRate: cachedData.winRate || 0,
-              profitFactor: cachedData.profitFactor || 0,
-              maxDrawdown: cachedData.maxDrawdown || 0,
-              dailyDrawdown: cachedData.dailyDrawdown || 0,
-              maxDailyDrawdown: cachedData.maxDailyDrawdown ?? cachedData.dailyDrawdown ?? 0,
-              currentProfit: cachedData.currentProfit || 0,
-              trades: cachedData.numberOfTrades || 0,
-              avgRRR: cachedData.averageRRR || 0
-            },
-            accountInfo: {
-              accountId,
-              name: cachedData.accountName || accountData?.name || 'Account',
-              broker: cachedData.broker || accountData?.broker || 'Unknown',
-              server: cachedData.server || accountData?.server || 'Unknown',
-              balance: cachedData.balance || 0,
-              equity: cachedData.equity || 0,
-              currency: accountData?.currency || 'USD',
-              leverage: accountData?.leverage || 100,
-              type: accountData?.type || 'ACCOUNT_TRADE_MODE_DEMO',
-              platform: accountData?.platform || 'mt5',
-              state: accountData?.state || 'UNKNOWN',
-              connectionStatus: accountData?.connectionStatus || 'DISCONNECTED'
-            },
-            trades: cachedData.lastTrades || [],
-            equityChart: cachedData.lastEquityChart || [],
-            objectives: cachedData.lastObjectives || calculateTradingObjectives({
-              challengeType: accountType as ChallengeType,
-              accountStartBalance: accountSize,
-              step: step || 1,
-              maxDrawdownPercent: cachedData.maxDrawdown || 0,
-              dailyDrawdownPercent: cachedData.maxDailyDrawdown ?? cachedData.dailyDrawdown ?? 0,
-              tradingDays: cachedData.tradingDays || 0,
-              profitPercent: accountSize > 0
-                ? (((cachedData.balance || 0) - accountSize) / accountSize) * 100
-                : 0
-            }),
-            riskEvents: cachedData.lastRiskEvents || [],
-            periodStats: cachedData.lastPeriodStats || [],
-            trackers: cachedData.lastTrackers || [],
-            accountStatus: 'cached',
-            dataStale: true
-          });
-        }
-      } catch (cacheReadError: any) {
-        console.error('Error reading cached metrics for fallback:', cacheReadError?.message);
-      }
-
-      // No cached data exists yet — surface a soft error (nothing to preserve).
+    // Only bail out if we truly have nothing to show: no live metrics, no live
+    // balance, AND no cache. Otherwise we continue and merge live + cached below.
+    if (!metricsFromStats && !(accountData && (accountData.balance || 0) > 0) && !existingCachedData) {
+      console.warn(`No live metrics and no cached data for account ${accountId}`);
       return NextResponse.json({
         error: 'Live metrics are temporarily unavailable for this account and no cached data exists yet.',
         accountStatus: 'metrics_unavailable',
@@ -473,9 +418,16 @@ export async function POST(req: NextRequest) {
     }));
 
     // 6. Process and combine data.
+    // When live MetaStats data is unavailable, fall back to the last cached
+    // values for trade-derived stats so a refresh never wipes them to zero.
     // MetaStats Metrics has no wonTrades/lostTrades fields; derive them from
     // wonTradesPercent and the long/short won-trade counts instead.
-    const totalTrades = Number(metricsFromStats?.trades ?? 0);
+    const cachedStats = existingCachedData || {};
+    const statsLive = !!metricsFromStats;
+
+    const totalTrades = statsLive
+      ? Number(metricsFromStats.trades ?? 0)
+      : Number(cachedStats.numberOfTrades ?? 0);
     const wonTradesPercent = Number(metricsFromStats?.wonTradesPercent ?? 0);
     const longWonTrades = Number(metricsFromStats?.longWonTrades ?? 0);
     const shortWonTrades = Number(metricsFromStats?.shortWonTrades ?? 0);
@@ -483,36 +435,48 @@ export async function POST(req: NextRequest) {
     if (!wonTrades && totalTrades > 0 && wonTradesPercent > 0) {
       wonTrades = Math.round((wonTradesPercent / 100) * totalTrades);
     }
-    const lostTrades = Math.max(0, totalTrades - wonTrades);
+    if (!statsLive) wonTrades = Number(cachedStats.wonTrades ?? 0);
+    const lostTrades = !statsLive
+      ? Number(cachedStats.lostTrades ?? Math.max(0, totalTrades - wonTrades))
+      : Math.max(0, totalTrades - wonTrades);
+
+    // Resolve balance/equity: live MetaStats -> live RPC account info -> cache.
+    const hasLiveAccountBalance = !!(accountData && (accountData.balance || 0) > 0);
+    const resolvedBalance = statsLive
+      ? (metricsFromStats.balance ?? 0)
+      : (hasLiveAccountBalance ? (accountData?.balance ?? 0) : (cachedStats.balance ?? 0));
+    const resolvedEquity = statsLive
+      ? (metricsFromStats.equity ?? 0)
+      : (hasLiveAccountBalance ? (accountData?.equity ?? accountData?.balance ?? 0) : (cachedStats.equity ?? cachedStats.balance ?? 0));
 
     const combinedMetrics = {
-      balance: metricsFromStats?.balance ?? accountData?.balance ?? 0,
-      equity: metricsFromStats?.equity ?? accountData?.equity ?? 0,
+      balance: resolvedBalance,
+      equity: resolvedEquity,
       margin: metricsFromStats?.margin || 0,
       freeMargin: metricsFromStats?.freeMargin || 0,
-      profit: metricsFromStats?.profit || 0,
+      profit: statsLive ? (metricsFromStats.profit || 0) : (cachedStats.currentProfit || 0),
       credit: 0,
       trades: totalTrades,
       wonTrades,
       lostTrades,
-      averageWin: metricsFromStats?.averageWin || 0,
-      averageLoss: metricsFromStats?.averageLoss || 0,
-      expectancy: metricsFromStats?.expectancy || 0,
-      profitFactor: metricsFromStats?.profitFactor || 0,
+      averageWin: statsLive ? (metricsFromStats.averageWin || 0) : (cachedStats.averageProfit || 0),
+      averageLoss: statsLive ? (metricsFromStats.averageLoss || 0) : (cachedStats.averageLoss || 0),
+      expectancy: statsLive ? (metricsFromStats.expectancy || 0) : (cachedStats.expectancy || 0),
+      profitFactor: statsLive ? (metricsFromStats.profitFactor || 0) : (cachedStats.profitFactor || 0),
       absoluteDrawdown: 0,
-      maxDrawdown: metricsFromStats?.maxDrawdown || 0, // already a percent
+      maxDrawdown: statsLive ? (metricsFromStats.maxDrawdown || 0) : (cachedStats.maxDrawdown || 0), // already a percent
       relativeDrawdown: 0, // set below to the computed daily drawdown for cache back-compat
-      lots: metricsFromStats?.lots || 0,
+      lots: statsLive ? (metricsFromStats.lots || 0) : (cachedStats.lots || 0),
       commissions: metricsFromStats?.commissions || 0
     };
 
     // Win rate comes straight from MetaStats wonTradesPercent (with a safe fallback).
-    const winRate = totalTrades > 0
-      ? (wonTradesPercent || (wonTrades / totalTrades) * 100)
-      : 0;
+    const winRate = statsLive
+      ? (totalTrades > 0 ? (wonTradesPercent || (wonTrades / totalTrades) * 100) : 0)
+      : Number(cachedStats.winRate ?? 0);
     const avgRRR = combinedMetrics.averageLoss !== 0
       ? Math.abs(combinedMetrics.averageWin / combinedMetrics.averageLoss)
-      : 0;
+      : (statsLive ? 0 : Number(cachedStats.averageRRR ?? 0));
 
     // Daily drawdown (percent). Priority: risk-management daily tracker stats ->
     // MetaStats daily growth -> equity-chart calculation -> cached value.
@@ -583,6 +547,8 @@ export async function POST(req: NextRequest) {
     } else {
       tradingDays = computeTradingDaysFromTrades(tradesData);
     }
+    // Don't let a failed live fetch reset the trading-day count.
+    if (!tradingDays && cachedStats.tradingDays) tradingDays = Number(cachedStats.tradingDays);
 
     const profitPercent = accountSize > 0
       ? ((combinedMetrics.balance - accountSize) / accountSize) * 100
@@ -622,36 +588,42 @@ export async function POST(req: NextRequest) {
         state: 'UNKNOWN',
         connectionStatus: 'UNKNOWN'
       },
-      trades: tradesData.map((trade: any) => ({
-        id: trade._id || trade.id || `trade_${Date.now()}_${Math.random()}`,
-        symbol: trade.symbol || 'Unknown',
-        type: mapTradeType(trade.type),
-        volume: parseFloat(trade.volume || trade.lots) || 0,
-        openPrice: parseFloat(trade.openPrice || trade.priceOpen || trade.price) || 0,
-        closePrice: trade.closePrice != null ? parseFloat(trade.closePrice || trade.priceClose) : null,
-        profit: parseFloat(trade.profit || trade.gain) || 0,
-        openTime: trade.openTime || trade.time || new Date().toISOString(),
-        closeTime: trade.closeTime || null,
-        commission: parseFloat(trade.commission || trade.commissions) || 0,
-        swap: parseFloat(trade.swap || trade.swaps) || 0,
-        state: trade.state || (trade.closeTime ? 'closed' : 'opened')
-      })),
-      equityChart: formatEquityChart(equityData),
+      trades: tradesData.length > 0
+        ? tradesData.map((trade: any) => ({
+            id: trade._id || trade.id || `trade_${Date.now()}_${Math.random()}`,
+            symbol: trade.symbol || 'Unknown',
+            type: mapTradeType(trade.type),
+            volume: parseFloat(trade.volume || trade.lots) || 0,
+            openPrice: parseFloat(trade.openPrice || trade.priceOpen || trade.price) || 0,
+            closePrice: trade.closePrice != null ? parseFloat(trade.closePrice || trade.priceClose) : null,
+            profit: parseFloat(trade.profit || trade.gain) || 0,
+            openTime: trade.openTime || trade.time || new Date().toISOString(),
+            closeTime: trade.closeTime || null,
+            commission: parseFloat(trade.commission || trade.commissions) || 0,
+            swap: parseFloat(trade.swap || trade.swaps) || 0,
+            state: trade.state || (trade.closeTime ? 'closed' : 'opened')
+          }))
+        : (cachedStats.lastTrades || []),
+      equityChart: (equityData && equityData.length > 0)
+        ? formatEquityChart(equityData)
+        : (cachedStats.lastEquityChart || []),
       objectives,
-      riskEvents: normalizedRiskEvents,
-      periodStats: periodStats.map(stat => ({
-        period: stat.period,
-        startBrokerTime: stat.startBrokerTime,
-        endBrokerTime: stat.endBrokerTime,
-        balance: stat.balance,
-        equity: stat.equity,
-        maxDrawdown: stat.maxDrawdown,
-        maxDailyDrawdown: stat.maxDailyDrawdown,
-        profit: stat.profit,
-        trades: stat.trades,
-        tradingDays: stat.tradingDays
-      })),
-      trackers: trackers.map(tracker => {
+      riskEvents: normalizedRiskEvents.length > 0 ? normalizedRiskEvents : (cachedStats.lastRiskEvents || []),
+      periodStats: periodStats.length > 0
+        ? periodStats.map(stat => ({
+            period: stat.period,
+            startBrokerTime: stat.startBrokerTime,
+            endBrokerTime: stat.endBrokerTime,
+            balance: stat.balance,
+            equity: stat.equity,
+            maxDrawdown: stat.maxDrawdown,
+            maxDailyDrawdown: stat.maxDailyDrawdown,
+            profit: stat.profit,
+            trades: stat.trades,
+            tradingDays: stat.tradingDays
+          }))
+        : (cachedStats.lastPeriodStats || []),
+      trackers: trackers.length === 0 && cachedStats.lastTrackers ? cachedStats.lastTrackers : trackers.map(tracker => {
         // Clean object by removing undefined values
         const cleanTracker: any = {
           id: tracker.id || `tracker_${tracker.name}_${Date.now()}`,
