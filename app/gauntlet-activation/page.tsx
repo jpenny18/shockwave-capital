@@ -96,6 +96,18 @@ const ACTIVATION_OPTIONS: ActivationOption[] = [
       'No Trading Restrictions',
       'Weekend Holding Allowed'
     ]
+  },
+  {
+    level: '$500k',
+    price: 1899,
+    features: [
+      '$500,000 Simulated Capital',
+      '15% Max Drawdown',
+      '8% Daily Drawdown',
+      '1:200 Leverage',
+      'No Trading Restrictions',
+      'Weekend Holding Allowed'
+    ]
   }
 ];
 
@@ -442,7 +454,7 @@ function GauntletActivationContent() {
           </h2>
           
           {filteredOptions.length > 0 ? (
-            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-6 gap-6">
               {filteredOptions.map((option, index) => (
                 <div
                   key={option.level}
