@@ -43,7 +43,7 @@ const challengeTypes = [
   { 
     id: 'Gauntlet' as const, 
     name: 'Shockwave Gauntlet', 
-    amounts: ['$10,000', '$25,000', '$50,000', '$100,000', '$200,000'],
+    amounts: ['$10,000', '$25,000', '$50,000', '$100,000', '$200,000', '$500,000'],
     image: '/shockwavegauntlet.png',
     description: 'Pay when you pass - ultimate freedom',
     badge: 'PAY WHEN YOU PASS',
@@ -358,6 +358,7 @@ const calculatePrice = (type: ChallengeType, amount: string): number => {
         case 50000: return 19.99;
         case 100000: return 19.99;
         case 200000: return 19.99;
+        case 500000: return 19.99;
         default: return 0;
       }
     default:
@@ -625,6 +626,7 @@ export default function ChallengePage() {
         50000: 'https://whop.com/checkout/plan_fheAViDdgQcGV',
         100000: 'https://whop.com/checkout/plan_fheAViDdgQcGV',
         200000: 'https://whop.com/checkout/plan_fheAViDdgQcGV',
+        500000: 'https://whop.com/checkout/plan_fheAViDdgQcGV',
       }
     };
     
@@ -1463,7 +1465,7 @@ export default function ChallengePage() {
                     Pay only $19.99 now. If you pass, you'll pay the activation fee to get your funded account.
                   </p>
                   <p className="text-gray-400 text-xs mt-1">
-                    Activation fees: $10k→$99, $25k→$199, $50k→$399, $100k→$499, $200k→$999
+                    Activation fees: $10k→$99, $25k→$199, $50k→$399, $100k→$499, $200k→$999, $500k→$1,899
                   </p>
                 </div>
               ) : (

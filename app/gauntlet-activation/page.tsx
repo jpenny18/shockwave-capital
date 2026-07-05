@@ -31,6 +31,11 @@ interface ActivationOption {
   whopCheckoutUrl?: string;
 }
 
+type ActivationMode = 'activate' | 'reset';
+
+// Reset accounts get 12% off the activation fee
+const RESET_DISCOUNT = 0.12;
+
 const ACTIVATION_OPTIONS: ActivationOption[] = [
   {
     level: '$10k',
@@ -114,6 +119,7 @@ const ACTIVATION_OPTIONS: ActivationOption[] = [
 function GauntletActivationContent() {
   const searchParams = useSearchParams();
   const [selectedOption, setSelectedOption] = useState<ActivationOption | null>(null);
+  const [activationMode, setActivationMode] = useState<ActivationMode>('activate');
   const [showPayment, setShowPayment] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'crypto' | null>(null);
   const [formData, setFormData] = useState<FormData>({
@@ -192,6 +198,23 @@ function GauntletActivationContent() {
     setShowPayment(false);
   };
 
+  const handleModeSelect = (mode: ActivationMode) => {
+    setActivationMode(mode);
+    setShowPayment(false);
+  };
+
+  // Effective fee for the selected mode (reset = 12% off the activation fee)
+  const getEffectivePrice = (option: ActivationOption): number => {
+    if (activationMode === 'reset') {
+      return Math.round(option.price * (1 - RESET_DISCOUNT) * 100) / 100;
+    }
+    return option.price;
+  };
+
+  const isReset = activationMode === 'reset';
+  const feeLabel = isReset ? 'Reset Fee (12% Off)' : 'Activation Fee';
+  const orderLabel = isReset ? 'Gauntlet Reset' : 'Gauntlet Activation';
+
   const handleProceedToPayment = () => {
     if (!selectedOption) return;
     
@@ -211,8 +234,9 @@ function GauntletActivationContent() {
         status: 'PENDING',
         challengeType: 'gauntlet-activation',
         challengeAmount: selectedOption.level,
+        activationMode,
         platform: formData.platform,
-        totalAmount: selectedOption.price,
+        totalAmount: getEffectivePrice(selectedOption),
         customerEmail: formData.email,
         customerName: `${formData.firstName} ${formData.lastName}`,
         customerPhone: formData.phone,
@@ -273,9 +297,10 @@ function GauntletActivationContent() {
     return {
       type: 'gauntlet-activation',
       amount: selectedOption.level,
+      activationMode,
       platform: formData.platform,
       formData,
-      price: selectedOption.price,
+      price: getEffectivePrice(selectedOption),
       addOns: []
     };
   };
@@ -302,12 +327,12 @@ function GauntletActivationContent() {
               <div className="p-6 md:p-8 border-b border-[#0FF1CE]/20">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-2xl font-bold text-[#0FF1CE]">Activate Your Gauntlet Account</h2>
-                    <p className="text-gray-400 mt-1">Gauntlet Activation - {selectedOption.level}</p>
+                    <h2 className="text-2xl font-bold text-[#0FF1CE]">{isReset ? 'Reset Your Gauntlet Account' : 'Activate Your Gauntlet Account'}</h2>
+                    <p className="text-gray-400 mt-1">{orderLabel} - {selectedOption.level}</p>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-[#0FF1CE]">${selectedOption.price.toLocaleString()}</div>
-                    <div className="text-gray-400 text-sm">Activation Fee</div>
+                    <div className="text-2xl font-bold text-[#0FF1CE]">${getEffectivePrice(selectedOption).toLocaleString()}</div>
+                    <div className="text-gray-400 text-sm">{feeLabel}</div>
                   </div>
                 </div>
               </div>
@@ -343,7 +368,7 @@ function GauntletActivationContent() {
             
             <div className="mb-8">
               <h2 className="text-2xl font-bold text-[#0FF1CE] mb-2">Select Payment Method</h2>
-              <p className="text-gray-400">Gauntlet Activation - {selectedOption.level}</p>
+              <p className="text-gray-400">{orderLabel} - {selectedOption.level}</p>
             </div>
 
             <div className="space-y-4 mb-8">
@@ -363,7 +388,7 @@ function GauntletActivationContent() {
                         <div className="text-sm text-gray-400">Secure checkout via Whop</div>
                       </div>
                     </div>
-                    <div className="text-2xl font-bold text-[#0FF1CE]">${selectedOption.price.toLocaleString()}</div>
+                    <div className="text-2xl font-bold text-[#0FF1CE]">${getEffectivePrice(selectedOption).toLocaleString()}</div>
                   </div>
                 </button>
               </div>
@@ -383,7 +408,7 @@ function GauntletActivationContent() {
                       <div className="text-sm text-gray-400">Pay with BTC, ETH, USDT, or USDC</div>
                     </div>
                   </div>
-                  <div className="text-2xl font-bold text-[#0FF1CE]">${selectedOption.price.toLocaleString()}</div>
+                  <div className="text-2xl font-bold text-[#0FF1CE]">${getEffectivePrice(selectedOption).toLocaleString()}</div>
                 </div>
               </button>
             </div>
@@ -408,9 +433,19 @@ function GauntletActivationContent() {
                   <span className="text-gray-400">Platform:</span>
                   <span className="text-white">{formData.platform}</span>
                 </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Option:</span>
+                  <span className="text-white">{isReset ? 'Reset Account' : 'Activate Account'}</span>
+                </div>
+                {isReset && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Reset Discount (12%):</span>
+                    <span className="text-[#0FF1CE]">-${(selectedOption.price - getEffectivePrice(selectedOption)).toLocaleString()}</span>
+                  </div>
+                )}
                 <div className="border-t border-[#2F2F2F]/50 pt-3 flex justify-between">
                   <span className="text-white font-semibold">Total:</span>
-                  <span className="text-[#0FF1CE] font-bold text-xl">${selectedOption.price.toLocaleString()}</span>
+                  <span className="text-[#0FF1CE] font-bold text-xl">${getEffectivePrice(selectedOption).toLocaleString()}</span>
                 </div>
               </div>
             </div>
@@ -448,10 +483,36 @@ function GauntletActivationContent() {
       <section className="py-20 px-6 bg-gradient-to-b from-[#131313] to-[#111111] relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-[#131313] to-transparent"></div>
         <div className="relative z-10">
-          <h2 className="text-4xl font-bold text-center text-[#0FF1CE] mb-16">
+          <h2 className="text-4xl font-bold text-center text-[#0FF1CE] mb-8">
             Activate your Funded Account
             {levelParam && <span className="block text-xl text-gray-400 mt-2">{levelParam.toUpperCase()} Account Activation</span>}
           </h2>
+
+          {/* Activate / Reset Mode Selection */}
+          <div className="max-w-xl mx-auto grid grid-cols-2 gap-4 mb-12">
+            <button
+              onClick={() => handleModeSelect('activate')}
+              className={`p-4 rounded-xl border-2 transition-all duration-300 text-center ${
+                activationMode === 'activate'
+                  ? 'border-[#0FF1CE] bg-[#0FF1CE]/10 shadow-[0_0_15px_rgba(15,241,206,0.2)]'
+                  : 'border-[#2F2F2F]/50 hover:border-[#0FF1CE]/30'
+              }`}
+            >
+              <div className={`font-bold ${activationMode === 'activate' ? 'text-[#0FF1CE]' : 'text-white'}`}>Activate Account</div>
+         
+            </button>
+            <button
+              onClick={() => handleModeSelect('reset')}
+              className={`p-4 rounded-xl border-2 transition-all duration-300 text-center ${
+                activationMode === 'reset'
+                  ? 'border-[#0FF1CE] bg-[#0FF1CE]/10 shadow-[0_0_15px_rgba(15,241,206,0.2)]'
+                  : 'border-[#2F2F2F]/50 hover:border-[#0FF1CE]/30'
+              }`}
+            >
+              <div className={`font-bold ${activationMode === 'reset' ? 'text-[#0FF1CE]' : 'text-white'}`}>Reset Account</div>
+             
+            </button>
+          </div>
           
           {filteredOptions.length > 0 ? (
             <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-6 gap-6">
@@ -468,8 +529,11 @@ function GauntletActivationContent() {
                 >
                   <div className="text-center">
                     <div className="text-2xl font-bold text-[#0FF1CE] mb-2">{option.level}</div>
-                    <div className="text-3xl font-bold text-white">${option.price.toLocaleString()}</div>
-                    <div className="text-sm text-gray-400 mt-1">Activation Fee</div>
+                    {isReset && (
+                      <div className="text-sm text-gray-500 line-through">${option.price.toLocaleString()}</div>
+                    )}
+                    <div className="text-3xl font-bold text-white">${getEffectivePrice(option).toLocaleString()}</div>
+                    <div className="text-sm text-gray-400 mt-1">{feeLabel}</div>
                   </div>
 
                   {selectedOption?.level === option.level && (
@@ -626,12 +690,15 @@ function GauntletActivationContent() {
                   <div className="pt-6 border-t border-[#0FF1CE]/20">
                     <div className="flex justify-between items-center mb-6">
                       <div>
-                        <div className="text-lg font-semibold text-white">Gauntlet Activation</div>
+                        <div className="text-lg font-semibold text-white">{orderLabel}</div>
                         <div className="text-[#0FF1CE]">{selectedOption.level} Funded Account</div>
                       </div>
                       <div className="text-right">
-                        <div className="text-2xl font-bold text-[#0FF1CE]">${selectedOption.price.toLocaleString()}</div>
-                        <div className="text-gray-400 text-sm">Activation Fee</div>
+                        {isReset && (
+                          <div className="text-sm text-gray-500 line-through">${selectedOption.price.toLocaleString()}</div>
+                        )}
+                        <div className="text-2xl font-bold text-[#0FF1CE]">${getEffectivePrice(selectedOption).toLocaleString()}</div>
+                        <div className="text-gray-400 text-sm">{feeLabel}</div>
                       </div>
                     </div>
 
@@ -639,7 +706,7 @@ function GauntletActivationContent() {
                       onClick={handleProceedToPayment}
                       className="w-full bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] hover:scale-105 text-black font-bold py-4 rounded-xl transition-all"
                     >
-                      Activate Gauntlet Account
+                      {isReset ? 'Reset Gauntlet Account' : 'Activate Gauntlet Account'}
                     </button>
                   </div>
                 </div>

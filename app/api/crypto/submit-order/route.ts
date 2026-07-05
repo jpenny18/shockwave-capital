@@ -23,6 +23,7 @@ export async function POST(req: Request) {
       customerPhone: challengeData.formData.phone,
       customerCountry: challengeData.formData.country,
       customerDiscordUsername: challengeData.formData.discordUsername || null,
+      activationMode: challengeData.activationMode || null,
       discountCode: challengeData.discount?.code || null,
       discountId: challengeData.discount?.id || null,
       originalAmount: challengeData.discount ? Math.round(challengeData.price / (1 - challengeData.discount.value / 100)) : challengeData.price,
