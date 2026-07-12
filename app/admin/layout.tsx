@@ -22,7 +22,8 @@ import {
   Shield,
   DollarSign,
   CreditCard,
-  FlaskConical
+  FlaskConical,
+  ToggleLeft
 } from 'lucide-react';
 
 const navItems = [
@@ -37,6 +38,7 @@ const navItems = [
   { name: 'Email Templates', href: '/admin/emails', icon: Mail },
   { name: 'Pulse Management', href: '/admin/pulse', icon: MessageSquare },
   { name: 'Discount Codes', href: '/admin/discounts', icon: Tag },
+  { name: 'Feature Toggles', href: '/admin/feature-toggles', icon: ToggleLeft },
   { name: 'Settings', href: '/admin/settings', icon: Settings }
 ];
 

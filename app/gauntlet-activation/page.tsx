@@ -135,6 +135,8 @@ function GauntletActivationContent() {
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const [cryptoPrices, setCryptoPrices] = useState<CryptoPrice>({ BTC: 0, ETH: 0, USDT: 1, USDC: 1 });
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  // Admin-controlled feature flag: hides the Reset Account option when disabled
+  const [resetFeatureEnabled, setResetFeatureEnabled] = useState(false);
 
   // Filter activation options based on URL parameter
   const levelParam = searchParams?.get('level'); // e.g., ?level=200k or ?level=$200k
@@ -169,6 +171,30 @@ function GauntletActivationContent() {
     const interval = setInterval(fetchPrices, 15 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Fetch the admin feature toggle for the Reset Account option
+  useEffect(() => {
+    const fetchFeatureToggle = async () => {
+      try {
+        const response = await fetch('/api/site-settings');
+        if (!response.ok) return;
+        const data = await response.json();
+        setResetFeatureEnabled(data.gauntletResetEnabled === true);
+      } catch (error) {
+        console.error('Error fetching site settings:', error);
+      }
+    };
+
+    fetchFeatureToggle();
+  }, []);
+
+  // If the reset feature gets disabled, never leave the user stuck in reset mode
+  useEffect(() => {
+    if (!resetFeatureEnabled && activationMode === 'reset') {
+      setActivationMode('activate');
+      setShowPayment(false);
+    }
+  }, [resetFeatureEnabled, activationMode]);
 
   const validateForm = (): boolean => {
     const errors: Partial<FormData> = {};
@@ -488,7 +514,8 @@ function GauntletActivationContent() {
             {levelParam && <span className="block text-xl text-gray-400 mt-2">{levelParam.toUpperCase()} Account Activation</span>}
           </h2>
 
-          {/* Activate / Reset Mode Selection */}
+          {/* Activate / Reset Mode Selection (shown only when enabled by admin) */}
+          {resetFeatureEnabled && (
           <div className="max-w-xl mx-auto grid grid-cols-2 gap-4 mb-12">
             <button
               onClick={() => handleModeSelect('activate')}
@@ -513,6 +540,7 @@ function GauntletActivationContent() {
              
             </button>
           </div>
+          )}
           
           {filteredOptions.length > 0 ? (
             <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-6 gap-6">
