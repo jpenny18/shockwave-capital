@@ -1121,15 +1121,15 @@ export default function ChallengePage() {
               <div className="flex flex-col lg:flex-row items-center justify-between gap-2">
                 <div className="flex items-center gap-2 justify-center lg:justify-start mb-1">
                   {/* Percent span removed */}
-                  <span className="text-xs font-semibold text-[#0FF1CE] uppercase tracking-wider">Anniversary Sale</span>
+                  <span className="text-xs font-semibold text-[#0FF1CE] uppercase tracking-wider">Last Discount Ever</span>
                 </div>
                 <div className="text-base lg:text-xl font-bold text-white text-center lg:text-left">
                   <span className="text-[#0FF1CE]">50% Off</span> + <span className="text-[#0FF1CE]">Free Retry</span>
                 </div>
                 <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 text-xs mt-2">
                   <span className="text-gray-100">Code:</span>
-                  <code className="bg-[#0FF1CE]/15 text-[#0FF1CE] px-2 py-0.5 rounded font-mono font-semibold">ONEYEAR</code>
-                  <span className="text-gray-400">Limited time</span>
+                  <code className="bg-[#0FF1CE]/15 text-[#0FF1CE] px-2 py-0.5 rounded font-mono font-semibold">LASTONE</code>
+                  <span className="text-gray-400">Final release — won't be offered again</span>
                 </div>
               </div>
             </div>

@@ -311,16 +311,16 @@ const OnDemandPayoutsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
           <div className="relative bg-gradient-to-br from-[#0D0D0D] via-[#121212] to-[#0D0D0D] border-2 border-[#0FF1CE]/30 rounded-3xl overflow-hidden shadow-2xl p-8">
             {/* Promo Badge */}
             <div className="absolute top-0 right-0 bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black px-6 py-2 rounded-bl-2xl font-bold text-sm shadow-lg">
-              1 YEAR ANNIVERSARY
+              LAST DISCOUNT EVER
             </div>
 
             {/* Content */}
             <div className="text-center pt-6">
               {/* Main Heading */}
               <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-2">
-                We&apos;re 1 Year Old!
+                Our Last Discount Code Ever
               </h2>
-              <div className="text-2xl mb-4">🎉</div>
+              <div className="text-2xl mb-4">⚡</div>
 
               {/* Subheading */}
               <div className="bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-transparent bg-clip-text text-2xl md:text-3xl font-bold mb-8">
@@ -333,7 +333,7 @@ const OnDemandPayoutsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                   <div className="text-[#0FF1CE] text-2xl mt-1 font-bold">•</div>
                   <div>
                     <div className="text-white font-bold text-lg">50% Off All Challenges</div>
-                    <div className="text-gray-400 text-sm">Celebrating one year — every challenge type at half price</div>
+                    <div className="text-gray-400 text-sm">This is the final discount code we will ever release — every challenge type at half price</div>
                   </div>
                 </div>
 
@@ -349,7 +349,7 @@ const OnDemandPayoutsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
               {/* Promo Code */}
               <div className="mb-6 bg-[#1A1A1A] border border-[#0FF1CE]/40 rounded-xl py-3 px-4">
                 <div className="text-gray-400 text-xs mb-1 uppercase tracking-widest">Use code at checkout</div>
-                <div className="text-[#0FF1CE] font-extrabold text-2xl tracking-widest">ONEYEAR</div>
+                <div className="text-[#0FF1CE] font-extrabold text-2xl tracking-widest">LASTONE</div>
               </div>
 
               {/* CTA Button */}
