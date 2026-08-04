@@ -226,7 +226,7 @@ export default function EarlyAccessPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0D0D0D]">
+      <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="relative">
           <div className="w-12 h-12 border-4 border-[#0FF1CE]/20 rounded-full animate-spin"></div>
           <div className="w-12 h-12 border-4 border-[#0FF1CE] border-t-transparent rounded-full animate-spin absolute inset-0"></div>
@@ -359,13 +359,13 @@ export default function EarlyAccessPage() {
         }
       `}</style>
       
-      <div className="min-h-screen bg-gradient-to-br from-[#0D0D0D] via-[#0D0D0D] to-[#151515] text-white relative overflow-hidden">
+      <div className="min-h-screen bg-black text-white relative overflow-hidden">
         {/* Background Effects */}
         <div className="absolute inset-0">
           <div className="absolute top-1/4 -left-1/4 w-96 h-96 bg-[#0FF1CE]/10 rounded-full blur-[150px] animate-pulse"></div>
           <div className="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-[#0FF1CE]/10 rounded-full blur-[150px] animate-pulse delay-1000"></div>
         </div>
-        <Particles />
+        <Particles opacityMultiplier={0.6} />
 
         {/* Launch Modal - Hidden */}
         {/* <LaunchModal isOpen={showLaunchModal} onClose={() => setShowLaunchModal(false)} /> */}
@@ -380,10 +380,17 @@ export default function EarlyAccessPage() {
               <div className="relative">
                 {/* Logo */}
                 <div className="mb-8 animate-float flex justify-center">
-                  <div className="w-20 h-20 bg-[#0FF1CE]/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-[#0FF1CE]/30">
-                    <Rocket className="w-10 h-10 text-[#0FF1CE]" />
+                  <div className="w-20 h-20 bg-black rounded-2xl flex items-center justify-center backdrop-blur-sm border border-[#0FF1CE]/30">
+                    <img
+                      src="/shockwaveS.png"
+                      alt="Shockwave Logo"
+                      className="w-14 h-14 object-contain"
+                      style={{ maxWidth: "56px", maxHeight: "56px" }}
+                    />
                   </div>
                 </div>
+          
+          
 
                 {/* Welcome Text */}
                 <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-[#0FF1CE] to-[#00D4FF] bg-clip-text text-transparent">
@@ -449,11 +456,20 @@ export default function EarlyAccessPage() {
           <div className="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-12">
             <div className="w-full max-w-md">
               {/* Mobile Logo */}
-              <div className="lg:hidden text-center mb-8">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#0FF1CE]/10 backdrop-blur-sm border border-[#0FF1CE]/30 mb-4">
-                  <Rocket className="w-8 h-8 text-[#0FF1CE]" />
+              <div className="lg:hidden flex justify-center mb-8">
+                <div className="inline-flex items-stretch rounded-2xl bg-black border border-[#0FF1CE]/30 px-4 py-3 w-full max-w-xs">
+                  <div className="flex items-center justify-center w-1/4">
+                    <img
+                      src="/shockwaveS.png"
+                      alt="Shockwave S"
+                      className="w-10 h-10 object-contain"
+                    />
+                  </div>
+                  <div className="w-px bg-[#0FF1CE]/30 mx-3"></div>
+                  <div className="flex items-center justify-center w-3/4">
+                    <h2 className="text-lg font-bold text-[#0FF1CE] text-center leading-tight">Shockwave Capital</h2>
+                  </div>
                 </div>
-                <h2 className="text-2xl font-bold text-[#0FF1CE]">Shockwave Capital</h2>
 
                 {/* Mobile Launch Preview Button - Hidden */}
                 {/* <button
@@ -464,6 +480,7 @@ export default function EarlyAccessPage() {
                   <span>See New Launch</span>
                 </button> */}
               </div>
+        
 
               {/* Mobile-only Stats Cards */}
               <div className="lg:hidden grid grid-cols-3 gap-2 px-2 mb-8">
@@ -488,14 +505,52 @@ export default function EarlyAccessPage() {
                 ))}
               </div>
 
+              {/* Auth Header */}
+              <div className="text-center mb-6">
+                <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+                  {isLogin ? 'Log into Shockwave' : 'Create Your Account'}
+                </h1>
+                <p className="text-sm text-gray-400">
+                  {isLogin ? (
+                    <>
+                      Don't have a profile yet?{' '}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsLogin(false);
+                          setErrors({});
+                        }}
+                        className="text-[#0FF1CE] hover:underline font-semibold"
+                      >
+                        create a profile
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      Already have a profile?{' '}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsLogin(true);
+                          setErrors({});
+                        }}
+                        className="text-[#0FF1CE] hover:underline font-semibold"
+                      >
+                        sign in
+                      </button>
+                    </>
+                  )}
+                </p>
+              </div>
+
               {/* Tab Switcher */}
-              <div className="flex bg-[#1A1A1A]/30 backdrop-blur-sm rounded-xl p-1 mb-8">
+              <div className="w-3/4 lg:w-full mx-auto lg:mx-0 flex bg-[#1A1A1A]/30 backdrop-blur-sm rounded-xl p-1 mb-8">
                 <button
                   onClick={() => {
                     setIsLogin(true);
                     setErrors({});
                   }}
-                  className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-300 ${isLogin
+                  className={`flex-1 py-2 lg:py-3 px-4 rounded-lg font-semibold text-sm lg:text-base transition-all duration-300 ${isLogin
                       ? 'bg-[#0FF1CE] text-black'
                       : 'text-gray-400 hover:text-white'
                     }`}
@@ -507,7 +562,7 @@ export default function EarlyAccessPage() {
                     setIsLogin(false);
                     setErrors({});
                   }}
-                  className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-300 ${!isLogin
+                  className={`flex-1 py-2 lg:py-3 px-4 rounded-lg font-semibold text-sm lg:text-base transition-all duration-300 ${!isLogin
                       ? 'bg-[#0FF1CE] text-black'
                       : 'text-gray-400 hover:text-white'
                     }`}
@@ -517,7 +572,7 @@ export default function EarlyAccessPage() {
               </div>
 
               {/* Promo Badge - Simplified for mobile */}
-              <div className="mb-6">
+              <div className="mb-6 hidden">
                 <div className="p-4 bg-gradient-to-r from-[#0FF1CE]/10 to-[#5059FC]/10 rounded-xl border border-[#0FF1CE]/20 backdrop-blur-sm relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-20 h-20 bg-[#0FF1CE]/20 rounded-full blur-3xl"></div>
                   <div className="relative">
@@ -607,34 +662,43 @@ export default function EarlyAccessPage() {
                 </div>
 
                 {/* Simplified Disclaimer for Mobile */}
-                <div className="space-y-3">
-                  <label className="flex items-start gap-3 cursor-pointer group">
+                <div className="space-y-2 md:space-y-3">
+                  <label className="flex items-start gap-2 md:gap-3 cursor-pointer group">
                     <input
                       type="checkbox"
                       id="disclaimer"
                       checked={acceptDisclaimer}
                       onChange={(e) => setAcceptDisclaimer(e.target.checked)}
-                      className="w-4 h-4 rounded border-gray-600 text-[#0FF1CE] focus:ring-[#0FF1CE] focus:ring-offset-0 bg-[#1A1A1A]/50 backdrop-blur-sm mt-0.5"
+                      className="w-3.5 h-3.5 md:w-4 md:h-4 rounded border-gray-600 text-[#0FF1CE] focus:ring-[#0FF1CE] focus:ring-offset-0 bg-[#1A1A1A]/50 backdrop-blur-sm mt-0.5"
                     />
-                    <span className="text-xs text-gray-400 group-hover:text-gray-300 transition-colors">
-                      I acknowledge the simulated environment and agree to the{' '}
-                      <Link href="/terms" className="text-[#0FF1CE] hover:underline">Terms</Link>,{' '}
-                      <Link href="/privacy" className="text-[#0FF1CE] hover:underline">Privacy</Link>, and{' '}
-                      <Link href="/disclaimer" className="text-[#0FF1CE] hover:underline">Disclaimer</Link>
+                    <span className="text-[11px] leading-snug md:text-xs md:leading-normal text-gray-400 group-hover:text-gray-300 transition-colors">
+                      <span className="md:hidden">
+                        I agree to the{' '}
+                        <Link href="/terms" className="text-[#0FF1CE] hover:underline">Terms</Link>,{' '}
+                        <Link href="/privacy" className="text-[#0FF1CE] hover:underline">Privacy</Link> &{' '}
+                        <Link href="/disclaimer" className="text-[#0FF1CE] hover:underline">Disclaimer</Link>
+                      </span>
+                      <span className="hidden md:inline">
+                        I acknowledge the simulated environment and agree to the{' '}
+                        <Link href="/terms" className="text-[#0FF1CE] hover:underline">Terms</Link>,{' '}
+                        <Link href="/privacy" className="text-[#0FF1CE] hover:underline">Privacy</Link>, and{' '}
+                        <Link href="/disclaimer" className="text-[#0FF1CE] hover:underline">Disclaimer</Link>
+                      </span>
                     </span>
                   </label>
 
                   {!isLogin && (
-                    <label className="flex items-start gap-3 cursor-pointer group">
+                    <label className="flex items-start gap-2 md:gap-3 cursor-pointer group">
                       <input
                         type="checkbox"
                         id="terms"
                         checked={acceptTerms}
                         onChange={(e) => setAcceptTerms(e.target.checked)}
-                        className="w-4 h-4 rounded border-gray-600 text-[#0FF1CE] focus:ring-[#0FF1CE] focus:ring-offset-0 bg-[#1A1A1A]/50 backdrop-blur-sm mt-0.5"
+                        className="w-3.5 h-3.5 md:w-4 md:h-4 rounded border-gray-600 text-[#0FF1CE] focus:ring-[#0FF1CE] focus:ring-offset-0 bg-[#1A1A1A]/50 backdrop-blur-sm mt-0.5"
                       />
-                      <span className="text-xs text-gray-400 group-hover:text-gray-300 transition-colors">
-                        I accept the Terms of Service and Privacy Policy
+                      <span className="text-[11px] leading-snug md:text-xs md:leading-normal text-gray-400 group-hover:text-gray-300 transition-colors">
+                        <span className="md:hidden">I accept the Terms &amp; Privacy Policy</span>
+                        <span className="hidden md:inline">I accept the Terms of Service and Privacy Policy</span>
                       </span>
                     </label>
                   )}
@@ -669,7 +733,7 @@ export default function EarlyAccessPage() {
                 </button>
               </form>
 
-              <div className="mt-6 text-center">
+              <div className="hidden lg:block mt-6 text-center">
                 <p className="text-sm text-gray-400">
                   {isLogin ? "Don't have an account?" : 'Already have an account?'}{' '}
                   <button

@@ -9,7 +9,7 @@ interface Particle {
   opacity: number;
 }
 
-export default function Particles() {
+export default function Particles({ opacityMultiplier = 1 }: { opacityMultiplier?: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -37,7 +37,7 @@ export default function Particles() {
       size: Math.random() * 2 + 1,
       speedX: (Math.random() - 0.5) * 0.5,
       speedY: (Math.random() - 0.5) * 0.5,
-      opacity: (Math.random() * 0.5 + 0.2) * 0.75
+      opacity: (Math.random() * 0.5 + 0.2) * 0.75 * opacityMultiplier
     }));
 
     // Animation loop
