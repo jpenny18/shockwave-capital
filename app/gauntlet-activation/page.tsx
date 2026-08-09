@@ -222,6 +222,12 @@ function GauntletActivationContent() {
   const handleSelectOption = (option: ActivationOption) => {
     setSelectedOption(option);
     setShowPayment(false);
+    // On mobile, auto-scroll to the information section once it has rendered
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setTimeout(() => {
+        document.getElementById('information-section')?.scrollIntoView({ behavior: 'smooth' });
+      }, 150);
+    }
   };
 
   const handleModeSelect = (mode: ActivationMode) => {
@@ -486,27 +492,90 @@ function GauntletActivationContent() {
       <Header />
       
       {/* Hero Section */}
-      <section className="relative px-4 md:px-6 pt-24 md:pt-40 pb-16 md:pb-32 text-center overflow-hidden bg-gradient-to-b from-[#121212] to-[#131313]">
+      <section className="relative px-4 md:px-6 pt-24 md:pt-40 pb-10 md:pb-32 text-center overflow-hidden bg-gradient-to-b from-[#121212] to-[#131313]">
         <div className="absolute top-0 left-0 w-full h-full bg-[#0FF1CE]/[0.02] background-noise"></div>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full md:w-3/4 h-full rounded-full bg-[#0FF1CE]/[0.03] blur-[150px] opacity-60"></div>
         <Particles />
         
         <div className="relative z-10 max-w-5xl mx-auto">
-          <div className="inline-block bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black px-4 py-2 rounded-full text-sm font-bold mb-4">
-            GAUNTLET ACTIVATION
+          <div className="inline-block bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-bold mb-3 md:mb-4">
+            FUNDED ACTIVATION
           </div>
           
-          <h1 className="text-3xl md:text-5xl lg:text-6xl font-extrabold bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-transparent bg-clip-text mb-4 md:mb-6">
+          <h1 className="text-3xl md:text-5xl lg:text-6xl font-extrabold bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-transparent bg-clip-text mb-3 md:mb-6">
             Activate Your Funded Account
           </h1>
-          <p className="text-base md:text-lg lg:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            Congratulations on passing the Gauntlet Challenge! Now pay your activation fee to unlock your funded account with zero restrictions.
+          <p className="text-sm md:text-lg lg:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed mb-4 md:mb-8">
+            Pay your activation fee to unlock your funded account with zero restrictions.
           </p>
+
+          {/* Price Increase Notice */}
+          <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/40 text-orange-400 px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-bold mb-6 md:mb-8 animate-pulse">
+            <span className="w-2 h-2 rounded-full bg-orange-400"></span>
+            PRICES INCREASE TOMORROW — LOCK IN TODAY
+          </div>
+
+          {/* Floating Stats Cards */}
+          <div className="grid grid-cols-3 gap-2 md:flex md:flex-row md:justify-center md:items-center md:gap-8 px-1 md:px-0 mb-6 md:mb-8">
+            {[
+              { value: "15%", label: "Max Drawdown", delay: "0s" },
+              { value: "8%", label: "Daily Drawdown", delay: "0.1s" },
+              { value: "1:200", label: "Leverage", delay: "0.2s" }
+            ].map(({ value, label, delay }) => (
+              <div
+                key={label}
+                className="group relative w-full bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl p-3 md:p-4 md:w-44 hover:scale-105 transition-all duration-300 animate-float"
+                style={{
+                  animation: `float 3s ease-in-out infinite`,
+                  animationDelay: delay,
+                  boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)'
+                }}
+              >
+                <div className="text-xl md:text-3xl font-bold text-[#0FF1CE] mb-1">{value}</div>
+                <div className="text-xs md:text-sm text-gray-400">{label}</div>
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#0FF1CE]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              </div>
+            ))}
+          </div>
+
+          {/* NO BS Rules Card */}
+          <div className="max-w-2xl mx-auto mb-6 md:mb-8">
+            <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-4 md:p-8 border border-[#0FF1CE]/20"
+              style={{ boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)' }}>
+              <h3 className="text-lg md:text-2xl font-bold text-[#0FF1CE] mb-4 md:mb-6 text-center">NO BS Funded Account RULES</h3>
+              <div className="grid grid-cols-2 gap-2 md:gap-4 text-left">
+                {[
+                  "No consistency rules",
+                  "News trading allowed",
+                  "Hold over weekends",
+                  "EAs & Bots allowed",
+                  "No Profit Caps",
+                  "No Position size caps"
+                ].map((rule, index) => (
+                  <div key={index} className="flex items-center space-x-2 md:space-x-3 group">
+                    <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center group-hover:scale-110 transition-transform shrink-0">
+                      <span className="text-[#0FF1CE] text-xs md:text-sm">✓</span>
+                    </div>
+                    <span className="text-gray-300 text-xs md:text-base group-hover:text-white transition-colors">{rule}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile CTA - scrolls to account selector */}
+          <button
+            onClick={() => document.getElementById('account-selector')?.scrollIntoView({ behavior: 'smooth' })}
+            className="md:hidden w-full max-w-xs mx-auto flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black text-sm font-bold rounded-xl active:scale-[0.98] transition-transform shadow-[0_0_20px_rgba(15,241,206,0.3)]"
+          >
+            <span>Choose Your Account</span>
+            <ChevronDown size={18} />
+          </button>
         </div>
       </section>
 
       {/* Activation Options Section */}
-      <section className="py-20 px-6 bg-gradient-to-b from-[#131313] to-[#111111] relative overflow-hidden">
+      <section id="account-selector" className="py-12 md:py-20 px-6 bg-gradient-to-b from-[#131313] to-[#111111] relative overflow-hidden scroll-mt-20">
         <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-[#131313] to-transparent"></div>
         <div className="relative z-10">
           <h2 className="text-4xl font-bold text-center text-[#0FF1CE] mb-8">
@@ -543,39 +612,44 @@ function GauntletActivationContent() {
           )}
           
           {filteredOptions.length > 0 ? (
-            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-6 gap-6">
-              {filteredOptions.map((option, index) => (
-                <div
-                  key={option.level}
-                  className={`group relative bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-6 border border-[#0FF1CE]/20 hover:scale-105 transition-all duration-300 cursor-pointer ${
-                    selectedOption?.level === option.level ? 'ring-2 ring-[#0FF1CE]' : ''
-                  }`}
-                  style={{
-                    boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)'
-                  }}
-                  onClick={() => handleSelectOption(option)}
-                >
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-[#0FF1CE] mb-2">{option.level}</div>
-                    {isReset && (
-                      <div className="text-sm text-gray-500 line-through">${option.price.toLocaleString()}</div>
-                    )}
-                    <div className="text-3xl font-bold text-white">${getEffectivePrice(option).toLocaleString()}</div>
-                    <div className="text-sm text-gray-400 mt-1">{feeLabel}</div>
-                  </div>
-
-                  {selectedOption?.level === option.level && (
-                    <div className="absolute top-2 right-2">
-                      <div className="w-6 h-6 bg-[#0FF1CE] rounded-full flex items-center justify-center">
-                        <Check size={14} className="text-black" />
-                      </div>
+            <>
+              <div className="max-w-7xl -mx-6 px-6 md:mx-auto md:px-0 flex md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-6 gap-4 md:gap-6 overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none pb-4 md:pb-0 hide-scrollbar">
+                {filteredOptions.map((option, index) => (
+                  <div
+                    key={option.level}
+                    className={`group relative shrink-0 w-[70%] max-w-[260px] snap-center md:w-auto md:max-w-none bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-6 border border-[#0FF1CE]/20 hover:scale-105 transition-all duration-300 cursor-pointer ${
+                      selectedOption?.level === option.level ? 'ring-2 ring-[#0FF1CE]' : ''
+                    }`}
+                    style={{
+                      boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)'
+                    }}
+                    onClick={() => handleSelectOption(option)}
+                  >
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-[#0FF1CE] mb-2">{option.level}</div>
+                      {isReset && (
+                        <div className="text-sm text-gray-500 line-through">${option.price.toLocaleString()}</div>
+                      )}
+                      <div className="text-3xl font-bold text-white">${getEffectivePrice(option).toLocaleString()}</div>
+                      <div className="text-sm text-gray-400 mt-1">{feeLabel}</div>
                     </div>
-                  )}
 
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#0FF1CE]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                </div>
-              ))}
-            </div>
+                    {selectedOption?.level === option.level && (
+                      <div className="absolute top-2 right-2">
+                        <div className="w-6 h-6 bg-[#0FF1CE] rounded-full flex items-center justify-center">
+                          <Check size={14} className="text-black" />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#0FF1CE]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  </div>
+                ))}
+              </div>
+              {filteredOptions.length > 1 && (
+                <p className="md:hidden text-center text-gray-500 text-xs mt-2">← Swipe to explore account sizes →</p>
+              )}
+            </>
           ) : (
             <div className="max-w-2xl mx-auto text-center">
               <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-8 border border-[#0FF1CE]/20"
@@ -592,7 +666,7 @@ function GauntletActivationContent() {
 
       {/* Form Section */}
       {selectedOption && (
-        <section className="py-20 px-6 bg-gradient-to-b from-[#111111] to-[#131313] relative overflow-hidden">
+        <section id="information-section" className="py-12 md:py-20 px-6 bg-gradient-to-b from-[#111111] to-[#131313] relative overflow-hidden scroll-mt-20">
           <div className="relative z-10">
             <h2 className="text-4xl font-bold text-center text-[#0FF1CE] mb-16">Complete Your Information</h2>
             
@@ -748,6 +822,19 @@ function GauntletActivationContent() {
         .background-noise {
           background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 250 250' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
           opacity: 0.15;
+        }
+
+        @keyframes float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
         }
       `}</style>
     </div>
