@@ -319,35 +319,35 @@ const calculatePrice = (type: ChallengeType, amount: string): number => {
   switch(type) {
     case 'Standard':
       switch(baseAmount) {
-        case 5000: return 59;
-        case 10000: return 109;
-        case 25000: return 189;
-        case 50000: return 289;
-        case 100000: return 499;
-        case 200000: return 949;
-        case 500000: return 1899;
+        case 5000: return 88.50;
+        case 10000: return 163.50;
+        case 25000: return 283.50;
+        case 50000: return 433.50;
+        case 100000: return 748.50;
+        case 200000: return 1423.50;
+        case 500000: return 2848.50;
         default: return 0;
       }
     case '1-Step':
       switch(baseAmount) {
-        case 5000: return 65;
-        case 10000: return 119;
-        case 25000: return 199;
-        case 50000: return 289;
-        case 100000: return 569;
-        case 200000: return 989;
-        case 500000: return 1999;
+        case 5000: return 97.50;
+        case 10000: return 178.50;
+        case 25000: return 298.50;
+        case 50000: return 433.50;
+        case 100000: return 853.50;
+        case 200000: return 1483.50;
+        case 500000: return 2998.50;
         default: return 0;
       }
     case 'Instant':
       switch(baseAmount) {
-        case 5000: return 299;
-        case 10000: return 549;
-        case 25000: return 749;
-        case 50000: return 899;
-        case 100000: return 1799;
-        case 200000: return 3499;
-        case 500000: return 6999;
+        case 5000: return 448.50;
+        case 10000: return 823.50;
+        case 25000: return 1123.50;
+        case 50000: return 1348.50;
+        case 100000: return 2698.50;
+        case 200000: return 5248.50;
+        case 500000: return 10498.50;
         default: return 0;
       }
     case 'Gauntlet':
@@ -1114,26 +1114,7 @@ export default function ChallengePage() {
 
         {/* Launch Day Sale Banner - Mobile Optimized */}
         <div className="mb-8 lg:mb-12 relative space-y-5">
-          {/* Launch Sale Promo: 50% Off + Free Retry */}
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0FF1CE]/30 to-[#5059FC]/20 rounded-2xl blur-xl"></div>
-            <div className="relative bg-gradient-to-r from-[#0FF1CE]/15 to-[#5059FC]/15 rounded-2xl p-4 lg:p-6 border border-[#0FF1CE]/30 backdrop-blur-sm overflow-hidden">
-              <div className="flex flex-col lg:flex-row items-center justify-between gap-2">
-                <div className="flex items-center gap-2 justify-center lg:justify-start mb-1">
-                  {/* Percent span removed */}
-                  <span className="text-xs font-semibold text-[#0FF1CE] uppercase tracking-wider">Last Discount Ever</span>
-                </div>
-                <div className="text-base lg:text-xl font-bold text-white text-center lg:text-left">
-                  <span className="text-[#0FF1CE]">50% Off</span> + <span className="text-[#0FF1CE]">Free Retry</span>
-                </div>
-                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 text-xs mt-2">
-                  <span className="text-gray-100">Code:</span>
-                  <code className="bg-[#0FF1CE]/15 text-[#0FF1CE] px-2 py-0.5 rounded font-mono font-semibold">LASTONE</code>
-                  <span className="text-gray-400">Final release — won't be offered again</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Launch Sale Promo removed */}
      
      
      
@@ -1461,7 +1442,7 @@ export default function ChallengePage() {
                     Pay only $19.99 now. If you pass, you'll pay the activation fee to get your funded account.
                   </p>
                   <p className="text-gray-400 text-xs mt-1">
-                    Activation fees: $10k→$99, $25k→$199, $50k→$399, $100k→$499, $200k→$999, $500k→$1,899
+                    Activation fees: $10k→$199, $25k→$299, $50k→$499, $100k→$799, $200k→$1,499, $500k→$2,999
                   </p>
                 </div>
               ) : (

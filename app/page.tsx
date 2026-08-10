@@ -9,8 +9,8 @@ import Link from 'next/link';
 import PricingTable from './components/PricingTable';
 import { ChevronRight, ChevronDown } from 'lucide-react';
 
-// Gauntlet Card Component with Accordion
-const GauntletCard = () => {
+// VIP Card Component with Accordion
+const VipCard = () => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
@@ -31,18 +31,18 @@ const GauntletCard = () => {
               <div className="flex-1">
                 {/* Badge */}
                 <div className="inline-block bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black px-4 py-2 rounded-full text-sm font-bold mb-4">
-                  NEW CHALLENGE
+                  NEW: VIP PROGRAM
                 </div>
                 
                 {/* Title */}
                 <h2 className="text-3xl md:text-4xl font-extrabold text-[#0FF1CE] mb-4">
-                  Shockwave Gauntlet
+                  Shockwave VIP
                 </h2>
                 
                 {/* Description */}
                 <p className="text-white text-base md:text-lg leading-relaxed">
-                  The ultimate trading challenge with <span className="text-[#0FF1CE] font-semibold">zero restrictions</span>. 
-                  One phase evaluation, complete trading freedom, and you only pay when you succeed.
+                  Trade bigger. Keep it simple. Up to <span className="text-[#0FF1CE] font-semibold">$3,000,000</span> in funded allocation 
+                  for experienced traders who have outgrown traditional prop firm account sizes.
                 </p>
               </div>
               
@@ -74,8 +74,8 @@ const GauntletCard = () => {
                       <div className="w-3 h-3 bg-[#0FF1CE] rounded-full"></div>
                     </div>
                     <div>
-                      <div className="text-[#0FF1CE] font-bold text-sm">Pay When Pass</div>
-                      <div className="text-gray-300 text-xs">Only $19.99 upfront</div>
+                      <div className="text-[#0FF1CE] font-bold text-sm">Up to $3M Allocation</div>
+                      <div className="text-gray-300 text-xs">One larger account, not ten small ones</div>
                     </div>
                   </div>
                 </div>
@@ -86,8 +86,8 @@ const GauntletCard = () => {
                       <div className="w-3 h-3 bg-[#0FF1CE] rounded-full"></div>
                     </div>
                     <div>
-                      <div className="text-[#0FF1CE] font-bold text-sm">One Phase</div>
-                      <div className="text-gray-300 text-xs">No verification needed</div>
+                      <div className="text-[#0FF1CE] font-bold text-sm">Simple Rules</div>
+                      <div className="text-gray-300 text-xs">No consistency rules, no restrictions</div>
                     </div>
                   </div>
                 </div>
@@ -98,11 +98,26 @@ const GauntletCard = () => {
                       <div className="w-3 h-3 bg-[#0FF1CE] rounded-full"></div>
                     </div>
                     <div>
-                      <div className="text-[#0FF1CE] font-bold text-sm">No Restrictions</div>
-                      <div className="text-gray-300 text-xs">Trade however you want</div>
+                      <div className="text-[#0FF1CE] font-bold text-sm">VIP Infrastructure</div>
+                      <div className="text-gray-300 text-xs">Dedicated 24/7 account manager</div>
                     </div>
                   </div>
                 </div>
+              </div>
+              
+              {/* Allocations Breakdown */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {[
+                  { name: "Professional", level: "$1M", price: "$5,499" },
+                  { name: "Executive", level: "$2M", price: "$9,999" },
+                  { name: "Institutional", level: "$3M", price: "$14,999" }
+                ].map((item, index) => (
+                  <div key={index} className="text-center bg-[#0FF1CE]/5 rounded-xl p-4 border border-[#0FF1CE]/20">
+                    <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">{item.name}</div>
+                    <div className="text-[#0FF1CE] font-bold text-2xl">{item.level}</div>
+                    <div className="text-white font-semibold text-sm mt-1">{item.price}</div>
+                  </div>
+                ))}
               </div>
               
               {/* Special Callout */}
@@ -110,10 +125,10 @@ const GauntletCard = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-[#0FF1CE]/5 to-transparent rounded-xl"></div>
                 <div className="relative z-10 text-center">
                   <div className="text-[#0FF1CE] font-bold text-sm mb-1">
-                    Revolutionary Model: We believe in your success
+                    Live Copy Trading to Corporate Accounts
                   </div>
                   <div className="text-gray-300 text-xs">
-                    Pay activation fees only when you prove yourself. No upfront risk, maximum reward.
+                    All trades are live copy traded to our corporate accounts — your performance moves real capital.
                   </div>
                 </div>
               </div>
@@ -123,8 +138,8 @@ const GauntletCard = () => {
                 {[
                   { label: "Max DD", value: "15%" },
                   { label: "Daily DD", value: "8%" },
-                  { label: "Leverage", value: "1:200" },
-                  { label: "Target", value: "10%" }
+                  { label: "Leverage", value: "1:100" },
+                  { label: "Profit Split", value: "80%" }
                 ].map((item, index) => (
                   <div key={index} className="text-center bg-[#0FF1CE]/5 rounded-lg p-3 border border-[#0FF1CE]/20">
                     <div className="text-[#0FF1CE] font-bold text-xl">{item.value}</div>
@@ -135,15 +150,15 @@ const GauntletCard = () => {
               
               {/* CTA */}
               <div className="flex flex-col items-center gap-3 pt-4">
-                <Link href="/challenge">
+                <Link href="/vip">
                   <button className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black text-lg font-bold rounded-xl hover:scale-105 transition-transform shadow-lg hover:shadow-[#0FF1CE]/25 group">
                     <div className="flex items-center justify-center gap-2">
-                      <span>Try the Gauntlet</span>
+                      <span>Explore Shockwave VIP</span>
                       <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
                     </div>
                   </button>
                 </Link>
-                <p className="text-center text-gray-400 text-sm">Pay $19.99 now, activation fee only when you pass</p>
+                <p className="text-center text-gray-400 text-sm">Monthly payouts via bank transfer, Wise or crypto — VIP dashboard included</p>
               </div>
             </div>
           </div>
@@ -291,8 +306,8 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
   */
 };
 
-// Promotional Modal - 1 Year Anniversary 50% OFF + Free Retry
-const OnDemandPayoutsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+// Promotional Modal - Introducing Shockwave VIP
+const VipAnnouncementModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   if (!isOpen) return null;
 
   return (
@@ -311,51 +326,53 @@ const OnDemandPayoutsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
           <div className="relative bg-gradient-to-br from-[#0D0D0D] via-[#121212] to-[#0D0D0D] border-2 border-[#0FF1CE]/30 rounded-3xl overflow-hidden shadow-2xl p-8">
             {/* Promo Badge */}
             <div className="absolute top-0 right-0 bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black px-6 py-2 rounded-bl-2xl font-bold text-sm shadow-lg">
-              LAST DISCOUNT EVER
+              NEW: VIP PROGRAM
             </div>
 
             {/* Content */}
             <div className="text-center pt-6">
               {/* Main Heading */}
               <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-2">
-                Our Last Discount Code Ever
+                Shockwave VIP
               </h2>
-              <div className="text-2xl mb-4">⚡</div>
 
               {/* Subheading */}
               <div className="bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-transparent bg-clip-text text-2xl md:text-3xl font-bold mb-8">
-                50% OFF All Challenges
+                $1,000,000+ Funded  Accounts
               </div>
 
               {/* Key Benefits */}
-              <div className="space-y-4 mb-8 text-left max-w-md mx-auto">
+              <div className="space-y-3 mb-8 text-left max-w-md mx-auto">
                 <div className="flex items-start gap-3 bg-[#1A1A1A]/50 p-4 rounded-lg border border-[#0FF1CE]/20">
                   <div className="text-[#0FF1CE] text-2xl mt-1 font-bold">•</div>
                   <div>
-                    <div className="text-white font-bold text-lg">50% Off All Challenges</div>
-                    <div className="text-gray-400 text-sm">This is the final discount code we will ever release — every challenge type at half price</div>
+                    <div className="text-white font-bold text-lg">Simple Rules, Big Capital</div>
+                    <div className="text-gray-400 text-sm">15% drawdown, no consistency or extra rules</div>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3 bg-[#1A1A1A]/50 p-4 rounded-lg border border-[#0FF1CE]/20">
                   <div className="text-[#0FF1CE] text-2xl mt-1 font-bold">•</div>
                   <div>
-                    <div className="text-white font-bold text-lg">1 Free Retry Included</div>
-                    <div className="text-gray-400 text-sm">Get 2 chances for the price of 1 (at 50% off!)</div>
+                    <div className="text-white font-bold text-lg">VIP Support</div>
+                    <div className="text-gray-400 text-sm">24/7 account manager & VIP dashboard</div>
                   </div>
                 </div>
-              </div>
 
-              {/* Promo Code */}
-              <div className="mb-6 bg-[#1A1A1A] border border-[#0FF1CE]/40 rounded-xl py-3 px-4">
-                <div className="text-gray-400 text-xs mb-1 uppercase tracking-widest">Use code at checkout</div>
-                <div className="text-[#0FF1CE] font-extrabold text-2xl tracking-widest">LASTONE</div>
+                <div className="flex items-start gap-3 bg-[#1A1A1A]/50 p-4 rounded-lg border border-[#0FF1CE]/20">
+                  <div className="text-[#0FF1CE] text-2xl mt-1 font-bold">•</div>
+                  <div>
+                    <div className="text-white font-bold text-lg">80% Profit Split</div>
+                    <div className="text-gray-400 text-sm">$1M, $2M & $3M allocations</div>
+                  </div>
+                </div>
+           
               </div>
 
               {/* CTA Button */}
-              <Link href="/challenge" onClick={onClose}>
+              <Link href="/vip" onClick={onClose}>
                 <button className="w-full bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black font-bold py-4 px-8 rounded-xl hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(15,241,206,0.4)] hover:shadow-[0_0_30px_rgba(15,241,206,0.6)] text-lg">
-                  CLAIM YOUR 50% OFF NOW →
+                  EXPLORE VIP ALLOCATIONS →
                 </button>
               </Link>
             </div>
@@ -369,7 +386,7 @@ const OnDemandPayoutsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
 export default function ShockwaveLandingPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
-    const [showOnDemandModal, setShowOnDemandModal] = useState(false); // On-demand payouts modal enabled
+    const [showVipModal, setShowVipModal] = useState(false); // VIP announcement modal enabled
     
     useEffect(() => {
       const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -382,11 +399,11 @@ export default function ShockwaveLandingPage() {
       return () => unsubscribe();
     }, [router, loading]);
 
-    // Show on-demand payouts modal after page loads
+    // Show VIP announcement modal after page loads
     useEffect(() => {
       if (!loading) {
         const timer = setTimeout(() => {
-          setShowOnDemandModal(true);
+          setShowVipModal(true);
         }, 1500); // Show modal 1.5 seconds after page loads
   
         return () => clearTimeout(timer);
@@ -405,10 +422,10 @@ export default function ShockwaveLandingPage() {
       <div className="bg-black text-white min-h-screen font-sans">
         <Header />
         
-        {/* On-Demand Payouts Modal */}
-        <OnDemandPayoutsModal 
-          isOpen={showOnDemandModal} 
-          onClose={() => setShowOnDemandModal(false)}
+        {/* VIP Announcement Modal */}
+        <VipAnnouncementModal 
+          isOpen={showVipModal} 
+          onClose={() => setShowVipModal(false)}
         />
         
         {/* Hero Section */}
@@ -1207,8 +1224,8 @@ export default function ShockwaveLandingPage() {
         <section id="pricing" className="relative py-20 px-6 bg-black overflow-hidden">
           <div className="absolute top-1/2 left-1/4 w-1/2 h-[400px] bg-[#0FF1CE]/[0.02] blur-[150px] rounded-full"></div>
           
-          {/* Gauntlet Showcase Card */}
-          <GauntletCard />
+          {/* VIP Showcase Card */}
+          <VipCard />
           
           <PricingTable />
         </section>

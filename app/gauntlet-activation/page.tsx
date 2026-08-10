@@ -39,7 +39,7 @@ const RESET_DISCOUNT = 0.12;
 const ACTIVATION_OPTIONS: ActivationOption[] = [
   {
     level: '$10k',
-    price: 99,
+    price: 199,
     whopCheckoutUrl: 'https://whop.com/checkout/plan_gYWVAVyu65Zwa',
     features: [
       '$10,000 Simulated Capital',
@@ -52,7 +52,7 @@ const ACTIVATION_OPTIONS: ActivationOption[] = [
   },
   {
     level: '$25k',
-    price: 199,
+    price: 299,
     whopCheckoutUrl: 'https://whop.com/checkout/plan_4JiIRmkyRqjq8',
     features: [
       '$25,000 Simulated Capital',
@@ -65,7 +65,7 @@ const ACTIVATION_OPTIONS: ActivationOption[] = [
   },
   {
     level: '$50k',
-    price: 399,
+    price: 499,
     whopCheckoutUrl: 'https://whop.com/checkout/plan_9t46Mcti2Gl1G',
     features: [
       '$50,000 Simulated Capital',
@@ -78,7 +78,7 @@ const ACTIVATION_OPTIONS: ActivationOption[] = [
   },
   {
     level: '$100k',
-    price: 499,
+    price: 799,
     whopCheckoutUrl: 'https://whop.com/checkout/plan_mYd9abFhGM9Mg',
     features: [
       '$100,000 Simulated Capital',
@@ -91,7 +91,7 @@ const ACTIVATION_OPTIONS: ActivationOption[] = [
   },
   {
     level: '$200k',
-    price: 999,
+    price: 1499,
     whopCheckoutUrl: 'https://whop.com/checkout/plan_ArcXmNChT9aLe',
     features: [
       '$200,000 Simulated Capital',
@@ -104,7 +104,7 @@ const ACTIVATION_OPTIONS: ActivationOption[] = [
   },
   {
     level: '$500k',
-    price: 1899,
+    price: 2999,
     features: [
       '$500,000 Simulated Capital',
       '15% Max Drawdown',

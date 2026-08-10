@@ -50,13 +50,13 @@ const challengeData: ChallengeData = {
     name: "Shockwave Standard",
     accounts: [5000, 10000, 25000, 50000, 100000, 200000, 500000],
     prices: {
-      5000: 59,
-      10000: 109,
-      25000: 189,
-      50000: 289,
-      100000: 499,
-      200000: 949,
-      500000: 1899
+      5000: 88.50,
+      10000: 163.50,
+      25000: 283.50,
+      50000: 433.50,
+      100000: 748.50,
+      200000: 1423.50,
+      500000: 2848.50
     },
     features: [
       {
@@ -204,13 +204,13 @@ const challengeData: ChallengeData = {
         subtitle: "Pay only when you pass",
         tooltip: "funded-activation-fee",
         values: {
-          5000: "$59",
-          10000: "$109",
-          25000: "$189",
-          50000: "$289",
-          100000: "$499",
-          200000: "$949",
-          500000: "$1899"
+          5000: "$88.50",
+          10000: "$163.50",
+          25000: "$283.50",
+          50000: "$433.50",
+          100000: "$748.50",
+          200000: "$1,423.50",
+          500000: "$2,848.50"
         }
       }
     ]
@@ -219,13 +219,13 @@ const challengeData: ChallengeData = {
     name: "Shockwave 1-Step",
     accounts: [5000, 10000, 25000, 50000, 100000, 200000, 500000],
     prices: {
-      5000: 65,
-      10000: 119,
-      25000: 199,
-      50000: 289,
-      100000: 569,
-      200000: 989,
-      500000: 1999
+      5000: 97.50,
+      10000: 178.50,
+      25000: 298.50,
+      50000: 433.50,
+      100000: 853.50,
+      200000: 1483.50,
+      500000: 2998.50
     },
     features: [
       {
@@ -360,13 +360,13 @@ const challengeData: ChallengeData = {
     name: "Shockwave Instant",
     accounts: [5000, 10000, 25000, 50000, 100000, 200000, 500000],
     prices: { 
-      5000: 299,
-      10000: 549,
-      25000: 749, 
-      50000: 899, 
-      100000: 1799,
-      200000: 3499,
-      500000: 6999
+      5000: 448.50,
+      10000: 823.50,
+      25000: 1123.50, 
+      50000: 1348.50, 
+      100000: 2698.50,
+      200000: 5248.50,
+      500000: 10498.50
     },
     features: [
       {
@@ -513,11 +513,11 @@ const challengeData: ChallengeData = {
         subtitle: "Only $19.99 to try",
         tooltip: "pay-when-pass",
         values: {
-          10000: "$99 activation",
-          25000: "$199 activation",
-          50000: "$399 activation",
-          100000: "$499 activation",
-          200000: "$999 activation"
+          10000: "$199 activation",
+          25000: "$299 activation",
+          50000: "$499 activation",
+          100000: "$799 activation",
+          200000: "$1,499 activation"
         }
       },
       {
@@ -870,15 +870,13 @@ export default function PricingTable() {
                     {/* Pricing */}
                     <div className="p-3 pt-2 border-t border-[#0FF1CE]/20">
                       <div className="flex flex-col items-center justify-center gap-0.5 mb-2">
-                        <span className="text-gray-400 text-xs line-through">${data.prices[account]}</span>
-                        <span className="text-[#0FF1CE] text-lg font-bold">${(data.prices[account] / 2).toFixed(2)}</span>
-                        <span className="text-[#0FF1CE] text-[10px] font-semibold">50% OFF</span>
+                        <span className="text-[#0FF1CE] text-lg font-bold">${data.prices[account].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                       </div>
                       
                       <button
                         onClick={() => {
                           sessionStorage.setItem('preselectedBalance', account.toString());
-                          handlePurchase(`${data.name} $${account.toLocaleString()}`, data.prices[account] / 2);
+                          handlePurchase(`${data.name} $${account.toLocaleString()}`, data.prices[account]);
                         }}
                         className="w-full bg-[#0FF1CE] hover:bg-[#0AA89E] text-black font-bold py-1.5 px-2 rounded-md transition-all duration-300 hover:scale-105 text-xs"
                       >
@@ -924,7 +922,7 @@ export default function PricingTable() {
                   onClick={() => {
                     // Update session storage with correct account before navigation
                     sessionStorage.setItem('preselectedBalance', selectedAccount.toString());
-                    handlePurchase(`${data.name} $${selectedAccount.toLocaleString()}`, data.prices[selectedAccount] / 2);
+                    handlePurchase(`${data.name} $${selectedAccount.toLocaleString()}`, data.prices[selectedAccount]);
                   }}
                   className="w-full group"
                 >
@@ -932,8 +930,7 @@ export default function PricingTable() {
                     <div className="flex flex-col items-center rounded-lg bg-gradient-to-br from-[#0FF1CE] to-[#0AA89E] px-6 py-3 transition-all duration-300">
                       <span className="text-lg font-bold text-black">Get Plan</span>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-black/60 line-through">Was: ${data.prices[selectedAccount]}</span>
-                        <span className="text-sm text-black font-bold">Now: ${(data.prices[selectedAccount] / 2).toFixed(2)}</span>
+                        <span className="text-sm text-black font-bold">${data.prices[selectedAccount].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                       </div>
                     </div>
                   </div>
