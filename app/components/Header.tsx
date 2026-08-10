@@ -33,58 +33,60 @@ export default function Header() {
 
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-20">
-          {/* Mobile menu button */}
-          <div className="flex md:hidden">
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
-              aria-expanded={isMenuOpen}
-              className="text-white p-2 rounded-lg hover:bg-white/5 active:bg-white/10 transition-colors duration-300"
-            >
-              <div className="w-6 h-5 relative flex flex-col justify-between">
-                <span className={`w-full h-0.5 rounded-full bg-white transform transition-all duration-300 ${isMenuOpen ? 'rotate-45 translate-y-2 bg-[#0FF1CE]' : ''}`} />
-                <span className={`w-full h-0.5 rounded-full bg-white transition-all duration-300 ${isMenuOpen ? 'opacity-0' : ''}`} />
-                <span className={`w-full h-0.5 rounded-full bg-white transform transition-all duration-300 ${isMenuOpen ? '-rotate-45 -translate-y-2 bg-[#0FF1CE]' : ''}`} />
-              </div>
-            </button>
+          {/* Logo + Desktop Navigation */}
+          <div className="flex items-center gap-8">
+            <div className="flex-shrink-0">
+              <Link href="/" className="block group">
+                <Image
+                  src="/logo.png"
+                  alt="Shockwave Capital"
+                  width={80}
+                  height={80}
+                  className="h-auto w-auto transition-transform duration-300 group-hover:scale-105 drop-shadow-[0_0_12px_rgba(15,241,206,0.15)]"
+                  priority
+                />
+              </Link>
+            </div>
+
+            <nav className="hidden md:flex items-center space-x-8">
+              {navItems.map((item) => (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  className="relative py-2 text-sm font-medium text-gray-300 hover:text-[#0FF1CE] transition-colors duration-300 group"
+                >
+                  {item.name}
+                  <span className="absolute left-0 -bottom-0.5 h-0.5 w-0 rounded-full bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] transition-all duration-300 group-hover:w-full" />
+                </a>
+              ))}
+            </nav>
           </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => (
-              <a
-                key={item.name}
-                href={item.href}
-                className="relative py-2 text-sm font-medium text-gray-300 hover:text-[#0FF1CE] transition-colors duration-300 group"
-              >
-                {item.name}
-                <span className="absolute left-0 -bottom-0.5 h-0.5 w-0 rounded-full bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] transition-all duration-300 group-hover:w-full" />
-              </a>
-            ))}
-          </nav>
-
-          {/* Logo */}
-          <div className={`absolute top-1/2 -translate-x-1/2 -translate-y-1/2 left-[calc(50%-40px)] md:left-1/2 ${isMenuOpen ? 'md:block hidden' : 'block'}`}>
-            <Link href="/" className="block group">
-              <Image
-                src="/logo.png"
-                alt="Shockwave Capital"
-                width={80}
-                height={80}
-                className="h-auto w-auto transition-transform duration-300 group-hover:scale-105 drop-shadow-[0_0_12px_rgba(15,241,206,0.15)]"
-                priority
-              />
-            </Link>
-          </div>
-
-          {/* Client Area Button */}
-          <div>
+          {/* Actions */}
+          <div className="flex items-center gap-3">
+            {/* Client Area Button */}
             <Link href="/auth">
               <button className="group relative overflow-hidden bg-gradient-to-r from-[#0FF1CE]/10 to-[#00D9FF]/10 backdrop-blur-sm border border-[#0FF1CE]/30 text-[#0FF1CE] px-4 py-2 md:px-6 md:py-2.5 text-sm md:text-base rounded-xl font-semibold hover:border-[#0FF1CE]/60 hover:from-[#0FF1CE]/20 hover:to-[#00D9FF]/20 hover:shadow-[0_0_20px_rgba(15,241,206,0.25)] hover:scale-[1.03] active:scale-[0.97] transition-all duration-300">
                 <span className="relative z-10">Client Area</span>
                 <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#0FF1CE]/0 to-[#00D9FF]/0 group-hover:from-[#0FF1CE]/10 group-hover:to-[#00D9FF]/10 transition-all duration-300"></div>
               </button>
             </Link>
+
+            {/* Mobile menu button */}
+            <div className="flex md:hidden">
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+                aria-expanded={isMenuOpen}
+                className="text-white p-2 rounded-lg hover:bg-white/5 active:bg-white/10 transition-colors duration-300"
+              >
+                <div className="w-6 h-5 relative flex flex-col justify-between">
+                  <span className={`w-full h-0.5 rounded-full bg-white transform transition-all duration-300 ${isMenuOpen ? 'rotate-45 translate-y-2 bg-[#0FF1CE]' : ''}`} />
+                  <span className={`w-full h-0.5 rounded-full bg-white transition-all duration-300 ${isMenuOpen ? 'opacity-0' : ''}`} />
+                  <span className={`w-full h-0.5 rounded-full bg-white transform transition-all duration-300 ${isMenuOpen ? '-rotate-45 -translate-y-2 bg-[#0FF1CE]' : ''}`} />
+                </div>
+              </button>
+            </div>
           </div>
         </div>
 

@@ -1,16 +1,24 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Particles from '../components/Particles';
 import Image from 'next/image';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db, createOrder, Timestamp } from '@/lib/firebase';
-import { Check, Zap, Shield, TrendingUp, ChevronRight, AlertCircle, CreditCard } from 'lucide-react';
+import { Check, Zap, Shield, TrendingUp, ChevronRight, AlertCircle, CreditCard, CalendarOff, Percent, Tag, Gift, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 
 // Define the type for challenge options
 type ChallengeType = 'Standard' | '1-Step' | 'Instant' | 'Gauntlet';
+
+const challengeSteps = [
+  { id: 1, label: 'Challenge Type', shortLabel: 'Type' },
+  { id: 2, label: 'Account Size', shortLabel: 'Size' },
+  { id: 3, label: 'Platform', shortLabel: 'Platform' },
+  { id: 4, label: 'Add-ons', shortLabel: 'Add-ons' },
+  { id: 5, label: 'Your Info', shortLabel: 'Info' },
+] as const;
 
 const challengeTypes = [
   { 
@@ -51,7 +59,17 @@ const challengeTypes = [
   }
 ];
 
-const platforms = ['MT4', 'MT5'];
+const platforms = ['MT4', 'MT5'] as const;
+
+const platformImages: Record<string, string> = {
+  MT4: '/mt4checkout.svg',
+  MT5: '/mt5checkout.svg',
+};
+
+const addOnMeta: Record<string, { icon: typeof CalendarOff }> = {
+  'no-min-days': { icon: CalendarOff },
+  'profit-split-100': { icon: Percent },
+};
 
 const countries = [
   { code: 'AF', name: 'Afghanistan' },
@@ -399,6 +417,68 @@ export default function ChallengePage() {
   const [discountCode, setDiscountCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState<DiscountCode | null>(null);
   const [isValidatingCode, setIsValidatingCode] = useState(false);
+  const [addonsContinued, setAddonsContinued] = useState(false);
+  const [showDiscountInput, setShowDiscountInput] = useState(false);
+  const step1Ref = useRef<HTMLDivElement>(null);
+  const step2Ref = useRef<HTMLDivElement>(null);
+  const step3Ref = useRef<HTMLDivElement>(null);
+  const step4Ref = useRef<HTMLDivElement>(null);
+  const step5Ref = useRef<HTMLDivElement>(null);
+  const stepRefs = [null, step1Ref, step2Ref, step3Ref, step4Ref, step5Ref] as const;
+
+  const isInfoComplete = Boolean(
+    formData.firstName &&
+    formData.lastName &&
+    formData.email &&
+    formData.phone &&
+    formData.country &&
+    termsAccepted
+  );
+
+  const isInfoStarted = Boolean(
+    formData.firstName ||
+    formData.lastName ||
+    formData.email ||
+    formData.phone ||
+    formData.country ||
+    formData.discordUsername ||
+    termsAccepted ||
+    addonsContinued
+  );
+
+  // Steps 1-3 require selections; step 4 (add-ons) is optional;
+  // step 5 completes when required info + terms are filled.
+  const completedSteps =
+    isInfoComplete && selectedType && selectedAmount && selectedPlatform ? 5 :
+    isInfoStarted && selectedPlatform ? 4 :
+    selectedPlatform ? 3 :
+    selectedAmount ? 2 :
+    selectedType ? 1 :
+    0;
+
+  const currentStep = Math.min(completedSteps + 1, 5);
+
+  const isStepUnlocked = (step: number) => {
+    if (step === 1) return true;
+    if (step === 2) return Boolean(selectedType);
+    if (step === 3) return Boolean(selectedAmount);
+    if (step === 4 || step === 5) return Boolean(selectedPlatform);
+    return false;
+  };
+
+  const scrollToStep = (step: number, force = false) => {
+    if (!force && !isStepUnlocked(step) && step > currentStep) return;
+    const ref = stepRefs[step];
+    if (ref?.current) {
+      ref.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+
+  const getStepState = (step: number): 'complete' | 'current' | 'upcoming' => {
+    if (step <= completedSteps) return 'complete';
+    if (step === currentStep) return 'current';
+    return 'upcoming';
+  };
   
   // Check for preselected values from pricing table
   useEffect(() => {
@@ -432,14 +512,17 @@ export default function ChallengePage() {
   const handleTypeSelect = (type: ChallengeType) => {
     setSelectedType(type);
     setSelectedAmount(null);
+    setTimeout(() => scrollToStep(2, true), 150);
   };
 
   const handleAmountSelect = (amount: string) => {
     setSelectedAmount(amount);
+    setTimeout(() => scrollToStep(3, true), 150);
   };
 
   const handlePlatformSelect = (platform: string) => {
     setSelectedPlatform(platform);
+    setTimeout(() => scrollToStep(4, true), 150);
   };
 
   const handleAddOnToggle = (addOnId: string) => {
@@ -727,106 +810,308 @@ export default function ChallengePage() {
     );
   };
 
-  const renderAddOnsSection = () => (
-    <div className={`mb-8 ${selectedPlatform ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
-      <h3 className="text-lg font-medium mb-4 text-[#0FF1CE]">Available Add-ons</h3>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {addOns.map((addOn) => (
-          <div
-            key={addOn.id}
-            onClick={() => selectedPlatform && handleAddOnToggle(addOn.id)}
-            className={`p-4 rounded-lg border-2 transition-all duration-300 cursor-pointer ${
-              selectedAddOns.includes(addOn.id)
-                ? 'border-[#0FF1CE] bg-[#0FF1CE]/10'
-                : 'border-[#2F2F2F]/50 hover:border-[#0FF1CE]/30'
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <h4 className="font-semibold text-white mb-1">{addOn.name}</h4>
-                <p className="text-sm text-gray-400">{addOn.description}</p>
-              </div>
-              <div className="ml-4 text-right">
-                <div className="text-[#0FF1CE] font-bold">FREE</div>
-                <div className="relative w-6 h-6 mt-2">
-                  <input
-                    type="checkbox"
-                    checked={selectedAddOns.includes(addOn.id)}
-                    onChange={() => {}}
-                    className="sr-only"
-                  />
-                  <div className={`w-6 h-6 rounded border-2 transition-all duration-300 ${
-                    selectedAddOns.includes(addOn.id)
-                      ? 'bg-[#0FF1CE] border-[#0FF1CE]'
-                      : 'bg-transparent border-gray-400'
-                  }`}>
-                    {selectedAddOns.includes(addOn.id) && (
-                      <Check size={16} className="text-black m-auto" />
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
+  const renderStepCircle = (step: number, size: 'sm' | 'md' = 'md') => {
+    const state = getStepState(step);
+    const sizeClasses = size === 'sm' ? 'w-7 h-7 text-xs' : 'w-8 h-8 text-sm';
+    return (
+      <div
+        className={`${sizeClasses} rounded-full flex items-center justify-center font-bold border-2 transition-all duration-500 shrink-0 ${
+          state === 'complete'
+            ? 'bg-[#0FF1CE] border-[#0FF1CE] text-black shadow-[0_0_12px_rgba(15,241,206,0.45)]'
+            : state === 'current'
+              ? 'bg-[#0FF1CE]/15 border-[#0FF1CE] text-[#0FF1CE] shadow-[0_0_12px_rgba(15,241,206,0.35)] scale-110'
+              : 'bg-[#151515] border-[#2F2F2F] text-gray-500'
+        }`}
+      >
+        {state === 'complete' ? <Check size={size === 'sm' ? 14 : 16} strokeWidth={3} /> : step}
       </div>
-      
-      {/* Promotional Text - Shows when add-ons are selected */}
-      {selectedAddOns.length > 0 && (
-        <div className="hidden mt-4 p-4 bg-gradient-to-r from-[#FF6B6B]/10 to-[#EE5A24]/10 border border-[#FF6B6B]/30 rounded-lg">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 bg-[#FF6B6B] rounded-full animate-pulse"></div>
-            <span className="text-[#FF6B6B] font-semibold text-sm">🎉 SPECIAL OFFER</span>
-          </div>
-          <p className="text-white text-sm">
-            <strong>Add-Ons are free for debit/credit card purchases during our re-launch week only!</strong>
-          </p>
-        </div>
-      )}
+    );
+  };
+
+  const renderProgressStepper = () => (
+    <div className="mb-8 lg:mb-10 bg-gradient-to-br from-[#1A1A1A]/80 to-[#151515]/80 backdrop-blur-sm rounded-2xl p-4 sm:p-5 border border-[#2F2F2F]/50">
+      <div className="flex items-center justify-between gap-1 sm:gap-2">
+        {challengeSteps.map((step, index) => {
+          const state = getStepState(step.id);
+          const lineFilled = completedSteps >= step.id;
+          const unlocked = isStepUnlocked(step.id);
+          return (
+            <React.Fragment key={step.id}>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!unlocked) return;
+                  if (step.id >= 5) setAddonsContinued(true);
+                  scrollToStep(step.id);
+                }}
+                disabled={!unlocked}
+                className={`flex flex-col items-center gap-1.5 min-w-0 ${unlocked ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
+                aria-label={`Step ${step.id}: ${step.label}`}
+              >
+                {renderStepCircle(step.id, 'sm')}
+                <span
+                  className={`text-[10px] sm:text-xs font-medium truncate max-w-[4.5rem] sm:max-w-none transition-colors duration-300 ${
+                    state === 'complete' || state === 'current' ? 'text-[#0FF1CE]' : 'text-gray-500'
+                  }`}
+                >
+                  <span className="sm:hidden">{step.shortLabel}</span>
+                  <span className="hidden sm:inline">{step.label}</span>
+                </span>
+              </button>
+              {index < challengeSteps.length - 1 && (
+                <div className="flex-1 h-0.5 mx-1 sm:mx-2 bg-[#2F2F2F] rounded-full overflow-hidden min-w-[12px]">
+                  <div
+                    className="h-full bg-gradient-to-r from-[#0FF1CE] to-[#00D4FF] rounded-full transition-all duration-700 ease-out"
+                    style={{ width: lineFilled ? '100%' : '0%' }}
+                  />
+                </div>
+              )}
+            </React.Fragment>
+          );
+        })}
+      </div>
     </div>
   );
 
-  const renderDiscountSection = () => (
-    <div className="mb-8">
-      <h3 className="text-lg font-medium mb-4 text-white">Discount Code</h3>
-      <div className="flex gap-4">
-        <div className="relative flex-1">
-          <input
-            type="text"
-            value={discountCode}
-            onChange={(e) => {
-              setDiscountCode(e.target.value.toUpperCase());
-              setFormErrors(prev => ({ ...prev, discountCode: undefined }));
-            }}
-            onBlur={() => validateDiscountCode(discountCode)}
-            placeholder="Enter discount code"
-            className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#0FF1CE]/50 focus:border-transparent transition-all"
-          />
-          {isValidatingCode && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <div className="animate-spin rounded-full h-5 w-5 border-2 border-[#0FF1CE] border-t-transparent"></div>
+  const renderStepRail = (step: number, showConnector = true) => {
+    const state = getStepState(step);
+    const connectorFilled = completedSteps >= step;
+    return (
+      <div className="flex flex-col items-center self-stretch shrink-0">
+        {renderStepCircle(step)}
+        {showConnector && (
+          <div className="w-0.5 flex-1 min-h-[1.5rem] mt-2 bg-[#2F2F2F] rounded-full overflow-hidden relative">
+            <div
+              className="absolute top-0 left-0 right-0 bg-gradient-to-b from-[#0FF1CE] to-[#00D4FF] transition-all duration-700 ease-out rounded-full"
+              style={{ height: connectorFilled ? '100%' : state === 'current' ? '40%' : '0%' }}
+            />
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderAddOnsSection = () => {
+    const showCheckoutExtras = Boolean(selectedType && selectedAmount && selectedPlatform);
+    const connectorFilled = completedSteps >= 4;
+    const connectorPartial = currentStep === 4;
+
+    return (
+      <div
+        ref={step4Ref}
+        className={`flex gap-3 sm:gap-4 ${selectedPlatform ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}
+      >
+        <div className="flex flex-col items-center self-stretch shrink-0">
+          {renderStepCircle(4)}
+          <div className="w-0.5 flex-1 min-h-[1.5rem] mt-2 bg-[#2F2F2F] rounded-full overflow-hidden relative">
+            <div
+              className="absolute top-0 left-0 right-0 bg-gradient-to-b from-[#0FF1CE] to-[#00D4FF] transition-all duration-700 ease-out rounded-full"
+              style={{ height: connectorFilled ? '100%' : connectorPartial ? '45%' : '0%' }}
+            />
+          </div>
+          {showCheckoutExtras && (
+            <div className="mt-2">
+              {renderStepCircle(5)}
             </div>
           )}
         </div>
-        <button
-          onClick={() => validateDiscountCode(discountCode)}
-          disabled={isValidatingCode || !discountCode}
-          className="bg-[#0FF1CE] text-black px-6 py-3 rounded-lg font-medium hover:bg-[#0FF1CE]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Apply
-        </button>
+
+        <div className="flex-1 min-w-0 flex flex-col pb-2">
+          <h3 className={`text-lg font-medium mb-4 transition-colors duration-300 ${getStepState(4) === 'upcoming' ? 'text-gray-500' : 'text-[#0FF1CE]'}`}>
+            Available Add-ons
+          </h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {addOns.map((addOn) => {
+              const meta = addOnMeta[addOn.id];
+              const Icon = meta?.icon || Gift;
+              const isSelected = selectedAddOns.includes(addOn.id);
+              return (
+                <div
+                  key={addOn.id}
+                  onClick={() => selectedPlatform && handleAddOnToggle(addOn.id)}
+                  className={`relative group rounded-xl overflow-hidden border-2 transition-all duration-300 cursor-pointer ${
+                    isSelected
+                      ? 'border-[#0FF1CE] shadow-[0_0_20px_rgba(15,241,206,0.3)]'
+                      : 'border-[#2F2F2F]/50 hover:border-[#0FF1CE]/50'
+                  }`}
+                >
+                  <div className="relative p-4 bg-gradient-to-b from-[#151515] to-[#0D0D0D]">
+                    <div className="relative flex items-start gap-3">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border transition-all duration-300 ${
+                        isSelected
+                          ? 'bg-[#0FF1CE]/20 border-[#0FF1CE]/50 text-[#0FF1CE] shadow-[0_0_16px_rgba(15,241,206,0.35)]'
+                          : 'bg-[#1A1A1A] border-[#2F2F2F] text-gray-400 group-hover:text-[#0FF1CE] group-hover:border-[#0FF1CE]/40'
+                      }`}>
+                        <Icon size={22} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <h4 className="font-semibold text-white">{addOn.name}</h4>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                            isSelected
+                              ? 'bg-[#0FF1CE] text-black'
+                              : 'bg-[#0FF1CE]/15 text-[#0FF1CE] border border-[#0FF1CE]/30'
+                          }`}>
+                            FREE
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-400 mb-3">{addOn.description}</p>
+                        <div className="flex items-center justify-between">
+                          <span className={`text-xs font-medium ${isSelected ? 'text-[#0FF1CE]' : 'text-gray-500'}`}>
+                            {isSelected ? 'Added to challenge' : 'Tap to unlock'}
+                          </span>
+                          <div className={`w-6 h-6 rounded border-2 transition-all duration-300 flex items-center justify-center ${
+                            isSelected
+                              ? 'bg-[#0FF1CE] border-[#0FF1CE]'
+                              : 'bg-transparent border-gray-500'
+                          }`}>
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => {}}
+                              className="sr-only"
+                            />
+                            {isSelected && <Check size={14} className="text-black" strokeWidth={3} />}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          
+          {/* Promotional Text - Shows when add-ons are selected */}
+          {selectedAddOns.length > 0 && (
+            <div className="hidden mt-4 p-4 bg-gradient-to-r from-[#FF6B6B]/10 to-[#EE5A24]/10 border border-[#FF6B6B]/30 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-2 h-2 bg-[#FF6B6B] rounded-full animate-pulse"></div>
+                <span className="text-[#FF6B6B] font-semibold text-sm">🎉 SPECIAL OFFER</span>
+              </div>
+              <p className="text-white text-sm">
+                <strong>Add-Ons are free for debit/credit card purchases during our re-launch week only!</strong>
+              </p>
+            </div>
+          )}
+
+          {showCheckoutExtras && (
+            <div className="mt-8 space-y-4 flex-1 flex flex-col">
+              {renderDiscountSection()}
+
+              <div className="hidden lg:block p-4 bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 rounded-lg border border-[#0FF1CE]/20">
+                {renderPriceSection()}
+              </div>
+              <div className="p-4 bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 rounded-lg border border-[#0FF1CE]/20 lg:hidden">
+                {renderPriceSection()}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setAddonsContinued(true);
+                  scrollToStep(5, true);
+                }}
+                className={`mt-auto w-full rounded-xl overflow-hidden border-2 transition-all duration-300 group ${
+                  getStepState(5) === 'upcoming'
+                    ? 'border-[#2F2F2F]/50 hover:border-[#0FF1CE]/50'
+                    : 'border-[#0FF1CE]/40 hover:border-[#0FF1CE] shadow-[0_0_16px_rgba(15,241,206,0.15)] hover:shadow-[0_0_20px_rgba(15,241,206,0.3)]'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-3 px-4 py-3.5 bg-gradient-to-b from-[#151515] to-[#0D0D0D] group-hover:from-[#0FF1CE]/10 group-hover:to-[#0D0D0D] transition-colors">
+                  <div className="text-left min-w-0">
+                    <div className="text-[10px] uppercase tracking-wide text-[#0FF1CE]/80 font-semibold">Next Step</div>
+                    <div className="text-sm sm:text-base font-semibold text-white group-hover:text-[#0FF1CE] transition-colors truncate">
+                      Continue to Your Information
+                    </div>
+                  </div>
+                  <ChevronRight size={20} className="text-[#0FF1CE] shrink-0 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
-      {formErrors.discountCode && (
-        <p className="mt-2 text-red-400 text-sm">{formErrors.discountCode}</p>
-      )}
-      {appliedDiscount && (
-        <div className="mt-2 text-[#0FF1CE] text-sm flex items-center gap-2">
-          <Check size={16} />
-          <span>
-            Discount applied: {appliedDiscount.type === 'percentage' 
-              ? `${appliedDiscount.value}% off` 
-              : `$${appliedDiscount.value} off`}
-          </span>
+    );
+  };
+
+  const renderDiscountSection = () => (
+    <div className="mb-8">
+      {!showDiscountInput && !appliedDiscount ? (
+        <button
+          type="button"
+          onClick={() => setShowDiscountInput(true)}
+          className="w-full rounded-xl overflow-hidden border-2 border-[#2F2F2F]/50 hover:border-[#0FF1CE]/50 transition-all duration-300 group"
+        >
+          <div className="flex items-center justify-center gap-2 px-4 py-3.5 bg-gradient-to-b from-[#151515] to-[#0D0D0D] text-white font-medium group-hover:text-[#0FF1CE] transition-colors">
+            <Tag size={18} className="text-[#0FF1CE]" />
+            <span>Apply Discount</span>
+            <ChevronDown size={16} className="text-gray-400 group-hover:text-[#0FF1CE] transition-colors" />
+          </div>
+        </button>
+      ) : (
+        <div className="rounded-xl overflow-hidden border-2 border-[#2F2F2F]/50 bg-gradient-to-b from-[#151515] to-[#0D0D0D]">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[#2F2F2F]/50">
+            <div className="flex items-center gap-2 text-[#0FF1CE] font-medium text-sm">
+              <Tag size={16} />
+              <span>Discount Code</span>
+            </div>
+            {!appliedDiscount && (
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDiscountInput(false);
+                  setDiscountCode('');
+                  setFormErrors(prev => ({ ...prev, discountCode: undefined }));
+                }}
+                className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+          <div className="p-4">
+            <div className="flex gap-3">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={discountCode}
+                  onChange={(e) => {
+                    setDiscountCode(e.target.value.toUpperCase());
+                    setFormErrors(prev => ({ ...prev, discountCode: undefined }));
+                  }}
+                  onBlur={() => validateDiscountCode(discountCode)}
+                  placeholder="Enter discount code"
+                  className="w-full bg-[#0D0D0D]/80 border border-[#2F2F2F] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#0FF1CE]/50 focus:border-[#0FF1CE]/40 transition-all placeholder:text-gray-600"
+                />
+                {isValidatingCode && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-[#0FF1CE] border-t-transparent"></div>
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => validateDiscountCode(discountCode)}
+                disabled={isValidatingCode || !discountCode}
+                className="bg-[#0FF1CE] text-black px-5 py-3 rounded-lg font-semibold hover:bg-[#0FF1CE]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+              >
+                Apply
+              </button>
+            </div>
+            {formErrors.discountCode && (
+              <p className="mt-2 text-red-400 text-sm">{formErrors.discountCode}</p>
+            )}
+            {appliedDiscount && (
+              <div className="mt-3 text-[#0FF1CE] text-sm flex items-center gap-2 bg-[#0FF1CE]/10 border border-[#0FF1CE]/20 rounded-lg px-3 py-2">
+                <Check size={16} />
+                <span>
+                  Discount applied: {appliedDiscount.type === 'percentage' 
+                    ? `${appliedDiscount.value}% off` 
+                    : `$${appliedDiscount.value} off`}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -1112,6 +1397,8 @@ export default function ChallengePage() {
           </h1>
             </div>
 
+        {renderProgressStepper()}
+
         {/* Launch Day Sale Banner - Mobile Optimized */}
         <div className="mb-8 lg:mb-12 relative space-y-5">
           {/* Launch Sale Promo removed */}
@@ -1145,106 +1432,124 @@ export default function ChallengePage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* First Card - Challenge Selection */}
           <div className="lg:col-span-7 bg-gradient-to-br from-[#1A1A1A]/80 to-[#151515]/80 backdrop-blur-sm rounded-2xl p-6 border border-[#2F2F2F]/50">
-            <div className="mb-8">
-              <h3 className="text-lg font-medium mb-4 text-[#0FF1CE]">Select Challenge Type</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {challengeTypes.map((type) => (
-                  <button
-                    key={type.id}
-                    onClick={() => handleTypeSelect(type.id)}
-                    className={`relative group w-full rounded-xl overflow-hidden border-2 transition-all duration-300 ${
-                      selectedType === type.id
-                        ? 'border-[#0FF1CE] shadow-[0_0_20px_rgba(15,241,206,0.3)]'
-                        : 'border-[#2F2F2F]/50 hover:border-[#0FF1CE]/50'
-                    }`}
-                  >
-                    {/* Image section */}
-                    <div className="relative w-full aspect-[16/12] overflow-hidden flex items-center justify-center bg-gradient-to-b from-[#151515] to-[#0D0D0D]">
-                      <div className="relative w-[85%] h-[85%]">
-                        <Image
-                          src={type.image}
-                          alt={type.name}
-                          fill
-                          className="object-contain"
-                          sizes="(max-width: 768px) 100vw, 33vw"
-                        />
-                      </div>
-                    </div>
-                    
-                    {/* Text section */}
-                    <div className="p-3 bg-[#0D0D0D]">
-                      <h2 className="text-xs lg:text-sm font-bold mb-1 text-white text-center">
-                        {type.name}
-                      </h2>
-                      <div className="h-0.5 w-12 bg-[#0FF1CE] mb-2 rounded mx-auto"></div>
-                      <p className="text-[10px] lg:text-xs text-gray-400 text-center">
-                        {type.description}
-                      </p>
-                    </div>
-                  </button>
-                ))}
+            <div ref={step1Ref} className="flex gap-3 sm:gap-4 mb-2">
+              {renderStepRail(1)}
+              <div className="flex-1 min-w-0 pb-8">
+                <h3 className={`text-lg font-medium mb-4 transition-colors duration-300 ${getStepState(1) === 'upcoming' ? 'text-gray-500' : 'text-[#0FF1CE]'}`}>
+                  Select Challenge Type
+                </h3>
+                <div className="max-md:scale-[1] max-md:origin-top">
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                    {challengeTypes.map((type) => (
+                      <button
+                        key={type.id}
+                        onClick={() => handleTypeSelect(type.id)}
+                        className={`relative group w-full rounded-xl overflow-hidden border-2 transition-all duration-300 ${
+                          selectedType === type.id
+                            ? 'border-[#0FF1CE] shadow-[0_0_20px_rgba(15,241,206,0.3)]'
+                            : 'border-[#2F2F2F]/50 hover:border-[#0FF1CE]/50'
+                        }`}
+                      >
+                        {/* Image section */}
+                        <div className="relative w-full aspect-[16/12] overflow-hidden flex items-center justify-center bg-gradient-to-b from-[#151515] to-[#0D0D0D]">
+                          <div className="relative w-[85%] h-[85%]">
+                            <Image
+                              src={type.image}
+                              alt={type.name}
+                              fill
+                              className="object-contain"
+                              sizes="(max-width: 768px) 100vw, 33vw"
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Text section */}
+                        <div className="p-3 bg-[#0D0D0D]">
+                          <h2 className="text-xs lg:text-sm font-bold mb-1 text-white text-center">
+                            {type.name}
+                          </h2>
+                          <div className="h-0.5 w-12 bg-[#0FF1CE] mb-2 rounded mx-auto"></div>
+                          <p className="text-[10px] lg:text-xs text-gray-400 text-center">
+                            {type.description}
+                          </p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Amount Selection */}
-            <div className={`mb-8 ${selectedType ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
-              <h3 className="text-lg font-medium mb-4 text-[#0FF1CE]">Select Account Size</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                {(selectedType ? challengeTypes.find(type => type.id === selectedType)?.amounts : [])?.map((amount) => (
-                  <button
-                    key={amount}
-                    onClick={() => handleAmountSelect(amount)}
-                    className={`p-3 rounded-lg border-2 transition-all duration-300 ${
-                      selectedAmount === amount
-                        ? 'border-[#0FF1CE] bg-[#0FF1CE]/10 text-[#0FF1CE] shadow-[0_0_15px_rgba(15,241,206,0.2)]'
-                        : 'border-[#2F2F2F]/50 hover:border-[#0FF1CE]/30 text-gray-300'
-                    }`}
-                  >
-                    {amount}
-                  </button>
-                ))}
+            <div
+              ref={step2Ref}
+              className={`flex gap-3 sm:gap-4 mb-2 ${selectedType ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}
+            >
+              {renderStepRail(2)}
+              <div className="flex-1 min-w-0 pb-8">
+                <h3 className={`text-lg font-medium mb-4 transition-colors duration-300 ${getStepState(2) === 'upcoming' ? 'text-gray-500' : 'text-[#0FF1CE]'}`}>
+                  Select Account Size
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {(selectedType ? challengeTypes.find(type => type.id === selectedType)?.amounts : [])?.map((amount) => (
+                    <button
+                      key={amount}
+                      onClick={() => handleAmountSelect(amount)}
+                      className={`relative rounded-xl overflow-hidden border-2 transition-all duration-300 ${
+                        selectedAmount === amount
+                          ? 'border-[#0FF1CE] shadow-[0_0_20px_rgba(15,241,206,0.3)]'
+                          : 'border-[#2F2F2F]/50 hover:border-[#0FF1CE]/50'
+                      }`}
+                    >
+                      <div className={`px-3 py-4 bg-gradient-to-b from-[#151515] to-[#0D0D0D] font-semibold transition-colors ${
+                        selectedAmount === amount ? 'text-[#0FF1CE]' : 'text-gray-300'
+                      }`}>
+                        {amount}
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
             {/* Platform Selection */}
-            <div className={`mb-8 ${selectedAmount ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
-              <h3 className="text-lg font-medium mb-4 text-[#0FF1CE]">Select Platform</h3>
-              <div className="grid grid-cols-2 gap-4">
-                {platforms.map((platform) => (
-                  <button
-                    key={platform}
-                    onClick={() => handlePlatformSelect(platform)}
-                    className={`p-4 rounded-lg border-2 transition-all duration-300 ${
-                      selectedPlatform === platform
-                        ? 'border-[#0FF1CE] bg-[#0FF1CE]/10 text-[#0FF1CE] shadow-[0_0_15px_rgba(15,241,206,0.2)]'
-                        : 'border-[#2F2F2F]/50 hover:border-[#0FF1CE]/30 text-gray-300'
-                    }`}
-                  >
-                    {platform}
-                  </button>
-                ))}
+            <div
+              ref={step3Ref}
+              className={`flex gap-3 sm:gap-4 mb-2 ${selectedAmount ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}
+            >
+              {renderStepRail(3)}
+              <div className="flex-1 min-w-0 pb-8">
+                <h3 className={`text-lg font-medium mb-4 transition-colors duration-300 ${getStepState(3) === 'upcoming' ? 'text-gray-500' : 'text-[#0FF1CE]'}`}>
+                  Select Platform
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  {platforms.map((platform) => (
+                    <button
+                      key={platform}
+                      onClick={() => handlePlatformSelect(platform)}
+                      className={`relative group rounded-xl overflow-hidden border-2 transition-all duration-300 ${
+                        selectedPlatform === platform
+                          ? 'border-[#0FF1CE] shadow-[0_0_20px_rgba(15,241,206,0.3)]'
+                          : 'border-[#2F2F2F]/50 hover:border-[#0FF1CE]/50'
+                      }`}
+                    >
+                      <div className="relative w-full aspect-[16/7] overflow-hidden flex items-center justify-center bg-gradient-to-b from-[#151515] to-[#0D0D0D] px-4">
+                        <Image
+                          src={platformImages[platform]}
+                          alt={platform}
+                          width={160}
+                          height={44}
+                          className="object-contain w-full max-w-[140px] h-auto"
+                        />
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* Add-ons Selection */}
+            {/* Add-ons Selection + discount, price, continue */}
             {renderAddOnsSection()}
-
-            {/* Discount Code */}
-            {selectedType && selectedAmount && selectedPlatform && (
-              <>
-                {renderDiscountSection()}
-                
-                {/* Desktop Price Display - Below Discount */}
-                <div className="hidden lg:block p-4 bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 rounded-lg border border-[#0FF1CE]/20">
-                  {renderPriceSection()}
-                </div>
-                
-                {/* Mobile Price Display - Original */}
-                <div className="p-4 bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 rounded-lg border border-[#0FF1CE]/20 lg:hidden">
-                  {renderPriceSection()}
-                </div>
-              </>
-            )}
           </div>
 
           {/* Second Card - Challenge Details */}
@@ -1283,10 +1588,18 @@ export default function ChallengePage() {
         </div>
 
         {/* Personal Information Section - Full Width Mobile First */}
-        <div className="mt-8 lg:mt-12 bg-gradient-to-br from-[#1A1A1A]/80 to-[#151515]/80 backdrop-blur-sm rounded-2xl p-6 lg:p-8 border border-[#2F2F2F]/50">
-          <h3 className="text-xl lg:text-2xl font-bold text-[#0FF1CE] mb-6 text-center">Your Information</h3>
+        <div
+          ref={step5Ref}
+          className="mt-8 lg:mt-12 bg-gradient-to-br from-[#1A1A1A]/80 to-[#151515]/80 backdrop-blur-sm rounded-2xl p-6 lg:p-8 border border-[#2F2F2F]/50"
+        >
+          <div className="flex items-center justify-center gap-3 mb-6">
+            {renderStepCircle(5)}
+            <h3 className={`text-xl lg:text-2xl font-bold transition-colors duration-300 ${getStepState(5) === 'upcoming' ? 'text-gray-500' : 'text-[#0FF1CE]'}`}>
+              Your Information
+            </h3>
+          </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6 max-w-4xl mx-auto">
+          <div className="grid grid-cols-2 gap-3 md:gap-4 lg:gap-6 max-w-4xl mx-auto">
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-2">First Name</label>
                 <input
@@ -1294,8 +1607,8 @@ export default function ChallengePage() {
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleInputChange}
-                className={`w-full bg-[#151515]/50 backdrop-blur-sm border ${formErrors.firstName ? 'border-red-500' : 'border-[#2F2F2F]'} rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#0FF1CE]/50 focus:border-transparent transition-all`}
-                placeholder="Enter your first name"
+                className={`w-full bg-[#151515]/50 backdrop-blur-sm border ${formErrors.firstName ? 'border-red-500' : 'border-[#2F2F2F]'} rounded-lg px-3 py-2.5 md:px-4 md:py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#0FF1CE]/50 focus:border-transparent transition-all`}
+                placeholder="First Name"
                 />
               {formErrors.firstName && <p className="mt-1 text-sm text-red-400 flex items-center gap-1"><AlertCircle size={14} />{formErrors.firstName}</p>}
               </div>
@@ -1307,8 +1620,8 @@ export default function ChallengePage() {
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleInputChange}
-                className={`w-full bg-[#151515]/50 backdrop-blur-sm border ${formErrors.lastName ? 'border-red-500' : 'border-[#2F2F2F]'} rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#0FF1CE]/50 focus:border-transparent transition-all`}
-                placeholder="Enter your last name"
+                className={`w-full bg-[#151515]/50 backdrop-blur-sm border ${formErrors.lastName ? 'border-red-500' : 'border-[#2F2F2F]'} rounded-lg px-3 py-2.5 md:px-4 md:py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#0FF1CE]/50 focus:border-transparent transition-all`}
+                placeholder="Last Name"
                 />
               {formErrors.lastName && <p className="mt-1 text-sm text-red-400 flex items-center gap-1"><AlertCircle size={14} />{formErrors.lastName}</p>}
               </div>
@@ -1320,8 +1633,8 @@ export default function ChallengePage() {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                className={`w-full bg-[#151515]/50 backdrop-blur-sm border ${formErrors.email ? 'border-red-500' : 'border-[#2F2F2F]'} rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#0FF1CE]/50 focus:border-transparent transition-all`}
-                placeholder="your@email.com"
+                className={`w-full bg-[#151515]/50 backdrop-blur-sm border ${formErrors.email ? 'border-red-500' : 'border-[#2F2F2F]'} rounded-lg px-3 py-2.5 md:px-4 md:py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#0FF1CE]/50 focus:border-transparent transition-all`}
+                placeholder="Email"
                 />
               {formErrors.email && <p className="mt-1 text-sm text-red-400 flex items-center gap-1"><AlertCircle size={14} />{formErrors.email}</p>}
               </div>
@@ -1333,8 +1646,8 @@ export default function ChallengePage() {
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
-                className={`w-full bg-[#151515]/50 backdrop-blur-sm border ${formErrors.phone ? 'border-red-500' : 'border-[#2F2F2F]'} rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#0FF1CE]/50 focus:border-transparent transition-all`}
-                placeholder="+1 (555) 000-0000"
+                className={`w-full bg-[#151515]/50 backdrop-blur-sm border ${formErrors.phone ? 'border-red-500' : 'border-[#2F2F2F]'} rounded-lg px-3 py-2.5 md:px-4 md:py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#0FF1CE]/50 focus:border-transparent transition-all`}
+                placeholder="Phone"
                 />
               {formErrors.phone && <p className="mt-1 text-sm text-red-400 flex items-center gap-1"><AlertCircle size={14} />{formErrors.phone}</p>}
               </div>
@@ -1345,9 +1658,9 @@ export default function ChallengePage() {
                   name="country"
                   value={formData.country}
                   onChange={handleInputChange}
-                className={`w-full bg-[#151515]/50 backdrop-blur-sm border ${formErrors.country ? 'border-red-500' : 'border-[#2F2F2F]'} rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#0FF1CE]/50 focus:border-transparent transition-all`}
+                className={`w-full bg-[#151515]/50 backdrop-blur-sm border ${formErrors.country ? 'border-red-500' : 'border-[#2F2F2F]'} rounded-lg px-3 py-2.5 md:px-4 md:py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#0FF1CE]/50 focus:border-transparent transition-all`}
                 >
-                  <option value="">Select a country</option>
+                  <option value="">Country</option>
                   {countries.map((country) => (
                     <option key={country.code} value={country.code}>
                       {country.name}
@@ -1358,14 +1671,17 @@ export default function ChallengePage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Discord Username (Optional)</label>
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  <span className="md:hidden">Discord (Optional)</span>
+                  <span className="hidden md:inline">Discord Username (Optional)</span>
+                </label>
                 <input
                   type="text"
                   name="discordUsername"
                   value={formData.discordUsername}
                   onChange={handleInputChange}
-                className="w-full bg-[#151515]/50 backdrop-blur-sm border border-[#2F2F2F] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#0FF1CE]/50 focus:border-transparent transition-all"
-                placeholder="username#0000"
+                className="w-full bg-[#151515]/50 backdrop-blur-sm border border-[#2F2F2F] rounded-lg px-3 py-2.5 md:px-4 md:py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#0FF1CE]/50 focus:border-transparent transition-all"
+                placeholder="Discord Username"
                 />
             </div>
               </div>
@@ -1382,7 +1698,12 @@ export default function ChallengePage() {
                 className="mt-1 w-4 h-4 rounded border-gray-600 text-[#0FF1CE] focus:ring-[#0FF1CE] focus:ring-offset-0 bg-[#1A1A1A]/50"
                   />
                   <label htmlFor="disclaimer" className="text-sm text-gray-400">
-                    I acknowledge that Shockwave Capital provides a simulated trading environment and that all activity is for educational and evaluative purposes only. I agree to the{' '}
+                    <span className="md:hidden">
+                      I understand Shockwave Capital is a simulated trading environment for educational and evaluative purposes only. I agree to the{' '}
+                    </span>
+                    <span className="hidden md:inline">
+                      I acknowledge that Shockwave Capital provides a simulated trading environment and that all activity is for educational and evaluative purposes only. I agree to the{' '}
+                    </span>
                     <Link href="/disclaimer" className="text-[#0FF1CE] hover:underline">
                       Disclaimer
                     </Link>, {' '}
