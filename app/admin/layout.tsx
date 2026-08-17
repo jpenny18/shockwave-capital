@@ -23,7 +23,8 @@ import {
   DollarSign,
   CreditCard,
   FlaskConical,
-  ToggleLeft
+  ToggleLeft,
+  Crown
 } from 'lucide-react';
 
 const navItems = [
@@ -33,6 +34,7 @@ const navItems = [
   { name: 'Card Orders', href: '/admin/card-orders', icon: CreditCard },
   { name: 'Customers', href: '/admin/customers', icon: Users },
   { name: 'KYC Management', href: '/admin/kyc', icon: Shield },
+  { name: 'VIP Portal', href: '/admin/vip', icon: Crown },
   { name: 'Withdrawals', href: '/admin/withdrawals', icon: DollarSign },
   { name: 'MetaAPI Accounts', href: '/admin/accounts', icon: Server },
   { name: 'Email Templates', href: '/admin/emails', icon: Mail },

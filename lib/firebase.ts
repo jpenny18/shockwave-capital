@@ -10,7 +10,8 @@ import {
   getDocs,
   query,
   where,
-  setDoc
+  setDoc,
+  deleteDoc
 } from 'firebase/firestore';
 import { 
   getAuth, 
@@ -212,6 +213,47 @@ export interface WithdrawalRequest {
   reviewedAt?: Timestamp;
   reviewedBy?: string;
   reviewNotes?: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+/**
+ * Interface for a VIP activation offer (admin-unlocked, per-user)
+ * Doc ID = userId in the 'vipActivations' collection.
+ * Presence of the doc unlocks the /dashboard/vip page for that user.
+ */
+export interface VIPActivation {
+  userId: string;
+  userEmail: string;
+  // Offer details (set by admin)
+  accountSize: string; // e.g. '$3M'
+  tierName?: string; // e.g. 'Institutional'
+  price: number; // custom/agreed price, e.g. 8999
+  publicPrice?: number; // public listed price, e.g. 14999 (for strikethrough display)
+  adminNotes?: string;
+  enabledAt: Timestamp;
+  enabledBy: string;
+  // Payment tracking
+  paymentStatus: 'unpaid' | 'pending' | 'completed';
+  platform?: string; // 'MT4' | 'MT5' - chosen by user at payment time
+  cryptoOrderId?: string; // linked doc id in 'crypto-orders'
+  paymentSubmittedAt?: Timestamp;
+  paymentCompletedAt?: Timestamp;
+  // KYB (corporate documents + terms acceptance)
+  kybStatus: 'not_submitted' | 'pending' | 'approved' | 'rejected' | 'needs_resubmission';
+  companyName?: string;
+  documents: {
+    corporateDocs?: Array<{
+      url: string;
+      fileName: string;
+      uploadedAt: Timestamp;
+    }>;
+    agreementSignedAt?: Timestamp;
+  };
+  kybSubmittedAt?: Timestamp;
+  reviewNotes?: string;
+  reviewedAt?: Timestamp;
+  reviewedBy?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -1051,5 +1093,188 @@ export async function isUserEligibleForWithdrawal(userId: string): Promise<boole
   } catch (error) {
     console.error('Error checking withdrawal eligibility:', error);
     return false;
+  }
+}
+
+/**
+ * Enable (unlock) the VIP portal for a user with a custom offer (admin only)
+ * @param userId The user ID
+ * @param userEmail The user's email
+ * @param offer The offer details (account size, custom price, etc.)
+ * @param enabledBy Admin who enabled
+ * @returns The user ID (doc ID)
+ */
+export async function enableVIPActivation(
+  userId: string,
+  userEmail: string,
+  offer: {
+    accountSize: string;
+    tierName?: string;
+    price: number;
+    publicPrice?: number;
+    adminNotes?: string;
+  },
+  enabledBy: string
+): Promise<string> {
+  try {
+    const vipRef = doc(db, 'vipActivations', userId);
+    
+    const data: any = {
+      userId,
+      userEmail,
+      accountSize: offer.accountSize,
+      price: offer.price,
+      paymentStatus: 'unpaid',
+      kybStatus: 'not_submitted',
+      documents: {},
+      enabledAt: Timestamp.now(),
+      enabledBy,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now()
+    };
+    
+    if (offer.tierName) data.tierName = offer.tierName;
+    if (offer.publicPrice !== undefined) data.publicPrice = offer.publicPrice;
+    if (offer.adminNotes) data.adminNotes = offer.adminNotes;
+    
+    await setDoc(vipRef, data);
+    
+    return userId;
+  } catch (error) {
+    console.error('Error enabling VIP activation:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get VIP activation by user ID
+ * @param userId The user ID
+ * @returns The VIP activation data or null
+ */
+export async function getVIPActivation(userId: string): Promise<VIPActivation | null> {
+  try {
+    const vipRef = doc(db, 'vipActivations', userId);
+    const vipSnap = await getDoc(vipRef);
+    
+    if (vipSnap.exists()) {
+      return vipSnap.data() as VIPActivation;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching VIP activation:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get all VIP activations (admin only)
+ * @returns Array of VIP activations
+ */
+export async function getAllVIPActivations(): Promise<(VIPActivation & { id: string })[]> {
+  try {
+    const vipRef = collection(db, 'vipActivations');
+    const querySnapshot = await getDocs(query(vipRef));
+    const activations: (VIPActivation & { id: string })[] = [];
+    
+    querySnapshot.forEach((doc) => {
+      activations.push({ 
+        ...(doc.data() as VIPActivation), 
+        id: doc.id 
+      });
+    });
+    
+    return activations;
+  } catch (error) {
+    console.error('Error fetching VIP activations:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update a VIP activation (merges the documents field like KYC submissions)
+ * @param userId The user ID
+ * @param vipData Partial data to update
+ */
+export async function updateVIPActivation(
+  userId: string,
+  vipData: Partial<VIPActivation>
+): Promise<void> {
+  try {
+    const vipRef = doc(db, 'vipActivations', userId);
+    const existingDoc = await getDoc(vipRef);
+    
+    if (!existingDoc.exists()) {
+      throw new Error('VIP activation not found');
+    }
+    
+    const existingData = existingDoc.data() as VIPActivation;
+    
+    const mergedData: any = {
+      ...vipData,
+      updatedAt: Timestamp.now()
+    };
+    
+    // If documents field is being updated, merge it with existing documents
+    if (vipData.documents) {
+      mergedData.documents = {
+        ...existingData.documents,
+        ...vipData.documents
+      };
+    }
+    
+    await updateDoc(vipRef, mergedData);
+  } catch (error) {
+    console.error('Error updating VIP activation:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update VIP KYB review status (admin only)
+ * @param userId The user ID
+ * @param kybStatus The new KYB status
+ * @param reviewNotes Optional review notes
+ * @param reviewedBy The reviewer's ID
+ */
+export async function updateVIPKybStatus(
+  userId: string,
+  kybStatus: VIPActivation['kybStatus'],
+  reviewNotes?: string,
+  reviewedBy?: string
+): Promise<void> {
+  try {
+    const vipRef = doc(db, 'vipActivations', userId);
+    const updateData: any = {
+      kybStatus,
+      reviewedAt: Timestamp.now(),
+      updatedAt: Timestamp.now()
+    };
+    
+    if (reviewNotes) {
+      updateData.reviewNotes = reviewNotes;
+    }
+    
+    if (reviewedBy) {
+      updateData.reviewedBy = reviewedBy;
+    }
+    
+    await updateDoc(vipRef, updateData);
+  } catch (error) {
+    console.error('Error updating VIP KYB status:', error);
+    throw error;
+  }
+}
+
+/**
+ * Delete (revoke) a VIP activation - locks the VIP portal for that user again (admin only)
+ * @param userId The user ID
+ */
+export async function deleteVIPActivation(userId: string): Promise<void> {
+  try {
+    const vipRef = doc(db, 'vipActivations', userId);
+    await deleteDoc(vipRef);
+  } catch (error) {
+    console.error('Error deleting VIP activation:', error);
+    throw error;
   }
 } 

@@ -10,6 +10,9 @@ interface CryptoPaymentProps {
   successRedirectPath: string;
   onProcessingStateChange: (state: boolean) => void;
   cryptoPrices: CryptoPrice;
+  // Optional: when provided, called with the created order ID instead of redirecting.
+  // Existing flows that don't pass this keep the default redirect behavior.
+  onPaymentSubmitted?: (orderId: string) => void;
 }
 
 interface CryptoPrice {
@@ -33,7 +36,7 @@ const CRYPTO_ADDRESSES: CryptoAddress = {
   USDC: '8ShmNrRPeN1KaCixPhPWPQTvZJn9a8s7oqsCdhoJgeJj'  // Replace with your actual USDC address (Solana)
 };
 
-export default function CryptoPayment({ challengeData, successRedirectPath, onProcessingStateChange, cryptoPrices }: CryptoPaymentProps) {
+export default function CryptoPayment({ challengeData, successRedirectPath, onProcessingStateChange, cryptoPrices, onPaymentSubmitted }: CryptoPaymentProps) {
   const router = useRouter();
   const [selectedCrypto, setSelectedCrypto] = useState<'BTC' | 'ETH' | 'USDT' | 'USDC'>('BTC');
   const [cryptoAmount, setCryptoAmount] = useState<CryptoPrice>({ BTC: 0, ETH: 0, USDT: 0, USDC: 0 });
@@ -142,7 +145,14 @@ export default function CryptoPayment({ challengeData, successRedirectPath, onPr
         console.error('Error sending order emails:', emailError);
       }
 
-      router.push('/challenge/cryptopending');
+      if (onPaymentSubmitted) {
+        // Caller handles the success state in-page (e.g. dashboard VIP portal)
+        setIsLoading(false);
+        onProcessingStateChange(false);
+        onPaymentSubmitted(orderId);
+      } else {
+        router.push('/challenge/cryptopending');
+      }
     } catch (error) {
       setError('Failed to submit order. Please try again.');
       setIsLoading(false);

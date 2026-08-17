@@ -15,9 +15,10 @@ import {
   Shield,
   Calculator,
   BookOpen,
-  Award
+  Award,
+  Crown
 } from 'lucide-react';
-import { auth, signOut } from '@/lib/firebase';
+import { auth, signOut, getVIPActivation } from '@/lib/firebase';
 import { useRouter, usePathname } from 'next/navigation';
 
 const navItems = [
@@ -42,6 +43,7 @@ export default function DashboardLayout({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [initials, setInitials] = useState('');
+  const [hasVipAccess, setHasVipAccess] = useState(false);
 
   useEffect(() => {
     // Listen for auth state changes
@@ -54,6 +56,10 @@ export default function DashboardLayout({
         } else {
           setInitials(user.email?.[0].toUpperCase() || '');
         }
+        // Show the VIP nav item only for users unlocked by an admin
+        getVIPActivation(user.uid)
+          .then((vip) => setHasVipAccess(!!vip))
+          .catch(() => setHasVipAccess(false));
       } else {
         // If no user, redirect to landing page
         router.push('/');
@@ -62,6 +68,14 @@ export default function DashboardLayout({
 
     return () => unsubscribe();
   }, [router]);
+
+  const visibleNavItems = hasVipAccess
+    ? [
+        ...navItems.slice(0, 2),
+        { name: 'VIP Portal', href: '/dashboard/vip', icon: Crown },
+        ...navItems.slice(2)
+      ]
+    : navItems;
 
   const handleLogout = async () => {
     try {
@@ -120,7 +134,7 @@ export default function DashboardLayout({
           </div>
           
           <nav className="flex-1 space-y-1">
-            {navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = item.href === '/dashboard'
                 ? pathname === '/dashboard'
