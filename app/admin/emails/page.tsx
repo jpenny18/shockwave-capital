@@ -21,8 +21,19 @@ import {
 import { getAllUsers, UserData, db, getCachedMetrics } from '@/lib/firebase';
 import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
 
+interface EmailTemplate {
+  id: number;
+  name: string;
+  subject: string;
+  body: string;
+  variables: string[];
+  lastUpdated: string;
+  isBulkTemplate?: boolean;
+  bulkSource?: 'gauntlet-activation' | 'active-accounts';
+}
+
 // Enhanced email templates with improved login credentials template
-const initialTemplates = [
+const initialTemplates: EmailTemplate[] = [
   {
     id: 1,
     name: 'Welcome Email',
@@ -798,17 +809,6 @@ const initialTemplates = [
   }
 ];
 
-interface EmailTemplate {
-  id: number;
-  name: string;
-  subject: string;
-  body: string;
-  variables: string[];
-  lastUpdated: string;
-  isBulkTemplate?: boolean;
-  bulkSource?: 'gauntlet-activation' | 'active-accounts';
-}
-
 interface TestValues {
   [key: string]: string;
 }
@@ -863,7 +863,7 @@ function formatAccountSize(accountSize: unknown): string {
 }
 
 export default function EmailTemplatesPage() {
-  const [templates, setTemplates] = useState(initialTemplates);
+  const [templates, setTemplates] = useState<EmailTemplate[]>(initialTemplates);
   const [isEditing, setIsEditing] = useState(false);
   const [currentTemplate, setCurrentTemplate] = useState<EmailTemplate | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -1094,7 +1094,7 @@ export default function EmailTemplatesPage() {
   }).slice(0, 10); // Limit to 10 results
 
   const handleCreateNew = () => {
-    const newTemplate = {
+    const newTemplate: EmailTemplate = {
       id: Date.now(),
       name: 'New Template',
       subject: 'New Email Subject',
@@ -1151,7 +1151,7 @@ export default function EmailTemplatesPage() {
   const handleSave = () => {
     if (!currentTemplate) return;
     
-    const updatedTemplate = {
+    const updatedTemplate: EmailTemplate = {
       ...currentTemplate,
       lastUpdated: new Date().toISOString().split('T')[0]
     };
