@@ -571,13 +571,17 @@ export async function sendTemplateEmail(
       .replace(/<[^>]*>/g, '')
       .replace(/\n\s*\n/g, '\n\n')
       .trim();
+
+    // Full HTML templates already include their own layout — don't wrap them again
+    const isFullHtmlDocument = /^\s*<(!DOCTYPE|html)/i.test(processedBody);
+    const htmlToSend = isFullHtmlDocument ? processedBody : styledBody;
     
     // Send customer email
     const { data, error } = await resend.emails.send({
       from: 'support@shockwave-capital.com',
       to: user.email,
       subject: processedSubject,
-      html: styledBody,
+      html: htmlToSend,
       text: `
         ${processedSubject}
         
