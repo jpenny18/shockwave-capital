@@ -306,73 +306,74 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
   */
 };
 
-// Promotional Modal - Introducing Shockwave VIP
+// Promotional Modal - Buy 1 Get 1 Free (2FOR1)
 const VipAnnouncementModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  const [copied, setCopied] = useState(false);
+
   if (!isOpen) return null;
+
+  const handleCopyCode = () => {
+    navigator.clipboard.writeText('2FOR1');
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm overflow-y-auto">
       <div className="min-h-full flex items-start md:items-center justify-center p-4 pt-8 md:pt-12 pb-8 md:pb-12">
-        <div className="relative w-full max-w-lg mx-auto" style={{ transform: 'scale(0.75)' }}>
-          {/* Close Button */}
+        <div className="relative w-full max-w-lg mx-auto" style={{ transform: 'scale(0.95)' }}>
           <button
             onClick={onClose}
             className="absolute -top-2 -right-2 z-10 w-10 h-10 bg-white text-black rounded-full flex items-center justify-center font-bold hover:scale-110 transition-transform shadow-lg text-2xl"
+            aria-label="Close modal"
           >
             ×
           </button>
 
-          {/* Modal Content */}
           <div className="relative bg-gradient-to-br from-[#0D0D0D] via-[#121212] to-[#0D0D0D] border-2 border-[#0FF1CE]/30 rounded-3xl overflow-hidden shadow-2xl p-8">
-            {/* Promo Badge */}
             <div className="absolute top-0 right-0 bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black px-6 py-2 rounded-bl-2xl font-bold text-sm shadow-lg">
-              NEW: VIP PROGRAM
+              LIMITED OFFER
             </div>
 
-            {/* Content */}
             <div className="text-center pt-6">
-              {/* Main Heading */}
               <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-2">
-                Shockwave VIP
+                Buy 1, Get 1 Free
               </h2>
-
-              {/* Subheading */}
               <div className="bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-transparent bg-clip-text text-2xl md:text-3xl font-bold mb-8">
-                $1,000,000+ Funded  Accounts
+                Two Challenges. One Price.
               </div>
 
-              {/* Key Benefits */}
-              <div className="space-y-3 mb-8 text-left max-w-md mx-auto">
+              <div className="space-y-3 mb-6 text-left max-w-md mx-auto">
                 <div className="flex items-start gap-3 bg-[#1A1A1A]/50 p-4 rounded-lg border border-[#0FF1CE]/20">
                   <div className="text-[#0FF1CE] text-2xl mt-1 font-bold">•</div>
                   <div>
-                    <div className="text-white font-bold text-lg">Simple Rules, Big Capital</div>
-                    <div className="text-gray-400 text-sm">15% drawdown, no consistency or extra rules</div>
+                    <div className="text-white font-bold text-lg">Two of the Same Account</div>
+                    <div className="text-gray-400 text-sm">Buy any challenge and we activate a second identical account at no extra cost</div>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3 bg-[#1A1A1A]/50 p-4 rounded-lg border border-[#0FF1CE]/20">
                   <div className="text-[#0FF1CE] text-2xl mt-1 font-bold">•</div>
                   <div>
-                    <div className="text-white font-bold text-lg">VIP Support</div>
-                    <div className="text-gray-400 text-sm">24/7 account manager & VIP dashboard</div>
+                    <div className="text-white font-bold text-lg">Same Size, Same Type</div>
+                    <div className="text-gray-400 text-sm">The free account matches the challenge you purchase</div>
                   </div>
                 </div>
-
-                <div className="flex items-start gap-3 bg-[#1A1A1A]/50 p-4 rounded-lg border border-[#0FF1CE]/20">
-                  <div className="text-[#0FF1CE] text-2xl mt-1 font-bold">•</div>
-                  <div>
-                    <div className="text-white font-bold text-lg">80% Profit Split</div>
-                    <div className="text-gray-400 text-sm">$1M, $2M & $3M allocations</div>
-                  </div>
-                </div>
-           
               </div>
 
-              {/* CTA Button */}
-              <Link href="/vip" onClick={onClose}>
+              <button
+                type="button"
+                onClick={handleCopyCode}
+                className="w-full mb-6 bg-[#0FF1CE]/10 border border-[#0FF1CE]/40 rounded-xl px-4 py-4 hover:bg-[#0FF1CE]/15 transition-colors"
+              >
+                <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Promo Code</div>
+                <div className="text-[#0FF1CE] font-extrabold text-3xl tracking-widest">2FOR1</div>
+                <div className="text-gray-400 text-xs mt-1">{copied ? 'Copied' : 'Click to copy'}</div>
+              </button>
+
+              <Link href="/challenge" onClick={onClose}>
                 <button className="w-full bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black font-bold py-4 px-8 rounded-xl hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(15,241,206,0.4)] hover:shadow-[0_0_30px_rgba(15,241,206,0.6)] text-lg">
-                  EXPLORE VIP ALLOCATIONS →
+                  CLAIM 2FOR1 OFFER
                 </button>
               </Link>
             </div>
