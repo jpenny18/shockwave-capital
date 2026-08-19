@@ -30,7 +30,8 @@ import {
   ArrowLeft,
   Building2,
   Bitcoin,
-  Eye
+  Eye,
+  Check
 } from 'lucide-react';
 
 interface CryptoPrice {
@@ -75,6 +76,8 @@ export default function VIPPortalPage() {
   const [companyName, setCompanyName] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [agreementAccepted, setAgreementAccepted] = useState(false);
+  const [customTermsAccepted, setCustomTermsAccepted] = useState(false);
+  const [activeTermsTab, setActiveTermsTab] = useState<'funded' | 'custom'>('funded');
   const [isSubmittingKyb, setIsSubmittingKyb] = useState(false);
   const [kybError, setKybError] = useState('');
 
@@ -222,6 +225,9 @@ export default function VIPPortalPage() {
 
   const existingDocs = activation?.documents?.corporateDocs || [];
   const agreementAlreadySigned = !!activation?.documents?.agreementSignedAt;
+  const hasCustomTerms = !!activation?.customTerms?.content;
+  const customTermsTitle = activation?.customTerms?.title || 'Additional Account Terms';
+  const customTermsAlreadySigned = !!activation?.documents?.customTermsSignedAt;
 
   const handleKybSubmit = async () => {
     if (!user || !activation) return;
@@ -232,6 +238,10 @@ export default function VIPPortalPage() {
     }
     if (!agreementAlreadySigned && !agreementAccepted) {
       setKybError('Please review and accept the account terms');
+      return;
+    }
+    if (hasCustomTerms && !customTermsAlreadySigned && !customTermsAccepted) {
+      setKybError(`Please review and accept the ${customTermsTitle}`);
       return;
     }
 
@@ -258,6 +268,9 @@ export default function VIPPortalPage() {
       };
       if (!agreementAlreadySigned) {
         documentsUpdate.agreementSignedAt = Timestamp.now();
+      }
+      if (hasCustomTerms && !customTermsAlreadySigned) {
+        documentsUpdate.customTermsSignedAt = Timestamp.now();
       }
 
       const update: Partial<VIPActivation> = {
@@ -359,6 +372,63 @@ export default function VIPPortalPage() {
     activation.kybStatus === 'rejected' ||
     activation.kybStatus === 'needs_resubmission';
 
+  // Step flow: 1 Payment -> 2 Terms -> 3 Documents (steps stay interactive; the rail is a visual guide)
+  const paymentStepDone =
+    activation.paymentStatus === 'pending' || activation.paymentStatus === 'completed';
+  const termsStepDone =
+    (agreementAlreadySigned || agreementAccepted) &&
+    (!hasCustomTerms || customTermsAlreadySigned || customTermsAccepted);
+  const docsStepDone =
+    activation.kybStatus === 'pending' || activation.kybStatus === 'approved';
+  const stepDoneList = [paymentStepDone, termsStepDone, docsStepDone];
+  const currentVipStep = !paymentStepDone ? 1 : !termsStepDone ? 2 : !docsStepDone ? 3 : 4;
+
+  const getVipStepState = (step: number): 'complete' | 'current' | 'upcoming' => {
+    if (stepDoneList[step - 1]) return 'complete';
+    if (step === currentVipStep) return 'current';
+    return 'upcoming';
+  };
+
+  const renderStepCircle = (step: number) => {
+    const state = getVipStepState(step);
+    return (
+      <div
+        className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all duration-500 shrink-0 ${
+          state === 'complete'
+            ? 'bg-[#0FF1CE] border-[#0FF1CE] text-black shadow-[0_0_12px_rgba(15,241,206,0.45)]'
+            : state === 'current'
+              ? 'bg-[#0FF1CE]/15 border-[#0FF1CE] text-[#0FF1CE] shadow-[0_0_12px_rgba(15,241,206,0.35)]'
+              : 'bg-[#151515] border-[#2F2F2F] text-gray-500'
+        }`}
+      >
+        {state === 'complete' ? <Check size={16} strokeWidth={3} /> : step}
+      </div>
+    );
+  };
+
+  const renderStepRail = (step: number, showConnector = true) => {
+    const state = getVipStepState(step);
+    const connectorFilled = stepDoneList[step - 1];
+    return (
+      <div className="flex flex-col items-center self-stretch shrink-0">
+        {renderStepCircle(step)}
+        {showConnector && (
+          <div className="w-0.5 flex-1 min-h-[1.5rem] mt-2 bg-[#2F2F2F] rounded-full overflow-hidden relative">
+            <div
+              className="absolute top-0 left-0 right-0 bg-gradient-to-b from-[#0FF1CE] to-[#00D4FF] transition-all duration-700 ease-out rounded-full"
+              style={{ height: connectorFilled ? '100%' : state === 'current' ? '40%' : '0%' }}
+            />
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const stepHeadingClass = (step: number) =>
+    `text-lg font-semibold mb-3 flex items-center gap-2 transition-colors duration-300 ${
+      getVipStepState(step) === 'upcoming' ? 'text-gray-500' : 'text-[#0FF1CE]'
+    }`;
+
   return (
     <div className="relative max-w-4xl mx-auto">
       {/* Decorative glow orbs */}
@@ -378,7 +448,7 @@ export default function VIPPortalPage() {
           </div>
         </div>
         <p className="text-gray-400">
-          Your exclusive VIP allocation offer. Complete the payment and submit your corporate documents below.
+          Your exclusive VIP allocation offer. Complete the three steps below to activate your allocation.
         </p>
       </div>
 
@@ -426,8 +496,15 @@ export default function VIPPortalPage() {
         </div>
       </div>
 
-      {/* Payment Section */}
-      <div className="bg-gradient-to-br from-[#1A1A1A]/80 to-[#151515]/80 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-[#2F2F2F]/50 mb-8 relative">
+      {/* Step 1: Payment */}
+      <div className="flex gap-3 sm:gap-4">
+        {renderStepRail(1)}
+        <div className="flex-1 min-w-0 pb-8">
+          <h2 className={stepHeadingClass(1)}>
+            <Bitcoin className="w-5 h-5" />
+            Payment
+          </h2>
+          <div className="bg-gradient-to-br from-[#1A1A1A]/80 to-[#151515]/80 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-[#2F2F2F]/50 relative">
         {isProcessingPayment && (
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 rounded-2xl">
             <div className="text-center">
@@ -436,11 +513,6 @@ export default function VIPPortalPage() {
             </div>
           </div>
         )}
-
-        <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-          <Bitcoin className="w-6 h-6 text-[#0FF1CE]" />
-          Payment
-        </h2>
 
         {activation.paymentStatus === 'completed' && (
           <div className="text-center py-8">
@@ -623,174 +695,65 @@ export default function VIPPortalPage() {
             </div>
           </div>
         )}
+          </div>
+        </div>
       </div>
 
-      {/* Corporate Documents & Terms (KYB) Section */}
-      <div className="bg-gradient-to-br from-[#1A1A1A]/80 to-[#151515]/80 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-[#2F2F2F]/50 mb-8">
-        <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-          <Building2 className="w-6 h-6 text-[#0FF1CE]" />
-          Corporate Documents & Account Terms
-        </h2>
-        <p className="text-gray-400 mb-6">
-          Upload your corporate/KYB documents and accept the account terms. Our team will review your submission for approval.
-        </p>
-
-        {activation.kybStatus === 'approved' && (
-          <div className="text-center py-8">
-            <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="w-10 h-10 text-green-500" />
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-2">Documents Approved</h3>
-            <p className="text-gray-400 max-w-xl mx-auto">
-              Your corporate documents have been reviewed and approved. Our team will be in touch with your
-              account credentials and next steps shortly.
+      {/* Step 2: Review & accept terms */}
+      <div className="flex gap-3 sm:gap-4">
+        {renderStepRail(2)}
+        <div className="flex-1 min-w-0 pb-8">
+          <h2 className={stepHeadingClass(2)}>
+            <Shield className="w-5 h-5" />
+            Review &amp; Accept Terms
+          </h2>
+          <div className="bg-gradient-to-br from-[#1A1A1A]/80 to-[#151515]/80 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-[#2F2F2F]/50">
+            <p className="text-gray-400 text-sm mb-4">
+              {hasCustomTerms
+                ? 'Your account has two agreements. Open each tab, review it carefully, then sign both electronically below.'
+                : 'Review the agreement carefully, then sign it electronically below.'}
             </p>
-            {existingDocs.length > 0 && (
-              <div className="mt-6 max-w-md mx-auto text-left space-y-2">
-                {existingDocs.map((docItem, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 bg-[#151515]/50 rounded-lg border border-[#2F2F2F]">
-                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                    <span className="text-white text-sm truncate">{docItem.fileName}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {activation.kybStatus === 'pending' && (
-          <div className="text-center py-8">
-            <div className="w-20 h-20 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Clock className="w-10 h-10 text-yellow-500" />
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-2">Documents Under Review</h3>
-            <p className="text-gray-400 mb-6 max-w-xl mx-auto">
-              Your submission has been received and is currently under review.
-              This typically takes 1-2 business days. We'll notify you once the review is complete.
-            </p>
-            {existingDocs.length > 0 && (
-              <div className="max-w-md mx-auto text-left space-y-2">
-                {existingDocs.map((docItem, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 bg-[#151515]/50 rounded-lg border border-[#2F2F2F]">
-                    <FileText className="w-4 h-4 text-[#0FF1CE] flex-shrink-0" />
-                    <span className="text-white text-sm truncate">{docItem.fileName}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {showKybForm && (
-          <div>
-            {(activation.kybStatus === 'rejected' || activation.kybStatus === 'needs_resubmission') && (
-              <div className={`mb-6 p-4 rounded-lg border ${
-                activation.kybStatus === 'rejected'
-                  ? 'bg-red-500/10 border-red-500/30'
-                  : 'bg-orange-500/10 border-orange-500/30'
-              }`}>
-                <div className="flex items-start gap-3">
-                  {activation.kybStatus === 'rejected' ? (
-                    <XCircle className="w-5 h-5 text-red-500 mt-0.5" />
-                  ) : (
-                    <RefreshCw className="w-5 h-5 text-orange-500 mt-0.5" />
-                  )}
-                  <div>
-                    <p className={`text-sm font-medium mb-1 ${
-                      activation.kybStatus === 'rejected' ? 'text-red-500' : 'text-orange-500'
-                    }`}>
-                      {activation.kybStatus === 'rejected' ? 'Submission Rejected' : 'Resubmission Required'}
-                    </p>
-                    <p className="text-sm text-gray-300">
-                      Please review the notes above, update your documents and submit again.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Company Name */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-400 mb-2">
-                Company / Entity Name (Optional)
-              </label>
-              <input
-                type="text"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                className="w-full bg-[#151515]/50 backdrop-blur-sm border border-[#2F2F2F] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#0FF1CE]/50 focus:border-transparent transition-all"
-                placeholder="Your registered company name"
-              />
-            </div>
-
-            {/* Corporate Documents Upload */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-400 mb-2">
-                Corporate / KYB Documents
-              </label>
-              <p className="text-xs text-gray-500 mb-3">
-                Certificate of incorporation, articles of association, proof of business address, director ID, or other corporate documents. You can upload multiple files.
-              </p>
-
-              {/* Already uploaded documents */}
-              {existingDocs.length > 0 && (
-                <div className="space-y-2 mb-3">
-                  {existingDocs.map((docItem, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-[#151515]/50 backdrop-blur-sm rounded-lg border border-[#2F2F2F]">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                        <span className="text-white text-sm truncate">{docItem.fileName}</span>
-                      </div>
-                      <span className="text-xs text-gray-500 flex-shrink-0 ml-3">Uploaded</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Newly selected files */}
-              {selectedFiles.length > 0 && (
-                <div className="space-y-2 mb-3">
-                  {selectedFiles.map((file, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-[#151515]/50 backdrop-blur-sm rounded-lg border border-[#0FF1CE]/30">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <FileText className="w-4 h-4 text-[#0FF1CE] flex-shrink-0" />
-                        <span className="text-white text-sm truncate">{file.name}</span>
-                      </div>
-                      <button
-                        onClick={() => removeSelectedFile(index)}
-                        className="text-gray-400 hover:text-red-400 flex-shrink-0 ml-3 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <label className="block">
-                <input
-                  type="file"
-                  accept="image/*,.pdf"
-                  multiple
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-                <div className="p-8 bg-[#151515]/50 backdrop-blur-sm rounded-xl border-2 border-dashed border-[#2F2F2F] hover:border-[#0FF1CE]/50 cursor-pointer transition-all duration-300 text-center">
-                  <Upload className="w-12 h-12 text-gray-500 mx-auto mb-3" />
-                  <p className="text-white mb-1">Click to upload or drag and drop</p>
-                  <p className="text-xs text-gray-500">PNG, JPG or PDF up to 10MB each - multiple files allowed</p>
-                </div>
-              </label>
-            </div>
 
             {/* Account Terms */}
-            <div className="mb-6">
-              <label className="text-sm font-medium text-gray-400 mb-2 flex items-center gap-2">
-                <Shield className="w-4 h-4 text-[#0FF1CE]" />
-                Account Terms
-              </label>
+            <div>
+              {hasCustomTerms && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTermsTab('funded')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
+                      activeTermsTab === 'funded'
+                        ? 'bg-[#0FF1CE]/10 text-[#0FF1CE] border-[#0FF1CE]/50'
+                        : 'bg-[#151515]/50 text-gray-400 border-[#2F2F2F] hover:text-white'
+                    }`}
+                  >
+                    Funded Trader Agreement{(agreementAlreadySigned || agreementAccepted) ? ' ✓' : ''}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTermsTab('custom')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
+                      activeTermsTab === 'custom'
+                        ? 'bg-[#0FF1CE]/10 text-[#0FF1CE] border-[#0FF1CE]/50'
+                        : 'bg-[#151515]/50 text-gray-400 border-[#2F2F2F] hover:text-white'
+                    }`}
+                  >
+                    {customTermsTitle}{(customTermsAlreadySigned || customTermsAccepted) ? ' ✓' : ''}
+                  </button>
+                </div>
+              )}
 
               <div className="bg-[#0D0D0D]/60 backdrop-blur-sm border border-[#2F2F2F]/50 rounded-xl p-6 mb-4 max-h-96 overflow-y-auto">
+                {hasCustomTerms && activeTermsTab === 'custom' ? (
+                  <div className="text-sm text-gray-400">
+                    <div className="text-center mb-6">
+                      <h3 className="text-lg font-semibold text-white">{customTermsTitle}</h3>
+                    </div>
+                    <div className="whitespace-pre-line leading-relaxed">
+                      {activation.customTerms?.content}
+                    </div>
+                  </div>
+                ) : (
                 <div className="space-y-6 text-sm text-gray-400">
                   <div className="text-center mb-6">
                     <h3 className="text-lg font-semibold text-white mb-2">SHOCKWAVE CAPITAL FUNDED TRADER AGREEMENT</h3>
@@ -977,37 +940,274 @@ export default function VIPPortalPage() {
                     </p>
                   </div>
                 </div>
+                )}
               </div>
 
-              {agreementAlreadySigned ? (
-                <div className="p-4 bg-[#151515]/50 backdrop-blur-sm rounded-lg border border-[#2F2F2F] flex items-center gap-3">
-                  <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <p className="text-white text-sm">
-                    Agreement signed on{' '}
-                    {activation.documents.agreementSignedAt?.toDate?.().toLocaleDateString() || 'record'}
-                  </p>
-                </div>
-              ) : (
-                <div className="p-4 bg-[#151515]/50 backdrop-blur-sm rounded-lg border border-[#2F2F2F]">
-                  <label className="flex items-start gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={agreementAccepted}
-                      onChange={(e) => setAgreementAccepted(e.target.checked)}
-                      className="mt-1"
-                    />
-                    <div>
+              {showKybForm ? (
+              <div className="space-y-3">
+                {agreementAlreadySigned ? (
+                  <div className="p-4 bg-[#151515]/50 backdrop-blur-sm rounded-lg border border-[#2F2F2F] flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                    <p className="text-white text-sm">
+                      Funded Trader Agreement signed on{' '}
+                      {activation.documents.agreementSignedAt?.toDate?.().toLocaleDateString() || 'record'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-4 bg-[#151515]/50 backdrop-blur-sm rounded-lg border border-[#2F2F2F]">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={agreementAccepted}
+                        onChange={(e) => setAgreementAccepted(e.target.checked)}
+                        className="mt-1"
+                      />
+                      <div>
+                        <p className="text-white text-sm">
+                          I have read, understood, and agree to the Shockwave Capital Funded Trader Agreement above
+                        </p>
+                        <p className="text-gray-500 text-xs mt-1">
+                          By checking this box, you are electronically signing this agreement
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+                )}
+
+                {hasCustomTerms && (
+                  customTermsAlreadySigned ? (
+                    <div className="p-4 bg-[#151515]/50 backdrop-blur-sm rounded-lg border border-[#2F2F2F] flex items-center gap-3">
+                      <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
                       <p className="text-white text-sm">
-                        I have read, understood, and agree to the Shockwave Capital account terms above
+                        {customTermsTitle} signed on{' '}
+                        {activation.documents.customTermsSignedAt?.toDate?.().toLocaleDateString() || 'record'}
                       </p>
-                      <p className="text-gray-500 text-xs mt-1">
-                        By checking this box, you are electronically signing this agreement
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-[#151515]/50 backdrop-blur-sm rounded-lg border border-[#2F2F2F]">
+                      <label className="flex items-start gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={customTermsAccepted}
+                          onChange={(e) => setCustomTermsAccepted(e.target.checked)}
+                          className="mt-1"
+                        />
+                        <div>
+                          <p className="text-white text-sm">
+                            I have read, understood, and agree to the {customTermsTitle} above
+                          </p>
+                          <p className="text-gray-500 text-xs mt-1">
+                            By checking this box, you are electronically signing this agreement
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+                  )
+                )}
+              </div>
+              ) : (
+              <div className="space-y-3">
+                <div className="p-4 bg-[#151515]/50 backdrop-blur-sm rounded-lg border border-[#2F2F2F] flex items-center gap-3">
+                  {agreementAlreadySigned ? (
+                    <>
+                      <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                      <p className="text-white text-sm">
+                        Funded Trader Agreement signed on{' '}
+                        {activation.documents.agreementSignedAt?.toDate?.().toLocaleDateString() || 'record'}
                       </p>
+                    </>
+                  ) : (
+                    <>
+                      <Clock className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                      <p className="text-gray-400 text-sm">Funded Trader Agreement - not signed yet</p>
+                    </>
+                  )}
+                </div>
+                {hasCustomTerms && (
+                  <div className="p-4 bg-[#151515]/50 backdrop-blur-sm rounded-lg border border-[#2F2F2F] flex items-center gap-3">
+                    {customTermsAlreadySigned ? (
+                      <>
+                        <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                        <p className="text-white text-sm">
+                          {customTermsTitle} signed on{' '}
+                          {activation.documents.customTermsSignedAt?.toDate?.().toLocaleDateString() || 'record'}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <Clock className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                        <p className="text-gray-400 text-sm">{customTermsTitle} - not signed yet</p>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Step 3: Corporate documents */}
+      <div className="flex gap-3 sm:gap-4">
+        {renderStepRail(3, false)}
+        <div className="flex-1 min-w-0">
+          <h2 className={stepHeadingClass(3)}>
+            <Building2 className="w-5 h-5" />
+            Corporate Documents
+          </h2>
+          <div className="bg-gradient-to-br from-[#1A1A1A]/80 to-[#151515]/80 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-[#2F2F2F]/50">
+            {activation.kybStatus === 'approved' && (
+              <div className="text-center py-8">
+                <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <CheckCircle className="w-10 h-10 text-green-500" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2">Documents Approved</h3>
+                <p className="text-gray-400 max-w-xl mx-auto">
+                  Your corporate documents have been reviewed and approved. Our team will be in touch with your
+                  account credentials and next steps shortly.
+                </p>
+                {existingDocs.length > 0 && (
+                  <div className="mt-6 max-w-md mx-auto text-left space-y-2">
+                    {existingDocs.map((docItem, index) => (
+                      <div key={index} className="flex items-center gap-3 p-3 bg-[#151515]/50 rounded-lg border border-[#2F2F2F]">
+                        <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                        <span className="text-white text-sm truncate">{docItem.fileName}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activation.kybStatus === 'pending' && (
+              <div className="text-center py-8">
+                <div className="w-20 h-20 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Clock className="w-10 h-10 text-yellow-500" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2">Documents Under Review</h3>
+                <p className="text-gray-400 mb-6 max-w-xl mx-auto">
+                  Your submission has been received and is currently under review.
+                  This typically takes 1-2 business days. We'll notify you once the review is complete.
+                </p>
+                {existingDocs.length > 0 && (
+                  <div className="max-w-md mx-auto text-left space-y-2">
+                    {existingDocs.map((docItem, index) => (
+                      <div key={index} className="flex items-center gap-3 p-3 bg-[#151515]/50 rounded-lg border border-[#2F2F2F]">
+                        <FileText className="w-4 h-4 text-[#0FF1CE] flex-shrink-0" />
+                        <span className="text-white text-sm truncate">{docItem.fileName}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {showKybForm && (
+              <div>
+                {(activation.kybStatus === 'rejected' || activation.kybStatus === 'needs_resubmission') && (
+                  <div className={`mb-6 p-4 rounded-lg border ${
+                    activation.kybStatus === 'rejected'
+                      ? 'bg-red-500/10 border-red-500/30'
+                      : 'bg-orange-500/10 border-orange-500/30'
+                  }`}>
+                    <div className="flex items-start gap-3">
+                      {activation.kybStatus === 'rejected' ? (
+                        <XCircle className="w-5 h-5 text-red-500 mt-0.5" />
+                      ) : (
+                        <RefreshCw className="w-5 h-5 text-orange-500 mt-0.5" />
+                      )}
+                      <div>
+                        <p className={`text-sm font-medium mb-1 ${
+                          activation.kybStatus === 'rejected' ? 'text-red-500' : 'text-orange-500'
+                        }`}>
+                          {activation.kybStatus === 'rejected' ? 'Submission Rejected' : 'Resubmission Required'}
+                        </p>
+                        <p className="text-sm text-gray-300">
+                          Please review the notes above, update your documents and submit again.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-gray-400 text-sm mb-4">
+                  Upload your corporate/KYB documents for verification. Our team will review your submission for approval.
+                </p>
+
+                {/* Company Name */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-400 mb-2">
+                    Company / Entity Name (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    className="w-full bg-[#151515]/50 backdrop-blur-sm border border-[#2F2F2F] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#0FF1CE]/50 focus:border-transparent transition-all"
+                    placeholder="Your registered company name"
+                  />
+                </div>
+
+                {/* Corporate Documents Upload */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-400 mb-2">
+                    Corporate / KYB Documents
+                  </label>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Certificate of incorporation, articles of association, proof of business address, director ID, or other corporate documents. You can upload multiple files.
+                  </p>
+
+                  {/* Already uploaded documents */}
+                  {existingDocs.length > 0 && (
+                    <div className="space-y-2 mb-3">
+                      {existingDocs.map((docItem, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-[#151515]/50 backdrop-blur-sm rounded-lg border border-[#2F2F2F]">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                            <span className="text-white text-sm truncate">{docItem.fileName}</span>
+                          </div>
+                          <span className="text-xs text-gray-500 flex-shrink-0 ml-3">Uploaded</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Newly selected files */}
+                  {selectedFiles.length > 0 && (
+                    <div className="space-y-2 mb-3">
+                      {selectedFiles.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-[#151515]/50 backdrop-blur-sm rounded-lg border border-[#0FF1CE]/30">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <FileText className="w-4 h-4 text-[#0FF1CE] flex-shrink-0" />
+                            <span className="text-white text-sm truncate">{file.name}</span>
+                          </div>
+                          <button
+                            onClick={() => removeSelectedFile(index)}
+                            className="text-gray-400 hover:text-red-400 flex-shrink-0 ml-3 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <label className="block">
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      multiple
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+                    <div className="p-8 bg-[#151515]/50 backdrop-blur-sm rounded-xl border-2 border-dashed border-[#2F2F2F] hover:border-[#0FF1CE]/50 cursor-pointer transition-all duration-300 text-center">
+                      <Upload className="w-12 h-12 text-gray-500 mx-auto mb-3" />
+                      <p className="text-white mb-1">Click to upload or drag and drop</p>
+                      <p className="text-xs text-gray-500">PNG, JPG or PDF up to 10MB each - multiple files allowed</p>
                     </div>
                   </label>
                 </div>
-              )}
-            </div>
 
             {kybError && (
               <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
@@ -1020,7 +1220,8 @@ export default function VIPPortalPage() {
               disabled={
                 isSubmittingKyb ||
                 (existingDocs.length === 0 && selectedFiles.length === 0) ||
-                (!agreementAlreadySigned && !agreementAccepted)
+                (!agreementAlreadySigned && !agreementAccepted) ||
+                (hasCustomTerms && !customTermsAlreadySigned && !customTermsAccepted)
               }
               className="w-full bg-gradient-to-r from-[#0FF1CE] to-[#00D4FF] text-black py-3 rounded-xl font-bold hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-[#0FF1CE]/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
@@ -1036,8 +1237,10 @@ export default function VIPPortalPage() {
                 </>
               )}
             </button>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

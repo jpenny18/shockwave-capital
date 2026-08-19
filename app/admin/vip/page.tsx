@@ -9,16 +9,8 @@ import {
   deleteVIPActivation,
   getVIPActivation,
   VIPActivation,
-  UserData,
-  Timestamp,
-  db
+  Timestamp
 } from '@/lib/firebase';
-import {
-  query,
-  collection,
-  where,
-  getDocs
-} from 'firebase/firestore';
 import {
   Search,
   CheckCircle,
@@ -45,11 +37,91 @@ interface VIPActivationWithId extends VIPActivation {
   id: string;
 }
 
+interface ResolvedUser {
+  uid: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+}
+
 const ALLOCATION_PRESETS = [
   { level: '$1M', tierName: 'Professional', publicPrice: 5499 },
   { level: '$2M', tierName: 'Executive', publicPrice: 9999 },
   { level: '$3M', tierName: 'Institutional', publicPrice: 14999 }
 ];
+
+const DEFAULT_CUSTOM_TERMS_TITLE = 'Corporate Allocation Terms';
+
+// Default template for the per-user additional terms tab (based on the
+// $3M Corporate Allocation Term Sheet). Fully editable before unlocking:
+// adjust the client name, allocation, drawdown figures, fee and payout split per user.
+const DEFAULT_CUSTOM_TERMS_CONTENT = `SHOCKWAVE CAPITAL - PRIVATE CORPORATE ALLOCATION TERM SHEET
+
+Client: [Client name] / approved corporate entity
+Status: Private invitation - subject to final approval, verification and an executed agreement
+
+COMMERCIAL TERMS
+
+- Program: Shockwave Private Corporate Allocation
+- Allocation: $3,000,000 consolidated account
+- Platform / account type: Dominion - Institutional account
+- Login structure: One consolidated account and one primary trading login
+- Registration: Approved corporate entity, subject to corporate KYC/KYB
+- Program fee: $8,999 one-time, payable in cryptocurrency
+- Maximum drawdown: 15% of the initial account balance ($450,000)
+- Maximum daily drawdown: 8% of the initial account balance ($240,000)
+- Leverage: Up to 1:200, subject to instrument specifications and platform limits
+- Consistency rule: None
+- Additional strategy restrictions: None, except the prohibited conduct listed below
+- Existing accounts: Existing funded accounts remain separate; existing challenges remain unchanged
+- Dedicated service: Named personal account manager and direct payout review
+- Payout split / timing: 80% of net profits in favour of the trader, reviewed and paid on a monthly basis
+
+NATURE OF THE ACCOUNT
+
+The allocation is operated as a live account and trading activity is live copy traded to Shockwave Capital's corporate accounts. The displayed allocation balance is not client-owned capital and is not withdrawable. The trader's entitlement is limited to the payout split described above, calculated on net profits and subject to the payout review standard below.
+
+ACCOUNT OPERATION AND EXECUTION
+
+- The allocation is operated through one consolidated Dominion Institutional account rather than multiple manually traded logins.
+- The account uses the same general execution environment and instrument specifications applicable to Dominion Institutional accounts.
+- Execution should be comparable under normal market conditions; however, fills cannot be guaranteed to be identical to smaller accounts because larger orders may experience slippage during fast markets, major news releases or reduced liquidity.
+- The trader is not required to increase lot size or percentage risk simply because the displayed allocation is larger.
+
+PERMITTED TRADING ACTIVITY
+
+- The same symbols and strategy may be used across accounts owned by the same verified client, subject to platform functionality and the final agreement.
+- Personal EAs, indicators and VPS use are permitted where they are controlled by the client and do not involve third-party account management or prohibited copying.
+- News, overnight and weekend trading permissions will follow the written specifications issued with the final account.
+
+PROHIBITED CONDUCT
+
+- Account sharing, sale, rental or operation by an undisclosed third party.
+- Third-party account management or copying trades from an unrelated person or service in a manner that defeats individual account evaluation.
+- Coordinated hedging or opposite-position schemes across separate identities or accounts.
+- Latency arbitrage, use of stale or erroneous pricing, platform exploitation, order flooding, or deliberate exploitation of a technical malfunction.
+- Fraud, false documents, payment abuse, sanctions violations or other unlawful activity.
+
+PAYOUT REVIEW AND APPROVAL STANDARD
+
+Core commitment: Payout requests will be reviewed against the objective written terms of the corporate account. If those terms have been followed, the payout will be approved. Profitability, payout size, trading style or strong performance will not, by themselves, be grounds for denial.
+
+- Each payout request will be assigned to the client's dedicated account manager for direct review.
+- Any concern must identify the specific transaction, factual issue and contractual provision involved.
+- A payout may only be delayed or withheld for a documented rule breach, suspected fraud, account ownership concern, legal or sanctions restriction, payment-destination problem, platform or pricing exploitation, or a verified technical/calculation error.
+- Where additional information is required, Shockwave will explain what is needed and provide a reasonable opportunity to respond.
+- If a payout is not approved, the client will receive a written explanation and may request a secondary review by a different authorized representative.
+- No retroactive or unpublished rule will be used to determine payout eligibility.
+
+CONDITIONS BEFORE ACTIVATION
+
+- Completion and approval of corporate KYC/KYB.
+- Payment of the program fee of $8,999 in cryptocurrency.
+- Execution of the definitive corporate allocation agreement and risk disclosures.
+- Confirmation of Dominion Institutional account availability and final instrument specifications.
+- Completion of onboarding and technical access setup.
+
+By accepting these terms you confirm that you have read and understood the structure described above, including that the displayed allocation is not client-owned or withdrawable capital, and you agree to operate the account in accordance with these terms and the final executed agreement.`;
 
 export default function AdminVIPPage() {
   const [activations, setActivations] = useState<VIPActivationWithId[]>([]);
@@ -63,7 +135,7 @@ export default function AdminVIPPage() {
 
   // Unlock form
   const [userSearchEmail, setUserSearchEmail] = useState('');
-  const [searchedUser, setSearchedUser] = useState<UserData | null>(null);
+  const [searchedUser, setSearchedUser] = useState<ResolvedUser | null>(null);
   const [existingActivation, setExistingActivation] = useState<VIPActivation | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [allocationChoice, setAllocationChoice] = useState('$3M');
@@ -71,10 +143,15 @@ export default function AdminVIPPage() {
   const [customPrice, setCustomPrice] = useState('');
   const [publicPrice, setPublicPrice] = useState('');
   const [adminNotes, setAdminNotes] = useState('');
+  const [includeCustomTerms, setIncludeCustomTerms] = useState(false);
+  const [customTermsTitle, setCustomTermsTitle] = useState(DEFAULT_CUSTOM_TERMS_TITLE);
+  const [customTermsContent, setCustomTermsContent] = useState('');
 
   // Manage modal - offer editing
   const [editPrice, setEditPrice] = useState('');
   const [editPublicPrice, setEditPublicPrice] = useState('');
+  const [editCustomTermsTitle, setEditCustomTermsTitle] = useState('');
+  const [editCustomTermsContent, setEditCustomTermsContent] = useState('');
 
   useEffect(() => {
     loadActivations();
@@ -138,19 +215,26 @@ export default function AdminVIPPage() {
       setSearchedUser(null);
       setExistingActivation(null);
 
-      const usersRef = collection(db, 'users');
-      const q = query(usersRef, where('email', '==', userSearchEmail.toLowerCase()));
-      const querySnapshot = await getDocs(q);
+      // Resolve the authoritative Firebase Auth UID server-side.
+      // (The users collection can contain stale duplicate docs for an email,
+      // so querying it directly can return a UID the user no longer logs in with.)
+      const response = await fetch('/api/admin/resolve-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: userSearchEmail })
+      });
 
-      if (!querySnapshot.empty) {
-        const userData = querySnapshot.docs[0].data() as UserData;
-        setSearchedUser(userData);
+      if (response.ok) {
+        const resolved: ResolvedUser = await response.json();
+        setSearchedUser(resolved);
 
         // Check if this user already has a VIP activation
-        const existing = await getVIPActivation(userData.uid);
+        const existing = await getVIPActivation(resolved.uid);
         setExistingActivation(existing);
-      } else {
+      } else if (response.status === 404) {
         alert('User not found');
+      } else {
+        alert('Error searching for user');
       }
     } catch (error) {
       console.error('Error searching user:', error);
@@ -181,6 +265,11 @@ export default function AdminVIPPage() {
       return;
     }
 
+    if (includeCustomTerms && !customTermsContent.trim()) {
+      alert('Please enter the custom terms text (or untick "Attach additional custom terms")');
+      return;
+    }
+
     try {
       setIsUpdating(true);
 
@@ -194,7 +283,9 @@ export default function AdminVIPPage() {
           tierName: preset?.tierName,
           price,
           publicPrice: pubPrice,
-          adminNotes: adminNotes.trim() || undefined
+          adminNotes: adminNotes.trim() || undefined,
+          customTermsTitle: includeCustomTerms ? customTermsTitle : undefined,
+          customTermsContent: includeCustomTerms ? customTermsContent : undefined
         },
         'admin'
       );
@@ -206,6 +297,9 @@ export default function AdminVIPPage() {
       setCustomPrice('');
       setCustomAllocation('');
       setAdminNotes('');
+      setIncludeCustomTerms(false);
+      setCustomTermsTitle(DEFAULT_CUSTOM_TERMS_TITLE);
+      setCustomTermsContent('');
       await loadActivations();
     } catch (error) {
       console.error('Error unlocking VIP portal:', error);
@@ -219,6 +313,8 @@ export default function AdminVIPPage() {
     setSelectedActivation(activation);
     setEditPrice(activation.price.toString());
     setEditPublicPrice(activation.publicPrice?.toString() || '');
+    setEditCustomTermsTitle(activation.customTerms?.title || DEFAULT_CUSTOM_TERMS_TITLE);
+    setEditCustomTermsContent(activation.customTerms?.content || '');
     setReviewNotes('');
   };
 
@@ -254,6 +350,53 @@ export default function AdminVIPPage() {
     } catch (error) {
       console.error('Error updating VIP offer:', error);
       alert('Failed to update offer');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleSaveCustomTerms = async () => {
+    if (!selectedActivation) return;
+
+    if (!editCustomTermsContent.trim()) {
+      alert('Please enter the custom terms text, or use "Remove Custom Terms" instead');
+      return;
+    }
+
+    try {
+      setIsUpdating(true);
+      await updateVIPActivation(selectedActivation.userId, {
+        customTerms: {
+          title: editCustomTermsTitle.trim() || 'Additional Account Terms',
+          content: editCustomTermsContent.trim()
+        }
+      });
+      await loadActivations();
+      closeManageModal();
+    } catch (error) {
+      console.error('Error saving custom terms:', error);
+      alert('Failed to save custom terms');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleRemoveCustomTerms = async () => {
+    if (!selectedActivation) return;
+    if (!confirm('Remove the additional custom terms for this user? Their VIP page will only show the standard Funded Trader Agreement.')) {
+      return;
+    }
+
+    try {
+      setIsUpdating(true);
+      await updateVIPActivation(selectedActivation.userId, {
+        customTerms: null
+      } as unknown as Partial<VIPActivation>);
+      await loadActivations();
+      closeManageModal();
+    } catch (error) {
+      console.error('Error removing custom terms:', error);
+      alert('Failed to remove custom terms');
     } finally {
       setIsUpdating(false);
     }
@@ -483,6 +626,61 @@ export default function AdminVIPPage() {
                   className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#0FF1CE]/50"
                 />
               </div>
+            </div>
+
+            {/* Per-user additional terms */}
+            <div className="mb-4 p-3 bg-[#151515]/60 rounded-lg border border-[#2F2F2F]">
+              <label className="flex items-start gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={includeCustomTerms}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setIncludeCustomTerms(checked);
+                    if (checked && !customTermsContent.trim()) {
+                      const clientName =
+                        [searchedUser?.firstName, searchedUser?.lastName].filter(Boolean).join(' ') ||
+                        searchedUser?.email ||
+                        '[Client name]';
+                      setCustomTermsContent(DEFAULT_CUSTOM_TERMS_CONTENT.replace('[Client name]', clientName));
+                      if (!customTermsTitle.trim()) setCustomTermsTitle(DEFAULT_CUSTOM_TERMS_TITLE);
+                    }
+                  }}
+                  className="mt-0.5"
+                />
+                <div>
+                  <span className="text-sm text-white font-medium">Attach additional custom terms</span>
+                  <p className="text-[11px] text-gray-500">
+                    Adds a second terms tab (e.g. the Corporate Allocation term sheet) the user must accept on top of the standard Funded Trader Agreement
+                  </p>
+                </div>
+              </label>
+
+              {includeCustomTerms && (
+                <div className="mt-3 space-y-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 mb-1.5">Terms Tab Title</label>
+                    <input
+                      type="text"
+                      value={customTermsTitle}
+                      onChange={(e) => setCustomTermsTitle(e.target.value)}
+                      placeholder="e.g. Corporate Allocation Terms"
+                      className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#0FF1CE]/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 mb-1.5">Terms Text</label>
+                    <textarea
+                      value={customTermsContent}
+                      onChange={(e) => setCustomTermsContent(e.target.value)}
+                      className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-3 py-2 text-white text-xs leading-relaxed focus:outline-none focus:border-[#0FF1CE]/50 min-h-[260px]"
+                    />
+                    <p className="text-[11px] text-gray-500 mt-1">
+                      Prefilled from the $3M Corporate Allocation term sheet with this user's name. Edit names, allocation, fee and payout split per user — this exact text is what the user reads and electronically signs.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             <button
@@ -832,20 +1030,117 @@ export default function AdminVIPPage() {
                   <Shield className="w-5 h-5 text-[#0FF1CE]" />
                   Account Terms
                 </h3>
-                <div className="bg-[#0D0D0D] rounded-lg p-4 border border-[#2F2F2F]">
-                  {selectedActivation.documents?.agreementSignedAt ? (
-                    <div className="flex items-center gap-2 text-green-500">
-                      <CheckCircle className="w-5 h-5" />
-                      <span>
-                        Signed on {selectedActivation.documents.agreementSignedAt.toDate?.().toLocaleDateString()}
+                <div className="bg-[#0D0D0D] rounded-lg p-4 border border-[#2F2F2F] space-y-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-sm text-gray-400">Funded Trader Agreement</span>
+                    {selectedActivation.documents?.agreementSignedAt ? (
+                      <div className="flex items-center gap-2 text-green-500 text-sm">
+                        <CheckCircle className="w-4 h-4" />
+                        <span>
+                          Signed on {selectedActivation.documents.agreementSignedAt.toDate?.().toLocaleDateString()}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 text-gray-500 text-sm">
+                        <XCircle className="w-4 h-4" />
+                        <span>Not signed</span>
+                      </div>
+                    )}
+                  </div>
+                  {(selectedActivation.customTerms || selectedActivation.documents?.customTermsSignedAt) && (
+                    <div className="flex items-center justify-between gap-3 border-t border-[#2F2F2F] pt-3">
+                      <span className="text-sm text-gray-400">
+                        {selectedActivation.customTerms?.title || 'Additional Account Terms'}
                       </span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-gray-500">
-                      <XCircle className="w-5 h-5" />
-                      <span>Not signed</span>
+                      {selectedActivation.documents?.customTermsSignedAt ? (
+                        <div className="flex items-center gap-2 text-green-500 text-sm">
+                          <CheckCircle className="w-4 h-4" />
+                          <span>
+                            Signed on {selectedActivation.documents.customTermsSignedAt.toDate?.().toLocaleDateString()}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-gray-500 text-sm">
+                          <XCircle className="w-4 h-4" />
+                          <span>Not signed</span>
+                        </div>
+                      )}
                     </div>
                   )}
+                </div>
+              </div>
+
+              {/* Custom terms editor */}
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-[#0FF1CE]" />
+                  Custom Terms (per-user)
+                </h3>
+                <div className="bg-[#0D0D0D] rounded-lg p-4 border border-[#2F2F2F] space-y-3">
+                  {!selectedActivation.customTerms && (
+                    <p className="text-xs text-gray-500">
+                      No custom terms attached — this user only sees the standard Funded Trader Agreement. Add terms below to show an extra tab they must also accept.
+                    </p>
+                  )}
+                  {selectedActivation.customTerms && selectedActivation.documents?.customTermsSignedAt && (
+                    <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-yellow-500 mt-0.5 flex-shrink-0" />
+                      <p className="text-xs text-yellow-500">
+                        The user has already accepted these terms. Editing the text will not reset their acceptance.
+                      </p>
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Terms Tab Title</label>
+                    <input
+                      type="text"
+                      value={editCustomTermsTitle}
+                      onChange={(e) => setEditCustomTermsTitle(e.target.value)}
+                      placeholder="e.g. Corporate Allocation Terms"
+                      className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#0FF1CE]/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Terms Text</label>
+                    <textarea
+                      value={editCustomTermsContent}
+                      onChange={(e) => setEditCustomTermsContent(e.target.value)}
+                      placeholder={'Paste or write the terms this user must accept.\nLeave empty and use "Load Template" to start from the $3M Corporate Allocation term sheet.'}
+                      className="w-full bg-[#151515] border border-[#2F2F2F] rounded-lg px-3 py-2 text-white text-xs leading-relaxed focus:outline-none focus:border-[#0FF1CE]/50 min-h-[220px]"
+                    />
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={handleSaveCustomTerms}
+                      disabled={isUpdating || !editCustomTermsContent.trim()}
+                      className="px-4 py-2 bg-[#0FF1CE] text-black rounded-lg text-sm font-medium hover:bg-[#0FF1CE]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                      Save Custom Terms
+                    </button>
+                    {!editCustomTermsContent.trim() && (
+                      <button
+                        onClick={() => {
+                          setEditCustomTermsContent(DEFAULT_CUSTOM_TERMS_CONTENT);
+                          if (!editCustomTermsTitle.trim()) setEditCustomTermsTitle(DEFAULT_CUSTOM_TERMS_TITLE);
+                        }}
+                        className="px-4 py-2 bg-[#151515] border border-[#2F2F2F] text-gray-300 rounded-lg text-sm font-medium hover:text-white transition-colors flex items-center gap-2"
+                      >
+                        <FileText className="w-4 h-4" />
+                        Load Template
+                      </button>
+                    )}
+                    {selectedActivation.customTerms && (
+                      <button
+                        onClick={handleRemoveCustomTerms}
+                        disabled={isUpdating}
+                        className="px-4 py-2 bg-transparent border border-red-500/50 text-red-400 rounded-lg text-sm font-medium hover:bg-red-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Remove Custom Terms
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
 

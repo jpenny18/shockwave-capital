@@ -242,6 +242,12 @@ export interface VIPActivation {
   // KYB (corporate documents + terms acceptance)
   kybStatus: 'not_submitted' | 'pending' | 'approved' | 'rejected' | 'needs_resubmission';
   companyName?: string;
+  // Optional per-user additional terms (e.g. corporate allocation term sheet),
+  // shown as an extra tab the user must accept alongside the standard agreement
+  customTerms?: {
+    title: string;
+    content: string;
+  };
   documents: {
     corporateDocs?: Array<{
       url: string;
@@ -249,6 +255,7 @@ export interface VIPActivation {
       uploadedAt: Timestamp;
     }>;
     agreementSignedAt?: Timestamp;
+    customTermsSignedAt?: Timestamp;
   };
   kybSubmittedAt?: Timestamp;
   reviewNotes?: string;
@@ -1113,6 +1120,8 @@ export async function enableVIPActivation(
     price: number;
     publicPrice?: number;
     adminNotes?: string;
+    customTermsTitle?: string;
+    customTermsContent?: string;
   },
   enabledBy: string
 ): Promise<string> {
@@ -1136,6 +1145,12 @@ export async function enableVIPActivation(
     if (offer.tierName) data.tierName = offer.tierName;
     if (offer.publicPrice !== undefined) data.publicPrice = offer.publicPrice;
     if (offer.adminNotes) data.adminNotes = offer.adminNotes;
+    if (offer.customTermsContent && offer.customTermsContent.trim()) {
+      data.customTerms = {
+        title: offer.customTermsTitle?.trim() || 'Additional Account Terms',
+        content: offer.customTermsContent.trim()
+      };
+    }
     
     await setDoc(vipRef, data);
     
