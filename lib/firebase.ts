@@ -261,6 +261,8 @@ export interface VIPActivation {
   reviewNotes?: string;
   reviewedAt?: Timestamp;
   reviewedBy?: string;
+  // Last time the user opened /dashboard/vip (admin-only; not shown to the user)
+  lastVisitedAt?: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -1158,6 +1160,21 @@ export async function enableVIPActivation(
   } catch (error) {
     console.error('Error enabling VIP activation:', error);
     throw error;
+  }
+}
+
+/**
+ * Silently record that the user opened the VIP dashboard page.
+ * Does not throw — visit tracking must never interrupt the user flow.
+ */
+export async function recordVIPPageVisit(userId: string): Promise<void> {
+  try {
+    const vipRef = doc(db, 'vipActivations', userId);
+    const vipSnap = await getDoc(vipRef);
+    if (!vipSnap.exists()) return;
+    await updateDoc(vipRef, { lastVisitedAt: Timestamp.now() });
+  } catch (error) {
+    console.error('Error recording VIP page visit:', error);
   }
 }
 

@@ -7,6 +7,7 @@ import {
   auth,
   getVIPActivation,
   updateVIPActivation,
+  recordVIPPageVisit,
   getUser,
   uploadFile,
   VIPActivation,
@@ -71,6 +72,7 @@ export default function VIPPortalPage() {
   const [billingErrors, setBillingErrors] = useState<Partial<BillingForm>>({});
   const [cryptoPrices, setCryptoPrices] = useState<CryptoPrice>({ BTC: 0, ETH: 0, USDT: 1, USDC: 1 });
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [isRefreshingPrices, setIsRefreshingPrices] = useState(false);
 
   // KYB (corporate docs + terms)
   const [companyName, setCompanyName] = useState('');
@@ -94,9 +96,11 @@ export default function VIPPortalPage() {
   useEffect(() => {
     const fetchPrices = async () => {
       try {
-        const response = await fetch('/api/crypto/prices');
+        const response = await fetch('/api/crypto/prices', { cache: 'no-store' });
         const data = await response.json();
-        setCryptoPrices(data);
+        if (data?.BTC && data?.ETH) {
+          setCryptoPrices(data);
+        }
       } catch (error) {
         console.error('Error fetching crypto prices:', error);
       }
@@ -114,6 +118,8 @@ export default function VIPPortalPage() {
       setActivation(vip);
 
       if (vip) {
+        recordVIPPageVisit(uid);
+
         if (vip.companyName) setCompanyName(vip.companyName);
 
         // Prefill billing details from the user profile
@@ -165,9 +171,21 @@ export default function VIPPortalPage() {
     return Object.keys(errors).length === 0;
   };
 
-  const handleProceedToCrypto = () => {
+  const handleProceedToCrypto = async () => {
     if (!validateBilling()) return;
-    setPaymentView('crypto');
+    setIsRefreshingPrices(true);
+    try {
+      const response = await fetch('/api/crypto/prices', { cache: 'no-store' });
+      const data = await response.json();
+      if (data?.BTC && data?.ETH) {
+        setCryptoPrices(data);
+      }
+    } catch (error) {
+      console.error('Error fetching crypto prices:', error);
+    } finally {
+      setIsRefreshingPrices(false);
+      setPaymentView('crypto');
+    }
   };
 
   const getChallengeData = () => {
@@ -644,10 +662,10 @@ export default function VIPPortalPage() {
               </div>
               <button
                 onClick={handleProceedToCrypto}
-                disabled={cryptoPrices.BTC === 0}
+                disabled={cryptoPrices.BTC === 0 || isRefreshingPrices}
                 className="bg-gradient-to-r from-[#0FF1CE] to-[#00D4FF] text-black px-8 py-3 rounded-xl font-bold hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-[#0FF1CE]/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {cryptoPrices.BTC === 0 ? (
+                {cryptoPrices.BTC === 0 || isRefreshingPrices ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
                     Loading Prices...

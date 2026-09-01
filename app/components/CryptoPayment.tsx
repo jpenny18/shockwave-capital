@@ -56,8 +56,8 @@ export default function CryptoPayment({ challengeData, successRedirectPath, onPr
   useEffect(() => {
     const usdAmount = challengeData.price;
     setCryptoAmount({
-      BTC: usdAmount / cryptoPrices.BTC,
-      ETH: usdAmount / cryptoPrices.ETH,
+      BTC: cryptoPrices.BTC > 0 ? Number((usdAmount / cryptoPrices.BTC).toFixed(8)) : 0,
+      ETH: cryptoPrices.ETH > 0 ? Number((usdAmount / cryptoPrices.ETH).toFixed(8)) : 0,
       USDT: usdAmount,
       USDC: usdAmount
     });
@@ -175,7 +175,7 @@ export default function CryptoPayment({ challengeData, successRedirectPath, onPr
             } transition-colors`}
           >
             <div className="text-center">
-              <div className="font-medium">
+              <div className="font-medium text-white">
                 {crypto}
               </div>
               {crypto === 'USDT' && (
@@ -195,8 +195,8 @@ export default function CryptoPayment({ challengeData, successRedirectPath, onPr
 
       <div className="bg-[#151515] rounded-xl p-4 border border-[#2F2F2F]/50">
         <div className="text-center mb-4">
-          <div className="text-lg font-medium">
-            1 {selectedCrypto} = ${cryptoPrices[selectedCrypto].toLocaleString()}
+          <div className="text-lg font-medium text-white">
+            1 {selectedCrypto} = ${cryptoPrices[selectedCrypto].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
         </div>
         
@@ -247,7 +247,7 @@ export default function CryptoPayment({ challengeData, successRedirectPath, onPr
           </div>
 
           <div className="flex items-center gap-2 bg-[#1A1A1A] rounded-lg p-3">
-            <div className="flex-1 font-mono text-sm truncate">
+            <div className="flex-1 font-mono text-sm truncate text-white">
               {CRYPTO_ADDRESSES[selectedCrypto]}
             </div>
             <button

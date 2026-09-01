@@ -780,6 +780,12 @@ export default function AdminVIPPage() {
               {getPaymentBadge(activation.paymentStatus)}
               {getKybBadge(activation.kybStatus)}
             </div>
+            <p className="text-gray-500 text-xs mt-2">
+              Last visit:{' '}
+              {activation.lastVisitedAt?.toDate
+                ? `${activation.lastVisitedAt.toDate().toLocaleString()} (${formatDistanceToNow(activation.lastVisitedAt.toDate(), { addSuffix: true })})`
+                : 'Never'}
+            </p>
           </div>
         ))}
       </div>
@@ -796,13 +802,14 @@ export default function AdminVIPPage() {
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Payment</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">KYB</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Unlocked</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Last Visit</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#2F2F2F]">
               {filteredActivations.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-gray-400">
+                  <td colSpan={8} className="px-6 py-8 text-center text-gray-400">
                     No VIP activations found
                   </td>
                 </tr>
@@ -842,6 +849,18 @@ export default function AdminVIPPage() {
                           {activation.enabledAt && formatDistanceToNow(activation.enabledAt.toDate(), { addSuffix: true })}
                         </p>
                       </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {activation.lastVisitedAt?.toDate ? (
+                        <div className="text-sm text-gray-400">
+                          <p>{activation.lastVisitedAt.toDate().toLocaleString()}</p>
+                          <p className="text-xs">
+                            {formatDistanceToNow(activation.lastVisitedAt.toDate(), { addSuffix: true })}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-500">Never</p>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <button
@@ -891,6 +910,19 @@ export default function AdminVIPPage() {
                   <div>
                     <p className="text-sm text-gray-400">Company / Entity</p>
                     <p className="text-white">{selectedActivation.companyName || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Last on VIP page</p>
+                    {selectedActivation.lastVisitedAt?.toDate ? (
+                      <>
+                        <p className="text-white">{selectedActivation.lastVisitedAt.toDate().toLocaleString()}</p>
+                        <p className="text-xs text-gray-500">
+                          {formatDistanceToNow(selectedActivation.lastVisitedAt.toDate(), { addSuffix: true })}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-gray-500">Never</p>
+                    )}
                   </div>
                   {selectedActivation.adminNotes && (
                     <div className="col-span-2">
