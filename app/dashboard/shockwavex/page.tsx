@@ -102,15 +102,15 @@ export default function ShockwaveXPage() {
   const [symbolIndex, setSymbolIndex] = useState(0);
   const [accountId, setAccountId] = useState<(typeof ACCOUNTS)[number]['id']>('std-100');
   const [orderType, setOrderType] = useState<OrderType>('Market');
-  const [lots, setLots] = useState(0.1);
-  const [bid, setBid] = useState(SYMBOLS[0].seed);
-  const [ask, setAsk] = useState(SYMBOLS[0].seed + SYMBOLS[0].spread);
+  const [lots, setLots] = useState<number>(0.1);
+  const [bid, setBid] = useState<number>(SYMBOLS[0].seed);
+  const [ask, setAsk] = useState<number>(SYMBOLS[0].seed + SYMBOLS[0].spread);
   const [quotes, setQuotes] = useState<Record<string, { bid: number; ask: number }>>({
     EURUSD: { bid: SYMBOLS[0].seed, ask: SYMBOLS[0].seed + SYMBOLS[0].spread },
   });
   const [activeTool, setActiveTool] = useState('chart');
   const [bottomTab, setBottomTab] = useState<BottomTab>('Positions');
-  const [limitPrice, setLimitPrice] = useState(SYMBOLS[0].seed);
+  const [limitPrice, setLimitPrice] = useState<number>(SYMBOLS[0].seed);
   const [notice, setNotice] = useState('Preview only — ShockwaveX is coming soon.');
   const [clock, setClock] = useState('--:--:--');
   const [positions, setPositions] = useState<MockPosition[]>([]);
