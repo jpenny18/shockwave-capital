@@ -31,6 +31,7 @@ import {
   getDownloadURL,
   deleteObject 
 } from 'firebase/storage';
+import { isVipMetaApiAccount } from './vip-accounts';
 
 // Your Firebase configuration
 const firebaseConfig = {
@@ -113,7 +114,7 @@ export interface UserMetaApiAccount {
   userId: string;
   accountId: string;
   accountToken: string;
-  accountType: 'standard' | 'instant' | '1-step' | 'gauntlet';
+  accountType: 'standard' | 'instant' | '1-step' | 'gauntlet' | 'vip';
   accountSize: number;
   platform: 'mt4' | 'mt5';
   status: 'active' | 'inactive' | 'passed' | 'failed' | 'funded';
@@ -124,6 +125,12 @@ export interface UserMetaApiAccount {
   lastMetricsUpdate?: Timestamp;
   trackerId?: string; // Risk management tracker ID
   fundedDate?: Timestamp; // Date when account became funded
+  loginCredentials?: {
+    login: string;
+    password: string;
+    server: string;
+  };
+  profitSplit?: number; // VIP funded accounts only, 80-100
 }
 
 /**
@@ -647,10 +654,19 @@ export async function getAllUserMetaApiAccounts(userId: string): Promise<UserMet
 }
 
 /**
+ * Get a user's VIP MetaAPI accounts only (excludes challenge accounts).
+ */
+export async function getUserVipMetaApiAccounts(userId: string): Promise<UserMetaApiAccount[]> {
+  const accounts = await getAllUserMetaApiAccounts(userId);
+  return accounts.filter((account) => isVipMetaApiAccount(account));
+}
+
+/**
  * Create or update user's MetaAPI account mapping
  */
 export async function setUserMetaApiAccount(data: Omit<UserMetaApiAccount, 'createdAt' | 'updatedAt'>): Promise<void> {
   try {
+    const payload = isVipMetaApiAccount(data) ? { ...data, accountType: 'vip' as const } : data;
     const accountsRef = collection(db, 'userMetaApiAccounts');
     
     // Check if this specific accountId already exists for this user (to prevent duplicates)
@@ -665,13 +681,13 @@ export async function setUserMetaApiAccount(data: Omit<UserMetaApiAccount, 'crea
       // Update existing account with same accountId
       const docId = duplicateSnapshot.docs[0].id;
       await updateDoc(doc(db, 'userMetaApiAccounts', docId), {
-        ...data,
+        ...payload,
         updatedAt: Timestamp.now()
       });
     } else {
       // Create new account (allow multiple accounts per user)
       await addDoc(accountsRef, {
-        ...data,
+        ...payload,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now()
       });

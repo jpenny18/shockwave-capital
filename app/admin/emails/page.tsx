@@ -19,6 +19,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { getAllUsers, UserData, db, getCachedMetrics } from '@/lib/firebase';
+import { isVipMetaApiAccount } from '@/lib/vip-accounts';
 import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
 
 interface EmailTemplate {
@@ -838,6 +839,8 @@ function formatAccountChallengeType(accountType?: string, isFunded?: boolean): s
       return '2-Step';
     case 'gauntlet':
       return 'Gauntlet';
+    case 'vip':
+      return 'VIP';
     case 'instant':
       return 'Instant';
     default:
@@ -965,6 +968,7 @@ export default function EmailTemplatesPage() {
       
       accountsSnapshot.forEach((doc) => {
         const data = doc.data();
+        if (isVipMetaApiAccount(data)) return;
         const userId = data.userId;
         userIds.add(userId);
         if (!accountsByUser[userId]) {
@@ -1413,7 +1417,7 @@ export default function EmailTemplatesPage() {
 
       const recipientResults = await Promise.all(accountsSnapshot.docs.map(async (accountDoc) => {
         const data = accountDoc.data();
-        if (!data.userId) return null;
+        if (!data.userId || isVipMetaApiAccount(data)) return null;
 
         try {
           const userSnapshot = await getDocs(query(collection(db, 'users'), where('uid', '==', data.userId), limit(1)));

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   getAllVIPActivations,
   enableVIPActivation,
@@ -503,7 +504,16 @@ export default function AdminVIPPage() {
   return (
     <div>
       <div className="mb-5 md:mb-8">
-        <h1 className="text-xl md:text-3xl font-bold text-white mb-1 md:mb-2">VIP Portal Management</h1>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-1 md:mb-2">
+          <h1 className="text-xl md:text-3xl font-bold text-white">VIP Portal Management</h1>
+          <Link
+            href="/admin/vip-accounts"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#0FF1CE] text-black rounded-lg text-sm font-semibold hover:bg-[#0FF1CE]/90 w-fit"
+          >
+            <Crown className="w-4 h-4" />
+            Manage VIP Accounts
+          </Link>
+        </div>
         <p className="text-gray-400 text-sm">Unlock the dashboard VIP portal per user with custom pricing, and review corporate/KYB submissions</p>
       </div>
 

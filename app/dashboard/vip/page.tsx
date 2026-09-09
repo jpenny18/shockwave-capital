@@ -10,10 +10,16 @@ import {
   recordVIPPageVisit,
   getUser,
   uploadFile,
+  getUserVipMetaApiAccounts,
+  getCachedMetrics,
   VIPActivation,
+  UserMetaApiAccount,
   Timestamp
 } from '@/lib/firebase';
+import { formatVipAllocation, getVipTierName, VIP_RULES } from '@/lib/vip-accounts';
 import CryptoPayment from '@/app/components/CryptoPayment';
+import VipLoginCredentialsAccordion from '@/app/components/VipLoginCredentials';
+import VipProfitTracker from '@/app/components/VipProfitTracker';
 import {
   Crown,
   Lock,
@@ -57,6 +63,7 @@ export default function VIPPortalPage() {
   const [user, authLoading] = useAuthState(auth);
   const [isLoading, setIsLoading] = useState(true);
   const [activation, setActivation] = useState<VIPActivation | null>(null);
+  const [vipAccounts, setVipAccounts] = useState<(UserMetaApiAccount & { cachedMetrics?: any })[]>([]);
 
   // Payment
   const [paymentView, setPaymentView] = useState<'summary' | 'crypto'>('summary');
@@ -119,6 +126,18 @@ export default function VIPPortalPage() {
 
       if (vip) {
         recordVIPPageVisit(uid);
+
+        try {
+          const accounts = await getUserVipMetaApiAccounts(uid);
+          const withMetrics = await Promise.all(accounts.map(async (account) => ({
+            ...account,
+            cachedMetrics: await getCachedMetrics(account.accountId)
+          })));
+          setVipAccounts(withMetrics);
+        } catch (accountsError) {
+          console.error('Error loading VIP trading accounts:', accountsError);
+          setVipAccounts([]);
+        }
 
         if (vip.companyName) setCompanyName(vip.companyName);
 
@@ -466,7 +485,7 @@ export default function VIPPortalPage() {
           </div>
         </div>
         <p className="text-gray-400">
-          Your exclusive VIP allocation offer. Complete the three steps below to activate your allocation.
+          Your exclusive VIP allocation. Complete onboarding below, then track live account metrics, drawdown, and profit split in VIP Accounts.
         </p>
       </div>
 
@@ -513,6 +532,75 @@ export default function VIPPortalPage() {
           </div>
         </div>
       </div>
+
+      {vipAccounts.length > 0 && (
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+              <Crown className="w-5 h-5 text-[#0FF1CE]" />
+              VIP Trading Accounts
+            </h2>
+            <button
+              onClick={() => router.push('/dashboard/vip/accounts')}
+              className="text-sm text-[#0FF1CE] hover:underline inline-flex items-center gap-1"
+            >
+              View all
+              <ChevronRight size={16} />
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {vipAccounts.map((account) => {
+              const profit = (account.cachedMetrics?.balance || account.accountSize) - account.accountSize;
+              return (
+                <div
+                  key={account.accountId}
+                  className="text-left bg-gradient-to-br from-[#1A1A1A]/80 to-[#151515]/80 backdrop-blur-sm rounded-2xl border border-[#2F2F2F]/50 p-5 hover:border-[#0FF1CE]/30 transition-all"
+                >
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/dashboard/vip/accounts/${account.accountId}`)}
+                    className="w-full text-left"
+                  >
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <p className="text-white font-semibold">Shockwave VIP</p>
+                      <p className="text-sm text-gray-400">
+                        {formatVipAllocation(account.accountSize)} • {getVipTierName(account.accountSize)}
+                      </p>
+                    </div>
+                    <span className={`px-2 py-1 text-xs rounded-full ${
+                      account.status === 'active' ? 'bg-green-500/20 text-green-400' :
+                      account.status === 'failed' ? 'bg-red-500/20 text-red-400' :
+                      account.status === 'passed' ? 'bg-blue-500/20 text-blue-400' :
+                      'bg-gray-500/20 text-gray-400'
+                    }`}>
+                      {account.status.toUpperCase()}
+                    </span>
+                  </div>
+                  {account.cachedMetrics && (
+                    <div className="mb-3">
+                      <VipProfitTracker
+                        compact
+                        profit={profit}
+                        profitSplit={account.profitSplit}
+                      />
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-500">
+                    {VIP_RULES.maxDrawdown}% / {VIP_RULES.maxDailyDrawdown}% drawdown
+                  </p>
+                  </button>
+                  <VipLoginCredentialsAccordion
+                    credentials={account.loginCredentials}
+                    platform={account.platform}
+                    emptyMessage="Login details will appear here after your VIP account is connected with broker credentials."
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Step 1: Payment */}
       <div className="flex gap-3 sm:gap-4">
