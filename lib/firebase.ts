@@ -81,6 +81,9 @@ export interface UserData {
   totalSpent?: number;
   orderCount?: number;
   lastOrderDate?: Timestamp;
+  payoutsUnlocked?: boolean;
+  payoutsUnlockedAt?: Timestamp;
+  payoutsUnlockedBy?: string;
 }
 
 /**
@@ -435,10 +438,16 @@ export async function getAllUsers(): Promise<UserData[]> {
 }
 
 /**
- * Update a user's data in Firestore
- * @param userId The user ID to update
- * @param userData The user data to update
+ * Open or close the customer payouts page without creating a payout request.
  */
+export async function setUserPayoutsAccess(userId: string, unlocked: boolean, adminId: string): Promise<void> {
+  await updateUser(userId, {
+    payoutsUnlocked: unlocked,
+    payoutsUnlockedAt: Timestamp.now(),
+    payoutsUnlockedBy: adminId,
+  });
+}
+
 export async function updateUser(userId: string, userData: Partial<UserData>): Promise<void> {
   try {
     const userRef = doc(db, 'users', userId);

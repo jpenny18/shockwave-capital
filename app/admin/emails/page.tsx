@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Mail, 
   Plus, 
@@ -899,6 +899,7 @@ export default function EmailTemplatesPage() {
   const [showBulkUserSearch, setShowBulkUserSearch] = useState(false);
   const [bulkListFilter, setBulkListFilter] = useState<'all' | 'drawdown'>('all');
   const [bulkListSearch, setBulkListSearch] = useState('');
+  const preselectedRecipient = useRef(false);
   
   // Load customers on component mount
   useEffect(() => {
@@ -946,6 +947,24 @@ export default function EmailTemplatesPage() {
     orderCount: user.orderCount || 0
   }));
       setCustomers(transformedCustomers);
+      if (!preselectedRecipient.current && typeof window !== 'undefined') {
+        const requestedEmail = new URLSearchParams(window.location.search).get('to');
+        if (requestedEmail) {
+          const match = transformedCustomers.find(
+            (customer) => customer.email.toLowerCase() === requestedEmail.toLowerCase()
+          );
+          preselectedRecipient.current = true;
+          const welcome = initialTemplates.find((template) => template.name === 'Welcome Email');
+          if (welcome) setCurrentTemplate(welcome);
+          setIsEditing(true);
+          if (match) {
+            setSelectedUser(match);
+            setUserSearchTerm(match.displayName || match.email || 'Unknown User');
+          } else {
+            setUserSearchTerm(requestedEmail);
+          }
+        }
+      }
     } catch (error) {
       console.error('Error loading customers:', error);
     } finally {

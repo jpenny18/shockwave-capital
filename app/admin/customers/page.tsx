@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   Search, 
   Filter, 
@@ -146,6 +147,7 @@ function getExportNames(customer: Customer): { first_name: string; last_name: st
 }
 
 export default function CustomersPage() {
+  const router = useRouter();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -161,6 +163,23 @@ export default function CustomersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
   const [loadingOrders, setLoadingOrders] = useState(false);
+  const [isEditingCustomer, setIsEditingCustomer] = useState(false);
+  const [savingCustomer, setSavingCustomer] = useState(false);
+  const [customerMessage, setCustomerMessage] = useState<string | null>(null);
+  const [notesStatus, setNotesStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [editForm, setEditForm] = useState({
+    firstName: '',
+    lastName: '',
+    phone: '',
+    country: '',
+  });
+
+  useEffect(() => {
+    const joined = new URLSearchParams(window.location.search).get('joined');
+    if (joined === '24h' || joined === '48h' || joined === '7d' || joined === '30d') {
+      setJoinDatePreset(joined);
+    }
+  }, []);
 
   // Helper function to fetch orders for a customer
   const fetchCustomerOrders = async (customerEmail: string) => {
@@ -395,49 +414,93 @@ export default function CustomersPage() {
   const handleViewDetails = (customer: Customer) => {
     setSelectedCustomer(customer);
     setIsDetailsOpen(true);
+    setIsEditingCustomer(false);
+    setCustomerMessage(null);
+    setNotesStatus('idle');
   };
   
   const handleCloseDetails = () => {
     setIsDetailsOpen(false);
-    // Small delay to make the transition smoother
+    setIsEditingCustomer(false);
     setTimeout(() => setSelectedCustomer(null), 200);
   };
 
   const handleStatusChange = async (customerId: string, newStatus: 'active' | 'inactive') => {
     try {
-      // Update in Firebase
       await updateUser(customerId, { status: newStatus });
       
-      // Update local state
       setCustomers(customers.map(customer => 
         customer.id === customerId ? { ...customer, status: newStatus } : customer
       ));
       
-      // Update selected customer if it's the one being edited
       if (selectedCustomer && selectedCustomer.id === customerId) {
         setSelectedCustomer({ ...selectedCustomer, status: newStatus });
       }
+      setCustomerMessage(null);
     } catch (error) {
       console.error('Error updating customer status:', error);
+      setCustomerMessage('Failed to update customer status.');
     }
   };
 
   const handleUpdateNotes = async (customerId: string, notes: string) => {
+    setNotesStatus('saving');
     try {
-      // Update in Firebase
       await updateUser(customerId, { notes });
       
-      // Update local state
       setCustomers(customers.map(customer => 
         customer.id === customerId ? { ...customer, notes } : customer
       ));
       
-      // Update selected customer if it's the one being edited
       if (selectedCustomer && selectedCustomer.id === customerId) {
         setSelectedCustomer({ ...selectedCustomer, notes });
       }
+      setNotesStatus('saved');
     } catch (error) {
       console.error('Error updating customer notes:', error);
+      setNotesStatus('error');
+    }
+  };
+
+  const startEditingCustomer = () => {
+    if (!selectedCustomer) return;
+    setEditForm({
+      firstName: selectedCustomer.firstName || '',
+      lastName: selectedCustomer.lastName || '',
+      phone: selectedCustomer.phone || '',
+      country: selectedCustomer.country || '',
+    });
+    setIsEditingCustomer(true);
+    setCustomerMessage(null);
+  };
+
+  const saveCustomerEdits = async () => {
+    if (!selectedCustomer) return;
+    setSavingCustomer(true);
+    setCustomerMessage(null);
+    try {
+      const firstName = editForm.firstName.trim();
+      const lastName = editForm.lastName.trim();
+      const updates = {
+        firstName,
+        lastName,
+        phone: editForm.phone.trim(),
+        country: editForm.country.trim(),
+        displayName: `${firstName} ${lastName}`.trim() || selectedCustomer.displayName || selectedCustomer.email,
+      };
+      await updateUser(selectedCustomer.id, updates);
+      const nextCustomer = { ...selectedCustomer, ...updates };
+      setSelectedCustomer(nextCustomer);
+      setCustomers((current) => current.map((customer) => (
+        customer.id === selectedCustomer.id ? { ...customer, ...updates } : customer
+      )));
+      setIsEditingCustomer(false);
+      setCustomerMessage('Customer details saved.');
+    } catch (error) {
+      console.error('Error saving customer:', error);
+      setCustomerMessage('Failed to save customer changes.');
+    } finally {
+      setSavingCustomer(false);
     }
   };
 
@@ -837,7 +900,24 @@ export default function CustomersPage() {
                     <User size={32} />
                   </div>
                   <div className="flex-grow">
-                    <h3 className="text-xl font-semibold text-white">{selectedCustomer.displayName}</h3>
+                    {isEditingCustomer ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <input
+                          value={editForm.firstName}
+                          onChange={(e) => setEditForm((current) => ({ ...current, firstName: e.target.value }))}
+                          placeholder="First name"
+                          className="bg-[#0D0D0D] border border-[#2F2F2F] rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#0FF1CE]/50"
+                        />
+                        <input
+                          value={editForm.lastName}
+                          onChange={(e) => setEditForm((current) => ({ ...current, lastName: e.target.value }))}
+                          placeholder="Last name"
+                          className="bg-[#0D0D0D] border border-[#2F2F2F] rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#0FF1CE]/50"
+                        />
+                      </div>
+                    ) : (
+                      <h3 className="text-xl font-semibold text-white">{selectedCustomer.displayName}</h3>
+                    )}
                     <p className="text-gray-400">{selectedCustomer.email}</p>
                   </div>
                   
@@ -862,11 +942,27 @@ export default function CustomersPage() {
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   <div>
                     <div className="text-sm text-gray-400 mb-1">Phone</div>
-                    <div className="text-white">{selectedCustomer.phone || 'Not provided'}</div>
+                    {isEditingCustomer ? (
+                      <input
+                        value={editForm.phone}
+                        onChange={(e) => setEditForm((current) => ({ ...current, phone: e.target.value }))}
+                        className="w-full bg-[#0D0D0D] border border-[#2F2F2F] rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#0FF1CE]/50"
+                      />
+                    ) : (
+                      <div className="text-white">{selectedCustomer.phone || 'Not provided'}</div>
+                    )}
                   </div>
                   <div>
                     <div className="text-sm text-gray-400 mb-1">Country</div>
-                    <div className="text-white">{selectedCustomer.country || 'Not provided'}</div>
+                    {isEditingCustomer ? (
+                      <input
+                        value={editForm.country}
+                        onChange={(e) => setEditForm((current) => ({ ...current, country: e.target.value }))}
+                        className="w-full bg-[#0D0D0D] border border-[#2F2F2F] rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#0FF1CE]/50"
+                      />
+                    ) : (
+                      <div className="text-white">{selectedCustomer.country || 'Not provided'}</div>
+                    )}
                   </div>
                   <div>
                     <div className="text-sm text-gray-400 mb-1">Join Date</div>
@@ -878,15 +974,48 @@ export default function CustomersPage() {
                   </div>
                 </div>
                 
+                {customerMessage && (
+                  <p className={`text-sm mb-3 ${customerMessage.includes('Failed') ? 'text-red-400' : 'text-[#0FF1CE]'}`}>
+                    {customerMessage}
+                  </p>
+                )}
                 <div className="flex gap-3">
-                  <button className="flex items-center gap-2 bg-[#0FF1CE] text-black px-4 py-2 rounded-lg font-medium hover:bg-[#0FF1CE]/90 transition-colors">
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/admin/emails?to=${encodeURIComponent(selectedCustomer.email)}`)}
+                    className="flex items-center gap-2 bg-[#0FF1CE] text-black px-4 py-2 rounded-lg font-medium hover:bg-[#0FF1CE]/90 transition-colors"
+                  >
                     <Mail size={16} />
                     <span>Send Email</span>
                   </button>
-                  <button className="flex items-center gap-2 bg-[#151515] border border-[#2F2F2F] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#2F2F2F] transition-colors">
-                    <Edit size={16} />
-                    <span>Edit Customer</span>
-                  </button>
+                  {isEditingCustomer ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={saveCustomerEdits}
+                        disabled={savingCustomer}
+                        className="flex items-center gap-2 bg-[#151515] border border-[#0FF1CE]/40 text-white px-4 py-2 rounded-lg font-medium hover:bg-[#2F2F2F] transition-colors disabled:opacity-50"
+                      >
+                        <span>{savingCustomer ? 'Saving...' : 'Save'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsEditingCustomer(false)}
+                        className="flex items-center gap-2 bg-[#151515] border border-[#2F2F2F] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#2F2F2F] transition-colors"
+                      >
+                        <span>Cancel</span>
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={startEditingCustomer}
+                      className="flex items-center gap-2 bg-[#151515] border border-[#2F2F2F] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#2F2F2F] transition-colors"
+                    >
+                      <Edit size={16} />
+                      <span>Edit Customer</span>
+                    </button>
+                  )}
                 </div>
               </div>
               
@@ -929,6 +1058,11 @@ export default function CustomersPage() {
                   className="w-full bg-[#0D0D0D] border border-[#2F2F2F] rounded-lg p-3 text-white min-h-24 resize-none focus:outline-none focus:border-[#0FF1CE]/50"
                   placeholder="Add notes about this customer..."
                 />
+                <p className={`text-xs mt-2 ${notesStatus === 'error' ? 'text-red-400' : 'text-gray-500'}`}>
+                  {notesStatus === 'saving' && 'Saving notes...'}
+                  {notesStatus === 'saved' && 'Notes saved.'}
+                  {notesStatus === 'error' && 'Failed to save notes.'}
+                </p>
               </div>
             </div>
           </div>

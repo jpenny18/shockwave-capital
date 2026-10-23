@@ -532,8 +532,10 @@ export async function sendTemplateEmail(
     
     Object.entries(variableValues).forEach(([key, value]) => {
       const regex = new RegExp(`{{${key}}}`, 'g');
-      processedSubject = processedSubject.replace(regex, value);
-      processedBody = processedBody.replace(regex, value);
+      const safeValue = value ?? '';
+      // Function replacer keeps characters like $ in passwords intact
+      processedSubject = processedSubject.replace(regex, () => safeValue);
+      processedBody = processedBody.replace(regex, () => safeValue);
     });
     
     // Enhanced HTML body with better styling and logo
