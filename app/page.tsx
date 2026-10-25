@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
 import Image from 'next/image';
@@ -7,175 +7,310 @@ import Particles from './components/Particles';
 import Header from './components/Header';
 import Link from 'next/link';
 import PricingTable from './components/PricingTable';
-import { ChevronRight, ChevronDown } from 'lucide-react';
+import { ChevronRight, ChevronDown, X, Copy, Check } from 'lucide-react';
 
 // VIP Card Component with Accordion
 const VipCard = () => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="max-w-6xl mx-auto mb-16">
-      <div className="relative group bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-3xl p-8 border-2 border-[#0FF1CE]/30 hover:border-[#0FF1CE]/50 transition-all duration-300 overflow-hidden">
-        {/* Background Effects */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0FF1CE]/5 to-transparent rounded-3xl opacity-50"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2/3 h-2/3 bg-[#0FF1CE]/10 blur-[60px] rounded-full"></div>
-        
-        {/* Content */}
-        <div className="relative z-10">
-          {/* Header Section - Always Visible */}
-          <div 
-            className="cursor-pointer"
-            onClick={() => setIsExpanded(!isExpanded)}
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                {/* Badge */}
-                <div className="inline-block bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black px-4 py-2 rounded-full text-sm font-bold mb-4">
-                  NEW: VIP PROGRAM
-                </div>
-                
-                {/* Title */}
-                <h2 className="text-3xl md:text-4xl font-extrabold text-[#0FF1CE] mb-4">
-                  Shockwave VIP
-                </h2>
-                
-                {/* Description */}
-                <p className="text-white text-base md:text-lg leading-relaxed">
-                  Trade bigger. Keep it simple. Up to <span className="text-[#0FF1CE] font-semibold">$3,000,000</span> in funded allocation 
-                  for experienced traders who have outgrown traditional prop firm account sizes.
-                </p>
-              </div>
-              
-              {/* Expand/Collapse Button */}
-              <button 
-                className="flex-shrink-0 w-10 h-10 rounded-full bg-[#0FF1CE]/20 border border-[#0FF1CE]/40 flex items-center justify-center hover:bg-[#0FF1CE]/30 transition-all"
-                aria-label={isExpanded ? "Collapse details" : "Expand details"}
+    <div className="flex justify-center">
+      <div style={{ transform: "scale(0.85)", transformOrigin: "top center", width: "100%" }}>
+        <div className="max-w-6xl mx-auto mb-16">
+          <div className="relative group bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-3xl p-8 border-2 border-[#0FF1CE]/30 hover:border-[#0FF1CE]/50 transition-all duration-300 overflow-hidden">
+            {/* Background Effects */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#0FF1CE]/5 to-transparent rounded-3xl opacity-50"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2/3 h-2/3 bg-[#0FF1CE]/10 blur-[60px] rounded-full"></div>
+            
+            {/* Content */}
+            <div className="relative z-10">
+              {/* Header Section - Always Visible */}
+              <div 
+                className="cursor-pointer"
+                onClick={() => setIsExpanded(!isExpanded)}
               >
-                <ChevronDown 
-                  size={24} 
-                  className={`text-[#0FF1CE] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
-                />
-              </button>
-            </div>
-          </div>
-
-          {/* Expandable Details Section */}
-          <div 
-            className={`overflow-hidden transition-all duration-500 ease-in-out ${
-              isExpanded ? 'max-h-[2000px] opacity-100 mt-8' : 'max-h-0 opacity-0'
-            }`}
-          >
-            <div className="space-y-6">
-              {/* Key Points Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                <div className="group bg-gradient-to-br from-[#0FF1CE]/15 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl p-4 border border-[#0FF1CE]/30 hover:border-[#0FF1CE]/50 transition-all duration-300">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#0FF1CE]/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <div className="w-3 h-3 bg-[#0FF1CE] rounded-full"></div>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    {/* Badge */}
+                    <div className="inline-block bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black px-4 py-2 rounded-full text-sm font-bold mb-4">
+                      NEW: VIP PROGRAM
                     </div>
-                    <div>
-                      <div className="text-[#0FF1CE] font-bold text-sm">Up to $3M Allocation</div>
-                      <div className="text-gray-300 text-xs">One larger account, not ten small ones</div>
-                    </div>
+                    
+                    {/* Title */}
+                    <h2 className="text-3xl md:text-4xl font-extrabold text-[#0FF1CE] mb-4">
+                      Shockwave VIP
+                    </h2>
+                    
+                    {/* Description */}
+                    <p className="text-white text-base md:text-lg leading-relaxed">
+                      Trade bigger. Keep it simple. Up to <span className="text-[#0FF1CE] font-semibold">$3,000,000</span> in funded allocation 
+                      for experienced traders who have outgrown traditional prop firm account sizes.
+                    </p>
                   </div>
-                </div>
-                
-                <div className="group bg-gradient-to-br from-[#0FF1CE]/15 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl p-4 border border-[#0FF1CE]/30 hover:border-[#0FF1CE]/50 transition-all duration-300">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#0FF1CE]/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <div className="w-3 h-3 bg-[#0FF1CE] rounded-full"></div>
-                    </div>
-                    <div>
-                      <div className="text-[#0FF1CE] font-bold text-sm">Simple Rules</div>
-                      <div className="text-gray-300 text-xs">No consistency rules, no restrictions</div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="group bg-gradient-to-br from-[#0FF1CE]/15 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl p-4 border border-[#0FF1CE]/30 hover:border-[#0FF1CE]/50 transition-all duration-300 sm:col-span-2 lg:col-span-1">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#0FF1CE]/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <div className="w-3 h-3 bg-[#0FF1CE] rounded-full"></div>
-                    </div>
-                    <div>
-                      <div className="text-[#0FF1CE] font-bold text-sm">VIP Infrastructure</div>
-                      <div className="text-gray-300 text-xs">Dedicated 24/7 account manager</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Allocations Breakdown */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {[
-                  { name: "Professional", level: "$1M", price: "$5,499" },
-                  { name: "Executive", level: "$2M", price: "$9,999" },
-                  { name: "Institutional", level: "$3M", price: "$14,999" }
-                ].map((item, index) => (
-                  <div key={index} className="text-center bg-[#0FF1CE]/5 rounded-xl p-4 border border-[#0FF1CE]/20">
-                    <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">{item.name}</div>
-                    <div className="text-[#0FF1CE] font-bold text-2xl">{item.level}</div>
-                    <div className="text-white font-semibold text-sm mt-1">{item.price}</div>
-                  </div>
-                ))}
-              </div>
-              
-              {/* Special Callout */}
-              <div className="bg-gradient-to-r from-[#0FF1CE]/20 via-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl p-4 border border-[#0FF1CE]/40 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-[#0FF1CE]/5 to-transparent rounded-xl"></div>
-                <div className="relative z-10 text-center">
-                  <div className="text-[#0FF1CE] font-bold text-sm mb-1">
-                    Live Copy Trading to Corporate Accounts
-                  </div>
-                  <div className="text-gray-300 text-xs">
-                    All trades are live copy traded to our corporate accounts — your performance moves real capital.
-                  </div>
-                </div>
-              </div>
-              
-              {/* Features */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
-                  { label: "Max DD", value: "15%" },
-                  { label: "Daily DD", value: "8%" },
-                  { label: "Leverage", value: "1:100" },
-                  { label: "Profit Split", value: "80%" }
-                ].map((item, index) => (
-                  <div key={index} className="text-center bg-[#0FF1CE]/5 rounded-lg p-3 border border-[#0FF1CE]/20">
-                    <div className="text-[#0FF1CE] font-bold text-xl">{item.value}</div>
-                    <div className="text-gray-300 text-sm">{item.label}</div>
-                  </div>
-                ))}
-              </div>
-              
-              {/* CTA */}
-              <div className="flex flex-col items-center gap-3 pt-4">
-                <Link href="/vip">
-                  <button className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black text-lg font-bold rounded-xl hover:scale-105 transition-transform shadow-lg hover:shadow-[#0FF1CE]/25 group">
-                    <div className="flex items-center justify-center gap-2">
-                      <span>Explore Shockwave VIP</span>
-                      <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                    </div>
+                  
+                  {/* Expand/Collapse Button */}
+                  <button 
+                    className="flex-shrink-0 w-10 h-10 rounded-full bg-[#0FF1CE]/20 border border-[#0FF1CE]/40 flex items-center justify-center hover:bg-[#0FF1CE]/30 transition-all"
+                    aria-label={isExpanded ? "Collapse details" : "Expand details"}
+                  >
+                    <ChevronDown 
+                      size={24} 
+                      className={`text-[#0FF1CE] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+                    />
                   </button>
-                </Link>
-                <p className="text-center text-gray-400 text-sm">Monthly payouts via bank transfer, Wise or crypto — VIP dashboard included</p>
+                </div>
+              </div>
+
+              {/* Expandable Details Section */}
+              <div 
+                className={`overflow-hidden transition-all duration-500 ease-in-out ${
+                  isExpanded ? 'max-h-[2000px] opacity-100 mt-8' : 'max-h-0 opacity-0'
+                }`}
+              >
+                <div className="space-y-6">
+                  {/* Key Points Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div className="group bg-gradient-to-br from-[#0FF1CE]/15 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl p-4 border border-[#0FF1CE]/30 hover:border-[#0FF1CE]/50 transition-all duration-300">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-[#0FF1CE]/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                          <div className="w-3 h-3 bg-[#0FF1CE] rounded-full"></div>
+                        </div>
+                        <div>
+                          <div className="text-[#0FF1CE] font-bold text-sm">Up to $3M Allocation</div>
+                          <div className="text-gray-300 text-xs">One larger account, not ten small ones</div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="group bg-gradient-to-br from-[#0FF1CE]/15 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl p-4 border border-[#0FF1CE]/30 hover:border-[#0FF1CE]/50 transition-all duration-300">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-[#0FF1CE]/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                          <div className="w-3 h-3 bg-[#0FF1CE] rounded-full"></div>
+                        </div>
+                        <div>
+                          <div className="text-[#0FF1CE] font-bold text-sm">Simple Rules</div>
+                          <div className="text-gray-300 text-xs">No consistency rules, no restrictions</div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="group bg-gradient-to-br from-[#0FF1CE]/15 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl p-4 border border-[#0FF1CE]/30 hover:border-[#0FF1CE]/50 transition-all duration-300 sm:col-span-2 lg:col-span-1">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-[#0FF1CE]/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                          <div className="w-3 h-3 bg-[#0FF1CE] rounded-full"></div>
+                        </div>
+                        <div>
+                          <div className="text-[#0FF1CE] font-bold text-sm">VIP Infrastructure</div>
+                          <div className="text-gray-300 text-xs">Dedicated 24/7 account manager</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Allocations Breakdown */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {[
+                      { name: "Professional", level: "$1M", price: "$5,499" },
+                      { name: "Executive", level: "$2M", price: "$9,999" },
+                      { name: "Institutional", level: "$3M", price: "$14,999" }
+                    ].map((item, index) => (
+                      <div key={index} className="text-center bg-[#0FF1CE]/5 rounded-xl p-4 border border-[#0FF1CE]/20">
+                        <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">{item.name}</div>
+                        <div className="text-[#0FF1CE] font-bold text-2xl">{item.level}</div>
+                        <div className="text-white font-semibold text-sm mt-1">{item.price}</div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Special Callout */}
+                  <div className="bg-gradient-to-r from-[#0FF1CE]/20 via-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl p-4 border border-[#0FF1CE]/40 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#0FF1CE]/5 to-transparent rounded-xl"></div>
+                    <div className="relative z-10 text-center">
+                      <div className="text-[#0FF1CE] font-bold text-sm mb-1">
+                        Live Copy Trading to Corporate Accounts
+                      </div>
+                      <div className="text-gray-300 text-xs">
+                        All trades are live copy traded to our corporate accounts — your performance moves real capital.
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Features */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {[
+                      { label: "Max DD", value: "15%" },
+                      { label: "Daily DD", value: "8%" },
+                      { label: "Leverage", value: "1:100" },
+                      { label: "Profit Split", value: "80%" }
+                    ].map((item, index) => (
+                      <div key={index} className="text-center bg-[#0FF1CE]/5 rounded-lg p-3 border border-[#0FF1CE]/20">
+                        <div className="text-[#0FF1CE] font-bold text-xl">{item.value}</div>
+                        <div className="text-gray-300 text-sm">{item.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* CTA */}
+                  <div className="flex flex-col items-center gap-3 pt-4">
+                    <Link href="/vip">
+                      <button className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black text-lg font-bold rounded-xl hover:scale-105 transition-transform shadow-lg hover:shadow-[#0FF1CE]/25 group">
+                        <div className="flex items-center justify-center gap-2">
+                          <span>Explore Shockwave VIP</span>
+                          <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                        </div>
+                      </button>
+                    </Link>
+                    <p className="text-center text-gray-400 text-sm">Payouts in USDC (ERC-20) or USDT (Tron or Solana) — VIP dashboard included</p>
+                  </div>
+                </div>
               </div>
             </div>
+            
+            {/* Decorative Elements */}
+            <div className="absolute top-4 right-4 w-16 h-16 bg-[#0FF1CE]/10 rounded-full blur-xl"></div>
+            <div className="absolute bottom-4 left-4 w-12 h-12 bg-[#0FF1CE]/10 rounded-full blur-xl"></div>
           </div>
         </div>
-        
-        {/* Decorative Elements */}
-        <div className="absolute top-4 right-4 w-16 h-16 bg-[#0FF1CE]/10 rounded-full blur-xl"></div>
-        <div className="absolute bottom-4 left-4 w-12 h-12 bg-[#0FF1CE]/10 rounded-full blur-xl"></div>
       </div>
     </div>
   );
 };
 
-// Disabled Promotional Modal Component - 40% OFF Deal
+// Promotional Modal - 2FOR1 Deal
 const PromotionalModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
-  // Modal is disabled - always return null
-  return null;
+  const [copied, setCopied] = useState(false);
+  const [rendered, setRendered] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  useEffect(() => {
+    if (isOpen) {
+      setRendered(true);
+      const frame = requestAnimationFrame(() => {
+        requestAnimationFrame(() => setVisible(true));
+      });
+      return () => cancelAnimationFrame(frame);
+    }
+
+    setVisible(false);
+    const timeout = setTimeout(() => setRendered(false), 340);
+    return () => clearTimeout(timeout);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!rendered) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onCloseRef.current();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    closeRef.current?.focus();
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [rendered]);
+
+  if (!rendered) return null;
+
+  const handleCopyCode = async () => {
+    try {
+      await navigator.clipboard.writeText('2FOR1');
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 sm:p-6">
+      <button
+        type="button"
+        aria-label="Close offer"
+        className={`absolute inset-0 bg-black/55 backdrop-blur-md transition-opacity duration-300 ease-out motion-reduce:transition-none ${visible ? 'opacity-100' : 'opacity-0'}`}
+        onClick={onClose}
+      />
+
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="promo-modal-title"
+        className={`promo-glass relative z-10 w-full max-w-[420px] rounded-[28px] px-5 pt-5 pb-5 sm:px-6 sm:pt-6 sm:pb-6 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
+          visible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 sm:translate-y-3 scale-[0.96]'
+        }`}
+      >
+        <div className="pointer-events-none absolute inset-x-8 -top-10 h-24 rounded-full bg-[#0FF1CE]/25 blur-3xl" />
+
+        <div className="relative flex items-center justify-between mb-5">
+          <span className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-bold tracking-[0.16em] text-[#0FF1CE]">
+            LIMITED OFFER
+          </span>
+          <button
+            ref={closeRef}
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white transition-colors hover:bg-white/20"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="relative text-center">
+          <h2 id="promo-modal-title" className="text-[2rem] sm:text-5xl font-extrabold leading-[0.95] tracking-tight text-white">
+            Buy 1,
+            <br />
+            Get 1 Free
+          </h2>
+          <p className="mt-3 text-sm sm:text-base text-white/70">
+            Same challenge. Second account free.
+          </p>
+
+          <button
+            type="button"
+            onClick={handleCopyCode}
+            className="mt-6 flex w-full items-center justify-between rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3.5 transition-colors hover:bg-white/[0.1]"
+          >
+            <span className="text-2xl font-extrabold tracking-[0.28em] text-[#0FF1CE]">2FOR1</span>
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0FF1CE]/15 text-[#0FF1CE]">
+              {copied ? <Check size={16} /> : <Copy size={16} />}
+            </span>
+          </button>
+
+          <Link href="https://www.shockwavetrading.com/challenge" onClick={onClose} className="mt-3 block">
+            <span className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0FF1CE] py-3.5 text-base font-bold text-black shadow-[0_8px_30px_rgba(15,241,206,0.28)] transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98]">
+              Claim offer
+              <ChevronRight size={18} />
+            </span>
+          </Link>
+        </div>
+      </div>
+
+      <style jsx>{`
+        .promo-glass {
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04) 28%, rgba(10, 12, 14, 0.55));
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          box-shadow:
+            0 24px 80px rgba(0, 0, 0, 0.45),
+            inset 0 1px 0 rgba(255, 255, 255, 0.28);
+          backdrop-filter: blur(28px) saturate(1.5);
+          -webkit-backdrop-filter: blur(28px) saturate(1.5);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .promo-glass {
+            transition: none !important;
+          }
+        }
+      `}</style>
+    </div>
+  );
 };
 
 // Shockwave Sunday Modal Component - 30% OFF Deal (DISABLED - keeping code for future use)
@@ -272,7 +407,7 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
               </div>
 
               <div className="space-y-3">
-                <Link href="/challenge" onClick={onClose}>
+                <Link href="https://www.shockwavetrading.com/challenge" onClick={onClose}>
                   <button className="w-full bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black font-bold py-3 px-6 rounded-xl hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(15,241,206,0.4)] hover:shadow-[0_0_30px_rgba(15,241,206,0.6)]">
                     START GAUNTLET CHALLENGE →
                   </button>
@@ -306,89 +441,114 @@ const ShockwaveSundayModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
   */
 };
 
-// Promotional Modal - Buy 1 Get 1 Free (2FOR1)
-const VipAnnouncementModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
-  const [copied, setCopied] = useState(false);
+type PayoutStory = {
+  kind: 'video' | 'image';
+  src: string;
+  title: string;
+  payout: string;
+  name: string;
+  place: string;
+  account: string;
+};
 
-  if (!isOpen) return null;
+const DESKTOP_PAYOUTS: PayoutStory[] = [
+  {
+    kind: 'video',
+    src: 'https://www.youtube.com/embed/C2_8YzvnamQ?si=nQlC1MMt-h7OYIDB',
+    title: 'Trader Payout Interview 1',
+    payout: '$2,100',
+    name: 'Andrew S',
+    place: 'United Kingdom',
+    account: '$50,000'
+  },
+  {
+    kind: 'image',
+    src: '/certificates/bento-certificate-1.png',
+    title: 'Payout Certificate 1',
+    payout: '$4,442',
+    name: 'James',
+    place: 'Australia',
+    account: '$100,000'
+  },
+  {
+    kind: 'image',
+    src: '/certificates/bento-certificate-2.png',
+    title: 'Payout Certificate 2',
+    payout: '$8,935',
+    name: 'Marcus',
+    place: 'Canada',
+    account: '$200,000'
+  },
+  {
+    kind: 'video',
+    src: 'https://www.youtube.com/embed/CZrKX44a5JY?si=6Ztd5N5wZHO4ch4f',
+    title: 'Trader Payout Interview 2',
+    payout: '$1,815',
+    name: 'Nikola',
+    place: 'Serbia',
+    account: '$100,000'
+  }
+];
 
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText('2FOR1');
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+const MOBILE_PAYOUTS: PayoutStory[] = [
+  DESKTOP_PAYOUTS[0],
+  { ...DESKTOP_PAYOUTS[1], src: '/certificates/mobile-certificate-1.png', title: 'Mobile Payout Certificate 1' },
+  DESKTOP_PAYOUTS[3],
+  { ...DESKTOP_PAYOUTS[2], src: '/certificates/mobile-certificate-2.png', title: 'Mobile Payout Certificate 2' },
+  DESKTOP_PAYOUTS[0],
+  { ...DESKTOP_PAYOUTS[1], src: '/certificates/mobile-certificate-3.png', title: 'Mobile Payout Certificate 3' },
+  DESKTOP_PAYOUTS[3],
+  { ...DESKTOP_PAYOUTS[2], src: '/certificates/mobile-certificate-4.png', title: 'Mobile Payout Certificate 4' }
+];
+
+function PayoutCard({ item }: { item: PayoutStory }) {
+  const [imageFailed, setImageFailed] = useState(false);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm overflow-y-auto">
-      <div className="min-h-full flex items-start md:items-center justify-center p-4 pt-8 md:pt-12 pb-8 md:pb-12">
-        <div className="relative w-full max-w-lg mx-auto" style={{ transform: 'scale(0.95)' }}>
-          <button
-            onClick={onClose}
-            className="absolute -top-2 -right-2 z-10 w-10 h-10 bg-white text-black rounded-full flex items-center justify-center font-bold hover:scale-110 transition-transform shadow-lg text-2xl"
-            aria-label="Close modal"
-          >
-            ×
-          </button>
-
-          <div className="relative bg-gradient-to-br from-[#0D0D0D] via-[#121212] to-[#0D0D0D] border-2 border-[#0FF1CE]/30 rounded-3xl overflow-hidden shadow-2xl p-8">
-            <div className="absolute top-0 right-0 bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black px-6 py-2 rounded-bl-2xl font-bold text-sm shadow-lg">
-              LIMITED OFFER
-            </div>
-
-            <div className="text-center pt-6">
-              <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-2">
-                Buy 1, Get 1 Free
-              </h2>
-              <div className="bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-transparent bg-clip-text text-2xl md:text-3xl font-bold mb-8">
-                Two Challenges. One Price.
-              </div>
-
-              <div className="space-y-3 mb-6 text-left max-w-md mx-auto">
-                <div className="flex items-start gap-3 bg-[#1A1A1A]/50 p-4 rounded-lg border border-[#0FF1CE]/20">
-                  <div className="text-[#0FF1CE] text-2xl mt-1 font-bold">•</div>
-                  <div>
-                    <div className="text-white font-bold text-lg">Two of the Same Account</div>
-                    <div className="text-gray-400 text-sm">Buy any challenge and we activate a second identical account at no extra cost</div>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 bg-[#1A1A1A]/50 p-4 rounded-lg border border-[#0FF1CE]/20">
-                  <div className="text-[#0FF1CE] text-2xl mt-1 font-bold">•</div>
-                  <div>
-                    <div className="text-white font-bold text-lg">Same Size, Same Type</div>
-                    <div className="text-gray-400 text-sm">The free account matches the challenge you purchase</div>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleCopyCode}
-                className="w-full mb-6 bg-[#0FF1CE]/10 border border-[#0FF1CE]/40 rounded-xl px-4 py-4 hover:bg-[#0FF1CE]/15 transition-colors"
-              >
-                <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Promo Code</div>
-                <div className="text-[#0FF1CE] font-extrabold text-3xl tracking-widest">2FOR1</div>
-                <div className="text-gray-400 text-xs mt-1">{copied ? 'Copied' : 'Click to copy'}</div>
-              </button>
-
-              <Link href="/challenge" onClick={onClose}>
-                <button className="w-full bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black font-bold py-4 px-8 rounded-xl hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(15,241,206,0.4)] hover:shadow-[0_0_30px_rgba(15,241,206,0.6)] text-lg">
-                  CLAIM 2FOR1 OFFER
-                </button>
-              </Link>
-            </div>
+    <article className="overflow-hidden rounded-[22px] border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-[0_18px_50px_rgba(0,0,0,0.35)]">
+      <div className="relative aspect-video bg-[#111]">
+        {item.kind === 'video' ? (
+          <iframe
+            src={item.src}
+            title={item.title}
+            className="h-full w-full"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        ) : imageFailed ? (
+          <div className="flex h-full items-center justify-center text-sm font-semibold text-[#0FF1CE]">
+            {item.payout}
           </div>
+        ) : (
+          <Image
+            src={item.src}
+            alt={item.title}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 256px, 25vw"
+            onError={() => setImageFailed(true)}
+          />
+        )}
+      </div>
+      <div className="flex items-center justify-between gap-3 px-4 py-3">
+        <div className="min-w-0">
+          <div className="truncate text-sm font-semibold text-white">{item.name}</div>
+          <div className="truncate text-xs text-white/50">{item.place}</div>
+        </div>
+        <div className="text-right">
+          <div className="text-sm font-bold text-[#0FF1CE]">{item.payout}</div>
+          <div className="text-[11px] text-white/40">{item.account}</div>
         </div>
       </div>
-    </div>
+    </article>
   );
-};
+}
 
 export default function ShockwaveLandingPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
-    const [showVipModal, setShowVipModal] = useState(false); // VIP announcement modal enabled
-    
+
     useEffect(() => {
       const unsubscribe = auth.onAuthStateChanged((user) => {
         if (!user && !loading) {
@@ -396,21 +556,10 @@ export default function ShockwaveLandingPage() {
         }
         setLoading(false);
       });
-  
+
       return () => unsubscribe();
     }, [router, loading]);
 
-    // Show VIP announcement modal after page loads
-    useEffect(() => {
-      if (!loading) {
-        const timer = setTimeout(() => {
-          setShowVipModal(true);
-        }, 1500); // Show modal 1.5 seconds after page loads
-  
-        return () => clearTimeout(timer);
-      }
-    }, [loading]);
-    
     if (loading) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-[#0D0D0D]">
@@ -421,604 +570,133 @@ export default function ShockwaveLandingPage() {
 
     return (
       <div className="bg-black text-white min-h-screen font-sans">
-        <Header />
-        
-        {/* VIP Announcement Modal */}
-        <VipAnnouncementModal 
-          isOpen={showVipModal} 
-          onClose={() => setShowVipModal(false)}
-        />
+        <Header clientHref="https://www.shockwavetrading.com/dashboard" />
+        <PromotionalModal isOpen={false} onClose={() => {}} />
         
         {/* Hero Section */}
-        <section className="relative z-10 px-6 pt-24 md:pt-28 pb-12 md:pb-10 text-center overflow-hidden bg-black">
+        <section className="relative z-10 px-6 pt-36 md:pt-44 pb-12 md:pb-10 text-center overflow-hidden bg-black">
           <Particles />
           <div className="max-w-5xl mx-auto">
-          
-            {/* Main Hero Image */}
-            <div className="relative mb-6 md:mb-4">
-              <div className="relative w-full max-w-3xl mx-auto aspect-[16/9]">
-                <Image
-                  src="/shockwavehero.png"
-                  alt="Shockwave Capital - Funded or Fried"
-                  fill
-                  className="object-contain"
-                  priority
-                />
+
+            {/* Mobile-scaling container for hero eyebrow, title, stats, and CTA */}
+            <div className="
+              w-full flex flex-col items-center 
+              md:scale-100 md:w-auto
+              scale-[0.85] 
+              origin-top 
+              md:origin-center
+              "
+              style={{}}
+            >
+              {/* Eyebrow */}
+              <div className="inline-block bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black font-bold px-4 py-1.5 rounded-full text-xs md:text-sm mb-4 md:mb-5">
+                Prop trading without the training wheels
               </div>
-            </div>
 
-            {/* Title */}
-            <h1 className="text-3xl md:text-5xl font-extrabold bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-transparent bg-clip-text mb-3 md:mb-2">
-              Funded or Fried
-            </h1>
-            
-            {/* Badge */}
-            <div className="inline-block bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black font-bold px-5 py-2 rounded-full text-sm md:text-base mb-6 md:mb-5">
-              Prop trading without the training wheels
-            </div>
+              {/* Title */}
+              <h1 className="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-transparent bg-clip-text mb-8 leading-tight">
+                The highest drawdown<br />CFD prop firm
+              </h1>
 
-            <p className="text-gray-400 max-w-3xl mx-auto text-sm md:text-base mb-8">
-              High-octane funding for elite traders. Push your trading into Overdrive with industry-leading conditions.
-            </p>
-
-            {/* Floating Stats Cards */}
-            <div className="grid grid-cols-3 gap-2 md:flex md:flex-row md:justify-center md:items-center md:gap-8 px-2 md:px-0 mb-8">
-              {[
-                { value: "15%", label: "Max Drawdown", delay: "0s" },
-                { value: "8%", label: "Daily Drawdown", delay: "0.1s" },
-                { value: "1:200", label: "Leverage", delay: "0.2s" }
-              ].map(({ value, label, delay }) => (
-                <div
-                  key={label}
-                  className="group relative w-full bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl p-3 md:p-4 md:w-44 hover:scale-105 transition-all duration-300 animate-float"
-                  style={{
-                    animation: `float 3s ease-in-out infinite`,
-                    animationDelay: delay,
-                    boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)'
-                  }}
-                >
-                  <div className="text-xl md:text-3xl font-bold text-[#0FF1CE] mb-1">{value}</div>
-                  <div className="text-xs md:text-sm text-gray-400">{label}</div>
-                  <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#0FF1CE]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </div>
-              ))}
-            </div>
-
-            {/* NO BS Rules Card */}
-            <div className="max-w-2xl mx-auto mb-8">
-              <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-[#0FF1CE]/20"
-                style={{ boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)' }}>
-                <h3 className="text-xl md:text-2xl font-bold text-[#0FF1CE] mb-6 text-center">NO BS Funded Account RULES</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[
-                    "No consistency rules",
-                    "News trading allowed",
-                    "Hold over weekends",
-                    "EAs & Bots allowed",
-                    "No Profit Caps",
-                    "No Position size caps"
-                  ].map((rule, index) => (
-                    <div key={index} className="flex items-center space-x-3 group">
-                      <div className="w-6 h-6 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center group-hover:scale-110 transition-transform shrink-0">
-                        <span className="text-[#0FF1CE] text-sm">✓</span>
-                      </div>
-                      <span className="text-gray-300 text-sm md:text-base group-hover:text-white transition-colors">{rule}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* CTA Buttons */}
-            <div className="flex flex-col md:flex-row justify-center gap-4 md:gap-6 max-w-sm md:max-w-[600px] mx-auto w-full mb-12">
-              <Link href="/challenge">
-                <button className="px-10 py-3 md:py-4 bg-[#0FF1CE] text-black text-sm md:text-lg font-bold rounded-lg hover:scale-105 transition-transform w-full md:w-[300px]">
-                  START CHALLENGE
-                </button>             
-              </Link>
-            </div>
-
-            {/* Tradable Assets */}
-            <div className="flex flex-wrap justify-center gap-6 md:gap-12 max-w-4xl mx-auto">
+              {/* Stats Cards */}
+              <div className="grid grid-cols-3 gap-2 md:flex md:flex-row md:justify-center md:items-center md:gap-8 px-2 md:px-0 mb-8">
                 {[
-                  {
-                    name: "Forex",
-                    icon: (
-                      <svg className="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M2 12C2 6.48 6.48 2 12 2s10 4.48 10 10-4.48 10-10 10S2 17.52 2 12zm16.5-4.5h-2.79l-2.33 7h-2.76l-2.33-7H5.5v-2h13v2z"/>
-                      </svg>
-                    )
-                  },
-                  {
-                    name: "Metals",
-                    icon: (
-                      <svg className="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2L4 8v3h16V8l-8-6zM4 19v-6h16v6H4z"/>
-                      </svg>
-                    )
-                  },
-                  {
-                    name: "Indices",
-                    icon: (
-                      <svg className="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M3.5 18.5l6-6 4 4L22 7.5L20.5 6l-7 7-4-4-6 6z"/>
-                      </svg>
-                    )
-                  },
-                  {
-                    name: "Crypto",
-                    icon: (
-                      <svg className="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/>
-                      </svg>
-                    )
-                  },
-                  {
-                    name: "Stocks",
-                    icon: (
-                      <svg className="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M3 3h6v4H3V3zm12 0h6v4h-6V3zM3 11h6v4H3v-4zm12 0h6v4h-6v-4zM3 19h6v4H3v-4zm12 0h6v4h-6v-4z"/>
-                      </svg>
-                    )
-                  }
-                ].map(({ name, icon }) => (
-                  <div key={name} className="flex flex-col items-center gap-2 group">
-                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <span className="text-[#0FF1CE] group-hover:text-white transition-colors">
-                        {icon}
-                      </span>
-                    </div>
-                    <span className="text-[0.6rem] md:text-xs text-gray-400 group-hover:text-[#0FF1CE] transition-colors">
-                      {name}
-                    </span>
+                  { value: "15%", label: "Max Drawdown" },
+                  { value: "8%", label: "Daily Drawdown" },
+                  { value: "1:200", label: "Leverage" }
+                ].map(({ value, label }) => (
+                  <div
+                    key={label}
+                    className="group relative w-full bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl p-3 md:p-4 md:w-44"
+                    style={{ boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)' }}
+                  >
+                    <div className="text-xl md:text-3xl font-bold text-[#0FF1CE] mb-1">{value}</div>
+                    <div className="text-xs md:text-sm text-gray-400">{label}</div>
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#0FF1CE]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </div>
                 ))}
               </div>
+
+              {/* CTA Buttons */}
+              <div className="flex flex-col md:flex-row justify-center gap-4 md:gap-6 max-w-sm md:max-w-[600px] mx-auto w-full mb-8 md:mb-10">
+                <Link href="https://www.shockwavetrading.com/challenge">
+                  <button className="px-10 py-3 md:py-4 bg-[#0FF1CE] text-black text-sm md:text-lg font-bold rounded-lg hover:scale-105 transition-transform w-full md:w-[300px]">
+                    START CHALLENGE
+                  </button>             
+                </Link>
+              </div>
+            </div>
+       
+
+            <div className="mx-auto max-w-3xl overflow-hidden rounded-[22px] border border-white/10 bg-white/[0.04] backdrop-blur-xl">
+              <div className="grid grid-cols-3 divide-x divide-white/10">
+                {[
+                  { value: "$2M+", label: "Paid out" },
+                  { value: "1 Hour", label: "Processing" },
+                  { value: "1,000+", label: "Funded traders" }
+                ].map(({ value, label }) => (
+                  <div key={label} className="px-2 py-5 text-center md:px-6 md:py-7">
+                    <div className="text-2xl font-semibold tracking-tight text-white md:text-4xl">{value}</div>
+                    <div className="mt-1 text-[10px] font-medium uppercase tracking-[0.14em] text-white/45 md:text-xs">{label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+      
+      
           </div>
         </section>
   
         {/* Live Payout Interviews Section */}
-        <section className="py-16 md:py-20 px-6 bg-black relative overflow-hidden">
-          <div className="absolute top-1/2 left-1/4 w-1/2 h-[300px] bg-[#0FF1CE]/[0.02] blur-[120px] rounded-full"></div>
-          <div className="relative z-10">
-            <div className="text-center mb-12 md:mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold text-[#0FF1CE] mb-4">Live Payout Interviews</h2>
-              <p className="text-gray-300 text-base md:text-xl max-w-3xl mx-auto">
-                Watch real traders receive their payouts live.
+        <section className="relative overflow-hidden bg-black px-6 py-16 md:py-24">
+          <div className="pointer-events-none absolute left-1/2 top-0 h-64 w-[70%] -translate-x-1/2 rounded-full bg-[#0FF1CE]/10 blur-[120px]" />
+          <div className="relative mx-auto max-w-6xl">
+            <div className="mx-auto mb-10 max-w-2xl text-center md:mb-14">
+              <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[#0FF1CE]">Payouts</p>
+              <h2 className="text-3xl font-semibold tracking-tight text-white md:text-5xl">Traders. On camera.</h2>
+              <p className="mt-3 text-sm text-white/60 md:text-base">
+                Live interviews and verified certificates. Pass, trade, request a payout.
               </p>
-            </div>
-
-            {/* Desktop: 50/50 Layout | Mobile: Stacked */}
-            <div className="max-w-7xl mx-auto">
-              <div className="flex flex-col md:flex-row items-start gap-8 md:gap-12">
-                
-                {/* Left Side: Video/Certificate Cards (Mobile: Infinite Scroll) */}
-                <div className="w-full md:w-1/2 order-1 md:order-1">
-                  
-                  {/* Desktop: 2x2 Bento Grid */}
-                  <div className="hidden md:grid md:grid-cols-2 gap-4">
-                    {/* Video 1 - Top Left */}
-                    <div className="group relative bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-4 hover:scale-[1.02] transition-all duration-300"
-                      style={{ boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)' }}>
-                      <div className="relative aspect-video rounded-xl overflow-hidden bg-[#181818] mb-3">
-                        <iframe
-                          src="https://www.youtube.com/embed/C2_8YzvnamQ?si=nQlC1MMt-h7OYIDB"
-                          title="Trader Payout Interview 1"
-                          className="w-full h-full"
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                        ></iframe>
-                        <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#0FF1CE]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-                      </div>
-                      <div className="text-center">
-                        <h3 className="text-[#0FF1CE] font-bold text-sm mb-1">$2,100 Payout</h3>
-                        <p className="text-gray-400 text-xs">Andrew S | UK</p>
-                        <div className="flex justify-center items-center gap-2 mt-2 text-xs text-gray-500">
-                          <span>$50,000</span>
-                          <span>•</span>
-                          <span>15 mins</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Certificate 1 - Top Right */}
-                    <div className="group relative bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-4 hover:scale-[1.02] transition-all duration-300"
-                      style={{ boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)' }}>
-                      <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-[#181818] mb-3">
-                        {/* Certificate image */}
-                        <Image
-                          src="/certificates/bento-certificate-1.png"
-                          alt="Payout Certificate 1"
-                          fill
-                          className="object-cover rounded-xl"
-                          sizes="(max-width: 768px) 50vw, 25vw"
-                          onError={(e) => {
-                            // Fallback to placeholder if image doesn't exist
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            const parent = target.parentElement;
-                            if (parent) {
-                              parent.innerHTML = `
-                                <div class="w-full h-full flex items-center justify-center">
-                                  <div class="text-center">
-                                    <div class="text-[#0FF1CE] text-sm font-bold mb-1">Certificate #1</div>
-                                    <div class="text-gray-400 text-xs">Upload bento-certificate-1.png</div>
-                                    <div class="text-gray-500 text-xs mt-1">to /public/certificates/</div>
-                                  </div>
-                                </div>
-                              `;
-                            }
-                          }}
-                        />
-                        <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#0FF1CE]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-[#0FF1CE] font-bold text-xs mb-1">$4,442 Payout</div>
-                        <p className="text-gray-400 text-xs">James | Australia</p>
-                        <div className="flex justify-center items-center gap-2 mt-2 text-xs text-gray-500">
-                          <span>$100,000</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Certificate 2 - Bottom Left */}
-                    <div className="group relative bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-4 hover:scale-[1.02] transition-all duration-300"
-                      style={{ boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)' }}>
-                      <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-[#181818] mb-3">
-                        {/* Certificate image */}
-                        <Image
-                          src="/certificates/bento-certificate-2.png"
-                          alt="Payout Certificate 2"
-                          fill
-                          className="object-cover rounded-xl"
-                          sizes="(max-width: 768px) 50vw, 25vw"
-                          onError={(e) => {
-                            // Fallback to placeholder if image doesn't exist
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            const parent = target.parentElement;
-                            if (parent) {
-                              parent.innerHTML = `
-                                <div class="w-full h-full flex items-center justify-center">
-                                  <div class="text-center">
-                                    <div class="text-[#0FF1CE] text-sm font-bold mb-1">Certificate #2</div>
-                                    <div class="text-gray-400 text-xs">Upload bento-certificate-2.png</div>
-                                    <div class="text-gray-500 text-xs mt-1">to /public/certificates/</div>
-                                  </div>
-                                </div>
-                              `;
-                            }
-                          }}
-                        />
-                        <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#0FF1CE]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      </div>
-                      <div className="text-center">
-                        <h3 className="text-[#0FF1CE] font-bold text-sm mb-1">$8,935 Payout</h3>
-                        <p className="text-gray-400 text-xs">Marcus | Canada</p>
-                        <div className="flex justify-center items-center gap-2 mt-2 text-xs text-gray-500">
-                          <span>$200,000</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Video 2 - Bottom Right */}
-                    <div className="group relative bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-4 hover:scale-[1.02] transition-all duration-300"
-                      style={{ boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)' }}>
-                      <div className="relative aspect-video rounded-xl overflow-hidden bg-[#181818] mb-3">
-                        <iframe
-                          src="https://www.youtube.com/embed/CZrKX44a5JY?si=6Ztd5N5wZHO4ch4f"
-                          title="Trader Payout Interview 2"
-                          className="w-full h-full"
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                        ></iframe>
-                        <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#0FF1CE]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-                      </div>
-                      <div className="text-center">
-                        <h3 className="text-[#0FF1CE] font-bold text-sm mb-1">$1,815 Payout</h3>
-                        <p className="text-gray-400 text-xs">Nikola | Serbia</p>
-                        <div className="flex justify-center items-center gap-2 mt-2 text-xs text-gray-500">
-                          <span>$100,000</span>
-                          <span>•</span>
-                          <span>20 mins</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Mobile: Infinite Scroll */}
-                  <div className="md:hidden relative overflow-hidden -mx-6">
-                    {/* Gradient overlays */}
-                    <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#131313] to-transparent z-10"></div>
-                    <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#131313] to-transparent z-10"></div>
-                    
-                    {/* Scrolling Track */}
-                    <div className="flex animate-infinite-scroll-mobile" style={{ width: '800%' }}>
-                      {/* First Set: Andrew, Certificate, Nikola, Certificate */}
-                      <div className="flex">
-                        {/* Andrew Video */}
-                        <div className="flex-shrink-0 mx-2 w-64">
-                          <div className="group relative bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-4 hover:scale-[1.02] transition-all duration-300"
-                            style={{ boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)' }}>
-                            <div className="relative aspect-video rounded-xl overflow-hidden bg-[#181818] mb-3">
-                              <iframe
-                                src="https://www.youtube.com/embed/C2_8YzvnamQ?si=nQlC1MMt-h7OYIDB"
-                                title="Trader Payout Interview 1"
-                                className="w-full h-full"
-                                frameBorder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                              ></iframe>
-                            </div>
-                            <div className="text-center">
-                              <h3 className="text-[#0FF1CE] font-bold text-sm mb-1">$2,100 Payout</h3>
-                              <p className="text-gray-400 text-xs">Andrew S | UK</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Certificate 1 */}
-                        <div className="flex-shrink-0 mx-2 w-64">
-                          <div className="group relative bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-4 hover:scale-[1.02] transition-all duration-300"
-                            style={{ boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)' }}>
-                            <div className="relative aspect-video rounded-xl overflow-hidden bg-[#181818] mb-3">
-                              <Image
-                                src="/certificates/mobile-certificate-1.png"
-                                alt="Mobile Payout Certificate 1"
-                                fill
-                                className="object-cover rounded-xl"
-                                sizes="256px"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = 'none';
-                                  const parent = target.parentElement;
-                                  if (parent) {
-                                    parent.innerHTML = `
-                                      <div class="w-full h-full flex items-center justify-center">
-                                        <div class="text-center">
-                                          <div class="text-[#0FF1CE] text-sm font-bold mb-1">Certificate #1</div>
-                                          <div class="text-gray-400 text-xs">Upload mobile-certificate-1.png</div>
-                                        </div>
-                                      </div>
-                                    `;
-                                  }
-                                }}
-                              />
-                            </div>
-                            <div className="text-center">
-                              <div className="text-[#0FF1CE] font-bold text-xs mb-1">$4,442 Payout</div>
-                              <p className="text-gray-400 text-xs">James | Australia</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Nikola Video */}
-                        <div className="flex-shrink-0 mx-2 w-64">
-                          <div className="group relative bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-4 hover:scale-[1.02] transition-all duration-300"
-                            style={{ boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)' }}>
-                            <div className="relative aspect-video rounded-xl overflow-hidden bg-[#181818] mb-3">
-                              <iframe
-                                src="https://www.youtube.com/embed/CZrKX44a5JY?si=6Ztd5N5wZHO4ch4f"
-                                title="Trader Payout Interview 2"
-                                className="w-full h-full"
-                                frameBorder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                              ></iframe>
-                            </div>
-                            <div className="text-center">
-                              <h3 className="text-[#0FF1CE] font-bold text-sm mb-1">$1,815 Payout</h3>
-                              <p className="text-gray-400 text-xs">Nikola | Serbia</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Certificate 2 */}
-                        <div className="flex-shrink-0 mx-2 w-64">
-                          <div className="group relative bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-4 hover:scale-[1.02] transition-all duration-300"
-                            style={{ boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)' }}>
-                            <div className="relative aspect-video rounded-xl overflow-hidden bg-[#181818] mb-3">
-                              <Image
-                                src="/certificates/mobile-certificate-2.png"
-                                alt="Mobile Payout Certificate 2"
-                                fill
-                                className="object-cover rounded-xl"
-                                sizes="256px"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = 'none';
-                                  const parent = target.parentElement;
-                                  if (parent) {
-                                    parent.innerHTML = `
-                                      <div class="w-full h-full flex items-center justify-center">
-                                        <div class="text-center">
-                                          <div class="text-[#0FF1CE] text-sm font-bold mb-1">Certificate #2</div>
-                                          <div class="text-gray-400 text-xs">Upload mobile-certificate-2.png</div>
-                                        </div>
-                                      </div>
-                                    `;
-                                  }
-                                }}
-                              />
-                            </div>
-                            <div className="text-center">
-                              <div className="text-[#0FF1CE] font-bold text-xs mb-1">$8,935 Payout</div>
-                              <p className="text-gray-400 text-xs">Marcus | Canada</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Duplicate Set for Seamless Loop */}
-                      <div className="flex">
-                        {/* Andrew Video */}
-                        <div className="flex-shrink-0 mx-2 w-64">
-                          <div className="group relative bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-4 hover:scale-[1.02] transition-all duration-300"
-                            style={{ boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)' }}>
-                            <div className="relative aspect-video rounded-xl overflow-hidden bg-[#181818] mb-3">
-                              <iframe
-                                src="https://www.youtube.com/embed/C2_8YzvnamQ?si=nQlC1MMt-h7OYIDB"
-                                title="Trader Payout Interview 1"
-                                className="w-full h-full"
-                                frameBorder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                              ></iframe>
-                            </div>
-                            <div className="text-center">
-                              <h3 className="text-[#0FF1CE] font-bold text-sm mb-1">$2,100 Payout</h3>
-                              <p className="text-gray-400 text-xs">Andrew S | UK</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Certificate 3 */}
-                        <div className="flex-shrink-0 mx-2 w-64">
-                          <div className="group relative bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-4 hover:scale-[1.02] transition-all duration-300"
-                            style={{ boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)' }}>
-                            <div className="relative aspect-video rounded-xl overflow-hidden bg-[#181818] mb-3">
-                              <Image
-                                src="/certificates/mobile-certificate-3.png"
-                                alt="Mobile Payout Certificate 3"
-                                fill
-                                className="object-cover rounded-xl"
-                                sizes="256px"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = 'none';
-                                  const parent = target.parentElement;
-                                  if (parent) {
-                                    parent.innerHTML = `
-                                      <div class="w-full h-full flex items-center justify-center">
-                                        <div class="text-center">
-                                          <div class="text-[#0FF1CE] text-sm font-bold mb-1">Certificate #3</div>
-                                          <div class="text-gray-400 text-xs">Upload mobile-certificate-3.png</div>
-                                        </div>
-                                      </div>
-                                    `;
-                                  }
-                                }}
-                              />
-                            </div>
-                            <div className="text-center">
-                              <div className="text-[#0FF1CE] font-bold text-xs mb-1">$4,442 Payout</div>
-                              <p className="text-gray-400 text-xs">James | Australia</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Nikola Video */}
-                        <div className="flex-shrink-0 mx-2 w-64">
-                          <div className="group relative bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-4 hover:scale-[1.02] transition-all duration-300"
-                            style={{ boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)' }}>
-                            <div className="relative aspect-video rounded-xl overflow-hidden bg-[#181818] mb-3">
-                              <iframe
-                                src="https://www.youtube.com/embed/CZrKX44a5JY?si=6Ztd5N5wZHO4ch4f"
-                                title="Trader Payout Interview 2"
-                                className="w-full h-full"
-                                frameBorder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                              ></iframe>
-                            </div>
-                            <div className="text-center">
-                              <h3 className="text-[#0FF1CE] font-bold text-sm mb-1">$1,815 Payout</h3>
-                              <p className="text-gray-400 text-xs">Nikola | Serbia</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Certificate 4 */}
-                        <div className="flex-shrink-0 mx-2 w-64">
-                          <div className="group relative bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-4 hover:scale-[1.02] transition-all duration-300"
-                            style={{ boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)' }}>
-                            <div className="relative aspect-video rounded-xl overflow-hidden bg-[#181818] mb-3">
-                              <Image
-                                src="/certificates/mobile-certificate-4.png"
-                                alt="Mobile Payout Certificate 4"
-                                fill
-                                className="object-cover rounded-xl"
-                                sizes="256px"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = 'none';
-                                  const parent = target.parentElement;
-                                  if (parent) {
-                                    parent.innerHTML = `
-                                      <div class="w-full h-full flex items-center justify-center">
-                                        <div class="text-center">
-                                          <div class="text-[#0FF1CE] text-sm font-bold mb-1">Certificate #4</div>
-                                          <div class="text-gray-400 text-xs">Upload mobile-certificate-4.png</div>
-                                        </div>
-                                      </div>
-                                    `;
-                                  }
-                                }}
-                              />
-                            </div>
-                            <div className="text-center">
-                              <div className="text-[#0FF1CE] font-bold text-xs mb-1">$8,935 Payout</div>
-                              <p className="text-gray-400 text-xs">Marcus | Canada</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right Side: Content Text (Mobile: Shows second) */}
-                <div className="w-full md:w-1/2 order-2 md:order-2 md:px-8 lg:px-12">
-                  <h3 className="text-xl md:text-2xl font-bold text-[#0FF1CE] mb-4 md:mb-6">
-                    Unleash Your Trading Potential
-                  </h3>
-                  
-                  <div className="space-y-3 md:space-y-4 text-gray-300 text-sm leading-relaxed">
-                    <p>
-                      Shockwave Capital developed a revolutionary <span className="text-[#0FF1CE] font-semibold">High-Octane Evaluation Process</span> for elite traders, consisting of our Shockwave Challenge and Verification - specifically engineered to discover true trading excellence.
-                    </p>
-                    
-                    <p>
-                      While other prop firms suffocate traders with restrictive rules and microscopic drawdowns, we've seen the industry's limitations and refuse to follow suit. Upon completing our Evaluation Process, traders gain access to <span className="text-[#0FF1CE] font-semibold">simulated funded accounts up to $500,000</span> with industry-leading conditions.
-                    </p>
-                    
-                    <p>
-                      Despite operating in a simulated environment, Shockwave traders can earn <span className="text-[#0FF1CE] font-semibold">up to 100% of their simulated profits</span> without risking personal capital. Our top performers unlock our Live Copy Trading Program, where consistent traders can have their trades copied 1:1 and scale to <span className="text-[#0FF1CE] font-semibold">$5 million in simulated capital</span>.
-                    </p>
-                    
-                    <p className="text-[#0FF1CE] font-semibold">
-                      The journey to becoming a Shockwave trader isn't for everyone - but for those ready to break free from industry limitations, we provide the tools, conditions, and opportunity to trade without restraints.
-                    </p>
-                  </div>
-
-                  <div className="mt-6 md:mt-8 flex flex-wrap gap-3 md:gap-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 md:w-3 md:h-3 bg-[#0FF1CE] rounded-full"></div>
-                      <span className="text-xs md:text-sm text-gray-400">15% Max Drawdown</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 md:w-3 md:h-3 bg-[#0FF1CE] rounded-full"></div>
-                      <span className="text-xs md:text-sm text-gray-400">1:200 Leverage</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 md:w-3 md:h-3 bg-[#0FF1CE] rounded-full"></div>
-                      <span className="text-xs md:text-sm text-gray-400">14-Day Payouts</span>
-                    </div>
-                  </div>
-                </div>
-
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+                {['15% max drawdown', '1:200 leverage', 'On-demand payouts'].map((item) => (
+                  <span
+                    key={item}
+                    className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs font-medium text-white/80 backdrop-blur-xl"
+                  >
+                    {item}
+                  </span>
+                ))}
               </div>
             </div>
 
-            {/* CTA Section */}
-            <div className="mx-auto mt-12 md:mt-16 text-center">
+            <div className="hidden gap-4 md:grid md:grid-cols-2 xl:grid-cols-4">
+              {DESKTOP_PAYOUTS.map((item) => (
+                <PayoutCard key={`${item.name}-${item.payout}`} item={item} />
+              ))}
+            </div>
+
+            <div className="relative -mx-6 overflow-hidden md:hidden">
+              <div className="pointer-events-none absolute bottom-0 left-0 top-0 z-10 w-8 bg-gradient-to-r from-black to-transparent" />
+              <div className="pointer-events-none absolute bottom-0 right-0 top-0 z-10 w-8 bg-gradient-to-l from-black to-transparent" />
+              <div className="flex animate-infinite-scroll-mobile" style={{ width: 'max-content' }}>
+                {[0, 1].map((setIndex) => (
+                  <div className="flex" key={setIndex}>
+                    {MOBILE_PAYOUTS.map((item, index) => (
+                      <div key={`${setIndex}-${index}`} className="mx-2 w-64 flex-shrink-0">
+                        <PayoutCard item={item} />
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-10 text-center md:mt-14">
               <button
-                onClick={() => window.location.href = '/challenge'}
-                className="px-8 py-4 bg-gradient-to-r from-[#0FF1CE] to-[#0AA89E] text-black text-lg md:text-xl font-bold rounded-xl hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-[#0FF1CE]/25"
+                onClick={() => window.location.href = 'https://www.shockwavetrading.com/challenge'}
+                className="rounded-full bg-[#0FF1CE] px-8 py-3.5 text-base font-bold text-black shadow-[0_10px_30px_rgba(15,241,206,0.25)] transition-transform duration-300 hover:scale-[1.02]"
               >
-                GET FUNDED NOW
+                Get funded
               </button>
             </div>
           </div>
@@ -1028,15 +706,17 @@ export default function ShockwaveLandingPage() {
         {/* Infinite Scroll Container */}
         <div className="relative overflow-hidden">
           {/* Gradient overlays for smooth edges */}
-          <div className="absolute left-0 top-0 bottom-0 w-20 md:w-32 bg-gradient-to-r from-[#111111] via-[#111111]/80 to-transparent z-10"></div>
-          <div className="absolute right-0 top-0 bottom-0 w-20 md:w-32 bg-gradient-to-l from-[#111111] via-[#111111]/80 to-transparent z-10"></div>
+          <div className="absolute left-0 top-0 bottom-0 w-20 md:w-32 bg-gradient-to-r from-black to-transparent z-10"></div>
+          <div className="absolute right-0 top-0 bottom-0 w-20 md:w-32 bg-gradient-to-l from-black to-transparent z-10"></div>
+     
+     
           
           {/* Scrolling Track */}
           <div className="flex animate-infinite-scroll md:animate-infinite-scroll-mobile" style={{ width: '600%' }}>
             {/* First set of certificates */}
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((index) => (
               <div key={`first-${index}`} className="flex-shrink-0 mx-4">
-                <div className="relative aspect-[4/3] rounded-lg overflow-hidden w-64 md:w-80 hover:scale-105 transition-all duration-300">
+                <div className="relative aspect-[4/3] w-64 overflow-hidden rounded-[18px] border border-white/10 md:w-80">
                   {/* Payout certificate image */}
                   <Image
                     src={`/certificates/certificate-${index}.png`}
@@ -1069,7 +749,7 @@ export default function ShockwaveLandingPage() {
             {/* Duplicate set for seamless loop */}
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((index) => (
               <div key={`second-${index}`} className="flex-shrink-0 mx-4">
-                <div className="relative aspect-[4/3] rounded-lg overflow-hidden w-64 md:w-80 hover:scale-105 transition-all duration-300">
+                <div className="relative aspect-[4/3] w-64 overflow-hidden rounded-[18px] border border-white/10 md:w-80">
                   {/* Payout certificate image */}
                   <Image
                     src={`/certificates/certificate-${index}.png`}
@@ -1102,12 +782,12 @@ export default function ShockwaveLandingPage() {
         </div>
   
         {/* How It Works Section */}
-        <section className="py-12 md:py-20 px-4 md:px-6 bg-black relative overflow-hidden">
+        <section className="py-12 md:py-20 px-4 md:px-6 bg-black relative overflow-hidden hidden">
           <div className="absolute top-1/3 right-0 w-1/2 h-[300px] bg-[#0FF1CE]/[0.015] blur-[120px] rounded-full"></div>
           <div className="absolute bottom-1/3 left-0 w-1/2 h-[300px] bg-[#0FF1CE]/[0.01] blur-[120px] rounded-full"></div>
           <div className="relative z-10 max-w-6xl mx-auto">
             <div className="text-center mb-8 md:mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-[#0FF1CE] mb-3 md:mb-4">How It Works</h2>
+              <h2 className="mb-3 text-3xl font-semibold tracking-tight text-white md:mb-4 md:text-4xl">How It Works</h2>
               <p className="text-gray-400 text-sm md:text-base max-w-2xl mx-auto">
                 Get started in three simple steps and begin your journey to becoming a funded trader
               </p>
@@ -1119,40 +799,30 @@ export default function ShockwaveLandingPage() {
                 {
                   icon: "1",
                   title: "Create Your Account",
-                  description: "Choose your evaluation plan and gain immediate access to a live-market simulated environment."
+                  description: "Choose your evaluation plan and gain immediate access to a live trading environment."
                 },
                 {
                   icon: "2",
                   title: "Complete the Challenge",
-                  description: "Demonstrate consistency, discipline, and strategic risk management in real-time simulated conditions."
+                  description: "Demonstrate consistency, discipline, and strategic risk management in live market conditions."
                 },
                 {
                   icon: "3",
-                  title: "Progress to Simulated Funded Status",
-                  description: "Once your performance meets the challenge criteria, you'll be transitioned into our Simulated Funded Program — designed to mirror the pressure and opportunity of trading at scale."
+                  title: "Progress to a Funded Account",
+                  description: "Once your performance meets the challenge criteria, you'll move into a funded account and trade live capital at scale."
                 },
-              ].map(({ icon, title, description }, index) => (
+              ].map(({ icon, title, description }) => (
                 <div
                   key={title}
-                  className="group relative bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-6 border-2 border-[#0FF1CE]/30 hover:border-[#0FF1CE]/50 transition-all duration-300 hover:scale-105 overflow-hidden"
-                  style={{ boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)' }}
+                  className="relative overflow-hidden rounded-[22px] border border-white/10 bg-white/[0.04] p-6 backdrop-blur-xl"
                 >
-                  {/* Background glow */}
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-[#0FF1CE]/10 blur-[40px] rounded-full"></div>
-                  
                   <div className="relative z-10">
-                    {/* Step Number Badge */}
-                    <div className="w-12 h-12 rounded-full bg-[#0FF1CE]/10 border-2 border-[#0FF1CE] flex items-center justify-center mb-4">
-                      <span className="text-[#0FF1CE] text-xl font-bold">{icon}</span>
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
+                      <span className="text-xl font-bold text-[#0FF1CE]">{icon}</span>
                     </div>
-
-                    {/* Content */}
-                    <h3 className="text-xl font-bold text-white mb-3">{title}</h3>
-                    <p className="text-gray-400 text-sm leading-relaxed">{description}</p>
+                    <h3 className="mb-3 text-xl font-semibold text-white">{title}</h3>
+                    <p className="text-sm leading-relaxed text-white/55">{description}</p>
                   </div>
-
-                  {/* Hover effect */}
-                  <div className="absolute inset-0 rounded-2xl bg-[#0FF1CE]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                 </div>
               ))}
             </div>
@@ -1163,31 +833,26 @@ export default function ShockwaveLandingPage() {
                 {
                   icon: "1",
                   title: "Create Your Account",
-                  description: "Choose your evaluation plan and gain immediate access to a live-market simulated environment."
+                  description: "Choose your evaluation plan and gain immediate access to a live trading environment."
                 },
                 {
                   icon: "2",
                   title: "Complete the Challenge",
-                  description: "Demonstrate consistency, discipline, and strategic risk management in real-time simulated conditions."
+                  description: "Demonstrate consistency, discipline, and strategic risk management in live market conditions."
                 },
                 {
                   icon: "3",
-                  title: "Progress to Simulated Funded Status",
-                  description: "Once your performance meets the challenge criteria, you'll be transitioned into our Simulated Funded Program."
+                  title: "Progress to a Funded Account",
+                  description: "Once your performance meets the challenge criteria, you'll move into a funded account."
                 },
               ].map(({ icon, title, description }, index) => (
                 <div key={title} className="relative">
                   {/* Card */}
-                  <div className="relative bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl p-5 border-2 border-[#0FF1CE]/30 overflow-hidden"
-                    style={{ boxShadow: '0 0 15px rgba(15, 241, 206, 0.1)' }}>
-                    
-                    {/* Background glow */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-[#0FF1CE]/10 blur-[30px] rounded-full"></div>
+                  <div className="relative overflow-hidden rounded-[22px] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
                     
                     <div className="relative z-10">
-                      {/* Step Number Badge */}
                       <div className="flex items-start gap-4 mb-3">
-                        <div className="w-10 h-10 rounded-full bg-[#0FF1CE]/10 border-2 border-[#0FF1CE] flex items-center justify-center flex-shrink-0">
+                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
                           <span className="text-[#0FF1CE] text-lg font-bold">{icon}</span>
                         </div>
                         <div className="flex-1">
@@ -1212,8 +877,8 @@ export default function ShockwaveLandingPage() {
 
             {/* CTA Button */}
             <div className="text-center mt-10 md:mt-12">
-              <Link href="/challenge">
-                <button className="px-8 md:px-12 py-3 md:py-4 bg-[#0FF1CE] text-black text-base md:text-lg font-bold rounded-lg hover:scale-105 transition-transform shadow-lg hover:shadow-[#0FF1CE]/20">
+              <Link href="https://www.shockwavetrading.com/challenge">
+                <button className="rounded-2xl bg-[#0FF1CE] px-8 py-3.5 text-base font-bold text-black shadow-[0_8px_30px_rgba(15,241,206,0.22)] transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98] md:px-12 md:text-lg">
                   Start Your Challenge
                 </button>
               </Link>
@@ -1228,25 +893,21 @@ export default function ShockwaveLandingPage() {
           {/* VIP Showcase Card */}
           <VipCard />
           
-          <PricingTable />
+          <PricingTable challengeHref="https://www.shockwavetrading.com/challenge" />
         </section>
 
         {/* Scaling Plan Section */}
         <section className="py-12 md:py-20 px-4 md:px-6 bg-black relative overflow-hidden">
           <div className="absolute top-1/2 right-1/4 w-1/2 h-[350px] bg-[#0FF1CE]/[0.02] blur-[130px] rounded-full"></div>
           <div className="relative z-10">
-            <h2 className="text-3xl md:text-4xl font-bold text-center text-[#0FF1CE] mb-3 md:mb-6">Performance Scaling Plan</h2>
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-center text-white mb-3 md:mb-6">Performance Scaling Plan</h2>
             <p className="text-gray-300 text-center text-sm md:text-base max-w-3xl mx-auto mb-8 md:mb-12">
               We believe trader development is a journey — not a one-time event. That's why Shockwave Capital offers an ongoing scale-up path for consistent performers.
             </p>
 
-            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12">
+            <div className="-mx-4 flex snap-x snap-mandatory scroll-pl-4 gap-3 overflow-x-auto px-4 pb-2 hide-scrollbar md:mx-auto md:grid md:max-w-7xl md:snap-none md:grid-cols-2 md:gap-12 md:overflow-visible md:px-0 md:pb-0">
               {/* Overview Card */}
-              <div className="relative bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl md:rounded-2xl p-5 md:p-8 border-2 border-[#0FF1CE]/30 hover:border-[#0FF1CE]/50 hover:scale-[1.01] transition-all duration-300 overflow-hidden"
-                style={{ boxShadow: '0 0 15px rgba(15, 241, 206, 0.1)' }}>
-                {/* Background glow */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2/3 h-2/3 bg-[#0FF1CE]/10 blur-[60px] rounded-full"></div>
-                
+              <div className="relative flex w-[calc(100vw-7.5rem)] shrink-0 snap-start flex-col overflow-hidden rounded-[22px] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl md:w-auto md:shrink md:p-8">
                 <div className="relative z-10">
                   <h3 className="text-xl md:text-2xl font-bold text-white mb-4 md:mb-8">Scaling plan <span className="text-[#0FF1CE]">overview</span></h3>
                 <ul className="space-y-3 md:space-y-6 text-sm md:text-base">
@@ -1255,7 +916,7 @@ export default function ShockwaveLandingPage() {
                     "Balance Scale up of 50% every 3 months",
                     "Ongoing increases every 3 months if objectives are met",
                     "Trading Objectives remain the same as your original plan on increased balance",
-                    "Maximum Allocation per trader of $5 million Simulated Account"
+                    "Maximum allocation per trader of $5 million on a funded account"
                   ].map((item, index) => (
                     <li key={index} className="flex items-start space-x-3 md:space-x-4 group">
                       <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center mt-0.5 md:mt-1 group-hover:scale-110 transition-transform shrink-0">
@@ -1266,8 +927,8 @@ export default function ShockwaveLandingPage() {
                   ))}
                 </ul>
                   <div className="mt-6 md:mt-8">
-                    <Link href="/challenge">
-                      <button className="w-full md:w-auto px-4 py-2 md:px-8 md:py-4 bg-[#0FF1CE] text-black text-sm md:text-lg font-bold rounded-lg hover:scale-105 transition-transform">
+                    <Link href="https://www.shockwavetrading.com/challenge">
+                      <button className="w-full rounded-2xl bg-[#0FF1CE] px-8 py-3.5 text-base font-bold text-black shadow-[0_8px_30px_rgba(15,241,206,0.22)] transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98] md:w-auto">
                         Get Funded
                       </button>
                     </Link>
@@ -1276,18 +937,14 @@ export default function ShockwaveLandingPage() {
               </div>
 
               {/* Table Card */}
-              <div className="relative bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-xl md:rounded-2xl p-5 md:p-8 border-2 border-[#0FF1CE]/30 hover:border-[#0FF1CE]/50 overflow-hidden hover:scale-[1.01] transition-all duration-300"
-                style={{ boxShadow: '0 0 15px rgba(15, 241, 206, 0.1)' }}>
-                {/* Background glow */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2/3 h-2/3 bg-[#0FF1CE]/10 blur-[60px] rounded-full"></div>
-                
+              <div className="relative flex w-[calc(100vw-7.5rem)] shrink-0 snap-start flex-col overflow-hidden rounded-[22px] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl md:w-auto md:shrink md:p-8">
                 <div className="relative z-10">
                 <div className="overflow-x-auto -mx-5 px-5 md:mx-0 md:px-0">
                   <table className="w-full text-sm md:text-base">
                     <thead>
-                      <tr className="border-b border-[#0FF1CE]/20">
-                        <th className="py-3 md:py-4 px-3 md:px-6 text-left text-[#0FF1CE] font-bold">Elapsed Time</th>
-                        <th className="py-3 md:py-4 px-3 md:px-6 text-right text-[#0FF1CE] font-bold">Simulated Capital</th>
+                      <tr className="border-b border-white/10">
+                        <th className="py-3 md:py-4 px-3 md:px-6 text-left text-white/50 text-xs font-semibold uppercase tracking-wider">Elapsed Time</th>
+                        <th className="py-3 md:py-4 px-3 md:px-6 text-right text-white/50 text-xs font-semibold uppercase tracking-wider">Funded Capital</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1304,7 +961,7 @@ export default function ShockwaveLandingPage() {
                       ].map((row, index) => (
                         <tr 
                           key={index}
-                          className="border-b border-[#2F2F2F] last:border-b-0 hover:bg-[#0FF1CE]/5 transition-colors group"
+                          className="border-b border-white/10 last:border-b-0"
                         >
                           <td className="py-2 md:py-4 px-3 md:px-6 text-left text-gray-300 group-hover:text-white transition-colors">
                             {row.time}
@@ -1318,7 +975,7 @@ export default function ShockwaveLandingPage() {
                   </table>
                 </div>
                   <div className="mt-4 md:mt-6 text-xs md:text-sm text-gray-400">
-                    Simulated capital increments on the Shockwave Funded Account can occur every 3 months. To qualify for a capital increase, the trader must generate at least 10% net profit over 3 consecutive months.
+                    Funded capital can increase every 3 months. To qualify, the trader must generate at least 10% net profit over 3 consecutive months.
                   </div>
                 </div>
               </div>
@@ -1330,120 +987,74 @@ export default function ShockwaveLandingPage() {
         <section className="py-12 md:py-20 px-4 md:px-6 bg-black relative overflow-hidden">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-[400px] bg-[#0FF1CE]/[0.015] blur-[130px] rounded-full"></div>
           <div className="relative z-10">
-            <h2 className="text-3xl md:text-4xl font-bold text-center text-[#0FF1CE] mb-3 md:mb-6">How we compare?</h2>
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-center text-white mb-3 md:mb-6">How we compare</h2>
             <p className="text-gray-300 text-center text-sm md:text-base max-w-3xl mx-auto mb-8 md:mb-16">
               Discover how Shockwave Capital stands out in the industry and compares to other leading prop firms.
             </p>
 
-            {/* Comparison Section Table */}
-            <div className="max-w-7xl mx-auto overflow-x-auto pb-4 px-4 md:px-8 py-2 md:py-4">
-              <div className="min-w-[768px] grid grid-cols-4 gap-px bg-[#0FF1CE]/20 rounded-2xl overflow-hidden border-2 border-[#0FF1CE]/30 transform hover:scale-[1.01] hover:border-[#0FF1CE]/50 transition-all duration-300 mx-auto"
-                style={{ boxShadow: '0 0 30px rgba(15, 241, 206, 0.15)' }}>
-                {/* Header Row */}
-                <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 p-4 md:p-8 flex items-center justify-center"></div>
-                <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 p-4 md:p-8 flex flex-col items-center justify-center">
-                  <div className="bg-gradient-to-br from-[#0FF1CE]/20 to-[#0FF1CE]/5 p-3 md:p-4 rounded-xl md:rounded-2xl mb-2 md:mb-4 w-20 h-20 md:w-40 md:h-40 flex items-center justify-center border border-[#0FF1CE]/30">
-                    <Image src="/logo.png" alt="Shockwave Capital" width={120} height={120} className="w-16 h-16 md:w-32 md:h-32" />
-                  </div>
-                  <span className="text-[#0FF1CE] font-bold text-base md:text-xl">Shockwave</span>
+            <div className="mx-auto max-w-5xl overflow-hidden rounded-[22px] border border-white/10 bg-white/[0.04] backdrop-blur-xl">
+              <div className="hidden border-b border-white/10 md:grid md:grid-cols-[minmax(180px,1.35fr)_repeat(3,1fr)]">
+                <div />
+                <div className="flex flex-col items-center gap-2 bg-white/[0.05] px-4 py-5">
+                  <Image src="/logo.png" alt="Shockwave Capital" width={48} height={48} className="h-10 w-10" />
+                  <span className="text-sm font-semibold text-[#0FF1CE]">Shockwave</span>
                 </div>
-                <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 p-4 md:p-8 flex flex-col items-center justify-center">
-                  <div className="bg-gradient-to-br from-[#0FF1CE]/5 to-transparent p-3 md:p-4 rounded-xl md:rounded-2xl mb-2 md:mb-4 w-20 h-20 md:w-40 md:h-40 flex items-center justify-center border border-[#0FF1CE]/20">
-                    <span className="text-lg md:text-2xl font-bold text-white">FTMO</span>
+                <div className="flex items-center justify-center px-4 py-5 text-sm font-semibold text-white/70">FTMO</div>
+                <div className="flex items-center justify-center px-4 py-5 text-sm font-semibold text-white/70">FundedNext</div>
+              </div>
+
+              {[
+                { feature: "Max Drawdown", shockwave: "15%", ftmo: "10%", fundedNext: "10%" },
+                { feature: "Max Daily Drawdown", shockwave: "8%", ftmo: "5%", fundedNext: "5%" },
+                { feature: "Leverage", shockwave: "1:200", ftmo: "1:30", fundedNext: "1:100" },
+                { feature: "First Payout", shockwave: "On-demand", ftmo: "14 Days", fundedNext: "21 Days" },
+                { feature: "Instant Funding", shockwave: true, ftmo: false, fundedNext: false },
+                { feature: "Max Allocation", shockwave: "$500k", ftmo: "$400k", fundedNext: "$300k" },
+                { feature: "Minimum Trading Days", shockwave: "None", ftmo: "5", fundedNext: "5" },
+                { feature: "Weekend Holding", shockwave: true, ftmo: false, fundedNext: true }
+              ].map((row) => (
+                <div
+                  key={row.feature}
+                  className="border-b border-white/10 px-4 py-4 last:border-b-0 md:grid md:grid-cols-[minmax(180px,1.35fr)_repeat(3,1fr)] md:items-center md:px-0 md:py-0"
+                >
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/45 md:px-6 md:py-4 md:text-sm md:font-medium md:normal-case md:tracking-normal md:text-white/80">
+                    {row.feature}
                   </div>
-                  <span className="text-white font-bold text-base md:text-xl">FTMO</span>
-                </div>
-                <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 p-4 md:p-8 flex flex-col items-center justify-center">
-                  <div className="bg-gradient-to-br from-[#0FF1CE]/5 to-transparent p-3 md:p-4 rounded-xl md:rounded-2xl mb-2 md:mb-4 w-20 h-20 md:w-40 md:h-40 flex items-center justify-center border border-[#0FF1CE]/20">
-                    <span className="text-xs md:text-2xl font-bold text-white">FundedNext</span>
-                  </div>
-                  <span className="text-white font-bold text-base md:text-xl">FundedNext</span>
-                </div>
-
-                {/* Comparison Rows */}
-                {[
-                  {
-                    feature: "Max Drawdown",
-                    shockwave: "15%",
-                    ftmo: "10%",
-                    fundedNext: "10%"
-                  },
-                  {
-                    feature: "Max Daily Drawdown",
-                    shockwave: "8%",
-                    ftmo: "5%",
-                    fundedNext: "5%"
-                  },
-
-                  {
-                    feature: "Leverage",
-                    shockwave: "1:200",
-                    ftmo: "1:30",
-                    fundedNext: "1:100"
-                  },
-
-                  {
-                    feature: "First Payout Eligibility",
-                    shockwave: "14 Days",
-                    ftmo: "14 Days",
-                    fundedNext: "21 Days"
-                  },
-        
-                  {
-                    feature: "Simulated Instant Access",
-                    shockwave: true,
-                    ftmo: false,
-                    fundedNext: false
-                  },
-                  {
-                    feature: "Simulated Max Allocation",
-                    shockwave: "$500k",
-                    ftmo: "$400k",
-                    fundedNext: "$300k"
-                  },
-                  {
-                    feature: "Minimum Trading Days",
-                    shockwave: "5",
-                    ftmo: "5",
-                    fundedNext: "5"
-                  },
-                  {
-                    feature: "Weekend Holding",
-                    shockwave: true,
-                    ftmo: false,
-                    fundedNext: true
-                  }
-                ].map((row, index) => (
-                  <React.Fragment key={index}>
-                    <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 p-3 md:p-6 flex items-center font-medium text-white border-t border-[#0FF1CE]/20 text-xs md:text-base">
-                      {row.feature}
-                    </div>
-                    {[row.shockwave, row.ftmo, row.fundedNext].map((value, i) => (
-                      <div key={i} className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 p-3 md:p-6 flex items-center justify-center border-t border-[#0FF1CE]/20 group hover:bg-[#0FF1CE]/15 transition-colors">
-                        {typeof value === 'boolean' ? (
-                          value ? (
-                            <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#0FF1CE]/10 flex items-center justify-center group-hover:scale-110 transition-transform border border-[#0FF1CE]/30">
-                              <span className="text-[#0FF1CE] text-lg md:text-2xl">✓</span>
-                            </div>
+                  <div className="mt-3 grid grid-cols-3 gap-2 md:contents md:mt-0">
+                    {[
+                      { name: "Shockwave", value: row.shockwave, highlight: true },
+                      { name: "FTMO", value: row.ftmo, highlight: false },
+                      { name: "FundedNext", value: row.fundedNext, highlight: false }
+                    ].map((column) => (
+                      <div
+                        key={column.name}
+                        className={`flex flex-col items-center justify-center rounded-2xl border px-1.5 py-2.5 text-center md:rounded-none md:border-0 md:px-4 md:py-4 ${
+                          column.highlight
+                            ? 'border-[#0FF1CE]/25 bg-[#0FF1CE]/10 md:bg-white/[0.05]'
+                            : 'border-white/10 bg-black/30 md:bg-transparent'
+                        }`}
+                      >
+                        <span className="mb-1 text-[10px] font-medium text-white/40 md:hidden">{column.name}</span>
+                        {typeof column.value === 'boolean' ? (
+                          column.value ? (
+                            <span className="text-base font-semibold text-[#0FF1CE]">✓</span>
                           ) : (
-                            <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-red-500/10 flex items-center justify-center group-hover:scale-110 transition-transform border border-red-500/30">
-                              <span className="text-red-500 text-lg md:text-2xl">×</span>
-                            </div>
+                            <span className="text-base font-semibold text-red-400">×</span>
                           )
                         ) : (
-                          <span className={`font-bold text-xs md:text-base ${i === 0 ? 'text-[#0FF1CE]' : 'text-white'}`}>{value}</span>
+                          <span className={`text-sm font-semibold ${column.highlight ? 'text-[#0FF1CE]' : 'text-white'}`}>{column.value}</span>
                         )}
                       </div>
                     ))}
-                  </React.Fragment>
-                ))}
-              </div>
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* CTA Button */}
             <div className="max-w-4xl mx-auto mt-8 md:mt-16 text-center">
-              <Link href="/challenge">
-                <button className="px-6 py-3 md:px-8 md:py-4 bg-[#0FF1CE] text-black text-base md:text-xl font-bold rounded-lg hover:scale-105 transition-transform shadow-lg hover:shadow-[#0FF1CE]/20">
+              <Link href="https://www.shockwavetrading.com/challenge">
+                <button className="rounded-2xl bg-[#0FF1CE] px-8 py-3.5 text-base font-bold text-black shadow-[0_8px_30px_rgba(15,241,206,0.22)] transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98]">
                   Choose the Best. Choose Shockwave
                 </button>
               </Link>
@@ -1455,16 +1066,16 @@ export default function ShockwaveLandingPage() {
         <section className="py-20 px-6 bg-black relative overflow-hidden">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-[#0FF1CE]/[0.05] blur-[120px] rounded-full"></div>
           <div className="relative z-10">
-            <h2 className="text-3xl font-bold text-center text-[#0FF1CE] mb-6">Global Network</h2>
+            <h2 className="text-3xl font-semibold tracking-tight text-center text-white mb-6">Global Network</h2>
             <p className="text-base md:text-xl text-gray-300 text-center max-w-2xl mx-auto mb-16">
-              Global Access. Elite Focus. Unmatched Simulation.
+              Global Access. Elite Focus. Live Markets.
             </p>
 
             <div className="max-w-5xl mx-auto relative">
               {/* Logo positioned above SVG */}
               <div className="absolute left-1/2 -translate-x-1/2 -top-10 z-10">
                 <div className="relative">
-                  <div className="absolute inset-0 rounded-full bg-[#121212] border-2 border-[#0FF1CE] animate-pulse"></div>
+                  <div className="absolute inset-0 rounded-full border border-white/15 bg-black"></div>
                   <Image
                     src="/logo.png"
                     alt="Shockwave Capital" 
@@ -1488,7 +1099,7 @@ export default function ShockwaveLandingPage() {
                 </defs>
 
                 {/* Background Circle */}
-                <circle cx="400" cy="400" r="400" fill="#181818" />
+                <circle cx="400" cy="400" r="400" fill="#0b0d0f" />
 
                 {/* Grid Lines */}
                 <g stroke="url(#globe-gradient)" strokeWidth="1">
@@ -1588,17 +1199,17 @@ export default function ShockwaveLandingPage() {
             {/* Stats Cards - Positioned to overlap SVG */}
             <div className="relative -mt-5 md:-mt-15 px-6">
               <div className="grid grid-cols-3 gap-4 max-w-4xl mx-auto">
-                <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-4 md:p-6">
+                <div className="rounded-[22px] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl md:p-6">
                   <h3 className="text-[#0FF1CE] text-lg md:text-4xl font-bold mb-2">24/7</h3>
                   <p className="text-gray-400 text-[0.625rem] md:text-base">Global Market Access</p>
                 </div>
-                <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-4 md:p-6">
+                <div className="rounded-[22px] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl md:p-6">
                   <h3 className="text-[#0FF1CE] text-lg md:text-4xl font-bold mb-2">100+</h3>
                   <p className="text-gray-400 text-[0.625rem] md:text-base">Countries Supported</p>
                 </div>
-                <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-4 md:p-6">
+                <div className="rounded-[22px] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl md:p-6">
                   <h3 className="text-[#0FF1CE] text-lg md:text-4xl font-bold mb-2">$2M+</h3>
-                  <p className="text-gray-400 text-[0.625rem] md:text-base">Simulated Capital Programs</p>
+                  <p className="text-gray-400 text-[0.625rem] md:text-base">Funded Capital</p>
                 </div>
               </div>
             </div>
@@ -1607,7 +1218,7 @@ export default function ShockwaveLandingPage() {
            <div className="absolute top-1/3 right-1/4 w-1/2 h-[300px] bg-[#0FF1CE]/[0.02] blur-[120px] rounded-full"></div>
           <div className="absolute bottom-1/3 left-1/4 w-1/2 h-[300px] bg-[#0FF1CE]/[0.015] blur-[120px] rounded-full"></div>
           <div className="relative z-10">
-            <h2 id="faq" className="text-4xl font-bold text-center text-[#0FF1CE] mb-12 mt-16 md:mt-20">FAQ</h2>
+            <h2 id="faq" className="text-4xl font-semibold tracking-tight text-center text-white mb-12 mt-16 md:mt-20">FAQ</h2>
             
             {/* Mobile Scroll Indicators */}
             <div className="relative">
@@ -1628,17 +1239,17 @@ export default function ShockwaveLandingPage() {
                     {
                       question: "What makes Shockwave different?",
                       questionShort: "We don't play small.",
-                      answer: "While other platforms overpromise and underdeliver, we offer structured simulations with higher drawdown tolerance, tighter feedback loops, and faster scaling potential — all with fully disclosed rules and performance metrics."
+                      answer: "While other platforms overpromise and underdeliver, we offer funded accounts with higher drawdown tolerance, tighter feedback loops, and faster scaling — all with fully disclosed rules and performance metrics."
                     },
                     {
                       question: "How soon can I start trading?",
                       questionShort: "Immediately after setup.",
-                      answer: "Once your account is set up and your evaluation fee is processed, you're good to go. No long waiting times, no phases to unlock — just start trading in our live-market simulation environment."
+                      answer: "Once your account is set up and your evaluation fee is processed, you're good to go. No long waiting times, no phases to unlock — start trading a live account."
                     },
                     {
                       question: "What's the payout process like?",
-                      questionShort: "Fast and straightforward.",
-                      answer: "After meeting performance benchmarks, simulated payouts become eligible after 14 days and the required number of profitable trade days. Standard accounts: up to 90% simulated share. Instant accounts: up to 70%."
+                      questionShort: "On demand. 24/7.",
+                      answer: "Request a payout any day, including weekends, as long as you have no open positions and have not breached your funded account. The minimum is $50 after Shockwave's performance split. The amount comes off your balance immediately, and you can keep trading the same account while it is processed. Payouts are sent as USDC on ERC-20, or USDT on Tron or Solana. Breached accounts cannot be paid."
                     },
                     {
                       question: "What trading styles are allowed?",
@@ -1653,45 +1264,12 @@ export default function ShockwaveLandingPage() {
                   ].map(({ question, questionShort, answer }, index) => (
                     <div
                       key={question}
-                      className="group relative bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-6 hover:scale-105 transition-all duration-300 min-w-[300px] md:min-w-0 animate-fadeIn"
-                      style={{
-                        boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)',
-                        animationDelay: `${index * 0.1}s`
-                      }}
+                      className="min-w-[280px] rounded-[22px] border border-white/10 bg-white/[0.04] p-6 backdrop-blur-xl md:min-w-0"
                     >
-                      {/* Chat Container */}
-                      <div className="space-y-4">
-                        {/* Trader Question */}
-                        <div className="flex flex-col space-y-2">
-                          <div className="flex items-center space-x-2 mb-2">
-                            <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
-                              <span className="text-sm text-white">T</span>
-                            </div>
-                            <span className="text-gray-400 text-sm">Trader</span>
-                          </div>
-                          <div className="bg-gray-800 rounded-2xl rounded-tl-none p-4 text-white text-sm">
-                            {question}
-                          </div>
-                        </div>
-
-                        {/* Shockwave Response */}
-                        <div className="flex flex-col space-y-2">
-                          <div className="flex items-center space-x-2 mb-2">
-                            <div className="w-8 h-8 rounded-full bg-[#0FF1CE] flex items-center justify-center">
-                              <span className="text-sm text-black font-bold">S</span>
-                            </div>
-                            <span className="text-[#0FF1CE] text-sm">Shockwave</span>
-                          </div>
-                          <div className="bg-[#0FF1CE]/10 backdrop-blur-sm rounded-2xl rounded-tl-none p-4">
-                            <p className="text-[#0FF1CE] font-bold mb-2">{questionShort}</p>
-                            <p className="text-gray-300 text-sm whitespace-pre-line">{answer}</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Hover gradient overlay */}
-                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#0FF1CE]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  </div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0FF1CE]">{questionShort}</p>
+                      <h3 className="mt-2 text-lg font-semibold text-white">{question}</h3>
+                      <p className="mt-3 text-sm leading-relaxed text-white/60 whitespace-pre-line">{answer}</p>
+                    </div>
                 ))}
                 </div>
               </div>
@@ -1700,8 +1278,8 @@ export default function ShockwaveLandingPage() {
           
           {/* CTA Button */}
           <div className="max-w-4xl mx-auto mt-16 text-center">
-            <Link href="/challenge">
-              <button className="px-8 md:px-12 py-3 md:py-4 bg-[#0FF1CE] text-black text-sm md:text-xl font-bold rounded-lg hover:scale-105 transition-transform shadow-lg hover:shadow-[#0FF1CE]/20">
+            <Link href="https://www.shockwavetrading.com/challenge">
+              <button className="rounded-2xl bg-[#0FF1CE] px-8 py-3.5 text-base font-bold text-black shadow-[0_8px_30px_rgba(15,241,206,0.22)] transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98] md:px-12">
                 Stop coasting and go full throttle
               </button>
             </Link>
@@ -1717,15 +1295,12 @@ export default function ShockwaveLandingPage() {
           <div className="relative z-10">
             <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12">
               {/* Discord Community */}
-              <div className="relative bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-8 hover:scale-105 transition-all duration-300"
-                style={{
-                  boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)'
-                }}>
+              <div className="relative rounded-[22px] border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl">
                 <div className="flex flex-col h-full justify-between">
                   <div>
-                    <h2 className="text-3xl md:text-4xl font-bold text-[#0FF1CE] mb-4">LEARN FROM OUR DISCORD COMMUNITY</h2>
-                    <a href="#" className="inline-block mt-6 text-[#0FF1CE] hover:text-[#0FF1CE]/80 font-bold text-lg transition-colors">
-                      JOIN OUR DISCORD →
+                    <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-white mb-4">Learn with the community</h2>
+                    <a href="#" className="mt-6 inline-flex items-center rounded-2xl bg-[#0FF1CE] px-6 py-3 text-sm font-bold text-black shadow-[0_8px_30px_rgba(15,241,206,0.22)] transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98]">
+                      Join Discord
                     </a>
                   </div>
                   <div className="mt-8">
@@ -1737,11 +1312,8 @@ export default function ShockwaveLandingPage() {
               </div>
 
               {/* Email Signup */}
-              <div className="relative bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-8 hover:scale-105 transition-all duration-300"
-                style={{
-                  boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)'
-                }}>
-                <h2 className="text-3xl md:text-4xl font-bold text-[#0FF1CE] mb-6">Subscribe for Email Updates</h2>
+              <div className="relative rounded-[22px] border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl">
+                <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-white mb-6">Email updates</h2>
                 <form className="space-y-4">
                   <div>
                     <label htmlFor="fullName" className="block text-white mb-2">Full Name</label>
@@ -1749,7 +1321,7 @@ export default function ShockwaveLandingPage() {
                       type="text"
                       id="fullName"
                       placeholder="Type your name"
-                      className="w-full px-4 py-3 bg-[#181818] border border-[#0FF1CE]/20 rounded-lg focus:outline-none focus:border-[#0FF1CE] text-white placeholder-gray-400"
+                      className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white placeholder-gray-500 focus:border-[#0FF1CE]/60 focus:outline-none"
                     />
                   </div>
                   <div>
@@ -1758,10 +1330,10 @@ export default function ShockwaveLandingPage() {
                       type="email"
                       id="email"
                       placeholder="Type your email"
-                      className="w-full px-4 py-3 bg-[#181818] border border-[#0FF1CE]/20 rounded-lg focus:outline-none focus:border-[#0FF1CE] text-white placeholder-gray-400"
+                      className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white placeholder-gray-500 focus:border-[#0FF1CE]/60 focus:outline-none"
                     />
                   </div>
-                  <button type="submit" className="w-full md:w-auto px-8 py-3 bg-[#0FF1CE] text-black font-bold rounded-lg hover:scale-105 transition-transform">
+                  <button type="submit" className="w-full rounded-2xl bg-[#0FF1CE] px-8 py-3.5 font-bold text-black shadow-[0_8px_30px_rgba(15,241,206,0.22)] transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98] md:w-auto">
                     Submit
                   </button>
                 </form>
@@ -1786,7 +1358,7 @@ export default function ShockwaveLandingPage() {
                   className="h-auto w-auto"
                 />
                 <p className="text-gray-400 text-sm">
-                High-performance simulated trading for skilled traders. Test your strategy with industry-leading virtual conditions and 1:200 simulated leverage in our evaluation programs.
+                High-drawdown CFD funding for skilled traders. Pass the evaluation, trade a funded account, and request payouts on demand with up to 1:200 leverage.
                 </p>
                 <div className="flex space-x-4">
                   {[
@@ -1798,8 +1370,7 @@ export default function ShockwaveLandingPage() {
                     <a
                       key={icon}
                       href={href}
-                      className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm flex items-center justify-center group hover:scale-110 transition-all duration-300"
-                      style={{ boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)' }}
+                      className="group flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-[#0FF1CE] transition-colors hover:bg-white/10"
                     >
                       <span className="text-[#0FF1CE] group-hover:text-white transition-colors">
                         {icon === 'twitter' && (
@@ -1834,7 +1405,7 @@ export default function ShockwaveLandingPage() {
                 <ul className="space-y-4">
                   {[
                     { text: 'Home', href: '/' },
-                    { text: 'Challenge', href: '/challenge' },
+                    { text: 'Challenge', href: 'https://www.shockwavetrading.com/challenge' },
                     { text: 'Pricing', href: '/#pricing', scroll: true },
                     { text: 'FAQ', href: '/#faq', scroll: true }
                   ].map(({ text, href, scroll }) => (
@@ -1881,9 +1452,9 @@ export default function ShockwaveLandingPage() {
                   <input
                     type="email"
                     placeholder="Enter your email"
-                    className="w-full px-4 py-2 bg-[#181818] border border-[#0FF1CE]/20 rounded-lg focus:outline-none focus:border-[#0FF1CE] text-white placeholder-gray-400"
+                    className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-2 text-white placeholder-gray-500 focus:border-[#0FF1CE]/60 focus:outline-none"
                   />
-                  <button type="submit" className="w-full px-4 py-2 bg-[#0FF1CE] text-black font-bold rounded-lg hover:scale-105 transition-transform">
+                  <button type="submit" className="w-full rounded-2xl bg-[#0FF1CE] px-4 py-2.5 font-bold text-black shadow-[0_8px_30px_rgba(15,241,206,0.18)] transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98]">
                     Subscribe
                   </button>
                 </form>
@@ -1895,7 +1466,7 @@ export default function ShockwaveLandingPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                 <div className="text-xs text-gray-500">
                 <p className="mb-2">
-  ⚠️ <strong>Disclaimer:</strong> Shockwave Capital provides access to simulated trading environments for educational and evaluation purposes only. No real funds are traded, invested, or deposited by participants at any stage. References to "funded accounts," "capital," "payouts," or "profit splits" refer exclusively to simulated performance metrics within our proprietary trading models.
+  ⚠️ <strong>Disclaimer:</strong> Shockwave Capital provides funded trading accounts after an evaluation. Payouts can be requested on demand when you have no open positions and have not breached the account. A breached funded account cannot receive a payout.
 </p>
 
 <p className="mb-2">
@@ -1903,11 +1474,11 @@ export default function ShockwaveLandingPage() {
 </p>
 
 <p className="mb-2">
-  All trading activity on our platform takes place in a simulated environment using live or delayed market data. Any strategies executed, profits generated, or losses incurred are part of a simulated experience and do not reflect actual market performance or real financial gain/loss.
+  Funded accounts trade live market conditions. The requested payout is deducted from the account balance immediately, and you can keep trading that same account while the payout is processed. The minimum payout is $50 after Shockwave's performance split. Payouts are sent as USDC on ERC-20, or USDT on Tron or Solana.
 </p>
 
 <p className="mb-2">
-  By purchasing access to any evaluation or subscription plan, you acknowledge and agree to our Terms of Use, Privacy Policy, and Program Rules. All purchases are final. Fees are non-refundable once your simulated trading account is activated or access to our services is granted.
+  By purchasing access to any evaluation or subscription plan, you acknowledge and agree to our Terms of Use, Privacy Policy, and Program Rules. All purchases are final. Fees are non-refundable once your funded account is activated or access to our services is granted.
 </p>
 
 <p className="mb-2">
@@ -1915,7 +1486,7 @@ export default function ShockwaveLandingPage() {
 </p>
 
 <p className="mb-2">
-  Trading leveraged products like forex, indices, and commodities carries inherent risk. Even in simulated environments, practicing risk management and caution is essential. Past simulated performance is not indicative of future results.
+  Trading leveraged products like forex, indices, and commodities carries inherent risk. Risk management is essential. Past performance is not indicative of future results.
 </p>
 
                   <p>
@@ -1938,6 +1509,11 @@ export default function ShockwaveLandingPage() {
             0% { transform: translateY(0px); }
             50% { transform: translateY(-10px); }
             100% { transform: translateY(0px); }
+          }
+
+          @keyframes borderGlowSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
           }
 
           @keyframes fadeIn {
