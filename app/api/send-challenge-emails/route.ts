@@ -299,7 +299,7 @@ export async function POST(req: Request) {
             </div>
             
             <div style="text-align: center; margin: 40px 0;">
-              <a href="https://shockwave-capital.com/dashboard" style="display: inline-block; background-color: #0FF1CE; color: #000; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Dashboard</a>
+              <a href="https://www.shockwavetrading.com/dashboard" style="display: inline-block; background-color: #0FF1CE; color: #000; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Dashboard</a>
             </div>
             
             <div style="margin-bottom: 30px;">

@@ -5,6 +5,7 @@ import { auth } from '@/lib/firebase';
 import Image from 'next/image';
 import Particles from './components/Particles';
 import Header from './components/Header';
+import { USER_DASHBOARD_URL } from '@/lib/user-dashboard';
 import Link from 'next/link';
 import PricingTable from './components/PricingTable';
 import { ChevronRight, ChevronDown, X, Copy, Check } from 'lucide-react';
@@ -570,7 +571,7 @@ export default function ShockwaveLandingPage() {
 
     return (
       <div className="bg-black text-white min-h-screen font-sans">
-        <Header clientHref="https://www.shockwavetrading.com/dashboard" />
+        <Header clientHref={USER_DASHBOARD_URL} />
         <PromotionalModal isOpen={false} onClose={() => {}} />
         
         {/* Hero Section */}

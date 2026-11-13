@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { USER_DASHBOARD_URL } from '@/lib/user-dashboard';
 import {
   Activity,
   ArrowLeft,
@@ -378,7 +379,7 @@ export default function ShockwaveXPage() {
       <div className="h-full min-h-full grid grid-cols-1 grid-rows-[auto_minmax(280px,46vh)_auto_auto] md:grid-cols-[52px_minmax(0,1fr)_280px] md:grid-rows-[auto_minmax(0,1fr)_200px] md:h-full">
         <header className="col-span-1 md:col-span-3 md:col-start-1 md:row-start-1 border-b border-[#2F2F2F] bg-[#101010] px-3 py-2 flex flex-wrap items-center gap-x-3 gap-y-2">
           <Link
-            href="/dashboard"
+            href={USER_DASHBOARD_URL}
             className="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#0FF1CE] to-[#00D4FF] text-black text-[11px] font-extrabold uppercase tracking-wide px-3 py-1.5 rounded-md shadow-[0_0_12px_rgba(15,241,206,0.28)] hover:scale-[1.02] active:scale-[0.98] transition-all"
           >
             <ArrowLeft size={14} />

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
 import Particles from '../../components/Particles';
 import Header from '../../components/Header';
+import { goToUserDashboard } from '@/lib/user-dashboard';
 
 export default function NYEActivationPendingPage() {
   const router = useRouter();
@@ -91,7 +92,7 @@ export default function NYEActivationPendingPage() {
           {/* Action Buttons */}
           <div className="flex flex-col md:flex-row gap-4 justify-center">
             <button
-              onClick={() => router.push('/dashboard')}
+              onClick={() => goToUserDashboard()}
               className="px-10 py-3 bg-[#0FF1CE] text-black text-base md:text-lg font-bold rounded-lg hover:bg-[#0AA89E] transition-all duration-300"
             >
               Go to Dashboard

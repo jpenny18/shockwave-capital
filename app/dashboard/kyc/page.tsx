@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { goToUserDashboard } from '@/lib/user-dashboard';
 import {
   auth,
   getKYCSubmission,
@@ -897,7 +898,7 @@ export default function KYCPage() {
                   Your KYC verification has been approved. You are now eligible to receive payouts and start trading as a funded trader. You will receive your funded account credentials shortly but please allow up to 48hrs from KYC approval to receive your credentials.
                 </p>
                 <button
-                  onClick={() => router.push('/dashboard')}
+                  onClick={() => goToUserDashboard()}
                   className="bg-gradient-to-r from-[#0FF1CE] to-[#00D4FF] text-black px-8 py-3 rounded-xl font-bold hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-[#0FF1CE]/25 transition-all duration-300"
                 >
                   Back to Dashboard
@@ -935,7 +936,7 @@ export default function KYCPage() {
                   This typically takes 1-2 business days. We'll notify you once the review is complete.
                 </p>
                 <button
-                  onClick={() => router.push('/dashboard')}
+                  onClick={() => goToUserDashboard()}
                   className="bg-transparent border border-[#0FF1CE]/50 text-[#0FF1CE] px-8 py-3 rounded-xl font-bold hover:bg-[#0FF1CE]/10 transition-all duration-300"
                 >
                   Back to Dashboard

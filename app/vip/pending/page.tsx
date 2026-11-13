@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
 import Particles from '../../components/Particles';
 import Header from '../../components/Header';
+import { goToUserDashboard } from '@/lib/user-dashboard';
 
 export default function VipPendingPage() {
   const router = useRouter();
@@ -110,7 +111,7 @@ export default function VipPendingPage() {
           {/* Action Buttons */}
           <div className="flex flex-col md:flex-row gap-4 justify-center">
             <button
-              onClick={() => router.push('/dashboard')}
+              onClick={() => goToUserDashboard()}
               className="px-8 py-4 bg-gradient-to-r from-[#0FF1CE] to-[#00D9FF] text-black text-lg font-bold rounded-xl hover:scale-105 transition-transform"
             >
               Go to Dashboard

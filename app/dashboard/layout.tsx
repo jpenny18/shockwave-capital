@@ -20,10 +20,11 @@ import {
   Zap
 } from 'lucide-react';
 import { auth, signOut, getVIPActivation, getUserVipMetaApiAccounts } from '@/lib/firebase';
+import { USER_DASHBOARD_URL } from '@/lib/user-dashboard';
 import { useRouter, usePathname } from 'next/navigation';
 
 const navItems = [
-  { name: 'Dashboard', href: '/dashboard', icon: BarChart2 },
+  { name: 'Dashboard', href: USER_DASHBOARD_URL, icon: BarChart2 },
   { name: 'My Accounts', href: '/dashboard/accounts', icon: Users },
   { name: 'KYC Verification', href: '/dashboard/kyc', icon: Shield },
   { name: 'Trading Calculators', href: '/dashboard/calculators', icon: Calculator },
@@ -168,7 +169,7 @@ export default function DashboardLayout({
           <nav className="flex-1 space-y-1">
             {visibleNavItems.map((item) => {
               const Icon = item.icon;
-              const isActive = item.href === '/dashboard'
+              const isActive = item.href === USER_DASHBOARD_URL
                 ? pathname === '/dashboard'
                 : item.href === '/dashboard/vip'
                   ? pathname === '/dashboard/vip'
@@ -237,7 +238,7 @@ export default function DashboardLayout({
             <span className="text-xs mt-1">Accounts</span>
           </Link>
           <Link
-            href="/dashboard"
+            href={USER_DASHBOARD_URL}
             className="flex flex-col items-center text-gray-400 hover:text-[#0FF1CE] transition-all"
           >
             <BarChart2 size={20} />

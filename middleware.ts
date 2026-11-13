@@ -1,12 +1,18 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { USER_DASHBOARD_URL } from '@/lib/user-dashboard';
 
 export const config = {
-  matcher: ['/admin/:path*', '/admin-auth/:path*', '/dashboard/challenge/:path*'],
+  matcher: ['/admin/:path*', '/admin-auth/:path*', '/dashboard/challenge/:path*', '/dashboard'],
   runtime: 'experimental-edge',
 };
 
 export async function middleware(request: NextRequest) {
+  // The local dashboard home is outdated. Subpaths (accounts, KYC, payouts) stay in place.
+  if (request.nextUrl.pathname === '/dashboard') {
+    return NextResponse.redirect(USER_DASHBOARD_URL);
+  }
+
   // Skip middleware for static files and API routes
   if (
     request.nextUrl.pathname.startsWith('/_next') ||

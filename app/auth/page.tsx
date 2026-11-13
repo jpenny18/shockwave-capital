@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { goToUserDashboard } from '@/lib/user-dashboard';
 import { 
   Eye, 
   EyeOff, 
@@ -91,7 +91,6 @@ const FloatingLabelInput = ({
 };
 
 export default function AuthPage() {
-  const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -107,12 +106,12 @@ export default function AuthPage() {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
-        router.push('/dashboard');
+        goToUserDashboard();
       }
     });
 
     return () => unsubscribe();
-  }, [router]);
+  }, []);
 
   const validateForm = () => {
     const newErrors: AuthErrors = {};
@@ -151,7 +150,7 @@ export default function AuthPage() {
     try {
       if (isLogin) {
         await signInUser(formData.email, formData.password);
-        router.push('/dashboard');
+        goToUserDashboard();
       } else {
         const nameParts = (formData.name || '').split(' ');
         const firstName = nameParts[0];

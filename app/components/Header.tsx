@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { USER_DASHBOARD_URL } from '@/lib/user-dashboard';
 
-export default function Header({ clientHref = '/auth' }: { clientHref?: string } = {}) {
+export default function Header({ clientHref = USER_DASHBOARD_URL }: { clientHref?: string } = {}) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 

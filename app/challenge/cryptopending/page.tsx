@@ -1,13 +1,11 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Particles from '../../components/Particles';
+import { goToUserDashboard } from '@/lib/user-dashboard';
 import { Loader2, LayoutDashboard } from 'lucide-react';
 
 export default function CryptoPendingPage() {
-  const router = useRouter();
-
   // Clear challenge data from session storage
   useEffect(() => {
     sessionStorage.removeItem('challengeData');
@@ -47,7 +45,7 @@ export default function CryptoPendingPage() {
               </p>
               
               <button
-                onClick={() => router.push('/dashboard')}
+                onClick={() => goToUserDashboard()}
                 className="inline-flex items-center gap-2 px-6 py-3 bg-[#0FF1CE]/10 hover:bg-[#0FF1CE]/20 text-[#0FF1CE] rounded-xl transition-colors"
               >
                 <LayoutDashboard size={18} />

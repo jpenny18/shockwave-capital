@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { goToUserDashboard } from '@/lib/user-dashboard';
 import Particles from '../../../components/Particles';
 import { CheckCircle, ArrowLeft, Mail } from 'lucide-react';
 
@@ -101,7 +102,7 @@ export default function SuccessPage() {
 
             <div className="space-y-4">
               <button
-                onClick={() => router.push('/dashboard')}
+                onClick={() => goToUserDashboard()}
                 className="w-full bg-gradient-to-r from-[#0FF1CE] to-[#00D4FF] text-black py-3 rounded-xl font-bold hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-[#0FF1CE]/25 transition-all duration-300"
               >
                 Go to Dashboard
@@ -239,7 +240,7 @@ export default function SuccessPage() {
 
           <div className="flex space-x-4 mb-6">
             <button
-              onClick={() => router.push('/dashboard')}
+              onClick={() => goToUserDashboard()}
               className="flex-1 bg-gradient-to-r from-[#0FF1CE] to-[#00D4FF] text-black py-3 rounded-xl font-bold hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-[#0FF1CE]/25 transition-all duration-300"
             >
               Go to Dashboard
