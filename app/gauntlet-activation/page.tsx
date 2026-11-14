@@ -6,6 +6,7 @@ import Particles from '../components/Particles';
 import Header from '../components/Header';
 import { Check, ChevronDown, ChevronUp, Bitcoin, Copy, CreditCard } from 'lucide-react';
 import CryptoPayment from '../components/CryptoPayment';
+import { GAUNTLET_ACTIVATION_URL } from '@/lib/user-dashboard';
 
 interface CryptoPrice {
   BTC: number;
@@ -649,7 +650,7 @@ function GauntletActivationContent() {
               <div className="bg-gradient-to-br from-[#0FF1CE]/10 to-[#0FF1CE]/5 backdrop-blur-sm rounded-2xl p-8 border border-[#0FF1CE]/20"
                 style={{ boxShadow: '0 0 20px rgba(15, 241, 206, 0.1)' }}>
                 <p className="text-gray-400 mb-4">No activation options found for the specified level.</p>
-                <a href="/gauntlet-activation" className="text-[#0FF1CE] hover:underline">
+                <a href={GAUNTLET_ACTIVATION_URL} className="text-[#0FF1CE] hover:underline">
                   View all activation options
                 </a>
               </div>

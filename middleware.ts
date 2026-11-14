@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { USER_DASHBOARD_URL } from '@/lib/user-dashboard';
+import { GAUNTLET_ACTIVATION_URL, USER_DASHBOARD_URL } from '@/lib/user-dashboard';
 
 export const config = {
-  matcher: ['/admin/:path*', '/admin-auth/:path*', '/dashboard/challenge/:path*', '/dashboard'],
+  matcher: ['/admin/:path*', '/admin-auth/:path*', '/dashboard/challenge/:path*', '/dashboard', '/gauntlet-activation'],
   runtime: 'experimental-edge',
 };
 
@@ -11,6 +11,11 @@ export async function middleware(request: NextRequest) {
   // The local dashboard home is outdated. Subpaths (accounts, KYC, payouts) stay in place.
   if (request.nextUrl.pathname === '/dashboard') {
     return NextResponse.redirect(USER_DASHBOARD_URL);
+  }
+
+  // The local activation page is outdated. /gauntlet-activation/pending stays in place.
+  if (request.nextUrl.pathname === '/gauntlet-activation') {
+    return NextResponse.redirect(GAUNTLET_ACTIVATION_URL);
   }
 
   // Skip middleware for static files and API routes

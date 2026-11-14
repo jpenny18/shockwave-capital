@@ -424,7 +424,7 @@ const initialTemplates: EmailTemplate[] = [
               </div>
               
               <div style="text-align: center; margin: 30px 0;">
-                <a href="https://shockwave-capital.com/gauntlet-activation" style="display: inline-block; background-color: #1a1a1a; color: #0FF1CE; padding: 16px 32px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 16px;">
+                <a href="https://www.shockwavetrading.com/gauntlet-activation" style="display: inline-block; background-color: #1a1a1a; color: #0FF1CE; padding: 16px 32px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 16px;">
                   👉 Activate Your Funded Account
                 </a>
               </div>
@@ -511,7 +511,7 @@ const initialTemplates: EmailTemplate[] = [
               </div>
               
               <div style="text-align: center; margin: 30px 0;">
-                <a href="https://shockwave-capital.com/gauntlet-activation" style="display: inline-block; background-color: #FF4444; color: #FFFFFF; padding: 16px 32px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 18px;">
+                <a href="https://www.shockwavetrading.com/gauntlet-activation" style="display: inline-block; background-color: #FF4444; color: #FFFFFF; padding: 16px 32px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 18px;">
                   👉 Complete Your Activation Here
                 </a>
               </div>
@@ -658,7 +658,7 @@ const initialTemplates: EmailTemplate[] = [
               </div>
               
               <div style="text-align: center; margin: 35px 0;">
-                <a href="https://shockwave-capital.com/gauntlet-activation" style="display: inline-block; background: linear-gradient(135deg, #0FF1CE 0%, #00D9FF 100%); color: #000000; padding: 18px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 18px; box-shadow: 0 4px 15px rgba(15, 241, 206, 0.3);">
+                <a href="https://www.shockwavetrading.com/gauntlet-activation" style="display: inline-block; background: linear-gradient(135deg, #0FF1CE 0%, #00D9FF 100%); color: #000000; padding: 18px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 18px; box-shadow: 0 4px 15px rgba(15, 241, 206, 0.3);">
                   Activate Your Funded Account
                 </a>
               </div>
